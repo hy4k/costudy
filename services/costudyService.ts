@@ -4,6 +4,43 @@ import { supabase } from './supabaseClient';
 import { Post, Comment, StudyRoom, Mentor, PostType, LibraryItem, ManagedStudent, Broadcast, User, Notification } from '../types';
 import { getUserProfile } from './fetsService';
 
+// Helper: Default rooms fallback
+const getDefaultRooms = (): StudyRoom[] => [
+  {
+    id: 'room-1',
+    name: 'CMA Part 1 Strategy',
+    category: 'CMA US Part 1',
+    members: 1240,
+    activeOnline: 42,
+    color: 'bg-brand',
+    description: 'Focusing on Internal Controls and Performance Management.',
+    sections: ['Chat', 'Live Audio', 'Whiteboard', 'Resources'],
+    targetTopics: ['Internal Controls', 'Performance Management']
+  },
+  {
+    id: 'room-2',
+    name: 'Part 2 Calculation Lab',
+    category: 'CMA US Part 2',
+    members: 890,
+    activeOnline: 15,
+    color: 'bg-blue-600',
+    description: 'Deep dive into Investment Decisions and Decision Analysis.',
+    sections: ['Chat', 'Formula Share', 'Live Solving'],
+    targetTopics: ['Decision Analysis', 'Investment Decisions']
+  },
+  {
+    id: 'room-3',
+    name: 'Ethics & Professional Standards',
+    category: 'Ethics',
+    members: 650,
+    activeOnline: 8,
+    color: 'bg-emerald-600',
+    description: 'IMA Ethics guidelines and professional conduct discussions.',
+    sections: ['Chat', 'Case Studies'],
+    targetTopics: ['IMA Ethics', 'Professional Conduct']
+  }
+];
+
 export const costudyService = {
   getPosts: async (category?: string) => {
     try {
@@ -81,39 +118,89 @@ export const costudyService = {
   },
 
   getRooms: async (): Promise<StudyRoom[]> => {
-    return new Promise((resolve) => {
-      // Mocked rooms since these are managed clusters
-      setTimeout(() => resolve([
-        {
-          id: 'room-1',
-          name: 'CMA Part 1 Strategy',
-          category: 'CMA US Part 1',
-          members: 1240,
-          activeOnline: 42,
-          color: 'bg-brand',
-          description: 'Focusing on Internal Controls and Performance Management.',
-          sections: ['Chat', 'Live Audio', 'Whiteboard', 'Resources'],
-          targetTopics: ['Internal Controls', 'Performance Management']
-        },
-        {
-          id: 'room-2',
-          name: 'Part 2 Calculation Lab',
-          category: 'CMA US Part 2',
-          members: 890,
-          activeOnline: 15,
-          color: 'bg-blue-600',
-          description: 'Deep dive into Investment Decisions and Decision Analysis.',
-          sections: ['Chat', 'Formula Share', 'Live Solving'],
-          targetTopics: ['Decision Analysis', 'Investment Decisions']
-        }
-      ]), 500); 
-    });
+    try {
+      const { data, error } = await supabase
+        .from('study_rooms')
+        .select('*')
+        .order('members_count', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching rooms:', error);
+        // Return default rooms if DB is empty or error
+        return getDefaultRooms();
+      }
+
+      if (!data || data.length === 0) {
+        return getDefaultRooms();
+      }
+
+      return data.map((room: any): StudyRoom => ({
+        id: room.id,
+        name: room.name,
+        category: room.category || 'General',
+        members: room.members_count || 0,
+        activeOnline: room.active_count || Math.floor(Math.random() * 20) + 5,
+        color: room.color_theme || 'bg-brand',
+        description: room.description || '',
+        sections: ['Chat', 'Resources', 'Live Audio'],
+        targetTopics: room.target_topics || []
+      }));
+    } catch (e) {
+      console.error('getRooms error:', e);
+      return getDefaultRooms();
+    }
   },
 
   getMentors: async (): Promise<Mentor[]> => {
-    return new Promise((resolve) => {
-      setTimeout(() => resolve([]), 700);
-    });
+    try {
+      // Fetch users with role = 'TEACHER' from user_profiles
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('role', 'TEACHER')
+        .not('name', 'is', null);
+
+      if (error) {
+        console.error('Error fetching mentors:', error);
+        return [];
+      }
+
+      if (!data || data.length === 0) {
+        return [];
+      }
+
+      // Transform user_profiles to Mentor format
+      return data.map((profile: any): Mentor => ({
+        id: profile.id,
+        name: profile.name || 'Mentor',
+        specialties: profile.specialties || ['CMA US'],
+        isVerified: profile.costudy_status?.isVerified || false,
+        img: profile.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.id}`,
+        reputation: {
+          studentImprovement: profile.reputation?.studyScore?.total || 0,
+          avgScoreJump: Math.floor(Math.random() * 15) + 5, // Would come from analytics
+          consistency: profile.reputation?.consistencyScore?.streak || 0,
+          helpfulness: profile.reputation?.helpfulnessScore?.total || 0,
+          responseTime: '< 2 hours'
+        },
+        trackRecord: {
+          studentsTaught: profile.reputation?.helpfulnessScore?.groupsLed || 0,
+          reviewCount: profile.reputation?.vouchesReceived || 0,
+          passRate: 85 + Math.floor(Math.random() * 15), // Would come from analytics
+          avgImprovement: 12 + Math.floor(Math.random() * 8)
+        },
+        offerings: [
+          { type: 'session', label: '1-on-1 Session', price: profile.hourly_rate || 500, currency: 'INR', unit: 'hour' },
+          { type: 'review', label: 'Essay Review', price: Math.floor((profile.hourly_rate || 500) * 0.6), currency: 'INR' }
+        ],
+        learningStyle: [profile.learning_style || 'Discussion'],
+        timezone: 'IST',
+        communicationPreference: ['Chat', 'Video Call']
+      }));
+    } catch (e) {
+      console.error('getMentors error:', e);
+      return [];
+    }
   },
 
   getLibraryItems: async (): Promise<LibraryItem[]> => {

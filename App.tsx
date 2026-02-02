@@ -19,32 +19,92 @@ import { supabase } from './services/supabaseClient';
 import { Icons } from './components/Icons';
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
-  const [isInitialLoading, setIsInitialLoading] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [showAuth, setShowAuth] = useState(false);
   const [authView, setAuthView] = useState<'LOGIN' | 'SIGNUP'>('LOGIN');
   const [currentView, setCurrentView] = useState<keyof typeof ViewState>(ViewState.WALL);
-  const [user, setUser] = useState<any>({
-    id: '00000000-0000-0000-0000-000000000000',
-    name: 'Guest Explorer',
-    role: UserRole.STUDENT,
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Guest',
-    level: 'SCHOLAR'
-  });
+  const [user, setUser] = useState<any>(null);
 
   // Unified Identity Sync function
   const syncUserIdentity = async (supabaseUser: any) => {
-    // Auth-free mode: We use the mock user
-    return;
+    if (!supabaseUser?.id) {
+      setIsLoggedIn(false);
+      setUser(null);
+      return;
+    }
+
+    try {
+      // Try to fetch existing profile
+      let profile = await getUserProfile(supabaseUser.id);
+      
+      // If no profile exists, create one (JIT provisioning)
+      if (!profile) {
+        const metadata = supabaseUser.user_metadata || {};
+        await createUserProfile(supabaseUser.id, {
+          full_name: metadata.full_name || supabaseUser.email?.split('@')[0] || 'New User',
+          role: metadata.role || 'STUDENT'
+        });
+        profile = await getUserProfile(supabaseUser.id);
+      }
+
+      if (profile) {
+        // Normalize the role from DB to match our enum
+        const roleMap: Record<string, UserRole> = {
+          'STUDENT': UserRole.STUDENT,
+          'TEACHER': UserRole.TEACHER,
+          'PEER_TUTOR': UserRole.PEER_TUTOR
+        };
+        
+        setUser({
+          ...profile,
+          role: roleMap[profile.role] || UserRole.STUDENT
+        });
+        setIsLoggedIn(true);
+      } else {
+        // Fallback if profile creation failed
+        setUser({
+          id: supabaseUser.id,
+          name: supabaseUser.email?.split('@')[0] || 'User',
+          role: UserRole.STUDENT,
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${supabaseUser.id}`,
+          level: 'STARTER'
+        });
+        setIsLoggedIn(true);
+      }
+    } catch (e) {
+      console.error("Error syncing user identity:", e);
+      // Set minimal user to avoid blocking the app
+      setUser({
+        id: supabaseUser.id,
+        name: supabaseUser.email?.split('@')[0] || 'User',
+        role: UserRole.STUDENT,
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${supabaseUser.id}`,
+        level: 'STARTER'
+      });
+      setIsLoggedIn(true);
+    }
   };
 
   const refreshUser = async () => {
-    // Auth-free mode: No refresh needed
+    if (user?.id) {
+      const profile = await getUserProfile(user.id);
+      if (profile) {
+        const roleMap: Record<string, UserRole> = {
+          'STUDENT': UserRole.STUDENT,
+          'TEACHER': UserRole.TEACHER,
+          'PEER_TUTOR': UserRole.PEER_TUTOR
+        };
+        setUser({
+          ...profile,
+          role: roleMap[profile.role] || UserRole.STUDENT
+        });
+      }
+    }
   };
 
   useEffect(() => {
-    // Auth-free mode: Disabling auth checks and listeners
-    /*
+    // Check initial session
     const checkUser = async () => {
       try {
         const session = await authService.getSession();
@@ -59,9 +119,11 @@ function App() {
     };
     checkUser();
 
+    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'USER_UPDATED') && session) {
         await syncUserIdentity(session.user);
+        setShowAuth(false);
       } else if (event === 'SIGNED_OUT') {
         setIsLoggedIn(false);
         setUser(null);
@@ -70,18 +132,22 @@ function App() {
     });
 
     return () => subscription.unsubscribe();
-    */
   }, []);
 
   const handleLogout = async () => {
-    // Auth-free mode: Reset to guest
-    setIsLoggedIn(true);
-    setCurrentView(ViewState.WALL);
+    try {
+      await authService.signOut();
+      setIsLoggedIn(false);
+      setUser(null);
+      setCurrentView(ViewState.WALL);
+    } catch (e) {
+      console.error("Logout error:", e);
+    }
   };
 
   const handleAuthRequired = (view: 'LOGIN' | 'SIGNUP' = 'SIGNUP') => {
-    // Auth-free mode: Ignore auth requests
-    console.log("Auth required ignored in auth-free mode");
+    setAuthView(view);
+    setShowAuth(true);
   };
 
   if (isInitialLoading) {

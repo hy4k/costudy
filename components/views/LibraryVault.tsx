@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Icons } from '../Icons';
 import { LibraryItem } from '../../types';
 import { costudyService } from '../../services/costudyService';
+import { costudyAPI } from '../../services/costudyAPI';
 
 export const LibraryVault: React.FC = () => {
     const [library, setLibrary] = useState<LibraryItem[]>([]);
@@ -12,15 +13,27 @@ export const LibraryVault: React.FC = () => {
     const [selectedCategory, setSelectedCategory] = useState('All Content');
     const [ingestionLogs, setIngestionLogs] = useState<string[]>([]);
     const [showArchitecture, setShowArchitecture] = useState(false);
+    
+    // RAG Search State
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [showSearchResults, setShowSearchResults] = useState(false);
+    const [apiStatus, setApiStatus] = useState<'checking' | 'online' | 'offline'>('checking');
 
     useEffect(() => {
-        const fetchLib = async () => {
+        const init = async () => {
             setLoading(true);
+            
+            // Check API health
+            const health = await costudyAPI.health();
+            setApiStatus(health.ok ? 'online' : 'offline');
+            
+            // Fetch library items
             const data = await costudyService.getLibraryItems();
             setLibrary(data);
             setLoading(false);
         };
-        fetchLib();
+        init();
     }, []);
 
     const handleIngest = async (item: LibraryItem) => {
@@ -33,7 +46,7 @@ export const LibraryVault: React.FC = () => {
         
         const logSteps = [
             `[COMPUTE]: Generating chunks (1000 tokens / 10% overlap)...`,
-            `[AI]: Embedding chunks via text-embedding-004...`,
+            `[AI]: Embedding chunks via text-embedding-3-small...`,
             `[DB]: batch_insert into 'vault_vectors'...`,
             `[DB]: Indexing column 'embedding' (HNSW)...`,
             `[SYSTEM]: Handshake verified. ${item.title} is now neural-ready.`
@@ -52,6 +65,35 @@ export const LibraryVault: React.FC = () => {
         }, logSteps.length * 800 + 500);
     };
 
+    // RAG Search Handler
+    const handleRAGSearch = async () => {
+        if (!searchTerm.trim()) return;
+        
+        setIsSearching(true);
+        setShowSearchResults(true);
+        
+        try {
+            const result = await costudyAPI.search(searchTerm, { topK: 8 });
+            
+            if (result.ok && result.hits) {
+                setSearchResults(result.hits);
+            } else {
+                setSearchResults([]);
+            }
+        } catch (e) {
+            console.error('Search error:', e);
+            setSearchResults([]);
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+    const handleKeyPress = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            handleRAGSearch();
+        }
+    };
+
     const filtered = library.filter(item => 
         (selectedCategory === 'All Content' || item.category === selectedCategory) &&
         item.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -59,7 +101,64 @@ export const LibraryVault: React.FC = () => {
 
     return (
         <div className="max-w-7xl mx-auto px-12 py-20 relative">
-            {/* Supabase Arch Overlay - Lowered z-index to 30 */}
+            {/* RAG Search Results Overlay */}
+            {showSearchResults && (
+                <div className="fixed inset-0 z-40 bg-slate-950/98 backdrop-blur-3xl flex items-start justify-center p-10 pt-20 animate-in fade-in zoom-in-95 duration-500 overflow-y-auto">
+                    <div className="bg-white/5 border border-white/10 p-12 rounded-[4rem] max-w-5xl w-full relative shadow-[0_0_100px_rgba(255,26,26,0.1)]">
+                        <button onClick={() => setShowSearchResults(false)} className="absolute top-8 right-8 p-4 hover:bg-white/10 rounded-full transition-all text-white">
+                            <Icons.Plus className="w-8 h-8 rotate-45" />
+                        </button>
+                        
+                        <div className="flex items-center gap-4 mb-8">
+                            <div className="p-4 bg-brand/10 rounded-2xl">
+                                <Icons.Search className="w-8 h-8 text-brand" />
+                            </div>
+                            <div>
+                                <h3 className="text-3xl font-black text-white tracking-tighter">Vector Search Results</h3>
+                                <p className="text-slate-400 text-sm">Query: "{searchTerm}"</p>
+                            </div>
+                        </div>
+
+                        {isSearching ? (
+                            <div className="flex flex-col items-center py-20 gap-6">
+                                <Icons.CloudSync className="w-16 h-16 animate-spin text-brand" />
+                                <span className="text-white font-black uppercase tracking-widest text-sm animate-pulse">Searching vector space...</span>
+                            </div>
+                        ) : searchResults.length > 0 ? (
+                            <div className="space-y-6">
+                                {searchResults.map((hit, i) => (
+                                    <div key={i} className="bg-white/[0.03] border border-white/5 p-8 rounded-3xl hover:border-brand/30 transition-all">
+                                        <div className="flex items-start justify-between mb-4">
+                                            <div className="flex items-center gap-3">
+                                                <span className="bg-brand/20 text-brand px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest">
+                                                    {Math.round(hit.similarity * 100)}% Match
+                                                </span>
+                                                <span className="text-slate-500 text-xs font-bold">
+                                                    Doc: {hit.document_id?.slice(0, 20)}...
+                                                </span>
+                                            </div>
+                                            <span className="text-[10px] text-slate-500 font-mono">
+                                                Page {hit.page_number} / Chunk {hit.chunk_index}
+                                            </span>
+                                        </div>
+                                        <p className="text-slate-300 text-sm leading-relaxed line-clamp-4">
+                                            {hit.content}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-16">
+                                <Icons.Search className="w-16 h-16 text-slate-600 mx-auto mb-6" />
+                                <p className="text-slate-400 font-bold">No matching vectors found.</p>
+                                <p className="text-slate-500 text-sm mt-2">Try a different query or ingest more documents.</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Supabase Arch Overlay */}
             {showArchitecture && (
                 <div className="fixed inset-0 z-30 bg-slate-950/98 backdrop-blur-3xl flex items-center justify-center p-10 animate-in fade-in zoom-in-95 duration-500">
                     <div className="bg-white/5 border border-white/10 p-16 rounded-[4rem] max-w-5xl w-full max-h-[85vh] overflow-y-auto no-scrollbar relative shadow-[0_0_100px_rgba(255,26,26,0.1)]">
@@ -96,7 +195,7 @@ export const LibraryVault: React.FC = () => {
                             <Icons.CloudSync className="w-12 h-12 text-brand mx-auto mb-6" />
                             <h4 className="text-white font-black uppercase tracking-widest text-lg mb-2">Retrieval Augmented Generation</h4>
                             <p className="text-slate-400 text-sm max-w-2xl mx-auto italic leading-relaxed">
-                                "The CoStudy AI Deck doesn't just guess. It performs a semantic search on your private library, finds the relevant facts, and uses Gemini to synthesize a perfect answer."
+                                "The CoStudy AI Deck doesn't just guess. It performs a semantic search on your private library, finds the relevant facts, and uses GPT-4 to synthesize a perfect answer."
                             </p>
                         </div>
                     </div>
@@ -107,8 +206,8 @@ export const LibraryVault: React.FC = () => {
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[400px] bg-brand/5 blur-[150px] pointer-events-none"></div>
                 <div className="flex justify-center gap-4 mb-8">
                     <div className="inline-flex items-center gap-3 bg-slate-900 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] shadow-2xl">
-                        <Icons.CloudSync className="w-5 h-5 text-brand" />
-                        Neural Vault Online
+                        <div className={`w-2 h-2 rounded-full ${apiStatus === 'online' ? 'bg-emerald-500' : apiStatus === 'offline' ? 'bg-red-500' : 'bg-yellow-500 animate-pulse'}`}></div>
+                        {apiStatus === 'online' ? 'RAG Engine Online' : apiStatus === 'offline' ? 'RAG Offline' : 'Connecting...'}
                     </div>
                     <button 
                         onClick={() => setShowArchitecture(true)}
@@ -128,12 +227,22 @@ export const LibraryVault: React.FC = () => {
                 <div className="relative w-full max-w-xl">
                     <input 
                         type="text" 
-                        placeholder="Search your knowledge vault..."
+                        placeholder="Semantic search your knowledge vault..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full bg-white border border-slate-100 px-10 py-5 rounded-[2rem] text-sm font-bold text-slate-900 shadow-sm outline-none pl-16 transition-all focus:ring-4 focus:ring-brand/5"
+                        onKeyPress={handleKeyPress}
+                        className="w-full bg-white border border-slate-100 px-10 py-5 rounded-[2rem] text-sm font-bold text-slate-900 shadow-sm outline-none pl-16 pr-32 transition-all focus:ring-4 focus:ring-brand/5"
                     />
                     <Icons.Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-slate-300" />
+                    {apiStatus === 'online' && (
+                        <button 
+                            onClick={handleRAGSearch}
+                            disabled={!searchTerm.trim()}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 px-6 py-3 bg-brand text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            RAG Search
+                        </button>
+                    )}
                 </div>
                 <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
                     {['All Content', 'Financial Accounting', 'Strategy', 'Practice'].map(cat => (

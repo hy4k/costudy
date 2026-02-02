@@ -3,52 +3,101 @@ import { GoogleGenAI } from "@google/genai";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-// Simulate a backend RAG retrieval step
+// Production API endpoint for vector search (RAG)
+const COSTUDY_API_URL = 'https://api.costudy.in';
+
+// Real backend RAG retrieval using api.costudy.in
 const performBackendVectorSearch = async (query: string): Promise<string> => {
     console.log(`[Backend Vector Search] Processing query: "${query}"`);
-    // In a real app, this would query Supabase pgvector or Pinecone.
-    // For simulation, we return relevant mock contexts.
     
-    // Expanded Mock Vault for better context hit rate
-    const mockVaultContexts: Record<string, string> = {
-        'costing': "Joint costing involves allocating total costs incurred up to the split-off point. Common methods include Physical Measures, Sales Value at Split-off, and Net Realizable Value.",
-        'abc': "Activity-Based Costing (ABC) assigns costs based on activities that drive costs rather than volume. It is more accurate for diverse product lines and helps identify non-value-added activities.",
-        'ethics': "IMA Statement of Ethical Professional Practice includes: Competence, Confidentiality, Integrity, and Credibility. Resolution of ethical conflict involves following established policies and consulting with a supervisor.",
-        'reporting': "External financial reporting must adhere to GAAP or IFRS. Key statements include Balance Sheet (Financial Position), Income Statement (Operations), and Statement of Cash Flows.",
-        'variance': "Variance analysis compares actual results to budgeted (standard) performance. Favorable variances increase operating income; Unfavorable variances decrease it. Material variances must be investigated.",
-        'internal': "Internal controls are processes designed to provide reasonable assurance regarding achievement of objectives in effectiveness/efficiency of operations, reliability of reporting, and compliance.",
-        'risk': "COSO ERM Framework components: Governance & Culture, Strategy & Objective-Setting, Performance, Review & Revision, and Information, Communication, & Reporting."
-    };
+    try {
+        const response = await fetch(`${COSTUDY_API_URL}/api/search`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                query: query,
+                topK: 5
+            })
+        });
 
-    const lowerQuery = query.toLowerCase();
-    const key = Object.keys(mockVaultContexts).find(k => lowerQuery.includes(k));
-    
-    if (key) {
-        return `[VAULT CONTEXT FOUND (${key.toUpperCase()}): ${mockVaultContexts[key]}]`;
+        if (!response.ok) {
+            console.warn(`[RAG] API returned ${response.status}, falling back to general knowledge`);
+            return "[VAULT: API unavailable. Relying on general CMA expert knowledge.]";
+        }
+
+        const data = await response.json();
+        
+        if (data.results && data.results.length > 0) {
+            // Format retrieved chunks for context injection
+            const contextChunks = data.results
+                .map((r: any, i: number) => `[${i + 1}] ${r.content || r.text}`)
+                .join('\n\n');
+            
+            return `[VAULT CONTEXT RETRIEVED - ${data.results.length} chunks]:\n${contextChunks}`;
+        }
+
+        return "[VAULT: No high-confidence matches found. Relying on general CMA expert knowledge.]";
+    } catch (error) {
+        console.error('[RAG] Vector search failed:', error);
+        return "[VAULT: Search service unavailable. Relying on general CMA expert knowledge.]";
     }
+};
 
-    return "[VAULT: No specific high-confidence match in 1GB index. Relying on general CMA expert knowledge.]";
+// Alternative: Use the ask-cma endpoint for complete AI responses
+export const askCMAExpert = async (message: string, history: {role: string, content: string}[] = []): Promise<string> => {
+    try {
+        const response = await fetch(`${COSTUDY_API_URL}/api/ask-cma`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message: message,
+                history: history.map(h => ({
+                    role: h.role === 'user' ? 'user' : 'assistant',
+                    content: h.content
+                }))
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`API returned ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data.response || data.answer || "I couldn't process that request.";
+    } catch (error) {
+        console.error('[CMA Expert] API call failed:', error);
+        // Fall back to Gemini
+        return null as any;
+    }
 };
 
 export const getChatResponse = async (history: {role: string, content: string}[], newMessage: string, subjectContext: string, additionalContext?: string) => {
     try {
-        // Step 1: Query Expansion (Context Awareness)
-        // If the message is a short follow-up, append previous user context to the search query
+        // Step 1: Try the dedicated CMA API first (full RAG pipeline)
+        const cmaResponse = await askCMAExpert(newMessage, history);
+        if (cmaResponse) {
+            return cmaResponse;
+        }
+
+        // Step 2: Query Expansion (Context Awareness) for fallback
         let searchQuery = newMessage;
         if (history.length > 0) {
-             // Find last user message
              const lastUserMsg = [...history].reverse().find(m => m.role === 'user');
              
-             // Heuristic: If message is short (< 30 chars) or contains pronouns, likely a follow-up
              if (lastUserMsg && (newMessage.length < 30 || /\b(it|that|they|he|she|this|those)\b/i.test(newMessage))) {
                  searchQuery = `${lastUserMsg.content} ${newMessage}`;
                  console.log("[Context] Query Expanded for RAG:", searchQuery);
              }
         }
 
-        // Step 2: Backend Retrieval (RAG)
+        // Step 3: Backend Retrieval (RAG) via api.costudy.in
         const retrievedContext = await performBackendVectorSearch(searchQuery);
 
+        // Step 4: Gemini fallback with retrieved context
         const response = await ai.models.generateContent({
             model: 'gemini-3-pro-preview',
             contents: [
@@ -97,6 +146,25 @@ export const generateStudyContent = async (prompt: string, systemInstruction?: s
 };
 
 export const summarizePost = async (postContent: string): Promise<string> => {
+    // Try api.costudy.in summarize endpoint first
+    try {
+        const response = await fetch(`${COSTUDY_API_URL}/api/summarize`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ text: postContent })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return data.summary || data.result;
+        }
+    } catch (error) {
+        console.warn('[Summarize] API unavailable, falling back to Gemini');
+    }
+
+    // Fallback to Gemini
     return generateStudyContent(
         `Summarize this study post into 3 short bullet points: ${postContent}`,
         "You are a helpful study assistant."

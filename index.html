@@ -1,0 +1,150 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CoStudy | Learn Together</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Plus Jakarta Sans', 'sans-serif'],
+            },
+            colors: {
+              brand: {
+                DEFAULT: 'var(--color-brand-500)',
+                50: 'var(--color-brand-50)',
+                100: 'var(--color-brand-100)',
+                200: 'var(--color-brand-200)',
+                300: 'var(--color-brand-300)',
+                400: 'var(--color-brand-400)',
+                500: 'var(--color-brand-500)',
+                600: 'var(--color-brand-600)',
+                700: 'var(--color-brand-700)',
+                800: 'var(--color-brand-800)',
+                900: 'var(--color-brand-900)',
+              },
+              slate: {
+                50: '#f8fafc',
+                100: '#f1f5f9',
+                200: '#e2e8f0',
+                300: '#cbd5e1',
+                400: '#94a3b8',
+                500: '#64748b',
+                600: '#475569',
+                700: '#334155',
+                800: '#1e293b',
+                900: '#0f172a',
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      :root {
+        /* Default Student Theme (Red) */
+        --color-brand-50: #fff1f1;
+        --color-brand-100: #ffdfdf;
+        --color-brand-200: #ffc5c5;
+        --color-brand-300: #ff9d9d;
+        --color-brand-400: #ff6464;
+        --color-brand-500: #ff1a1a;
+        --color-brand-600: #ed0000;
+        --color-brand-700: #c80000;
+        --color-brand-800: #a50404;
+        --color-brand-900: #890b0b;
+      }
+
+      body {
+        background-color: #f8fafc;
+        color: #0f172a;
+      }
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-track { background: #f1f5f9; }
+      ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+      ::-webkit-scrollbar-thumb:hover { background: var(--color-brand-500); }
+
+      .container-button {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
+        grid-template-areas: "bt-1 bt-2 bt-3" "bt-4 bt-5 bt-6";
+        position: relative;
+        perspective: 800px;
+        padding: 0;
+        width: 140px;
+        height: 44px;
+        transition: all 0.3s ease-in-out;
+      }
+      .container-button:active { transform: scale(0.95); }
+      .hover-area { position: absolute; width: 100%; height: 100%; z-index: 20; }
+      .bt-1 { grid-area: bt-1; }
+      .bt-2 { grid-area: bt-2; }
+      .bt-3 { grid-area: bt-3; }
+      .bt-4 { grid-area: bt-4; }
+      .bt-5 { grid-area: bt-5; }
+      .bt-6 { grid-area: bt-6; }
+
+      .bt-1:hover ~ .tilt-btn { transform: rotateX(15deg) rotateY(-15deg); box-shadow: -2px -2px #ff1a1a22; }
+      .bt-3:hover ~ .tilt-btn { transform: rotateX(15deg) rotateY(15deg); box-shadow: 2px -2px #ff1a1a22; }
+      .bt-4:hover ~ .tilt-btn { transform: rotateX(-15deg) rotateY(-15deg); box-shadow: -2px 2px #ff1a1a22; }
+      .bt-6:hover ~ .tilt-btn { transform: rotateX(-15deg) rotateY(15deg); box-shadow: 2px 2px #ff1a1a22; }
+
+      .tilt-btn {
+        position: absolute;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.4);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 12px;
+        transition: all 0.3s ease-out;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 600;
+        color: #64748b;
+        z-index: 1;
+        pointer-events: none;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      }
+      .tilt-btn.active {
+        background: var(--color-brand-500);
+        backdrop-filter: blur(16px);
+        border-color: rgba(255, 255, 255, 0.3);
+        color: #ffffff;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+      }
+      .hover-area:hover ~ .tilt-btn {
+        color: #0f172a;
+        background: rgba(255, 255, 255, 0.7);
+        border-color: var(--color-brand-500);
+      }
+
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
+    "@supabase/supabase-js": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="selection:bg-brand selection:text-white antialiased">
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>

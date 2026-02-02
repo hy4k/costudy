@@ -1,0 +1,8 @@
+{
+  "name": "CoStudy.in",
+  "description": "A modern, AI-powered educational social network where students learn together, hire teachers, and grow.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ]
+}

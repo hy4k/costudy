@@ -1,5 +1,6 @@
 
 import { GoogleGenAI } from "@google/genai";
+import { getSystemInstruction, getEssayEvalInstruction } from "./prompts";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
@@ -8,8 +9,8 @@ const COSTUDY_API_URL = 'https://api.costudy.in';
 
 // Real backend RAG retrieval using api.costudy.in
 const performBackendVectorSearch = async (query: string): Promise<string> => {
-    console.log(`[Backend Vector Search] Processing query: "${query}"`);
-    
+    console.log(`[RAG] Searching CMA Databank for: "${query}"`);
+
     try {
         const response = await fetch(`${COSTUDY_API_URL}/api/search`, {
             method: 'POST',
@@ -18,35 +19,34 @@ const performBackendVectorSearch = async (query: string): Promise<string> => {
             },
             body: JSON.stringify({
                 query: query,
-                topK: 5
+                topK: 8, // Fetch more context for better accuracy
+                threshold: 0.7
             })
         });
 
-        if (!response.ok) {
-            console.warn(`[RAG] API returned ${response.status}, falling back to general knowledge`);
-            return "[VAULT: API unavailable. Relying on general CMA expert knowledge.]";
-        }
+        if (!response.ok) return "[VAULT: Databank connection jitter. Relying on master expertise.]";
 
         const data = await response.json();
-        
-        if (data.results && data.results.length > 0) {
-            // Format retrieved chunks for context injection
-            const contextChunks = data.results
-                .map((r: any, i: number) => `[${i + 1}] ${r.content || r.text}`)
-                .join('\n\n');
-            
-            return `[VAULT CONTEXT RETRIEVED - ${data.results.length} chunks]:\n${contextChunks}`;
+        // The API returns 'hits' according to types, but we handle 'results' for legacy support
+        const hits = data.hits || data.results || [];
+
+        if (hits.length > 0) {
+            const contextChunks = hits
+                .map((r: any, i: number) => `[RELEVANT CMA MATERIAL - DOC: ${r.document_id || 'OFFICIAL_GUIDE'}]: ${r.content || r.text}`)
+                .join('\n\n---\n\n');
+
+            return `SOURCE MATERIAL FROM CMA US DATABANK:\n\n${contextChunks}`;
         }
 
-        return "[VAULT: No high-confidence matches found. Relying on general CMA expert knowledge.]";
+        return "[VAULT: No specific document matches. Proceeding with core CMA logic.]";
     } catch (error) {
         console.error('[RAG] Vector search failed:', error);
-        return "[VAULT: Search service unavailable. Relying on general CMA expert knowledge.]";
+        return "[VAULT: Databank offline. Using expert training data.]";
     }
 };
 
 // Alternative: Use the ask-cma endpoint for complete AI responses
-export const askCMAExpert = async (message: string, history: {role: string, content: string}[] = []): Promise<string> => {
+export const askCMAExpert = async (message: string, history: { role: string, content: string }[] = []): Promise<string> => {
     try {
         const response = await fetch(`${COSTUDY_API_URL}/api/ask-cma`, {
             method: 'POST',
@@ -75,29 +75,21 @@ export const askCMAExpert = async (message: string, history: {role: string, cont
     }
 };
 
-export const getChatResponse = async (history: {role: string, content: string}[], newMessage: string, subjectContext: string, additionalContext?: string) => {
+export const getChatResponse = async (history: { role: string, content: string }[], newMessage: string, subjectContext: string, additionalContext?: string) => {
     try {
-        // Step 1: Try the dedicated CMA API first (full RAG pipeline)
-        const cmaResponse = await askCMAExpert(newMessage, history);
-        if (cmaResponse) {
-            return cmaResponse;
-        }
-
-        // Step 2: Query Expansion (Context Awareness) for fallback
+        // Step 1: Query Expansion for better RAG retrieval
         let searchQuery = newMessage;
         if (history.length > 0) {
-             const lastUserMsg = [...history].reverse().find(m => m.role === 'user');
-             
-             if (lastUserMsg && (newMessage.length < 30 || /\b(it|that|they|he|she|this|those)\b/i.test(newMessage))) {
-                 searchQuery = `${lastUserMsg.content} ${newMessage}`;
-                 console.log("[Context] Query Expanded for RAG:", searchQuery);
-             }
+            const lastUserMsg = [...history].reverse().find(m => m.role === 'user');
+            if (lastUserMsg && (newMessage.length < 30 || /\b(it|that|they|he|she|this|those)\b/i.test(newMessage))) {
+                searchQuery = `${lastUserMsg.content} ${newMessage}`;
+            }
         }
 
-        // Step 3: Backend Retrieval (RAG) via api.costudy.in
+        // Step 2: Fetch context from the backend CMA Databank (RAG)
         const retrievedContext = await performBackendVectorSearch(searchQuery);
 
-        // Step 4: Gemini fallback with retrieved context
+        // Step 3: Use Gemini with Mastermind persona + Databank context
         const response = await ai.models.generateContent({
             model: 'gemini-3-pro-preview',
             contents: [
@@ -108,41 +100,36 @@ export const getChatResponse = async (history: {role: string, content: string}[]
                 { role: 'user', parts: [{ text: newMessage }] }
             ],
             config: {
-                systemInstruction: `You are an expert AI Tutor in CoStudy. 
-                Subject Area: ${subjectContext}.
-                ${additionalContext ? `Additional Context: ${additionalContext}` : ''}
-                
-                KNOWLEDGE VAULT DATA (RAG):
-                ${retrievedContext}
-                
-                INSTRUCTIONS:
-                1. Prioritize the "KNOWLEDGE VAULT DATA" if relevant.
-                2. If the vault data is not relevant (e.g., retrieval failed for a follow-up), rely heavily on the CONVERSATION HISTORY and your general CMA US expertise.
-                3. Maintain a continuous conversation. Remember previous definitions and context.
-                4. Keep answers concise, professional, and visually structured (use Markdown).
-                5. Use emojis appropriately to keep the tone engaging.`
+                systemInstruction: getSystemInstruction(subjectContext, additionalContext, retrievedContext)
             }
         });
 
         return response.text;
     } catch (error) {
-        console.error("Chat Error", error);
-        return "Sorry, I'm experiencing a neural block. Try again in a moment.";
+        console.error("Mastermind Chat Error", error);
+
+        // Final fallback to the basic backend ask-cma if Gemini fails
+        try {
+            const fallback = await askCMAExpert(newMessage, history);
+            if (fallback) return fallback;
+        } catch (e) { }
+
+        return "I'm experiencing a brief strategic blackout. Please re-state your query, future CMA.";
     }
 }
 
 export const generateStudyContent = async (prompt: string, systemInstruction?: string): Promise<string> => {
-  try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: prompt,
-      config: { systemInstruction }
-    });
-    return response.text || "No content generated.";
-  } catch (error) {
-    console.error("API Error:", error);
-    return "Error generating content.";
-  }
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: prompt,
+            config: { systemInstruction }
+        });
+        return response.text || "No content generated.";
+    } catch (error) {
+        console.error("API Error:", error);
+        return "Error generating content.";
+    }
 };
 
 export const summarizePost = async (postContent: string): Promise<string> => {
@@ -170,3 +157,26 @@ export const summarizePost = async (postContent: string): Promise<string> => {
         "You are a helpful study assistant."
     );
 }
+
+export const evaluateEssay = async (essayContent: string, subject: string): Promise<string> => {
+    try {
+        // Step 1: Specifically search the databank for "Rubrics" related to the essay topic
+        // We use the first 100 chars of the essay to guess the topic for the RAG search
+        const topicClue = essayContent.substring(0, 150);
+        const rubricContext = await performBackendVectorSearch(`IMA official essay rubric for ${topicClue}`);
+
+        // Step 2: Generate evaluation using the specialized Essay Auditor instruction
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-pro-preview',
+            contents: [{ role: 'user', parts: [{ text: `STUDENT ESSAY SUBMISSION:\n\n${essayContent}` }] }],
+            config: {
+                systemInstruction: getEssayEvalInstruction(subject, rubricContext)
+            }
+        });
+
+        return response.text;
+    } catch (error) {
+        console.error("Essay Eval Error", error);
+        return "The Mastermind Auditor is temporarily unavailable. Please preserve your essay and try again in a few minutes.";
+    }
+};

@@ -1,6 +1,6 @@
 
 import { GoogleGenAI } from "@google/genai";
-import { getSystemInstruction, getEssayEvalInstruction } from "./prompts";
+import { getSystemInstruction, getEssayEvalInstruction, getTeacherSystemInstruction } from "./prompts";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
@@ -180,3 +180,51 @@ export const evaluateEssay = async (essayContent: string, subject: string): Prom
         return "The Mastermind Auditor is temporarily unavailable. Please preserve your essay and try again in a few minutes.";
     }
 };
+
+export const getTeacherResponse = async (history: { role: string, content: string }[], newMessage: string, subject: string, toolContext?: string) => {
+    try {
+        // Step 1: Fetch pedagogical context from the databank (RAG)
+        const retrievedContext = await performBackendVectorSearch(newMessage);
+
+        // Step 2: Use Gemini with Teacher Mastermind persona
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-pro-preview',
+            contents: [
+                ...history.map(h => ({
+                    role: h.role === 'user' ? 'user' : 'model',
+                    parts: [{ text: h.content }]
+                })),
+                { role: 'user', parts: [{ text: newMessage }] }
+            ],
+            config: {
+                systemInstruction: getTeacherSystemInstruction(subject, toolContext, retrievedContext)
+            }
+        });
+
+        return response.text;
+    } catch (error) {
+        console.error("Teacher Mastermind Error", error);
+        return "The Teacher Mastermind is briefly off-line for a faculty meeting. Please retry your query.";
+    }
+}
+
+export const generateTeachingResource = async (subject: string, type: 'LESSON_PLAN' | 'MCQ' | 'CASE_STUDY' | 'RUBRIC', topic: string): Promise<string> => {
+    try {
+        const prompt = `Generate a professional ${type} for the CMA US topic: "${topic}".`;
+        const retrievedContext = await performBackendVectorSearch(topic);
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-pro-preview',
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            config: {
+                systemInstruction: getTeacherSystemInstruction(subject, type, retrievedContext)
+            }
+        });
+
+        return response.text;
+    } catch (error) {
+        console.error("Resource Generation Error", error);
+        return "Failed to generate resource.";
+    }
+};
+

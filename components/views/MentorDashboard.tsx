@@ -3,11 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { Icons } from '../Icons';
 import { ManagedStudent, Broadcast, User, StudyRoom, BountyDetails } from '../../types';
 import { costudyService } from '../../services/costudyService';
+import { TeachersDeck } from './TeachersDeck';
 import { supabase } from '../../services/supabaseClient';
 import { getUserProfile } from '../../services/fetsService';
 
 interface MentorDashboardProps {
-    defaultTab?: 'IMPACT' | 'BROADCAST' | 'CLASSROOMS' | 'REVENUE' | 'BOUNTIES';
+    defaultTab?: 'IMPACT' | 'BROADCAST' | 'CLASSROOMS' | 'REVENUE' | 'BOUNTIES' | 'TEACHERS_DECK';
 }
 
 export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = 'IMPACT' }) => {
@@ -15,7 +16,7 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
     const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
     const [myRooms, setMyRooms] = useState<StudyRoom[]>([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<'IMPACT' | 'BROADCAST' | 'CLASSROOMS' | 'REVENUE' | 'BOUNTIES'>(defaultTab);
+    const [activeTab, setActiveTab] = useState<'IMPACT' | 'BROADCAST' | 'CLASSROOMS' | 'REVENUE' | 'BOUNTIES' | 'TEACHERS_DECK'>(defaultTab);
     const [user, setUser] = useState<any>(null);
     const [userProfile, setUserProfile] = useState<User | null>(null);
 
@@ -47,7 +48,7 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
             const { data: { session } } = await supabase.auth.getSession();
             if (session?.user) {
                 setUser(session.user);
-                
+
                 // Fetch full profile to get slug
                 const profile = await getUserProfile(session.user.id);
                 setUserProfile(profile);
@@ -61,12 +62,12 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
                 setBroadcasts(broadcastData);
                 setMyRooms(roomData); // For demo, using all rooms as managed rooms
             }
-            
+
             // Artificial delay to simulate subdomain redirect
             setTimeout(() => {
-                 setIsRedirecting(false);
-                 setLoading(false);
-            }, 3000); 
+                setIsRedirecting(false);
+                setLoading(false);
+            }, 3000);
         };
         init();
     }, []);
@@ -163,17 +164,17 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
     }
 
     if (loading) return (
-      <div className="flex flex-col items-center justify-center h-screen gap-8 opacity-40">
-         <Icons.Sparkles className="w-16 h-16 animate-spin text-brand" />
-         <span className="font-black uppercase tracking-[0.4em] text-sm text-slate-900">Loading Dashboard...</span>
-      </div>
+        <div className="flex flex-col items-center justify-center h-screen gap-8 opacity-40">
+            <Icons.Sparkles className="w-16 h-16 animate-spin text-brand" />
+            <span className="font-black uppercase tracking-[0.4em] text-sm text-slate-900">Loading Dashboard...</span>
+        </div>
     );
 
     // --- RENDER STUDENT DETAIL VIEW ---
     if (selectedStudent) {
         return (
             <div className="max-w-7xl mx-auto px-6 lg:px-12 py-16 animate-in fade-in zoom-in-95 duration-500 specialist-mode">
-                <button 
+                <button
                     onClick={() => setSelectedStudent(null)}
                     className="flex items-center gap-3 text-slate-400 hover:text-brand font-black uppercase tracking-widest text-xs mb-10 transition-colors"
                 >
@@ -181,8 +182,8 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
                 </button>
 
                 <div className="bg-white rounded-[4rem] border border-slate-200 shadow-2xl overflow-hidden relative">
-                     {/* Header */}
-                     <div className="bg-slate-50/50 p-12 border-b border-slate-100 flex flex-col md:flex-row items-start md:items-center gap-8">
+                    {/* Header */}
+                    <div className="bg-slate-50/50 p-12 border-b border-slate-100 flex flex-col md:flex-row items-start md:items-center gap-8">
                         <img src={selectedStudent.avatar} className="w-32 h-32 rounded-[2.5rem] shadow-xl ring-4 ring-white object-cover" />
                         <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
@@ -203,9 +204,9 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
                             <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2">Learning Style</div>
                             <div className="text-3xl font-black text-brand">{selectedStudent.learningStyle}</div>
                         </div>
-                     </div>
+                    </div>
 
-                     <div className="p-12 grid grid-cols-1 lg:grid-cols-3 gap-12">
+                    <div className="p-12 grid grid-cols-1 lg:grid-cols-3 gap-12">
                         {/* Performance Stats */}
                         <div className="lg:col-span-2 space-y-12">
                             <div>
@@ -247,7 +248,7 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
                         <div className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
                             <div className="absolute top-0 right-0 p-8 opacity-10"><Icons.ClipboardList className="w-32 h-32 text-brand" /></div>
                             <h3 className="text-[10px] font-black text-brand uppercase tracking-[0.4em] mb-8 relative z-10">Notes</h3>
-                            
+
                             <div className="space-y-6 relative z-10">
                                 <div className="p-4 bg-white/10 rounded-2xl border border-white/5">
                                     <div className="text-[8px] font-black text-slate-400 uppercase mb-1">2 Hours Ago</div>
@@ -263,7 +264,7 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
                                 Add Note
                             </button>
                         </div>
-                     </div>
+                    </div>
                 </div>
             </div>
         );
@@ -276,37 +277,40 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
                         <div className="flex items-center gap-3 mb-2">
-                           <div className="px-3 py-1 bg-brand/5 text-brand rounded-lg text-[9px] font-black uppercase tracking-widest border border-brand/10">
-                               {userProfile?.specialistSlug ? `https://${userProfile.specialistSlug}.costudy.cloud` : 'Teacher Dashboard'}
-                           </div>
-                           <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                           <span className="text-slate-400 text-[9px] font-black uppercase tracking-widest">Online</span>
+                            <div className="px-3 py-1 bg-brand/5 text-brand rounded-lg text-[9px] font-black uppercase tracking-widest border border-brand/10">
+                                {userProfile?.specialistSlug ? `https://${userProfile.specialistSlug}.costudy.cloud` : 'Teacher Dashboard'}
+                            </div>
+                            <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                            <span className="text-slate-400 text-[9px] font-black uppercase tracking-widest">Online</span>
                         </div>
                         <h1 className="text-6xl font-black text-slate-900 tracking-tighter uppercase leading-[0.8] mb-2">
-                           DASHBOARD
+                            DASHBOARD
                         </h1>
                         <p className="text-slate-400 font-bold text-xs uppercase tracking-[0.4em] italic">Manage Students & Revenue</p>
                     </div>
-                    
+
                     <div className="flex gap-4">
                         <button onClick={() => setActiveTab('REVENUE')} className="px-8 py-5 bg-white border border-slate-200 rounded-[2rem] text-slate-900 font-black text-[10px] uppercase tracking-widest hover:border-brand transition-all flex items-center gap-3 shadow-sm">
-                           <Icons.DollarSign className="w-4 h-4 text-brand" /> ₹{user?.user_metadata?.wallet || '12,400'}
+                            <Icons.DollarSign className="w-4 h-4 text-brand" /> ₹{user?.user_metadata?.wallet || '12,400'}
                         </button>
                         <button onClick={() => setActiveTab('BROADCAST')} className="px-8 py-5 bg-brand text-white rounded-[2rem] text-[10px] font-black uppercase tracking-widest shadow-xl shadow-brand/30 active:scale-95 transition-all flex items-center gap-3">
-                           <Icons.Sparkles className="w-4 h-4" /> Create Announcement
+                            <Icons.Sparkles className="w-4 h-4" /> Create Announcement
+                        </button>
+                        <button onClick={() => setActiveTab('TEACHERS_DECK')} className="px-8 py-5 bg-emerald-600 text-white rounded-[2rem] text-[10px] font-black uppercase tracking-widest shadow-xl shadow-emerald-500/20 active:scale-95 transition-all flex items-center gap-3">
+                            <Icons.Sparkles className="w-4 h-4 text-emerald-300" /> Launch Teachers Deck
                         </button>
                     </div>
                 </div>
             </header>
 
             <div className="flex gap-10 border-b border-slate-100 mb-12 overflow-x-auto no-scrollbar">
-                {(['IMPACT', 'BROADCAST', 'CLASSROOMS', 'BOUNTIES', 'REVENUE'] as const).map(tab => (
-                    <button 
+                {(['IMPACT', 'BROADCAST', 'CLASSROOMS', 'BOUNTIES', 'REVENUE', 'TEACHERS_DECK'] as const).map(tab => (
+                    <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
                         className={`pb-5 text-[10px] font-black uppercase tracking-[0.4em] transition-all relative whitespace-nowrap ${activeTab === tab ? 'text-brand' : 'text-slate-400 hover:text-slate-600'}`}
                     >
-                        {tab}
+                        {tab === 'TEACHERS_DECK' ? 'TEACHERS DECK' : tab}
                         {activeTab === tab && <div className="absolute bottom-0 left-0 right-0 h-1 bg-brand rounded-full"></div>}
                     </button>
                 ))}
@@ -322,16 +326,16 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
                         { label: 'Rating', value: '4.9', color: 'text-amber-500' }
                     ].map((s, i) => (
                         <div key={i} className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm">
-                           <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">{s.label}</div>
-                           <div className={`text-4xl font-black ${s.color}`}>{s.value}</div>
+                            <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">{s.label}</div>
+                            <div className={`text-4xl font-black ${s.color}`}>{s.value}</div>
                         </div>
                     ))}
 
                     {/* Impact Registry Table */}
                     <div className="lg:col-span-4 bg-white rounded-[4rem] border border-slate-100 shadow-xl overflow-hidden mt-4">
                         <div className="px-10 py-8 bg-slate-50/50 border-b border-slate-100 flex justify-between items-center">
-                           <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Student List</h3>
-                           <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">Synchronized with AI Data</span>
+                            <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Student List</h3>
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">Synchronized with AI Data</span>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left">
@@ -346,8 +350,8 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
                                 </thead>
                                 <tbody className="divide-y divide-slate-50">
                                     {students.map(s => (
-                                        <tr 
-                                            key={s.id} 
+                                        <tr
+                                            key={s.id}
                                             onClick={() => !isLoadingDetail && handleStudentClick(s.id)}
                                             className="group hover:bg-brand/5 transition-all cursor-pointer"
                                         >
@@ -382,11 +386,11 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
                                         </tr>
                                     ))}
                                     {students.length === 0 && (
-                                       <tr>
-                                          <td colSpan={5} className="px-10 py-12 text-center text-slate-400 text-sm font-medium italic">
-                                             No students currently enrolled.
-                                          </td>
-                                       </tr>
+                                        <tr>
+                                            <td colSpan={5} className="px-10 py-12 text-center text-slate-400 text-sm font-medium italic">
+                                                No students currently enrolled.
+                                            </td>
+                                        </tr>
                                     )}
                                 </tbody>
                             </table>
@@ -397,62 +401,62 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
 
             {activeTab === 'BROADCAST' && (
                 <div className="max-w-4xl mx-auto space-y-12">
-                   <div className="bg-white p-12 rounded-[4rem] shadow-2xl border border-slate-100">
-                      <h3 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-4">New Announcement</h3>
-                      <p className="text-slate-500 font-medium italic text-lg mb-10">Post an update to your students.</p>
-                      
-                      <div className="space-y-8">
-                         <input 
-                            value={bTitle}
-                            onChange={(e) => setBTitle(e.target.value)}
-                            placeholder="Announcement Title"
-                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-8 py-5 text-xl font-black outline-none focus:border-brand transition-all"
-                         />
-                         <textarea 
-                            value={bContent}
-                            onChange={(e) => setBContent(e.target.value)}
-                            placeholder="Content..."
-                            className="w-full h-48 bg-slate-50 border border-slate-100 rounded-[2rem] p-8 text-lg font-medium outline-none focus:border-brand transition-all resize-none"
-                         />
-                         <div className="flex gap-4">
-                            {(['GENERAL', 'URGENT', 'RESOURCE'] as const).map(type => (
-                               <button 
-                                  key={type}
-                                  onClick={() => setBType(type)}
-                                  className={`flex-1 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${bType === type ? 'bg-slate-900 text-white border-slate-900 shadow-xl' : 'bg-white text-slate-400 border-slate-200'}`}
-                               >
-                                  {type}
-                               </button>
-                            ))}
-                         </div>
-                         <button 
-                            onClick={handleBroadcast}
-                            disabled={isBroadcasting || !bTitle || !bContent}
-                            className="w-full py-8 bg-brand text-white rounded-[2.5rem] font-black text-sm uppercase tracking-[0.4em] shadow-2xl active:scale-95 disabled:opacity-50 transition-all"
-                         >
-                            {isBroadcasting ? 'POSTING...' : 'POST ANNOUNCEMENT'}
-                         </button>
-                      </div>
-                   </div>
+                    <div className="bg-white p-12 rounded-[4rem] shadow-2xl border border-slate-100">
+                        <h3 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-4">New Announcement</h3>
+                        <p className="text-slate-500 font-medium italic text-lg mb-10">Post an update to your students.</p>
 
-                   <div className="bg-slate-900 text-white p-12 rounded-[4rem] shadow-2xl">
-                      <h4 className="text-[10px] font-black text-brand uppercase tracking-[0.5em] mb-8">ANNOUNCEMENT HISTORY</h4>
-                      <div className="space-y-6">
-                         {broadcasts.map(b => (
-                            <div key={b.id} className="p-6 bg-white/5 border border-white/5 rounded-3xl hover:bg-white/10 transition-all">
-                               <div className="flex justify-between items-center mb-4">
-                                  <span className="px-3 py-1 bg-brand rounded-lg text-[8px] font-black uppercase text-white">{b.type}</span>
-                                  <span className="text-[8px] font-black text-slate-500 uppercase">{new Date(b.created_at).toLocaleDateString()}</span>
-                               </div>
-                               <h5 className="text-lg font-black uppercase tracking-tight mb-2">{b.title}</h5>
-                               <p className="text-sm text-slate-400 line-clamp-2 italic">"{b.content}"</p>
+                        <div className="space-y-8">
+                            <input
+                                value={bTitle}
+                                onChange={(e) => setBTitle(e.target.value)}
+                                placeholder="Announcement Title"
+                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-8 py-5 text-xl font-black outline-none focus:border-brand transition-all"
+                            />
+                            <textarea
+                                value={bContent}
+                                onChange={(e) => setBContent(e.target.value)}
+                                placeholder="Content..."
+                                className="w-full h-48 bg-slate-50 border border-slate-100 rounded-[2rem] p-8 text-lg font-medium outline-none focus:border-brand transition-all resize-none"
+                            />
+                            <div className="flex gap-4">
+                                {(['GENERAL', 'URGENT', 'RESOURCE'] as const).map(type => (
+                                    <button
+                                        key={type}
+                                        onClick={() => setBType(type)}
+                                        className={`flex-1 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${bType === type ? 'bg-slate-900 text-white border-slate-900 shadow-xl' : 'bg-white text-slate-400 border-slate-200'}`}
+                                    >
+                                        {type}
+                                    </button>
+                                ))}
                             </div>
-                         ))}
-                         {broadcasts.length === 0 && (
-                            <div className="text-center text-slate-600 italic">No recent announcements.</div>
-                         )}
-                      </div>
-                   </div>
+                            <button
+                                onClick={handleBroadcast}
+                                disabled={isBroadcasting || !bTitle || !bContent}
+                                className="w-full py-8 bg-brand text-white rounded-[2.5rem] font-black text-sm uppercase tracking-[0.4em] shadow-2xl active:scale-95 disabled:opacity-50 transition-all"
+                            >
+                                {isBroadcasting ? 'POSTING...' : 'POST ANNOUNCEMENT'}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="bg-slate-900 text-white p-12 rounded-[4rem] shadow-2xl">
+                        <h4 className="text-[10px] font-black text-brand uppercase tracking-[0.5em] mb-8">ANNOUNCEMENT HISTORY</h4>
+                        <div className="space-y-6">
+                            {broadcasts.map(b => (
+                                <div key={b.id} className="p-6 bg-white/5 border border-white/5 rounded-3xl hover:bg-white/10 transition-all">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <span className="px-3 py-1 bg-brand rounded-lg text-[8px] font-black uppercase text-white">{b.type}</span>
+                                        <span className="text-[8px] font-black text-slate-500 uppercase">{new Date(b.created_at).toLocaleDateString()}</span>
+                                    </div>
+                                    <h5 className="text-lg font-black uppercase tracking-tight mb-2">{b.title}</h5>
+                                    <p className="text-sm text-slate-400 line-clamp-2 italic">"{b.content}"</p>
+                                </div>
+                            ))}
+                            {broadcasts.length === 0 && (
+                                <div className="text-center text-slate-600 italic">No recent announcements.</div>
+                            )}
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -464,7 +468,7 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
                         <div className="bg-white p-10 rounded-[3.5rem] shadow-xl border border-slate-100">
                             <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-6">Post New Bounty</h3>
                             <div className="space-y-6">
-                                <textarea 
+                                <textarea
                                     value={bountyTask}
                                     onChange={(e) => setBountyTask(e.target.value)}
                                     placeholder="Describe the task (e.g. 'Summarize new IMA Ethics Update')"
@@ -473,8 +477,8 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
                                 <div className="flex gap-4">
                                     <div className="flex-1">
                                         <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2 mb-1 block">Reward Amount</label>
-                                        <input 
-                                            type="number" 
+                                        <input
+                                            type="number"
                                             value={bountyReward}
                                             onChange={(e) => setBountyReward(Number(e.target.value))}
                                             className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-black text-slate-900 outline-none"
@@ -482,7 +486,7 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
                                     </div>
                                     <div className="flex-1">
                                         <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-2 mb-1 block">Reward Type</label>
-                                        <select 
+                                        <select
                                             value={bountyType}
                                             onChange={(e) => setBountyType(e.target.value as any)}
                                             className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-900 outline-none"
@@ -492,7 +496,7 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
                                         </select>
                                     </div>
                                 </div>
-                                <button 
+                                <button
                                     onClick={handleCreateBounty}
                                     disabled={!bountyTask}
                                     className="w-full py-5 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-[0.2em] hover:bg-brand transition-all shadow-lg active:scale-95 disabled:opacity-50"
@@ -550,10 +554,10 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
                                         <Icons.Users className="w-5 h-5" />
                                     </div>
                                 </div>
-                                
+
                                 <h4 className="text-3xl font-black text-slate-900 uppercase tracking-tighter mb-4 leading-none group-hover:text-emerald-600 transition-colors">{room.name}</h4>
                                 <p className="text-slate-500 text-sm font-medium mb-8 leading-relaxed line-clamp-2 flex-1">"{room.description}"</p>
-                                
+
                                 <div className="flex items-center justify-between pt-8 border-t border-slate-50">
                                     <div>
                                         <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest block mb-1">Enrollment</span>
@@ -580,28 +584,34 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
 
             {activeTab === 'REVENUE' && (
                 <div className="max-w-4xl mx-auto animate-in fade-in duration-700">
-                   <div className="bg-white p-16 rounded-[5rem] shadow-2xl border border-slate-100 text-center">
-                      <div className="w-24 h-24 bg-brand/5 text-brand rounded-[2rem] flex items-center justify-center mx-auto mb-10 shadow-xl border border-brand/10">
-                         <Icons.DollarSign className="w-12 h-12" />
-                      </div>
-                      <h3 className="text-5xl font-black text-slate-900 uppercase tracking-tighter mb-4">Earnings</h3>
-                      <p className="text-slate-500 font-medium italic mb-16">Track your earnings and withdrawals.</p>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-                         <div className="p-10 bg-slate-900 text-white rounded-[3rem] shadow-2xl">
-                            <span className="text-[10px] font-black text-brand uppercase tracking-[0.4em] mb-4 block">Available Balance</span>
-                            <div className="text-6xl font-black">₹12,400</div>
-                         </div>
-                         <div className="p-10 bg-brand/5 border border-brand/10 rounded-[3rem]">
-                            <span className="text-[10px] font-black text-brand uppercase tracking-[0.4em] mb-4 block">Lifetime Earnings</span>
-                            <div className="text-6xl font-black text-slate-900">₹84,200</div>
-                         </div>
-                      </div>
-                      
-                      <button className="px-16 py-8 bg-brand text-white rounded-[3rem] font-black text-sm uppercase tracking-[0.5em] shadow-2xl hover:bg-slate-900 transition-all active:scale-95">
-                         Withdraw Funds
-                      </button>
-                   </div>
+                    <div className="bg-white p-16 rounded-[5rem] shadow-2xl border border-slate-100 text-center">
+                        <div className="w-24 h-24 bg-brand/5 text-brand rounded-[2rem] flex items-center justify-center mx-auto mb-10 shadow-xl border border-brand/10">
+                            <Icons.DollarSign className="w-12 h-12" />
+                        </div>
+                        <h3 className="text-5xl font-black text-slate-900 uppercase tracking-tighter mb-4">Earnings</h3>
+                        <p className="text-slate-500 font-medium italic mb-16">Track your earnings and withdrawals.</p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+                            <div className="p-10 bg-slate-900 text-white rounded-[3rem] shadow-2xl">
+                                <span className="text-[10px] font-black text-brand uppercase tracking-[0.4em] mb-4 block">Available Balance</span>
+                                <div className="text-6xl font-black">₹12,400</div>
+                            </div>
+                            <div className="p-10 bg-brand/5 border border-brand/10 rounded-[3rem]">
+                                <span className="text-[10px] font-black text-brand uppercase tracking-[0.4em] mb-4 block">Lifetime Earnings</span>
+                                <div className="text-6xl font-black text-slate-900">₹84,200</div>
+                            </div>
+                        </div>
+
+                        <button className="px-16 py-8 bg-brand text-white rounded-[3rem] font-black text-sm uppercase tracking-[0.5em] shadow-2xl hover:bg-slate-900 transition-all active:scale-95">
+                            Withdraw Funds
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {activeTab === 'TEACHERS_DECK' && (
+                <div className="h-[calc(100vh-350px)] rounded-[3rem] overflow-hidden border border-white/5 shadow-2xl">
+                    <TeachersDeck />
                 </div>
             )}
         </div>

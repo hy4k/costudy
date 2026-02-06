@@ -7,9 +7,15 @@ const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 // Production API endpoint for vector search (RAG)
 const COSTUDY_API_URL = 'https://api.costudy.in';
 
+// Chunk types for filtering
+type ChunkType = 'mcq_question' | 'mcq_answer' | 'essay' | 'other' | null;
+
 // Real backend RAG retrieval using api.costudy.in
-const performBackendVectorSearch = async (query: string): Promise<string> => {
-    console.log(`[RAG] Searching CMA Databank for: "${query}"`);
+const performBackendVectorSearch = async (
+    query: string, 
+    options?: { chunkType?: ChunkType; topK?: number; threshold?: number }
+): Promise<string> => {
+    console.log(`[RAG] Searching CMA Databank for: "${query}"${options?.chunkType ? ` (type: ${options.chunkType})` : ''}`);
 
     try {
         const response = await fetch(`${COSTUDY_API_URL}/api/search`, {
@@ -19,20 +25,24 @@ const performBackendVectorSearch = async (query: string): Promise<string> => {
             },
             body: JSON.stringify({
                 query: query,
-                topK: 8, // Fetch more context for better accuracy
-                threshold: 0.7
+                topK: options?.topK ?? 8,
+                threshold: options?.threshold ?? 0.7,
+                chunkType: options?.chunkType ?? null,
             })
         });
 
         if (!response.ok) return "[VAULT: Databank connection jitter. Relying on master expertise.]";
 
         const data = await response.json();
-        // The API returns 'hits' according to types, but we handle 'results' for legacy support
         const hits = data.hits || data.results || [];
 
         if (hits.length > 0) {
             const contextChunks = hits
-                .map((r: any, i: number) => `[RELEVANT CMA MATERIAL - DOC: ${r.document_id || 'OFFICIAL_GUIDE'}]: ${r.content || r.text}`)
+                .map((r: any) => {
+                    const meta = r.question_no ? ` | Q#${r.question_no}` : '';
+                    const type = r.chunk_type ? ` | ${r.chunk_type.toUpperCase()}` : '';
+                    return `[CMA MATERIAL - DOC: ${r.document_id || 'OFFICIAL_GUIDE'}${meta}${type}]: ${r.content || r.text}`;
+                })
                 .join('\n\n---\n\n');
 
             return `SOURCE MATERIAL FROM CMA US DATABANK:\n\n${contextChunks}`;
@@ -160,12 +170,29 @@ export const summarizePost = async (postContent: string): Promise<string> => {
 
 export const evaluateEssay = async (essayContent: string, subject: string): Promise<string> => {
     try {
-        // Step 1: Specifically search the databank for "Rubrics" related to the essay topic
-        // We use the first 100 chars of the essay to guess the topic for the RAG search
+        // Try the new backend essay evaluation endpoint first
+        const backendResponse = await fetch(`${COSTUDY_API_URL}/api/essay/evaluate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                essay: essayContent,
+                topic: essayContent.substring(0, 150),
+                subject: subject,
+            })
+        });
+
+        if (backendResponse.ok) {
+            const data = await backendResponse.json();
+            if (data.ok && data.evaluation) {
+                return data.evaluation;
+            }
+        }
+
+        // Fallback to Gemini if backend fails
+        console.log('[Essay] Backend unavailable, falling back to Gemini');
         const topicClue = essayContent.substring(0, 150);
         const rubricContext = await performBackendVectorSearch(`IMA official essay rubric for ${topicClue}`);
 
-        // Step 2: Generate evaluation using the specialized Essay Auditor instruction
         const response = await ai.models.generateContent({
             model: 'gemini-3-pro-preview',
             contents: [{ role: 'user', parts: [{ text: `STUDENT ESSAY SUBMISSION:\n\n${essayContent}` }] }],
@@ -179,6 +206,32 @@ export const evaluateEssay = async (essayContent: string, subject: string): Prom
         console.error("Essay Eval Error", error);
         return "The Mastermind Auditor is temporarily unavailable. Please preserve your essay and try again in a few minutes.";
     }
+};
+
+// NEW: Fetch MCQ practice questions from the knowledge base
+export const fetchMCQPractice = async (topic: string, count: number = 5): Promise<{
+    questions: Array<{ id: string; content: string; question_no: string | null }>;
+    answers: Array<{ content: string; question_no: string | null }>;
+}> => {
+    try {
+        const response = await fetch(`${COSTUDY_API_URL}/api/mcq/practice`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ topic, count })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            return {
+                questions: data.questions || [],
+                answers: data.answers || [],
+            };
+        }
+    } catch (error) {
+        console.error('[MCQ] Practice fetch failed:', error);
+    }
+
+    return { questions: [], answers: [] };
 };
 
 export const getTeacherResponse = async (history: { role: string, content: string }[], newMessage: string, subject: string, toolContext?: string) => {

@@ -12,6 +12,7 @@ import { StudentStore } from './components/views/StudentStore';
 import { LibraryVault } from './components/views/LibraryVault';
 import { MentorDashboard } from './components/views/MentorDashboard';
 import { DirectMessages } from './components/views/DirectMessages';
+import { Landing } from './components/views/Landing';
 import { Login } from './components/auth/Login';
 import { SignUp } from './components/auth/SignUp';
 import { authService, getUserProfile, createUserProfile } from './services/fetsService';
@@ -25,6 +26,7 @@ function App() {
   const [authView, setAuthView] = useState<'LOGIN' | 'SIGNUP'>('LOGIN');
   const [currentView, setCurrentView] = useState<keyof typeof ViewState>(ViewState.WALL);
   const [user, setUser] = useState<any>(null);
+  const [showLanding, setShowLanding] = useState(true); // Show landing by default
 
   // Unified Identity Sync function
   const syncUserIdentity = async (supabaseUser: any) => {
@@ -161,8 +163,24 @@ function App() {
 
   if (showAuth && !isLoggedIn) {
     return authView === 'LOGIN'
-      ? <Login onLogin={() => setShowAuth(false)} onSwitch={() => setAuthView('SIGNUP')} onBack={() => setShowAuth(false)} />
-      : <SignUp onSignUp={() => setShowAuth(false)} onSwitch={() => setAuthView('LOGIN')} onBack={() => setShowAuth(false)} />;
+      ? <Login onLogin={() => setShowAuth(false)} onSwitch={() => setAuthView('SIGNUP')} onBack={() => { setShowAuth(false); setShowLanding(true); }} />
+      : <SignUp onSignUp={() => setShowAuth(false)} onSwitch={() => setAuthView('LOGIN')} onBack={() => { setShowAuth(false); setShowLanding(true); }} />;
+  }
+
+  // Show landing page for non-logged-in users who haven't skipped it
+  if (!isLoggedIn && showLanding) {
+    return (
+      <Landing 
+        onGetStarted={() => {
+          setShowLanding(false);
+          handleAuthRequired('SIGNUP');
+        }}
+        onLogin={() => {
+          setShowLanding(false);
+          handleAuthRequired('LOGIN');
+        }}
+      />
+    );
   }
 
   const renderView = () => {

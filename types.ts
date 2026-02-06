@@ -403,3 +403,326 @@ export interface Notification {
   is_read: boolean;
   created_at: string;
 }
+
+// ==========================================
+// CLUSTER HUB TYPES (Study Rooms V2)
+// ==========================================
+
+export type RoomType = 'PUBLIC' | 'PRIVATE' | 'GROUP_PREMIUM';
+export type SignalLight = 'GREEN' | 'BLUE' | 'VIOLET' | 'OFFLINE';
+export type MemberRole = 'ADMIN' | 'MEMBER';
+export type MemberStatus = 'ACTIVE' | 'INACTIVE' | 'AWAY';
+
+export interface StudyRoomMember {
+  id: string;
+  room_id: string;
+  user_id: string;
+  user?: Partial<User>;
+  role: MemberRole;
+  status: MemberStatus;
+  signal_light: SignalLight;
+  daily_contribution: boolean;
+  joined_at: string;
+  last_active_at: string;
+}
+
+export interface StudyRoomMission {
+  id: string;
+  room_id: string;
+  title: string;
+  description?: string;
+  target_type: 'ACCURACY' | 'QUESTIONS_COMPLETED' | 'ESSAYS_AUDITED' | 'STREAK_DAYS';
+  target_value: number;
+  current_value: number;
+  deadline?: string;
+  status: 'ACTIVE' | 'COMPLETED' | 'FAILED' | 'CERTIFIED';
+  created_by: string;
+  created_at: string;
+  completed_at?: string;
+}
+
+export interface EnhancedStudyRoom extends StudyRoom {
+  creator_id?: string;
+  room_type: RoomType;
+  group_subscription_id?: string;
+  settings: {
+    radioSilence: boolean;
+    focusTheme: 'default' | 'dark' | 'minimal';
+  };
+  cluster_streak: number;
+  last_streak_update?: string;
+  created_at: string;
+  members_list?: StudyRoomMember[];
+  active_mission?: StudyRoomMission;
+}
+
+// ==========================================
+// MCQ WAR ROOM TYPES
+// ==========================================
+
+export type WarSessionStatus = 'WAITING' | 'LIVE' | 'COMPLETED';
+
+export interface MCQWarSession {
+  id: string;
+  room_id: string;
+  host_id: string;
+  host?: Partial<User>;
+  title: string;
+  question_count: number;
+  topic_tags: string[];
+  status: WarSessionStatus;
+  room_accuracy: number;
+  global_average: number;
+  started_at?: string;
+  ended_at?: string;
+  created_at: string;
+  participants?: MCQWarParticipant[];
+}
+
+export interface MCQWarParticipant {
+  id: string;
+  session_id: string;
+  user_id: string;
+  user?: Partial<User>;
+  score: number;
+  questions_answered: number;
+  accuracy: number;
+  joined_at: string;
+}
+
+// ==========================================
+// WHITEBOARD TYPES
+// ==========================================
+
+export interface WhiteboardSession {
+  id: string;
+  room_id: string;
+  title: string;
+  canvas_data: any; // JSON canvas state
+  is_active: boolean;
+  created_by: string;
+  creator?: Partial<User>;
+  created_at: string;
+  updated_at: string;
+}
+
+// ==========================================
+// GROUP PREMIUM TYPES
+// ==========================================
+
+export type BillingCycle = 'MONTHLY' | 'YEARLY';
+export type PaymentStatus = 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';
+export type InviteStatus = 'PENDING' | 'ACCEPTED' | 'EXPIRED';
+
+export interface GroupSubscription {
+  id: string;
+  purchaser_id: string;
+  purchaser?: Partial<User>;
+  plan_type: 'PRO';
+  billing_cycle: BillingCycle;
+  group_size: number;
+  base_price: number;
+  discount_percent: number;
+  per_person_price: number;
+  total_amount: number;
+  payment_status: PaymentStatus;
+  payment_id?: string;
+  starts_at?: string;
+  expires_at?: string;
+  study_room_id?: string;
+  study_room?: EnhancedStudyRoom;
+  created_at: string;
+  invites?: GroupInvite[];
+}
+
+export interface GroupInvite {
+  id: string;
+  group_subscription_id: string;
+  email: string;
+  invite_code: string;
+  status: InviteStatus;
+  accepted_by?: string;
+  sent_at: string;
+  accepted_at?: string;
+  expires_at?: string;
+}
+
+// Group pricing calculator
+export const calculateGroupPricing = (groupSize: number, billingCycle: BillingCycle) => {
+  const basePrice = billingCycle === 'YEARLY' ? 3999 : 499;
+  const discountPercent = Math.min(0.20 + (groupSize - 2) * 0.05, 0.50);
+  const perPersonPrice = Math.round(basePrice * (1 - discountPercent));
+  const totalAmount = perPersonPrice * groupSize;
+  
+  return {
+    basePrice,
+    discountPercent,
+    perPersonPrice,
+    totalAmount,
+    savings: basePrice * groupSize - totalAmount
+  };
+};
+
+// ==========================================
+// FACULTY HIVE / MENTOR SESSION TYPES
+// ==========================================
+
+export type SessionType = 'FLASH' | 'SCHEDULED' | 'SOS';
+export type SessionStatus = 'REQUESTED' | 'ACCEPTED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'DISPUTED';
+export type SessionPaymentStatus = 'PENDING' | 'PAID' | 'ESCROWED' | 'RELEASED' | 'REFUNDED';
+
+export interface MentorAvailability {
+  id: string;
+  mentor_id: string;
+  mentor?: Partial<User>;
+  is_online: boolean;
+  available_for_flash: boolean;
+  topics: string[];
+  timezone: string;
+  updated_at: string;
+}
+
+export interface MentorSession {
+  id: string;
+  room_id?: string;
+  room?: EnhancedStudyRoom;
+  mentor_id?: string;
+  mentor?: Partial<User>;
+  requested_by: string;
+  requester?: Partial<User>;
+  
+  title: string;
+  topic: string;
+  description?: string;
+  duration_minutes: number;
+  session_type: SessionType;
+  
+  total_fee: number;
+  platform_fee_percent: number;
+  mentor_payout?: number;
+  
+  status: SessionStatus;
+  
+  scheduled_at?: string;
+  started_at?: string;
+  ended_at?: string;
+  
+  room_vouch?: boolean;
+  mentor_rating?: number;
+  feedback?: string;
+  
+  created_at: string;
+  payments?: SessionPayment[];
+}
+
+export interface SessionPayment {
+  id: string;
+  session_id: string;
+  user_id: string;
+  user?: Partial<User>;
+  amount: number;
+  status: SessionPaymentStatus;
+  payment_id?: string;
+  paid_at?: string;
+}
+
+// Split fee calculator
+export const calculateSplitFee = (totalFee: number, memberCount: number, platformFeePercent: number = 12.5) => {
+  const perPersonShare = Math.ceil(totalFee / memberCount);
+  const platformCut = Math.round(totalFee * (platformFeePercent / 100));
+  const mentorPayout = totalFee - platformCut;
+  
+  return {
+    perPersonShare,
+    platformCut,
+    mentorPayout,
+    totalCollected: perPersonShare * memberCount
+  };
+};
+
+// ==========================================
+// VOUCH TYPES
+// ==========================================
+
+export interface Vouch {
+  id: string;
+  voucher_id: string;
+  voucher?: Partial<User>;
+  post_id?: string;
+  comment_id?: string;
+  created_at: string;
+}
+
+// ==========================================
+// POST SUMMARY TYPES
+// ==========================================
+
+export interface PostSummary {
+  id: string;
+  post_id: string;
+  bullets: string[]; // 3 strategic bullet points
+  generated_at: string;
+}
+
+// ==========================================
+// BADGE TYPES
+// ==========================================
+
+export type BadgeCategory = 'MASTERY' | 'STREAK' | 'ALIGNMENT' | 'CONTRIBUTION';
+
+export interface Badge {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  icon: string;
+  category: BadgeCategory;
+  requirements?: {
+    type: string;
+    value: string | number;
+  };
+}
+
+export interface UserBadge {
+  id: string;
+  user_id: string;
+  badge_id: string;
+  badge?: Badge;
+  earned_at: string;
+  source_type?: 'ROOM' | 'ALIGNMENT' | 'BOUNTY';
+  source_id?: string;
+}
+
+// ==========================================
+// WALLET TYPES
+// ==========================================
+
+export type TransactionType = 'CREDIT' | 'DEBIT' | 'REFUND' | 'REWARD' | 'SESSION_PAYMENT';
+
+export interface WalletTransaction {
+  id: string;
+  user_id: string;
+  type: TransactionType;
+  amount: number;
+  balance_after: number;
+  description: string;
+  reference_type?: 'SESSION' | 'BOUNTY' | 'SUBSCRIPTION' | 'TOPUP';
+  reference_id?: string;
+  created_at: string;
+}
+
+// ==========================================
+// ROOM LEADERBOARD TYPES
+// ==========================================
+
+export interface RoomLeaderboardEntry {
+  id: string;
+  room_id: string;
+  room?: EnhancedStudyRoom;
+  week_start: string;
+  essays_audited: number;
+  questions_solved: number;
+  streak_days: number;
+  total_score: number;
+  global_rank?: number;
+}

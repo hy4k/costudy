@@ -17,7 +17,7 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
       { name: 'Social Feed & Community', limit: 'Full access', included: true },
       { name: 'Peer Connections', limit: 'Unlimited', included: true },
       { name: 'Essay Evaluation', limit: '', included: false },
-      { name: 'Full MCQ Bank (39k+)', limit: '', included: false },
+      { name: 'Full Question Bank', limit: '', included: false },
       { name: 'Mock Test Simulations', limit: '', included: false },
       { name: 'Progress Analytics', limit: '', included: false },
       { name: 'Priority Support', limit: '', included: false },
@@ -29,7 +29,7 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
       { name: 'Social Feed & Community', limit: 'Full access', included: true },
       { name: 'Peer Connections', limit: 'Unlimited', included: true },
       { name: 'Essay Evaluation', limit: 'AI-powered grading', included: true },
-      { name: 'Full MCQ Bank (39k+)', limit: 'Complete access', included: true },
+      { name: 'Full Question Bank', limit: 'Complete access', included: true },
       { name: 'Mock Test Simulations', limit: 'Real exam feel', included: true },
       { name: 'Progress Analytics', limit: 'Weak area tracking', included: true },
       { name: 'Priority Support', limit: '24/7 help', included: true },
@@ -84,7 +84,7 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
           
           <p className="text-xl text-slate-500 max-w-2xl mx-auto mb-10 leading-relaxed">
             The AI-powered study platform built for CMA US students. 
-            39,000+ MCQs, AI tutoring, mock exams, and a community of future CMAs.
+            Smart practice, instant feedback, and a community of future CMAs.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -104,16 +104,16 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
             </button>
           </div>
 
-          {/* Social Proof */}
+          {/* Social Proof - Reframed */}
           <div className="mt-16 flex items-center justify-center gap-8 text-slate-400">
             <div className="text-center">
-              <div className="text-3xl font-black text-slate-900">39k+</div>
-              <div className="text-xs font-bold uppercase tracking-wider">MCQ Questions</div>
+              <div className="text-3xl font-black text-slate-900">Part 1 & 2</div>
+              <div className="text-xs font-bold uppercase tracking-wider">Full Coverage</div>
             </div>
             <div className="w-px h-12 bg-slate-200"></div>
             <div className="text-center">
-              <div className="text-3xl font-black text-slate-900">96</div>
-              <div className="text-xs font-bold uppercase tracking-wider">Study PDFs</div>
+              <div className="text-3xl font-black text-slate-900">IMA</div>
+              <div className="text-xs font-bold uppercase tracking-wider">Aligned Content</div>
             </div>
             <div className="w-px h-12 bg-slate-200"></div>
             <div className="text-center">
@@ -124,67 +124,155 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
         </div>
       </section>
 
-      {/* Features Grid */}
+      {/* Student Features Grid - Red/White Theme */}
       <section className="py-20 px-6 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand/10 rounded-full mb-4">
+              <Icons.GraduationCap className="w-4 h-4 text-brand" />
+              <span className="text-xs font-bold text-brand uppercase tracking-wider">For Students</span>
+            </div>
             <h2 className="text-4xl font-black text-slate-900 mb-4">Everything You Need to Pass</h2>
             <p className="text-lg text-slate-500">Built specifically for CMA US exam preparation</p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-6">
             {[
               {
                 icon: Icons.Brain,
                 title: 'AI Mastermind Tutor',
                 description: 'Get instant answers to any CMA concept. Our AI knows IMA standards, formulas, and exam patterns.',
-                color: 'brand'
               },
               {
                 icon: Icons.ClipboardList,
-                title: '39,000+ MCQ Bank',
-                description: 'Practice with our massive question bank covering Part 1 and Part 2. Track your weak areas.',
-                color: 'emerald'
+                title: 'Smart Question Bank',
+                description: 'Practice with our curated question bank covering Part 1 and Part 2. Track your weak areas automatically.',
               },
               {
                 icon: Icons.Award,
                 title: 'Mock Test Simulations',
-                description: 'Real exam experience with timed tests, proctored environment, and detailed analytics.',
-                color: 'violet'
+                description: 'Experience the real exam with timed tests, proctored environment, and detailed performance analytics.',
               },
               {
                 icon: Icons.Pencil,
                 title: 'Essay Evaluation',
-                description: 'Submit essays and get AI-powered grading based on official IMA rubrics.',
-                color: 'amber'
+                description: 'Submit essays and get AI-powered grading based on official IMA rubrics and scoring criteria.',
               },
               {
                 icon: Icons.Users,
                 title: 'Study Community',
-                description: 'Connect with fellow CMA aspirants. Study rooms, doubt solving, and peer support.',
-                color: 'rose'
+                description: 'Connect with fellow CMA aspirants. Join study rooms, solve doubts together, and stay motivated.',
               },
               {
                 icon: Icons.BarChart,
                 title: 'Progress Analytics',
-                description: 'Track your preparation journey. Identify weak topics and optimize your study time.',
-                color: 'cyan'
+                description: 'Track your preparation journey. Identify weak topics and optimize your study schedule.',
               }
             ].map((feature, i) => (
-              <div key={i} className="p-8 rounded-3xl bg-slate-50 hover:bg-white hover:shadow-xl transition-all group">
-                <div className={`w-14 h-14 rounded-2xl bg-${feature.color}-100 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
-                  <feature.icon className={`w-7 h-7 text-${feature.color}-500`} />
+              <div 
+                key={i} 
+                className="group relative p-8 rounded-3xl bg-gradient-to-br from-white to-slate-50 border-2 border-slate-100 hover:border-brand/30 hover:shadow-2xl hover:shadow-brand/10 transition-all duration-300"
+              >
+                {/* Decorative corner */}
+                <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-brand/5 to-transparent rounded-bl-[3rem] rounded-tr-3xl" />
+                
+                <div className="relative">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand to-brand-600 flex items-center justify-center mb-6 shadow-lg shadow-brand/30 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
+                    <feature.icon className="w-7 h-7 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 mb-3">{feature.title}</h3>
+                  <p className="text-slate-500 leading-relaxed">{feature.description}</p>
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">{feature.title}</h3>
-                <p className="text-slate-500 leading-relaxed">{feature.description}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
+      {/* Mentor Section - Emerald/White Theme */}
+      <section className="py-20 px-6 bg-gradient-to-br from-emerald-50 via-white to-emerald-50/50">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 rounded-full mb-4">
+              <Icons.Award className="w-4 h-4 text-emerald-600" />
+              <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">For Mentors</span>
+            </div>
+            <h2 className="text-4xl font-black text-slate-900 mb-4">Teach, Earn & Impact</h2>
+            <p className="text-lg text-slate-500">Help students succeed while building your coaching business</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* Mentor Card 1 */}
+            <div className="group relative p-8 rounded-3xl bg-white border-2 border-emerald-100 hover:border-emerald-300 hover:shadow-2xl hover:shadow-emerald-100 transition-all duration-300">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-emerald-50 to-transparent rounded-bl-[4rem] rounded-tr-3xl" />
+              
+              <div className="relative">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center mb-6 shadow-lg shadow-emerald-200 group-hover:scale-110 transition-transform">
+                  <Icons.Users className="w-7 h-7 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">Student Dashboard</h3>
+                <p className="text-slate-500 leading-relaxed mb-4">
+                  Track your students' progress, send broadcasts, create private study rooms, and manage your coaching practice all in one place.
+                </p>
+                <ul className="space-y-2 text-sm text-slate-600">
+                  <li className="flex items-center gap-2">
+                    <Icons.CheckCircle className="w-4 h-4 text-emerald-500" />
+                    Enrolled student tracking
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Icons.CheckCircle className="w-4 h-4 text-emerald-500" />
+                    Broadcast announcements
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Icons.CheckCircle className="w-4 h-4 text-emerald-500" />
+                    Revenue share on referrals
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Mentor Card 2 */}
+            <div className="group relative p-8 rounded-3xl bg-white border-2 border-emerald-100 hover:border-emerald-300 hover:shadow-2xl hover:shadow-emerald-100 transition-all duration-300">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-emerald-50 to-transparent rounded-bl-[4rem] rounded-tr-3xl" />
+              
+              <div className="relative">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center mb-6 shadow-lg shadow-emerald-200 group-hover:scale-110 transition-transform">
+                  <Icons.CheckBadge className="w-7 h-7 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">Verified Mentor Badge</h3>
+                <p className="text-slate-500 leading-relaxed mb-4">
+                  All mentors are verified by the CoStudy team. Get a unique verification code for secure login and build trust with students.
+                </p>
+                <ul className="space-y-2 text-sm text-slate-600">
+                  <li className="flex items-center gap-2">
+                    <Icons.CheckCircle className="w-4 h-4 text-emerald-500" />
+                    Manual verification by CoStudy
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Icons.CheckCircle className="w-4 h-4 text-emerald-500" />
+                    Unique verification code login
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Icons.CheckCircle className="w-4 h-4 text-emerald-500" />
+                    Verified badge on profile
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Mentor CTA */}
+          <div className="mt-12 text-center">
+            <p className="text-slate-500 mb-4">Are you a CMA or accounting professional?</p>
+            <button className="px-8 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200">
+              Apply to Become a Mentor
+            </button>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing Section */}
-      <section id="pricing" className="py-20 px-6 bg-gradient-to-b from-slate-50 to-white">
+      <section id="pricing" className="py-20 px-6 bg-gradient-to-b from-white to-slate-50">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-black text-slate-900 mb-4">Simple, Honest Pricing</h2>
@@ -220,7 +308,7 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
 
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* Free Plan */}
-            <div className="p-8 rounded-3xl bg-white border-2 border-slate-100 hover:border-slate-200 transition-all">
+            <div className="p-8 rounded-3xl bg-white border-2 border-slate-100 hover:border-slate-200 hover:shadow-xl transition-all">
               <div className="mb-8">
                 <h3 className="text-2xl font-black text-slate-900 mb-2">Free</h3>
                 <p className="text-slate-500">Perfect to get started</p>
@@ -259,63 +347,69 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
               </ul>
             </div>
 
-            {/* Pro Plan */}
-            <div className="p-8 rounded-3xl bg-gradient-to-br from-brand to-brand-600 text-white relative overflow-hidden">
-              <div className="absolute top-4 right-4 px-3 py-1 bg-white/20 rounded-full text-xs font-bold uppercase">
-                Most Popular
-              </div>
+            {/* Pro Plan - Softer gradient */}
+            <div className="relative p-8 rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden">
+              {/* Subtle brand accent */}
+              <div className="absolute top-0 right-0 w-40 h-40 bg-brand/20 rounded-full blur-3xl" />
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-brand/10 rounded-full blur-2xl" />
               
-              <div className="mb-8">
-                <h3 className="text-2xl font-black mb-2">Pro</h3>
-                <p className="text-white/70">Everything you need to pass</p>
-              </div>
-              
-              <div className="mb-8">
-                <span className="text-5xl font-black">
-                  ₹{billingCycle === 'yearly' ? pricing.yearly.monthly : pricing.monthly.price}
-                </span>
-                <span className="text-white/70 ml-2">/month</span>
-                {billingCycle === 'yearly' && (
-                  <div className="text-sm text-white/60 mt-1">
-                    Billed ₹{pricing.yearly.price}/year
-                  </div>
-                )}
-              </div>
-
-              <button
-                onClick={onGetStarted}
-                className="w-full py-4 bg-white text-brand font-bold rounded-2xl hover:bg-slate-50 transition-all mb-8 shadow-xl"
-              >
-                Start 7-Day Free Trial
-              </button>
-
-              <ul className="space-y-4">
-                {features.pro.map((feature, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <Icons.CheckCircle className="w-5 h-5 text-emerald-300 mt-0.5 shrink-0" />
-                    <div>
-                      <span className="text-white">{feature.name}</span>
-                      {feature.limit && (
-                        <span className="text-white/60 text-sm ml-2">({feature.limit})</span>
-                      )}
+              <div className="relative">
+                <div className="absolute top-0 right-0 px-3 py-1 bg-brand/90 rounded-full text-xs font-bold uppercase shadow-lg">
+                  Most Popular
+                </div>
+                
+                <div className="mb-8">
+                  <h3 className="text-2xl font-black mb-2">Pro</h3>
+                  <p className="text-slate-400">Everything you need to pass</p>
+                </div>
+                
+                <div className="mb-8">
+                  <span className="text-5xl font-black">
+                    ₹{billingCycle === 'yearly' ? pricing.yearly.monthly : pricing.monthly.price}
+                  </span>
+                  <span className="text-slate-400 ml-2">/month</span>
+                  {billingCycle === 'yearly' && (
+                    <div className="text-sm text-slate-500 mt-1">
+                      Billed ₹{pricing.yearly.price}/year
                     </div>
-                  </li>
-                ))}
-              </ul>
+                  )}
+                </div>
+
+                <button
+                  onClick={onGetStarted}
+                  className="w-full py-4 bg-brand text-white font-bold rounded-2xl hover:bg-brand-600 transition-all mb-8 shadow-lg shadow-brand/30"
+                >
+                  Start 7-Day Free Trial
+                </button>
+
+                <ul className="space-y-4">
+                  {features.pro.map((feature, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <Icons.CheckCircle className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
+                      <div>
+                        <span className="text-white">{feature.name}</span>
+                        {feature.limit && (
+                          <span className="text-slate-500 text-sm ml-2">({feature.limit})</span>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </div>
 
           {/* Comparison to competitors */}
           <div className="mt-16 text-center">
             <p className="text-slate-500 mb-4">Compare with traditional CMA prep courses</p>
-            <div className="inline-flex items-center gap-8 text-sm">
+            <div className="inline-flex flex-wrap items-center justify-center gap-6 text-sm">
               <div className="text-slate-400">
                 <span className="line-through">Gleim: ₹80,000+</span>
               </div>
               <div className="text-slate-400">
                 <span className="line-through">Becker: ₹1,20,000+</span>
               </div>
-              <div className="text-brand font-bold">
+              <div className="text-slate-900 font-bold px-4 py-2 bg-emerald-100 rounded-full">
                 CoStudy Pro: ₹3,999/year
               </div>
             </div>
@@ -330,7 +424,7 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
             Ready to Become a CMA?
           </h2>
           <p className="text-xl text-slate-400 mb-10 max-w-2xl mx-auto">
-            Join thousands of CMA aspirants already preparing smarter with AI-powered tools.
+            Join CMA aspirants already preparing smarter with AI-powered tools.
           </p>
           <button
             onClick={onGetStarted}

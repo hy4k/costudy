@@ -8,989 +8,492 @@ interface LandingProps {
 
 export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly');
-  const [pricingMode, setPricingMode] = useState<'individual' | 'group'>('individual');
-  const [groupSize, setGroupSize] = useState(5);
 
-  // Group pricing calculation (20% discount base + 5% per additional member)
-  const basePrice = billingCycle === 'yearly' ? 3999 : 499;
-  const groupDiscount = Math.min(0.20 + (groupSize - 2) * 0.05, 0.50); // Max 50% discount
-  const perPersonPrice = Math.round(basePrice * (1 - groupDiscount));
-  const totalGroupPrice = perPersonPrice * groupSize;
+  const features = {
+    free: [
+      { name: 'AI Tutor Chat', limit: '20 questions/day', included: true },
+      { name: 'MCQ Practice', limit: '10 questions/day', included: true },
+      { name: 'Study Rooms', limit: 'Unlimited', included: true },
+      { name: 'Social Feed & Community', limit: 'Full access', included: true },
+      { name: 'Peer Connections', limit: 'Unlimited', included: true },
+      { name: 'Essay Evaluation', limit: '', included: false },
+      { name: 'Full Question Bank', limit: '', included: false },
+      { name: 'Mock Test Simulations', limit: '', included: false },
+      { name: 'Progress Analytics', limit: '', included: false },
+      { name: 'Priority Support', limit: '', included: false },
+    ],
+    pro: [
+      { name: 'AI Tutor Chat', limit: 'Unlimited', included: true },
+      { name: 'MCQ Practice', limit: 'Unlimited', included: true },
+      { name: 'Study Rooms', limit: 'Unlimited', included: true },
+      { name: 'Social Feed & Community', limit: 'Full access', included: true },
+      { name: 'Peer Connections', limit: 'Unlimited', included: true },
+      { name: 'Essay Evaluation', limit: 'AI-powered grading', included: true },
+      { name: 'Full Question Bank', limit: 'Complete access', included: true },
+      { name: 'Mock Test Simulations', limit: 'Real exam feel', included: true },
+      { name: 'Progress Analytics', limit: 'Weak area tracking', included: true },
+      { name: 'Priority Support', limit: '24/7 help', included: true },
+    ],
+  };
+
+  const pricing = {
+    monthly: { price: 499, period: '/month' },
+    yearly: { price: 3999, period: '/year', monthly: 333, savings: '33% off' },
+  };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
-                <Icons.BookOpen className="w-4 h-4 text-white" />
-              </div>
-              <span className="text-xl font-bold">CoStudy</span>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-brand/5">
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-100">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-brand rounded-2xl flex items-center justify-center shadow-lg shadow-brand/20">
+              <Icons.BookOpen className="w-5 h-5 text-white" />
             </div>
-            <div className="hidden md:flex items-center gap-8">
-              <a href="#wall" className="text-slate-400 hover:text-white transition">The Wall</a>
-              <a href="#alignment" className="text-slate-400 hover:text-white transition">Alignment Network</a>
-              <a href="#clusters" className="text-slate-400 hover:text-white transition">Study Rooms</a>
-              <a href="#pricing" className="text-slate-400 hover:text-white transition">Pricing</a>
-            </div>
-            <div className="flex items-center gap-4">
-              <button onClick={onLogin} className="text-slate-400 hover:text-white transition">Sign In</button>
-              <button onClick={onGetStarted} className="px-4 py-2 bg-violet-600 hover:bg-violet-500 rounded-lg font-medium transition">
-                Get Started
-              </button>
-            </div>
+            <span className="font-black text-xl tracking-tight">CoStudy</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={onLogin}
+              className="px-6 py-2.5 text-sm font-bold text-slate-600 hover:text-brand transition-colors"
+            >
+              Log In
+            </button>
+            <button
+              onClick={onGetStarted}
+              className="px-6 py-2.5 bg-brand text-white text-sm font-bold rounded-xl hover:bg-brand-600 transition-all shadow-lg shadow-brand/20"
+            >
+              Start Free
+            </button>
           </div>
         </div>
-      </nav>
+      </header>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4 relative overflow-hidden">
-        {/* Background Effects */}
-        <div className="absolute inset-0 bg-gradient-to-b from-violet-950/20 to-transparent" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-violet-600/10 rounded-full blur-3xl" />
-        
-        <div className="max-w-7xl mx-auto relative">
-          {/* Global Pulse Badge */}
-          <div className="flex justify-center mb-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800/50 rounded-full border border-slate-700">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              <span className="text-sm text-slate-300">
-                <span className="text-emerald-400 font-semibold">1,420</span> Active Alignments Worldwide
-              </span>
-            </div>
+      <section className="pt-32 pb-20 px-6">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand/10 rounded-full mb-8">
+            <Icons.Sparkles className="w-4 h-4 text-brand" />
+            <span className="text-xs font-bold text-brand uppercase tracking-wider">AI-Powered CMA US Prep</span>
           </div>
-
-          <h1 className="text-5xl md:text-7xl font-bold text-center mb-6 leading-tight">
-            Study Like a{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-purple-400">
-              Global Firm
-            </span>
+          
+          <h1 className="text-5xl md:text-7xl font-black text-slate-900 leading-tight mb-6">
+            Pass Your CMA Exam<br />
+            <span className="text-brand">Learn Together</span>
           </h1>
           
-          <p className="text-xl md:text-2xl text-slate-400 text-center max-w-3xl mx-auto mb-8">
-            The CMA exam demands professional-grade discipline. CoStudy transforms isolated studying into a 
-            <span className="text-white font-medium"> synchronized global operation</span>.
+          <p className="text-xl text-slate-500 max-w-2xl mx-auto mb-10 leading-relaxed">
+            The AI-powered study platform built for CMA US students. 
+            Smart practice, instant feedback, and a community of future CMAs.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-            <button 
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <button
               onClick={onGetStarted}
-              className="w-full sm:w-auto px-8 py-4 bg-violet-600 hover:bg-violet-500 rounded-xl font-semibold text-lg transition flex items-center justify-center gap-2"
+              className="px-10 py-4 bg-brand text-white text-lg font-bold rounded-2xl hover:bg-brand-600 transition-all shadow-xl shadow-brand/30 flex items-center gap-3"
             >
-              Start Your Mission <Icons.ArrowRight className="w-5 h-5" />
+              <Icons.Rocket className="w-5 h-5" />
+              Start Free Today
             </button>
-            <button className="w-full sm:w-auto px-8 py-4 bg-slate-800 hover:bg-slate-700 rounded-xl font-semibold text-lg transition border border-slate-700">
-              Watch Demo
+            <button
+              onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
+              className="px-10 py-4 bg-slate-100 text-slate-700 text-lg font-bold rounded-2xl hover:bg-slate-200 transition-all flex items-center gap-3"
+            >
+              View Pricing
+              <Icons.ArrowRight className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Stats Bar */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
-            {[
-              { value: '39,914', label: 'Study Chunks Indexed' },
-              { value: '24/7', label: 'Global Coverage' },
-              { value: '96', label: 'PDFs Analyzed' },
-              { value: '0', label: 'Excuses Left' },
-            ].map((stat, i) => (
-              <div key={i} className="text-center p-4 bg-slate-900/50 rounded-xl border border-slate-800">
-                <div className="text-2xl md:text-3xl font-bold text-white">{stat.value}</div>
-                <div className="text-sm text-slate-500">{stat.label}</div>
-              </div>
-            ))}
+          {/* Social Proof */}
+          <div className="mt-16 flex items-center justify-center gap-8 text-slate-400">
+            <div className="text-center">
+              <div className="text-3xl font-black text-slate-900">Part 1 & 2</div>
+              <div className="text-xs font-bold uppercase tracking-wider">Full Coverage</div>
+            </div>
+            <div className="w-px h-12 bg-slate-200"></div>
+            <div className="text-center">
+              <div className="text-3xl font-black text-slate-900">IMA</div>
+              <div className="text-xs font-bold uppercase tracking-wider">Aligned Content</div>
+            </div>
+            <div className="w-px h-12 bg-slate-200"></div>
+            <div className="text-center">
+              <div className="text-3xl font-black text-slate-900">24/7</div>
+              <div className="text-xs font-bold uppercase tracking-wider">AI Tutor</div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* The Wall Section */}
-      <section id="wall" className="py-24 px-4 bg-slate-900/50">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-violet-500/10 rounded-full text-violet-400 text-sm font-medium mb-4">
-              <Icons.MessageSquare className="w-4 h-4" /> THE WALL
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Not a Feed.{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-purple-400">
-                A Knowledge Exchange.
-              </span>
-            </h2>
-            <p className="text-xl text-slate-400 max-w-2xl mx-auto">
-              Traditional social networks optimize for likes. The CoStudy Wall is an Academic Intelligence Hub 
-              designed for validation and strategic knowledge exchange.
-            </p>
+      {/* What Makes Us Different - NEW SUBTLE SECTION */}
+      <section className="py-16 px-6 bg-gradient-to-r from-brand/5 via-white to-emerald-50/50">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-black text-slate-900 mb-3">Not Just Another Prep Course</h2>
+            <p className="text-slate-500">Three things that make CoStudy different</p>
           </div>
-
-          <div className="grid md:grid-cols-2 gap-8 mb-16">
-            {/* Left: Post Types */}
-            <div className="bg-slate-900 rounded-2xl border border-slate-800 p-8">
-              <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center text-violet-400">+</div>
-                Academic Protocols
-              </h3>
-              <div className="space-y-4">
-                {[
-                  { title: 'Standard Question', desc: 'Classic doubt-clearing. Tagged by CMA Part & Section.', color: 'bg-blue-500' },
-                  { title: 'MCQ Share', desc: 'Share tricky questions with formatted A/B/C/D options.', color: 'bg-emerald-500' },
-                  { title: 'Resource Drop', desc: 'Summaries, formula cheat sheets, high-value videos.', color: 'bg-amber-500' },
-                  { title: 'Peer Audit Request', desc: 'Post essay arguments for IMA-standards review.', color: 'bg-purple-500' },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-start gap-4 p-4 bg-slate-800/50 rounded-xl">
-                    <div className={`w-3 h-3 rounded-full mt-1.5 ${item.color}`} />
-                    <div>
-                      <div className="font-semibold text-white">{item.title}</div>
-                      <div className="text-sm text-slate-400">{item.desc}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Right: Specialized Desks */}
-            <div className="bg-slate-900 rounded-2xl border border-slate-800 p-8">
-              <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center text-violet-400">
-                  <Icons.Target className="w-5 h-5" />
-                </div>
-                Specialized Desks
-              </h3>
-              <div className="space-y-4">
-                {[
-                  { title: 'Audit Desk', desc: 'Peer essay reviews. Verdicts: Compliant or Non-Compliant.' },
-                  { title: 'Bounty Board', desc: 'Gig economy for study tasks. Earn Credits & Badges.' },
-                  { title: 'Strategic Notes', desc: 'Curated high-density study guides from top performers.' },
-                  { title: 'Expert Q&A', desc: 'Verified mentors only. Professional Skepticism score 50+.' },
-                  { title: 'Discussions', desc: 'Long-form academic debates. IFRS vs GAAP deep-dives.' },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-start gap-4 p-4 bg-slate-800/50 rounded-xl">
-                    <div className="w-2 h-2 rounded-full mt-2 bg-violet-500" />
-                    <div>
-                      <div className="font-semibold text-white">{item.title}</div>
-                      <div className="text-sm text-slate-400">{item.desc}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Interactive Mechanics */}
+          
           <div className="grid md:grid-cols-3 gap-6">
-            <div className="bg-gradient-to-br from-emerald-500/10 to-transparent rounded-2xl border border-emerald-500/20 p-6">
-              <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 mb-4">
-                <Icons.Shield className="w-6 h-6" />
+            {/* The Wall */}
+            <div className="text-center p-6">
+              <div className="w-12 h-12 mx-auto mb-4 rounded-2xl bg-brand/10 flex items-center justify-center">
+                <Icons.MessageSquare className="w-6 h-6 text-brand" />
               </div>
-              <h4 className="text-xl font-bold mb-2">Vouch, Don't Like</h4>
-              <p className="text-slate-400">
-                A Vouch is a professional endorsement. It means the content is accurate and academically sound. 
-                High Vouch counts unlock Peer Tutor recommendations.
+              <h3 className="font-bold text-slate-900 mb-2">The Wall</h3>
+              <p className="text-sm text-slate-500">
+                A knowledge exchange, not a social feed. Share MCQs, get peer reviews on essays, and learn from high-signal discussions.
               </p>
             </div>
-
-            <div className="bg-gradient-to-br from-blue-500/10 to-transparent rounded-2xl border border-blue-500/20 p-6">
-              <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400 mb-4">
-                <Icons.MessageSquare className="w-6 h-6" />
+            
+            {/* Study Partners */}
+            <div className="text-center p-6">
+              <div className="w-12 h-12 mx-auto mb-4 rounded-2xl bg-violet-100 flex items-center justify-center">
+                <Icons.Users className="w-6 h-6 text-violet-600" />
               </div>
-              <h4 className="text-xl font-bold mb-2">Audit Trail Threads</h4>
-              <p className="text-slate-400">
-                Comments form a Threaded Logic Tree. Follow the audit trail of any argument. 
-                Sub-replies keep context without losing the main question.
+              <h3 className="font-bold text-slate-900 mb-2">Find Study Partners</h3>
+              <p className="text-sm text-slate-500">
+                Connect with peers who complement your weaknesses. Someone in the US can review your essay while you sleep.
               </p>
             </div>
-
-            <div className="bg-gradient-to-br from-purple-500/10 to-transparent rounded-2xl border border-purple-500/20 p-6">
-              <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center text-purple-400 mb-4">
-                <Icons.Zap className="w-6 h-6" />
+            
+            {/* Study Rooms */}
+            <div className="text-center p-6">
+              <div className="w-12 h-12 mx-auto mb-4 rounded-2xl bg-emerald-100 flex items-center justify-center">
+                <Icons.Home className="w-6 h-6 text-emerald-600" />
               </div>
-              <h4 className="text-xl font-bold mb-2">Instant Summaries</h4>
-              <p className="text-slate-400">
-                Every post has a Summary button. AI generates 3 Strategic Bullet Points instantly. 
-                Scan 10 posts in the time it takes to read 2.
+              <h3 className="font-bold text-slate-900 mb-2">Study Rooms</h3>
+              <p className="text-sm text-slate-500">
+                Join live rooms for group practice. Solve MCQs together, share resources, and keep each other accountable.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* CAN (Alignment Network) Section */}
-      <section id="alignment" className="py-24 px-4 relative overflow-hidden">
-        <div className="absolute inset-0">
-          <div className="absolute top-1/2 left-0 w-full h-px bg-gradient-to-r from-transparent via-violet-500/50 to-transparent" />
-          <div className="absolute top-1/2 left-1/4 w-2 h-2 bg-violet-500 rounded-full animate-pulse" />
-          <div className="absolute top-1/2 right-1/4 w-2 h-2 bg-violet-500 rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
-        </div>
-
-        <div className="max-w-7xl mx-auto relative">
+      {/* Student Features Grid - Red/White Theme */}
+      <section className="py-20 px-6 bg-white">
+        <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-violet-500/10 rounded-full text-violet-400 text-sm font-medium mb-4">
-              <Icons.Globe className="w-4 h-4" /> CMA ALIGNMENT NETWORK
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand/10 rounded-full mb-4">
+              <Icons.GraduationCap className="w-4 h-4 text-brand" />
+              <span className="text-xs font-bold text-brand uppercase tracking-wider">For Students</span>
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Your Global Study Partner,{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-purple-400">
-                Synchronized.
-              </span>
-            </h2>
-            <p className="text-xl text-slate-400 max-w-3xl mx-auto">
-              From "friends" to "contractors." Form Borderless Academic Units with peers whose strengths 
-              offset your weaknesses. A student in Mumbai and a student in New York, operating as one.
-            </p>
+            <h2 className="text-4xl font-black text-slate-900 mb-4">Everything You Need to Pass</h2>
+            <p className="text-lg text-slate-500">Built specifically for CMA US exam preparation</p>
           </div>
 
-          {/* The Protocol Steps */}
-          <div className="grid md:grid-cols-4 gap-6 mb-16">
+          <div className="grid md:grid-cols-3 gap-6">
             {[
-              { step: '01', title: 'Signal Intercept', desc: "The Academic Radar scans globally. See who's hitting 80%+ in topics you struggle with.", icon: <Icons.Target className="w-6 h-6" /> },
-              { step: '02', title: 'Treaty Request', desc: 'Send a Contract Proposal: Purpose, Duration, Mission Goal. Not a friend request.', icon: <Icons.Users className="w-6 h-6" /> },
-              { step: '03', title: 'Synchronized Metrics', desc: 'Shared Radar shows live telemetry. Streak-Lock: if one breaks, both are threatened.', icon: <Icons.Zap className="w-6 h-6" /> },
-              { step: '04', title: 'Context-Only DMs', desc: "Messages anchored to Missions. When your phone pings, it's high-value insight.", icon: <Icons.MessageSquare className="w-6 h-6" /> },
-            ].map((item, i) => (
-              <div key={i} className="relative">
-                <div className="bg-slate-900 rounded-2xl border border-slate-800 p-6 h-full">
-                  <div className="text-violet-500 font-mono text-sm mb-4">{item.step}</div>
-                  <div className="w-12 h-12 rounded-xl bg-violet-500/10 flex items-center justify-center text-violet-400 mb-4">
-                    {item.icon}
+              {
+                icon: Icons.Brain,
+                title: 'AI Mastermind Tutor',
+                description: 'Get instant answers to any CMA concept. Our AI knows IMA standards, formulas, and exam patterns.',
+              },
+              {
+                icon: Icons.ClipboardList,
+                title: 'Smart Question Bank',
+                description: 'Practice with our curated question bank covering Part 1 and Part 2. Track your weak areas automatically.',
+              },
+              {
+                icon: Icons.Award,
+                title: 'Mock Test Simulations',
+                description: 'Experience the real exam with timed tests, proctored environment, and detailed performance analytics.',
+              },
+              {
+                icon: Icons.Pencil,
+                title: 'Essay Evaluation',
+                description: 'Submit essays and get AI-powered grading based on official IMA rubrics and scoring criteria.',
+              },
+              {
+                icon: Icons.Users,
+                title: 'Global Study Network',
+                description: 'Connect with CMA aspirants worldwide. Find study partners, join group sessions, and stay motivated together.',
+              },
+              {
+                icon: Icons.BarChart,
+                title: 'Progress Analytics',
+                description: 'Track your preparation journey. Identify weak topics and optimize your study schedule.',
+              }
+            ].map((feature, i) => (
+              <div 
+                key={i} 
+                className="group relative p-8 rounded-3xl bg-gradient-to-br from-white to-slate-50 border-2 border-slate-100 hover:border-brand/30 hover:shadow-2xl hover:shadow-brand/10 transition-all duration-300"
+              >
+                <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-brand/5 to-transparent rounded-bl-[3rem] rounded-tr-3xl" />
+                
+                <div className="relative">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand to-brand-600 flex items-center justify-center mb-6 shadow-lg shadow-brand/30 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
+                    <feature.icon className="w-7 h-7 text-white" />
                   </div>
-                  <h4 className="text-xl font-bold mb-2">{item.title}</h4>
-                  <p className="text-slate-400 text-sm">{item.desc}</p>
+                  <h3 className="text-xl font-bold text-slate-900 mb-3">{feature.title}</h3>
+                  <p className="text-slate-500 leading-relaxed">{feature.description}</p>
                 </div>
-                {i < 3 && (
-                  <div className="hidden md:block absolute top-1/2 -right-3 w-6 h-px bg-gradient-to-r from-violet-500/50 to-transparent" />
-                )}
               </div>
             ))}
           </div>
+        </div>
+      </section>
 
-          {/* USPs Grid */}
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="bg-gradient-to-br from-slate-900 to-slate-900/50 rounded-2xl border border-slate-800 p-8 relative overflow-hidden">
-              <div className="absolute top-4 right-4 text-6xl font-bold text-slate-800">24/7</div>
+      {/* Mentor Section - Emerald/White Theme */}
+      <section className="py-20 px-6 bg-gradient-to-br from-emerald-50 via-white to-emerald-50/50">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 rounded-full mb-4">
+              <Icons.Award className="w-4 h-4 text-emerald-600" />
+              <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">For Mentors</span>
+            </div>
+            <h2 className="text-4xl font-black text-slate-900 mb-4">Teach, Earn & Impact</h2>
+            <p className="text-lg text-slate-500">Help students succeed while building your coaching business</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* Mentor Card 1 */}
+            <div className="group relative p-8 rounded-3xl bg-white border-2 border-emerald-100 hover:border-emerald-300 hover:shadow-2xl hover:shadow-emerald-100 transition-all duration-300">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-emerald-50 to-transparent rounded-bl-[4rem] rounded-tr-3xl" />
+              
               <div className="relative">
-                <h3 className="text-2xl font-bold mb-4 flex items-center gap-3">
-                  <Icons.Clock className="w-6 h-6" />
-                  Cross-Timezone Intelligence
-                </h3>
-                <p className="text-slate-400 mb-6">
-                  While you sleep in India, your partner in the USA is auditing your essays. 
-                  When you wake up, a professional feedback report is waiting.
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center mb-6 shadow-lg shadow-emerald-200 group-hover:scale-110 transition-transform">
+                  <Icons.Users className="w-7 h-7 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">Student Dashboard</h3>
+                <p className="text-slate-500 leading-relaxed mb-4">
+                  Track your students' progress, send broadcasts, create private study rooms, and manage your coaching practice.
                 </p>
-                <div className="flex items-center gap-4 text-sm">
-                  <div className="px-3 py-1 bg-slate-800 rounded-full">🇮🇳 Mumbai</div>
-                  <div className="flex-1 h-px bg-gradient-to-r from-violet-500 to-blue-500" />
-                  <div className="px-3 py-1 bg-slate-800 rounded-full">🇺🇸 New York</div>
-                </div>
-                <p className="text-center text-violet-400 text-sm mt-4">The 24/7 Academic Factory</p>
+                <ul className="space-y-2 text-sm text-slate-600">
+                  <li className="flex items-center gap-2">
+                    <Icons.CheckCircle className="w-4 h-4 text-emerald-500" />
+                    Enrolled student tracking
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Icons.CheckCircle className="w-4 h-4 text-emerald-500" />
+                    Broadcast announcements
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Icons.CheckCircle className="w-4 h-4 text-emerald-500" />
+                    Revenue share on referrals
+                  </li>
+                </ul>
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-slate-900 to-slate-900/50 rounded-2xl border border-slate-800 p-8">
-              <h3 className="text-2xl font-bold mb-4 flex items-center gap-3">
-                <Icons.Shield className="w-6 h-6" />
-                Enforced Professionalism
-              </h3>
-              <p className="text-slate-400 mb-6">
-                No more ghosting. If a student fails to meet contract goals, their Consistency Score drops. 
-                Low-Signal students can't align with elite peers.
-              </p>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl">
-                  <span className="text-slate-300">Reputation Score</span>
-                  <div className="flex items-center gap-2">
-                    <div className="w-32 h-2 bg-slate-700 rounded-full overflow-hidden">
-                      <div className="w-4/5 h-full bg-emerald-500 rounded-full" />
-                    </div>
-                    <span className="text-emerald-400 font-mono text-sm">82</span>
-                  </div>
+            {/* Mentor Card 2 */}
+            <div className="group relative p-8 rounded-3xl bg-white border-2 border-emerald-100 hover:border-emerald-300 hover:shadow-2xl hover:shadow-emerald-100 transition-all duration-300">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-emerald-50 to-transparent rounded-bl-[4rem] rounded-tr-3xl" />
+              
+              <div className="relative">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center mb-6 shadow-lg shadow-emerald-200 group-hover:scale-110 transition-transform">
+                  <Icons.CheckBadge className="w-7 h-7 text-white" />
                 </div>
-                <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl">
-                  <span className="text-slate-300">Consistency Rating</span>
-                  <div className="flex items-center gap-2">
-                    <div className="w-32 h-2 bg-slate-700 rounded-full overflow-hidden">
-                      <div className="w-11/12 h-full bg-violet-500 rounded-full" />
-                    </div>
-                    <span className="text-violet-400 font-mono text-sm">94%</span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl">
-                  <span className="text-slate-300">Successful Alignments</span>
-                  <span className="text-amber-400 font-mono">12 ✓</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Mission Control & SOS */}
-          <div className="grid md:grid-cols-2 gap-8 mt-8">
-            <div className="bg-slate-900 rounded-2xl border border-slate-800 p-8">
-              <h3 className="text-2xl font-bold mb-4">Mission Control Dashboard</h3>
-              <p className="text-slate-400 mb-6">
-                Instead of a profile page, see a Combined Tactical View. Two progress bars racing toward Mastery.
-              </p>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-slate-400">You</span>
-                    <span className="text-violet-400">78%</span>
-                  </div>
-                  <div className="h-3 bg-slate-800 rounded-full overflow-hidden">
-                    <div className="w-[78%] h-full bg-gradient-to-r from-violet-600 to-violet-400 rounded-full" />
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-slate-400">Partner (NYC)</span>
-                    <span className="text-blue-400">82%</span>
-                  </div>
-                  <div className="h-3 bg-slate-800 rounded-full overflow-hidden">
-                    <div className="w-[82%] h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-br from-red-500/10 to-transparent rounded-2xl border border-red-500/20 p-8">
-              <h3 className="text-2xl font-bold mb-4 flex items-center gap-3">
-                🚨 SOS Protocol
-              </h3>
-              <p className="text-slate-400 mb-6">
-                Stuck on a calculation? Trigger an SOS. Jump into a 15-minute Rapid Response audio session 
-                with your aligned peer — anywhere in the world.
-              </p>
-              <button className="w-full py-3 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded-xl text-red-400 font-semibold transition">
-                Request Rapid Response
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Study Rooms / Cluster Hub Section */}
-      <section id="clusters" className="py-24 px-4 bg-slate-900/50">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/10 rounded-full text-amber-400 text-sm font-medium mb-4">
-              <Icons.Users className="w-4 h-4" /> CLUSTER HUB
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Study Rooms:{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-400">
-                Tactical Command Centers
-              </span>
-            </h2>
-            <p className="text-xl text-slate-400 max-w-3xl mx-auto">
-              While the Wall is for broad intelligence, Study Rooms are for Deep-Dive Operations. 
-              Persistent, private workspaces designed for high-intensity Learning Units.
-            </p>
-          </div>
-
-          {/* Room Features */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-            {[
-              {
-                icon: <Icons.Target className="w-6 h-6" />,
-                title: 'MCQ War Room',
-                desc: "Live-solve 50 questions together. Real-time room accuracy vs global average.",
-                color: 'violet'
-              },
-              {
-                icon: <Icons.FolderLock className="w-6 h-6" />,
-                title: 'Shared Ledger',
-                desc: 'Encrypted vault for summaries, formula banks, and essay audit logs.',
-                color: 'emerald'
-              },
-              {
-                icon: <Icons.Moon className="w-6 h-6" />,
-                title: 'Radio Silence Mode',
-                desc: 'Room-wide focus timer. Notifications suppressed, dark focus theme.',
-                color: 'blue'
-              },
-              {
-                icon: <Icons.Pencil className="w-6 h-6" />,
-                title: 'Strategic Whiteboard',
-                desc: 'Low-latency canvas for variance analysis and allocation trees on audio.',
-                color: 'amber'
-              },
-              {
-                icon: <Icons.BarChart className="w-6 h-6" />,
-                title: 'Mission Ticker',
-                desc: '"85% Accuracy in Section B by Sunday" — live goal tracking.',
-                color: 'purple'
-              },
-              {
-                icon: <Icons.Trophy className="w-6 h-6" />,
-                title: 'Mastery Certification',
-                desc: 'Complete missions, get Certified. Earn Mastery Badges per topic.',
-                color: 'rose'
-              },
-            ].map((item, i) => (
-              <div key={i} className={`bg-slate-900 rounded-2xl border border-slate-800 p-6 hover:border-${item.color}-500/50 transition`}>
-                <div className={`w-12 h-12 rounded-xl bg-${item.color}-500/10 flex items-center justify-center text-${item.color}-400 mb-4`}>
-                  {item.icon}
-                </div>
-                <h4 className="text-xl font-bold mb-2">{item.title}</h4>
-                <p className="text-slate-400">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Stickiness Features */}
-          <div className="bg-gradient-to-r from-amber-500/10 via-slate-900 to-orange-500/10 rounded-2xl border border-amber-500/20 p-8 mb-16">
-            <h3 className="text-2xl font-bold text-center mb-8">Why Teams Come Back Every Day</h3>
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className="text-center">
-                <div className="text-4xl mb-3">🔥</div>
-                <h4 className="text-lg font-bold mb-2">Cluster Streak Lock</h4>
-                <p className="text-slate-400 text-sm">10-day streak = Exclusive Mock Exams & Mentor Credits. Breaking it feels like letting down your unit.</p>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl mb-3">🏆</div>
-                <h4 className="text-lg font-bold mb-2">Room vs Room Leaderboards</h4>
-                <p className="text-slate-400 text-sm">Mumbai Cluster vs London Cluster. Who finishes more essay audits this week?</p>
-              </div>
-              <div className="text-center">
-                <div className="text-4xl mb-3">📍</div>
-                <h4 className="text-lg font-bold mb-2">Scheduled Ops</h4>
-                <p className="text-slate-400 text-sm">"Your NYC partner enters the War Room in 15 min for MCQ Sprint." Auto-generated rendezvous.</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Faculty Hive - Mentor Integration */}
-          <div className="bg-gradient-to-br from-emerald-500/10 to-slate-900 rounded-2xl border border-emerald-500/30 p-8">
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-              <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 rounded-full text-emerald-400 text-sm font-medium mb-4">
-                  <Icons.Award className="w-4 h-4" /> THE FACULTY HIVE
-                </div>
-                <h3 className="text-3xl font-bold mb-4">
-                  Micro-Crowdfunded{' '}
-                  <span className="text-emerald-400">Mentorship</span>
-                </h3>
-                <p className="text-slate-400 mb-6">
-                  Cluster struggling with Foreign Currency Translation? Click "Enlist Specialist." 
-                  Split the fee. Get expert help. This is mentorship democratized.
+                <h3 className="text-xl font-bold text-slate-900 mb-3">Verified Mentor Badge</h3>
+                <p className="text-slate-500 leading-relaxed mb-4">
+                  All mentors are verified by CoStudy. Get a unique code for secure login and build trust with students.
                 </p>
-                
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">1</div>
-                    <div>
-                      <div className="font-semibold">SOS Signal</div>
-                      <div className="text-sm text-slate-400">Any room member clicks "Enlist Specialist"</div>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">2</div>
-                    <div>
-                      <div className="font-semibold">Marketplace Pull</div>
-                      <div className="text-sm text-slate-400">See verified mentors online for Flash Sessions</div>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">3</div>
-                    <div>
-                      <div className="font-semibold">Split-Fee Logic</div>
-                      <div className="text-sm text-slate-400">₹2500 session ÷ 5 members = ₹500 each</div>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">4</div>
-                    <div>
-                      <div className="font-semibold">Escrow + Vouch Release</div>
-                      <div className="text-sm text-slate-400">Room vouches for quality → funds released to mentor</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-slate-900 rounded-2xl border border-slate-800 p-6">
-                <div className="text-center mb-6">
-                  <div className="text-sm text-slate-500 mb-2">Example: 1-Hour Deep Dive</div>
-                  <div className="text-4xl font-bold text-emerald-400">₹2,500</div>
-                  <div className="text-slate-400">Session Fee</div>
-                </div>
-                
-                <div className="space-y-3 mb-6">
-                  <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-violet-500/20" />
-                      <span className="text-slate-300">You</span>
-                    </div>
-                    <span className="text-emerald-400 font-mono">₹500</span>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-blue-500/20" />
-                      <span className="text-slate-300">Partner 1 (NYC)</span>
-                    </div>
-                    <span className="text-emerald-400 font-mono">₹500</span>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-amber-500/20" />
-                      <span className="text-slate-300">Partner 2 (London)</span>
-                    </div>
-                    <span className="text-emerald-400 font-mono">₹500</span>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-rose-500/20" />
-                      <span className="text-slate-300">Partner 3 (Dubai)</span>
-                    </div>
-                    <span className="text-emerald-400 font-mono">₹500</span>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-slate-800/50 rounded-xl">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-emerald-500/20" />
-                      <span className="text-slate-300">Partner 4 (Singapore)</span>
-                    </div>
-                    <span className="text-emerald-400 font-mono">₹500</span>
-                  </div>
-                </div>
-
-                <div className="text-center text-sm text-slate-500">
-                  CoStudy Platform Fee: 10-15%
-                </div>
+                <ul className="space-y-2 text-sm text-slate-600">
+                  <li className="flex items-center gap-2">
+                    <Icons.CheckCircle className="w-4 h-4 text-emerald-500" />
+                    Manual verification by CoStudy
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Icons.CheckCircle className="w-4 h-4 text-emerald-500" />
+                    Unique verification code login
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Icons.CheckCircle className="w-4 h-4 text-emerald-500" />
+                    Verified badge on profile
+                  </li>
+                </ul>
               </div>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* For Mentors Section */}
-      <section className="py-24 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/10 rounded-full text-emerald-400 text-sm font-medium mb-4">
-              <Icons.Award className="w-4 h-4" /> FOR MENTORS
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Teach Globally.{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">
-                Earn Professionally.
-              </span>
-            </h2>
-            <p className="text-xl text-slate-400 max-w-2xl mx-auto">
-              Verified mentors join the Faculty Hive. Get pulled into Flash Sessions, 
-              set your rates, and earn from global clusters.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              {
-                icon: <Icons.CheckBadge className="w-6 h-6" />,
-                title: 'Verified Badge',
-                desc: 'Manual verification by CoStudy. Unique code login. Trust built-in.',
-              },
-              {
-                icon: <Icons.Users className="w-6 h-6" />,
-                title: 'Student Dashboard',
-                desc: 'Track enrolled students. Send broadcasts. Monitor progress at scale.',
-              },
-              {
-                icon: <Icons.Wallet className="w-6 h-6" />,
-                title: 'Revenue Share',
-                desc: 'Referral bonuses + session fees. CoStudy Escrow protects payments.',
-              },
-              {
-                icon: <Icons.Zap className="w-6 h-6" />,
-                title: 'Flash Sessions',
-                desc: "Clusters pull you in for 1-hour deep dives. You see their data before joining.",
-              },
-              {
-                icon: <Icons.BarChart className="w-6 h-6" />,
-                title: 'Analytics & Insights',
-                desc: 'Track your impact. See which topics need you most.',
-              },
-              {
-                icon: <Icons.Award className="w-6 h-6" />,
-                title: 'Post Bounties',
-                desc: 'Create study tasks for students. Build your coaching empire.',
-              },
-            ].map((item, i) => (
-              <div key={i} className="bg-slate-900 rounded-2xl border border-slate-800 p-6 hover:border-emerald-500/50 transition">
-                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 mb-4">
-                  {item.icon}
-                </div>
-                <h4 className="text-xl font-bold mb-2">{item.title}</h4>
-                <p className="text-slate-400">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-
+          {/* Mentor CTA */}
           <div className="mt-12 text-center">
-            <button className="px-8 py-4 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-semibold text-lg transition">
+            <p className="text-slate-500 mb-4">Are you a CMA or accounting professional?</p>
+            <button className="px-8 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200">
               Apply to Become a Mentor
             </button>
           </div>
         </div>
       </section>
 
-      {/* Supporting Features */}
-      <section className="py-24 px-4 bg-slate-900/50">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">Everything Else You Need</h2>
-            <p className="text-xl text-slate-400">Powered by AI. Built for CMA.</p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              { icon: <Icons.Brain className="w-6 h-6" />, title: 'RAG-Powered AI', desc: '39,914 chunks from official CMA materials. Answers grounded in your actual syllabus.' },
-              { icon: <Icons.Target className="w-6 h-6" />, title: 'Smart MCQ Practice', desc: 'Topic-tagged questions with instant explanations. Track weak areas automatically.' },
-              { icon: <Icons.Award className="w-6 h-6" />, title: 'Essay Evaluation', desc: 'AI grades your essays using RAG context. Get IMA-standards feedback in seconds.' },
-              { icon: <Icons.Clock className="w-6 h-6" />, title: 'Mock Test Simulation', desc: 'Real test-center experience. Timed sections, proctored environment, stress training.' },
-              { icon: <Icons.Trophy className="w-6 h-6" />, title: 'Gamified Progress', desc: 'Streaks, badges, leaderboards. Turn grinding into a game. Compete globally.' },
-              { icon: <Icons.Sparkles className="w-6 h-6" />, title: 'Glassmorphism UI', desc: 'Flight cockpit aesthetic. Signal lights for active solving. Premium feel.' },
-            ].map((item, i) => (
-              <div key={i} className="bg-slate-900 rounded-2xl border border-slate-800 p-6 hover:border-violet-500/50 transition">
-                <div className="w-12 h-12 rounded-xl bg-violet-500/10 flex items-center justify-center text-violet-400 mb-4">
-                  {item.icon}
-                </div>
-                <h4 className="text-xl font-bold mb-2">{item.title}</h4>
-                <p className="text-slate-400">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Pricing Section */}
-      <section id="pricing" className="py-24 px-4">
-        <div className="max-w-7xl mx-auto">
+      <section id="pricing" className="py-20 px-6 bg-gradient-to-b from-white to-slate-50">
+        <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">Simple, Transparent Pricing</h2>
-            <p className="text-xl text-slate-400 mb-8">Start free. Upgrade solo or with your squad.</p>
+            <h2 className="text-4xl font-black text-slate-900 mb-4">Simple, Honest Pricing</h2>
+            <p className="text-lg text-slate-500 mb-8">Start free, upgrade when you're ready</p>
             
             {/* Billing Toggle */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
-              <div className="inline-flex items-center gap-4 p-1 bg-slate-800 rounded-full">
-                <button
-                  onClick={() => setBillingCycle('monthly')}
-                  className={`px-6 py-2 rounded-full font-medium transition ${
-                    billingCycle === 'monthly' ? 'bg-violet-600 text-white' : 'text-slate-400'
-                  }`}
-                >
-                  Monthly
-                </button>
-                <button
-                  onClick={() => setBillingCycle('yearly')}
-                  className={`px-6 py-2 rounded-full font-medium transition ${
-                    billingCycle === 'yearly' ? 'bg-violet-600 text-white' : 'text-slate-400'
-                  }`}
-                >
-                  Yearly <span className="text-emerald-400 text-sm">Save 33%</span>
-                </button>
+            <div className="inline-flex items-center gap-4 p-2 bg-slate-100 rounded-2xl">
+              <button
+                onClick={() => setBillingCycle('monthly')}
+                className={`px-6 py-3 rounded-xl text-sm font-bold transition-all ${
+                  billingCycle === 'monthly' 
+                    ? 'bg-white text-slate-900 shadow-lg' 
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setBillingCycle('yearly')}
+                className={`px-6 py-3 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${
+                  billingCycle === 'yearly' 
+                    ? 'bg-white text-slate-900 shadow-lg' 
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Yearly
+                <span className="px-2 py-0.5 bg-emerald-100 text-emerald-600 text-[10px] font-black rounded-full uppercase">
+                  Save 33%
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* Free Plan */}
+            <div className="p-8 rounded-3xl bg-white border-2 border-slate-100 hover:border-slate-200 hover:shadow-xl transition-all">
+              <div className="mb-8">
+                <h3 className="text-2xl font-black text-slate-900 mb-2">Free</h3>
+                <p className="text-slate-500">Perfect to get started</p>
+              </div>
+              
+              <div className="mb-8">
+                <span className="text-5xl font-black text-slate-900">₹0</span>
+                <span className="text-slate-400 ml-2">forever</span>
               </div>
 
-              <div className="inline-flex items-center gap-4 p-1 bg-slate-800 rounded-full">
+              <button
+                onClick={onGetStarted}
+                className="w-full py-4 bg-slate-100 text-slate-700 font-bold rounded-2xl hover:bg-slate-200 transition-all mb-8"
+              >
+                Get Started Free
+              </button>
+
+              <ul className="space-y-4">
+                {features.free.map((feature, i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    {feature.included ? (
+                      <Icons.CheckCircle className="w-5 h-5 text-emerald-500 mt-0.5 shrink-0" />
+                    ) : (
+                      <Icons.XCircle className="w-5 h-5 text-slate-300 mt-0.5 shrink-0" />
+                    )}
+                    <div>
+                      <span className={feature.included ? 'text-slate-700' : 'text-slate-400'}>
+                        {feature.name}
+                      </span>
+                      {feature.limit && (
+                        <span className="text-slate-400 text-sm ml-2">({feature.limit})</span>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Pro Plan */}
+            <div className="relative p-8 rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden">
+              <div className="absolute top-0 right-0 w-40 h-40 bg-brand/20 rounded-full blur-3xl" />
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-brand/10 rounded-full blur-2xl" />
+              
+              <div className="relative">
+                <div className="absolute top-0 right-0 px-3 py-1 bg-brand/90 rounded-full text-xs font-bold uppercase shadow-lg">
+                  Most Popular
+                </div>
+                
+                <div className="mb-8">
+                  <h3 className="text-2xl font-black mb-2">Pro</h3>
+                  <p className="text-slate-400">Everything you need to pass</p>
+                </div>
+                
+                <div className="mb-8">
+                  <span className="text-5xl font-black">
+                    ₹{billingCycle === 'yearly' ? pricing.yearly.monthly : pricing.monthly.price}
+                  </span>
+                  <span className="text-slate-400 ml-2">/month</span>
+                  {billingCycle === 'yearly' && (
+                    <div className="text-sm text-slate-500 mt-1">
+                      Billed ₹{pricing.yearly.price}/year
+                    </div>
+                  )}
+                </div>
+
                 <button
-                  onClick={() => setPricingMode('individual')}
-                  className={`px-6 py-2 rounded-full font-medium transition ${
-                    pricingMode === 'individual' ? 'bg-amber-600 text-white' : 'text-slate-400'
-                  }`}
+                  onClick={onGetStarted}
+                  className="w-full py-4 bg-brand text-white font-bold rounded-2xl hover:bg-brand-600 transition-all mb-8 shadow-lg shadow-brand/30"
                 >
-                  Individual
+                  Start 7-Day Free Trial
                 </button>
-                <button
-                  onClick={() => setPricingMode('group')}
-                  className={`px-6 py-2 rounded-full font-medium transition ${
-                    pricingMode === 'group' ? 'bg-amber-600 text-white' : 'text-slate-400'
-                  }`}
-                >
-                  Group <span className="text-emerald-400 text-sm">Extra Savings</span>
-                </button>
+
+                <ul className="space-y-4">
+                  {features.pro.map((feature, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <Icons.CheckCircle className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
+                      <div>
+                        <span className="text-white">{feature.name}</span>
+                        {feature.limit && (
+                          <span className="text-slate-500 text-sm ml-2">({feature.limit})</span>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
           </div>
 
-          {pricingMode === 'individual' ? (
-            <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-              {/* Free */}
-              <div className="bg-slate-900 rounded-2xl border border-slate-800 p-8">
-                <h3 className="text-2xl font-bold mb-2">Free</h3>
-                <p className="text-slate-400 mb-6">Get started, test the waters</p>
-                <div className="mb-6">
-                  <span className="text-4xl font-bold">₹0</span>
-                  <span className="text-slate-400">/forever</span>
-                </div>
-                <ul className="space-y-3 mb-8">
-                  {['20 AI questions/day', '10 MCQ practice/day', 'Community Wall access', 'Basic Alignment (1 peer)', '3 Vouches/day'].map((item, i) => (
-                    <li key={i} className="flex items-center gap-2 text-slate-300">
-                      <span className="text-emerald-400"><Icons.CheckCircle className="w-5 h-5" /></span>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                <button onClick={onGetStarted} className="w-full py-3 bg-slate-800 hover:bg-slate-700 rounded-xl font-semibold transition">
-                  Get Started
-                </button>
+          {/* Comparison to competitors */}
+          <div className="mt-16 text-center">
+            <p className="text-slate-500 mb-4">Compare with traditional CMA prep courses</p>
+            <div className="inline-flex flex-wrap items-center justify-center gap-6 text-sm">
+              <div className="text-slate-400">
+                <span className="line-through">Gleim: ₹80,000+</span>
               </div>
-
-              {/* Pro */}
-              <div className="bg-gradient-to-b from-violet-600/20 to-slate-900 rounded-2xl border-2 border-violet-500 p-8 relative">
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-violet-600 rounded-full text-sm font-semibold">
-                  Most Popular
-                </div>
-                <h3 className="text-2xl font-bold mb-2">Pro</h3>
-                <p className="text-slate-400 mb-6">For serious candidates</p>
-                <div className="mb-6">
-                  <span className="text-4xl font-bold">
-                    ₹{billingCycle === 'yearly' ? '333' : '499'}
-                  </span>
-                  <span className="text-slate-400">/month</span>
-                  {billingCycle === 'yearly' && (
-                    <div className="text-sm text-slate-500">Billed ₹3,999/year</div>
-                  )}
-                </div>
-                <ul className="space-y-3 mb-8">
-                  {['Unlimited AI questions', 'Unlimited MCQ practice', 'Full Wall + all Desks', 'Unlimited Alignments', 'Unlimited Vouches', 'Essay AI evaluation', 'Mock test simulations', 'Priority support'].map((item, i) => (
-                    <li key={i} className="flex items-center gap-2 text-slate-300">
-                      <span className="text-emerald-400"><Icons.CheckCircle className="w-5 h-5" /></span>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                <button onClick={onGetStarted} className="w-full py-3 bg-violet-600 hover:bg-violet-500 rounded-xl font-semibold transition">
-                  Upgrade to Pro
-                </button>
+              <div className="text-slate-400">
+                <span className="line-through">Becker: ₹1,20,000+</span>
               </div>
-
-              {/* Mentor */}
-              <div className="bg-slate-900 rounded-2xl border border-slate-800 p-8">
-                <h3 className="text-2xl font-bold mb-2">Mentor</h3>
-                <p className="text-slate-400 mb-6">Teach and earn</p>
-                <div className="mb-6">
-                  <span className="text-4xl font-bold">₹1,999</span>
-                  <span className="text-slate-400">/month</span>
-                </div>
-                <ul className="space-y-3 mb-8">
-                  {['Everything in Pro', 'Student dashboard', 'Broadcast to followers', 'Revenue share on sessions', 'Verified Mentor badge', 'Post Bounties', 'Analytics & insights'].map((item, i) => (
-                    <li key={i} className="flex items-center gap-2 text-slate-300">
-                      <span className="text-emerald-400"><Icons.CheckCircle className="w-5 h-5" /></span>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                <button className="w-full py-3 bg-slate-800 hover:bg-slate-700 rounded-xl font-semibold transition">
-                  Become a Mentor
-                </button>
+              <div className="text-slate-900 font-bold px-4 py-2 bg-emerald-100 rounded-full">
+                CoStudy Pro: ₹3,999/year
               </div>
-            </div>
-          ) : (
-            /* Group Pricing */
-            <div className="max-w-4xl mx-auto">
-              <div className="bg-gradient-to-b from-amber-600/20 to-slate-900 rounded-2xl border-2 border-amber-500 p-8">
-                <div className="text-center mb-8">
-                  <h3 className="text-3xl font-bold mb-2">Group Pro</h3>
-                  <p className="text-slate-400">Buy together. Study together. Save together.</p>
-                </div>
-
-                {/* Group Size Slider */}
-                <div className="mb-8">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-slate-400">Group Size</span>
-                    <span className="text-2xl font-bold text-amber-400">{groupSize} Students</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="2"
-                    max="10"
-                    value={groupSize}
-                    onChange={(e) => setGroupSize(Number(e.target.value))}
-                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
-                  />
-                  <div className="flex justify-between text-xs text-slate-500 mt-2">
-                    <span>2</span>
-                    <span>10</span>
-                  </div>
-                </div>
-
-                {/* Pricing Breakdown */}
-                <div className="grid md:grid-cols-2 gap-8 mb-8">
-                  <div className="bg-slate-800/50 rounded-xl p-6">
-                    <div className="text-sm text-slate-400 mb-2">Per Person</div>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-4xl font-bold text-white">₹{perPersonPrice}</span>
-                      <span className="text-slate-400">/{billingCycle === 'yearly' ? 'year' : 'month'}</span>
-                    </div>
-                    <div className="text-emerald-400 text-sm mt-2">
-                      Save {Math.round(groupDiscount * 100)}% vs Individual
-                    </div>
-                  </div>
-                  <div className="bg-slate-800/50 rounded-xl p-6">
-                    <div className="text-sm text-slate-400 mb-2">Total for Group</div>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-4xl font-bold text-amber-400">₹{totalGroupPrice.toLocaleString()}</span>
-                      <span className="text-slate-400">/{billingCycle === 'yearly' ? 'year' : 'month'}</span>
-                    </div>
-                    <div className="text-slate-500 text-sm mt-2">
-                      One payment, {groupSize} Premium accounts
-                    </div>
-                  </div>
-                </div>
-
-                {/* How It Works */}
-                <div className="bg-slate-800/30 rounded-xl p-6 mb-8">
-                  <h4 className="font-bold mb-4">How Group Purchase Works</h4>
-                  <div className="grid md:grid-cols-3 gap-4 text-sm">
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">1</div>
-                      <div>
-                        <div className="font-medium">You Pay Once</div>
-                        <div className="text-slate-400">One payment for entire group</div>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">2</div>
-                      <div>
-                        <div className="font-medium">Invites Sent</div>
-                        <div className="text-slate-400">Each member gets email to register</div>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">3</div>
-                      <div>
-                        <div className="font-medium">Auto Study Room</div>
-                        <div className="text-slate-400">Your Cluster Hub is pre-created</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* What's Included */}
-                <div className="grid md:grid-cols-2 gap-4 mb-8">
-                  {[
-                    'All Pro features for each member',
-                    'Pre-configured Study Room',
-                    'Shared Ledger (Resource Vault)',
-                    'Group Streak tracking',
-                    'Priority cluster support',
-                    'Bulk mentor session discounts',
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-2 text-slate-300">
-                      <span className="text-emerald-400"><Icons.CheckCircle className="w-5 h-5" /></span>
-                      {item}
-                    </div>
-                  ))}
-                </div>
-
-                <button onClick={onGetStarted} className="w-full py-4 bg-amber-600 hover:bg-amber-500 rounded-xl font-semibold text-lg transition">
-                  Purchase Group Plan
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Competitor Comparison */}
-          <div className="mt-16 max-w-4xl mx-auto">
-            <div className="text-center mb-8">
-              <h3 className="text-2xl font-bold mb-2">Why Not Just Use Gleim or Becker?</h3>
-              <p className="text-slate-400">Legacy tools for a legacy era.</p>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-slate-800">
-                    <th className="text-left py-4 px-4 font-medium text-slate-400">Feature</th>
-                    <th className="py-4 px-4 font-medium text-slate-400">Gleim/Becker</th>
-                    <th className="py-4 px-4 font-medium text-violet-400">CoStudy</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    ['Global Peer Accountability', false, true],
-                    ['Cross-Timezone Study Partners', false, true],
-                    ['AI-Powered Essay Grading', false, true],
-                    ['Mission-Based Contracts', false, true],
-                    ['Cluster Study Rooms', false, true],
-                    ['Crowdfunded Mentorship', false, true],
-                    ['Community Knowledge Exchange', false, true],
-                    ['Price', '$1,500+', '₹499/mo'],
-                  ].map((row, i) => (
-                    <tr key={i} className="border-b border-slate-800/50">
-                      <td className="py-4 px-4 text-slate-300">{row[0]}</td>
-                      <td className="py-4 px-4 text-center">
-                        {typeof row[1] === 'boolean' ? (
-                          row[1] ? (
-                            <span className="text-emerald-400"><Icons.CheckCircle className="w-5 h-5 inline" /></span>
-                          ) : (
-                            <span className="text-slate-600"><Icons.XCircle className="w-5 h-5 inline" /></span>
-                          )
-                        ) : (
-                          <span className="text-slate-400">{row[1]}</span>
-                        )}
-                      </td>
-                      <td className="py-4 px-4 text-center">
-                        {typeof row[2] === 'boolean' ? (
-                          row[2] ? (
-                            <span className="text-emerald-400"><Icons.CheckCircle className="w-5 h-5 inline" /></span>
-                          ) : (
-                            <span className="text-slate-600"><Icons.XCircle className="w-5 h-5 inline" /></span>
-                          )
-                        ) : (
-                          <span className="text-violet-400 font-semibold">{row[2]}</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="py-24 px-4 bg-slate-900/50">
+      {/* CTA Section */}
+      <section className="py-20 px-6 bg-slate-900">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">
-            Ready to Join the{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-purple-400">
-              Global Force?
-            </span>
+          <h2 className="text-4xl font-black text-white mb-6">
+            Ready to Become a CMA?
           </h2>
-          <p className="text-xl text-slate-400 mb-8">
-            1,420 students are already aligned across 12 time zones. The CMA exam doesn't wait. Neither should you.
+          <p className="text-xl text-slate-400 mb-10 max-w-2xl mx-auto">
+            Join CMA aspirants already preparing smarter with AI-powered tools.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button 
-              onClick={onGetStarted}
-              className="w-full sm:w-auto px-8 py-4 bg-violet-600 hover:bg-violet-500 rounded-xl font-semibold text-lg transition flex items-center justify-center gap-2"
-            >
-              Start Your Mission <Icons.ArrowRight className="w-5 h-5" />
-            </button>
-            <button className="w-full sm:w-auto px-8 py-4 bg-slate-800 hover:bg-slate-700 rounded-xl font-semibold text-lg transition border border-slate-700">
-              Schedule a Demo
-            </button>
-          </div>
+          <button
+            onClick={onGetStarted}
+            className="px-12 py-5 bg-brand text-white text-lg font-bold rounded-2xl hover:bg-brand-600 transition-all shadow-2xl shadow-brand/30"
+          >
+            Start Your CMA Journey — Free
+          </button>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-4 border-t border-slate-800">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
-                <Icons.BookOpen className="w-4 h-4 text-white" />
-              </div>
-              <span className="text-xl font-bold">CoStudy</span>
+      <footer className="py-12 px-6 bg-slate-950 text-slate-400">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-brand rounded-xl flex items-center justify-center">
+              <Icons.BookOpen className="w-4 h-4 text-white" />
             </div>
-            <div className="flex items-center gap-6 text-slate-400 text-sm">
-              <a href="#" className="hover:text-white transition">Privacy</a>
-              <a href="#" className="hover:text-white transition">Terms</a>
-              <a href="#" className="hover:text-white transition">Contact</a>
-            </div>
-            <div className="text-slate-500 text-sm">
-              © 2026 CoStudy. Study like a global firm.
-            </div>
+            <span className="font-bold text-white">CoStudy</span>
+          </div>
+          <div className="text-sm">
+            © 2026 CoStudy. Built for CMA aspirants, by CMA aspirants.
+          </div>
+          <div className="flex items-center gap-6 text-sm">
+            <a href="#" className="hover:text-white transition-colors">Privacy</a>
+            <a href="#" className="hover:text-white transition-colors">Terms</a>
+            <a href="#" className="hover:text-white transition-colors">Contact</a>
           </div>
         </div>
       </footer>

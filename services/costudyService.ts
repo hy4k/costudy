@@ -1,7 +1,7 @@
 
 
 import { supabase } from './supabaseClient';
-import { Post, Comment, StudyRoom, Mentor, PostType, LibraryItem, ManagedStudent, Broadcast, User, Notification } from '../types';
+import { Post, Comment, StudyRoom, Mentor, PostType, LibraryItem, ManagedStudent, Broadcast, User, Notification, StudySession } from '../types';
 import { getUserProfile } from './fetsService';
 
 // Helper: Default rooms fallback
@@ -72,9 +72,9 @@ export const costudyService = {
     const { data, error } = await supabase
       .from('posts')
       .insert([
-        { 
-          author_id: authorId, 
-          content, 
+        {
+          author_id: authorId,
+          content,
           type,
           tags,
           likes: 0,
@@ -105,11 +105,11 @@ export const costudyService = {
     const { data, error } = await supabase
       .from('comments')
       .insert([
-        { 
-          post_id: postId, 
-          author_id: authorId, 
-          content, 
-          parent_id: parentId 
+        {
+          post_id: postId,
+          author_id: authorId,
+          content,
+          parent_id: parentId
         }
       ])
       .select();
@@ -205,13 +205,13 @@ export const costudyService = {
 
   getLibraryItems: async (): Promise<LibraryItem[]> => {
     return [
-      { 
-        id: 'lib-1', 
-        title: 'CMA Part 1: Strategic Financial Management Official Guide', 
-        type: 'PDF', 
-        size: '15.4 MB', 
-        category: 'Financial Accounting', 
-        tags: ['Part 1', 'IMA', 'Official'], 
+      {
+        id: 'lib-1',
+        title: 'CMA Part 1: Strategic Financial Management Official Guide',
+        type: 'PDF',
+        size: '15.4 MB',
+        category: 'Financial Accounting',
+        tags: ['Part 1', 'IMA', 'Official'],
         isIndexed: true,
         pageCount: 450
       }
@@ -248,35 +248,35 @@ export const costudyService = {
   getManagedStudents: async (teacherId: string): Promise<ManagedStudent[]> => {
     try {
       const { data } = await supabase
-          .from('student_enrollments')
-          .select('*, student:student_id(*)')
-          .eq('teacher_id', teacherId);
-      
-      if (data && data.length > 0) {
-          return data.map((e: any) => {
-              const performance = e.student.performance || [];
-              const avgScore = performance.length > 0 
-                  ? Math.round(performance.reduce((acc: number, curr: any) => acc + (curr.score || 0), 0) / performance.length)
-                  : 0;
+        .from('student_enrollments')
+        .select('*, student:student_id(*)')
+        .eq('teacher_id', teacherId);
 
-              return {
-                  id: e.student.id,
-                  name: e.student.name,
-                  handle: e.student.handle || 'aspirant',
-                  avatar: e.student.avatar || 'https://i.pravatar.cc/150',
-                  focus: e.student.exam_focus || 'General',
-                  lastActivity: '1d ago', 
-                  performanceScore: avgScore || 70, // Default to 70 for visual balance if empty
-                  status: e.status === 'ACTIVE' ? 'Active' : 'Struggling'
-              };
-          });
+      if (data && data.length > 0) {
+        return data.map((e: any) => {
+          const performance = e.student.performance || [];
+          const avgScore = performance.length > 0
+            ? Math.round(performance.reduce((acc: number, curr: any) => acc + (curr.score || 0), 0) / performance.length)
+            : 0;
+
+          return {
+            id: e.student.id,
+            name: e.student.name,
+            handle: e.student.handle || 'aspirant',
+            avatar: e.student.avatar || 'https://i.pravatar.cc/150',
+            focus: e.student.exam_focus || 'General',
+            lastActivity: '1d ago',
+            performanceScore: avgScore || 70, // Default to 70 for visual balance if empty
+            status: e.status === 'ACTIVE' ? 'Active' : 'Struggling'
+          };
+        });
       }
 
       // Fallback mock data if DB is empty for demo purposes
       return [
-          { id: 's1', name: 'Rahul V.', handle: 'rahul_cma', avatar: 'https://i.pravatar.cc/150?u=s1', focus: 'Part 1', lastActivity: '10m ago', performanceScore: 82, status: 'Active' },
-          { id: 's2', name: 'Sneha P.', handle: 'sneha_study', avatar: 'https://i.pravatar.cc/150?u=s2', focus: 'Part 2', lastActivity: '1d ago', performanceScore: 65, status: 'Struggling' },
-          { id: 's3', name: 'Amit Kumar', handle: 'amit_k', avatar: 'https://i.pravatar.cc/150?u=s3', focus: 'Ethics', lastActivity: '4h ago', performanceScore: 90, status: 'Active' }
+        { id: 's1', name: 'Rahul V.', handle: 'rahul_cma', avatar: 'https://i.pravatar.cc/150?u=s1', focus: 'Part 1', lastActivity: '10m ago', performanceScore: 82, status: 'Active' },
+        { id: 's2', name: 'Sneha P.', handle: 'sneha_study', avatar: 'https://i.pravatar.cc/150?u=s2', focus: 'Part 2', lastActivity: '1d ago', performanceScore: 65, status: 'Struggling' },
+        { id: 's3', name: 'Amit Kumar', handle: 'amit_k', avatar: 'https://i.pravatar.cc/150?u=s3', focus: 'Ethics', lastActivity: '4h ago', performanceScore: 90, status: 'Active' }
       ];
     } catch (e) {
       return [];
@@ -285,32 +285,62 @@ export const costudyService = {
 
   // New method to drill down into a specific student for the Mentor
   getStudentDeepDive: async (studentId: string): Promise<User | null> => {
-     return await getUserProfile(studentId);
+    return await getUserProfile(studentId);
   },
 
   getBroadcasts: async (teacherId: string): Promise<Broadcast[]> => {
-      try {
-        const { data } = await supabase
-          .from('teacher_broadcasts')
-          .select('*')
-          .eq('teacher_id', teacherId)
-          .order('created_at', { ascending: false });
-        
-        return (data as Broadcast[]) || [];
-      } catch (e) {
+    try {
+      const { data } = await supabase
+        .from('teacher_broadcasts')
+        .select('*')
+        .eq('teacher_id', teacherId)
+        .order('created_at', { ascending: false });
+
+      return (data as Broadcast[]) || [];
+    } catch (e) {
+      return [];
+    }
+  },
+
+  createBroadcast: async (teacherId: string, title: string, content: string, type: string) => {
+    const { data, error } = await supabase
+      .from('teacher_broadcasts')
+      .insert([{ teacher_id: teacherId, title, content, type }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data as Broadcast;
+  },
+
+  // --- Study Session Methods ---
+  getSessions: async (roomId: string): Promise<StudySession[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('study_room_sessions')
+        .select('*, author:user_profiles(*)')
+        .eq('room_id', roomId)
+        .order('start_time', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching sessions:', error);
         return [];
       }
+      return data as StudySession[];
+    } catch (e) {
+      return [];
+    }
   },
-  
-  createBroadcast: async (teacherId: string, title: string, content: string, type: string) => {
-      const { data, error } = await supabase
-        .from('teacher_broadcasts')
-        .insert([{ teacher_id: teacherId, title, content, type }])
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data as Broadcast;
+
+  createSession: async (session: Omit<StudySession, 'id' | 'created_at' | 'author'>) => {
+    const { data, error } = await supabase
+      .from('study_room_sessions')
+      .insert([session])
+      .select('*, author:user_profiles(*)')
+      .single();
+
+    if (error) throw error;
+    return data as StudySession;
   }
 };
 

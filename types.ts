@@ -184,15 +184,15 @@ export interface User {
   yearsExperience?: number;
   hourlyRate?: number;
   specialistSlug?: string;
-  
+
   // CAN Data
   alignments?: ActiveAlignment[];
   pendingRequests?: AlignmentRequest[];
-  
+
   // Radar Data
   tracking?: TrackingRecord[];
   observers?: ObserverRecord[];
-  
+
   // Visibility
   signalLevel: SignalLevel;
 }
@@ -219,7 +219,7 @@ export interface Post {
   id: string;
   type: PostType;
   author_id: string;
-  author?: Partial<User>; 
+  author?: Partial<User>;
   content: string;
   created_at: string;
   likes: number; // Used for Vouches
@@ -252,6 +252,20 @@ export interface RoomResource {
   category?: string;
   author?: Partial<User>;
   summary?: string;
+}
+
+export interface StudySession {
+  id: string;
+  room_id: string;
+  created_by: string;
+  title: string;
+  description?: string;
+  start_time: string;
+  end_time: string;
+  session_type: 'STRATEGY' | 'DRILL' | 'MOCK_EXAM' | 'Q&A' | 'GENERAL';
+  meeting_link?: string;
+  created_at?: string;
+  author?: Partial<User>;
 }
 
 export interface Comment {
@@ -325,9 +339,9 @@ export interface ChatConversation {
   contextTitle?: string;
   status?: 'ACTIVE' | 'LOCKED'; // Locked if inactive > 7 days
   lastActiveAt?: string;
-  
+
   // Hydrated fields
-  participants?: Partial<User>[]; 
+  participants?: Partial<User>[];
   last_message?: ChatMessage;
 }
 

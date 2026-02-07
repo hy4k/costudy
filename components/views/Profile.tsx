@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Icons } from '../Icons';
 import { User, UserRole, AlignmentPurpose, ActiveAlignment, AlignmentRequest, AlignmentDuration, TrackingRecord, ObserverRecord, SignalLevel, SignalConfig } from '../../types';
 import { getUserProfile, updateUserProfile } from '../../services/fetsService';
+import { alignmentService } from '../../services/alignmentService';
 
 interface ProfileProps {
   onLogout?: () => void;
@@ -38,56 +39,12 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
     const [saveStatus, setSaveStatus] = useState<'IDLE' | 'SUCCESS' | 'ERROR'>('IDLE');
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // MOCK DATA FOR ALIGNMENTS
-    const [alignments, setAlignments] = useState<ActiveAlignment[]>([
-        { 
-            id: 'a1', 
-            peerId: 'p1', 
-            peerName: 'Priya K.', 
-            peerAvatar: 'https://i.pravatar.cc/150?u=p1', 
-            purpose: AlignmentPurpose.MCQ_DRILL, 
-            streak: 4, 
-            startDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), 
-            duration: '7 Days',
-            status: 'ACTIVE',
-            goal: "Complete 100 MCQs daily for Part 1 Section A."
-        },
-        { 
-            id: 'a2', 
-            peerId: 'p2', 
-            peerName: 'David Chen', 
-            peerAvatar: 'https://i.pravatar.cc/150?u=p2', 
-            purpose: AlignmentPurpose.ACCOUNTABILITY, 
-            streak: 15, 
-            startDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(), 
-            duration: '30 Days',
-            status: 'ACTIVE',
-            goal: "Check in at 6 AM EST every morning."
-        }
-    ]);
-
-    const [pendingRequests, setPendingRequests] = useState<AlignmentRequest[]>([
-        { id: 'r1', senderId: 's1', senderName: 'Rahul V.', senderAvatar: 'https://i.pravatar.cc/150?u=s1', purpose: AlignmentPurpose.REVISION_SPRINT, duration: '7 Days', note: "Need someone to grind Part 2 formulas with every morning at 6am.", timestamp: new Date().toISOString(), status: 'PENDING' }
-    ]);
-
-    // MOCK DATA FOR TRACKING (RADAR)
-    const [trackingList, setTrackingList] = useState<TrackingRecord[]>([
-        {
-            id: 't1', targetId: 'u-101', targetName: 'Ananya S.', targetAvatar: 'https://i.pravatar.cc/150?u=101',
-            stats: { consistencyStreak: 45, lastMockScore: 82, essaysSubmitted: 12, doubtsSolved: 5 },
-            trackedSince: '2023-10-01'
-        },
-        {
-            id: 't2', targetId: 'u-102', targetName: 'Marcus L.', targetAvatar: 'https://i.pravatar.cc/150?u=102',
-            stats: { consistencyStreak: 3, lastMockScore: 65, essaysSubmitted: 2, doubtsSolved: 0 },
-            trackedSince: '2023-10-10'
-        }
-    ]);
-
-    const [observerList, setObserverList] = useState<ObserverRecord[]>([
-        { id: 'o1', observerId: 'u-201', observerName: 'StudyBot_99', observerAvatar: 'https://i.pravatar.cc/150?u=201', observedSince: '2023-09-15' },
-        { id: 'o2', observerId: 'u-202', observerName: 'CMA_Ninja', observerAvatar: 'https://i.pravatar.cc/150?u=202', observedSince: '2023-09-20' }
-    ]);
+    // Alignments State (fetched from backend)
+    const [alignments, setAlignments] = useState<ActiveAlignment[]>([]);
+    const [pendingRequests, setPendingRequests] = useState<AlignmentRequest[]>([]);
+    const [trackingList, setTrackingList] = useState<TrackingRecord[]>([]);
+    const [observerList, setObserverList] = useState<ObserverRecord[]>([]);
+    const [networkLoading, setNetworkLoading] = useState(false);
 
     // Boundary Modal State
     const [boundaryTarget, setBoundaryTarget] = useState<ActiveAlignment | null>(null);
@@ -115,6 +72,9 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
                         yearsExperience: data.yearsExperience || '',
                         hourlyRate: data.hourlyRate || ''
                     });
+                    
+                    // Load CAN Network data
+                    loadNetworkData(userId);
                 }
             } catch (err) {
                 console.error("Profile Load Error", err);
@@ -124,6 +84,28 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
         };
         load();
     }, [userId]);
+
+    // Load CAN Network data (alignments, requests, tracking)
+    const loadNetworkData = async (uid: string) => {
+        setNetworkLoading(true);
+        try {
+            const [alignmentsData, requestsData, trackingData, observersData] = await Promise.all([
+                alignmentService.getMyAlignments(uid),
+                alignmentService.getPendingRequests(uid),
+                alignmentService.getTracking(uid),
+                alignmentService.getObservers(uid)
+            ]);
+            
+            setAlignments(alignmentsData);
+            setPendingRequests(requestsData);
+            setTrackingList(trackingData);
+            setObserverList(observersData);
+        } catch (err) {
+            console.error("Network Data Load Error", err);
+        } finally {
+            setNetworkLoading(false);
+        }
+    };
 
     const handleSave = async () => {
         if (!userId || !me) return;
@@ -182,45 +164,60 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
         }
     };
 
-    const handleAcceptRequest = (req: AlignmentRequest) => {
-        setAlignments(prev => [...prev, {
-            id: `a-${Date.now()}`,
-            peerId: req.senderId,
-            peerName: req.senderName,
-            peerAvatar: req.senderAvatar,
-            purpose: req.purpose,
-            streak: 0,
-            startDate: new Date().toISOString(),
-            duration: req.duration,
-            status: 'ACTIVE',
-            goal: req.note
-        }]);
-        setPendingRequests(prev => prev.filter(r => r.id !== req.id));
+    const handleAcceptRequest = async (req: AlignmentRequest) => {
+        const newAlignmentId = await alignmentService.acceptRequest(req.id);
+        if (newAlignmentId && userId) {
+            // Refresh alignments and requests
+            const [alignmentsData, requestsData] = await Promise.all([
+                alignmentService.getMyAlignments(userId),
+                alignmentService.getPendingRequests(userId)
+            ]);
+            setAlignments(alignmentsData);
+            setPendingRequests(requestsData);
+        }
     };
 
-    const handleRejectRequest = (id: string) => {
-        setPendingRequests(prev => prev.filter(r => r.id !== id));
+    const handleRejectRequest = async (id: string) => {
+        const success = await alignmentService.declineRequest(id);
+        if (success) {
+            setPendingRequests(prev => prev.filter(r => r.id !== id));
+        }
     };
 
-    const handleRenewAlignment = (id: string) => {
-        setAlignments(prev => prev.map(a => 
-            a.id === id ? { ...a, status: 'ACTIVE', startDate: new Date().toISOString(), streak: 0 } : a
-        ));
-        alert("Renewal request sent to peer. Protocol reactivated provisionally.");
+    const handleRenewAlignment = async (id: string) => {
+        const success = await alignmentService.renewAlignment(id);
+        if (success) {
+            setAlignments(prev => prev.map(a => 
+                a.id === id ? { ...a, status: 'ACTIVE', startDate: new Date().toISOString(), streak: 0 } : a
+            ));
+            alert("Protocol renewed successfully.");
+        }
     };
 
     // Boundary Actions
-    const handleBoundaryAction = (action: 'PAUSE' | 'RESTRICT' | 'END', payload?: any) => {
+    const handleBoundaryAction = async (action: 'PAUSE' | 'RESTRICT' | 'END', payload?: any) => {
         if (!boundaryTarget) return;
         
-        setAlignments(prev => prev.map(a => {
-            if (a.id === boundaryTarget.id) {
-                if (action === 'PAUSE') return { ...a, status: 'PAUSED', pausedUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() };
-                if (action === 'END') return { ...a, status: 'ARCHIVED' };
-                if (action === 'RESTRICT') return { ...a, restrictions: payload };
-            }
-            return a;
-        }));
+        let success = false;
+        if (action === 'PAUSE') {
+            const pausedUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+            success = await alignmentService.updateAlignmentStatus(boundaryTarget.id, 'PAUSED', pausedUntil);
+        } else if (action === 'END') {
+            success = await alignmentService.updateAlignmentStatus(boundaryTarget.id, 'ARCHIVED');
+        } else if (action === 'RESTRICT') {
+            success = await alignmentService.updateRestrictions(boundaryTarget.id, payload);
+        }
+        
+        if (success) {
+            setAlignments(prev => prev.map(a => {
+                if (a.id === boundaryTarget.id) {
+                    if (action === 'PAUSE') return { ...a, status: 'PAUSED', pausedUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() };
+                    if (action === 'END') return { ...a, status: 'ARCHIVED' };
+                    if (action === 'RESTRICT') return { ...a, restrictions: payload };
+                }
+                return a;
+            }));
+        }
         
         setBoundaryTarget(null);
     };

@@ -124,45 +124,106 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
         </div>
       </section>
 
-      {/* What Makes Us Different - NEW SUBTLE SECTION */}
-      <section className="py-16 px-6 bg-gradient-to-r from-brand/5 via-white to-emerald-50/50">
+      {/* What Makes Us Different */}
+      <section className="py-20 px-6 bg-gradient-to-b from-slate-50 to-white overflow-hidden">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-black text-slate-900 mb-3">Not Just Another Prep Course</h2>
-            <p className="text-slate-500">Three things that make CoStudy different</p>
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-full mb-4">
+              <Icons.Sparkles className="w-4 h-4 text-slate-600" />
+              <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">What Makes Us Different</span>
+            </div>
+            <h2 className="text-4xl font-black text-slate-900">Not Just Another Prep Course</h2>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3 gap-8">
             {/* The Wall */}
-            <div className="text-center p-6">
-              <div className="w-12 h-12 mx-auto mb-4 rounded-2xl bg-brand/10 flex items-center justify-center">
-                <Icons.MessageSquare className="w-6 h-6 text-brand" />
+            <div className="group relative p-6 rounded-3xl bg-white border-2 border-slate-100 hover:border-brand/30 hover:shadow-xl transition-all duration-300">
+              {/* Mini illustration - stacked cards */}
+              <div className="relative h-32 mb-6 flex items-center justify-center">
+                <div className="absolute w-28 h-20 bg-slate-100 rounded-xl -rotate-6 top-4"></div>
+                <div className="absolute w-28 h-20 bg-brand/10 rounded-xl rotate-3 top-2"></div>
+                <div className="relative w-28 h-20 bg-white rounded-xl shadow-lg border border-slate-200 flex flex-col p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-5 h-5 rounded-full bg-brand/20"></div>
+                    <div className="h-2 w-12 bg-slate-200 rounded"></div>
+                  </div>
+                  <div className="h-2 w-full bg-slate-100 rounded mb-1"></div>
+                  <div className="h-2 w-3/4 bg-slate-100 rounded"></div>
+                  <div className="mt-auto flex gap-1">
+                    <div className="px-2 py-0.5 bg-emerald-100 rounded text-[8px] text-emerald-600 font-bold">MCQ</div>
+                    <div className="px-2 py-0.5 bg-brand/10 rounded text-[8px] text-brand font-bold">Part 1</div>
+                  </div>
+                </div>
               </div>
-              <h3 className="font-bold text-slate-900 mb-2">The Wall</h3>
-              <p className="text-sm text-slate-500">
-                A knowledge exchange, not a social feed. Share MCQs, get peer reviews on essays, and learn from high-signal discussions.
+              <h3 className="font-bold text-lg text-slate-900 mb-2 text-center">The Wall</h3>
+              <p className="text-sm text-slate-500 text-center">
+                Knowledge exchange, not social feed. Share MCQs, peer-review essays.
               </p>
             </div>
             
             {/* Study Partners */}
-            <div className="text-center p-6">
-              <div className="w-12 h-12 mx-auto mb-4 rounded-2xl bg-violet-100 flex items-center justify-center">
-                <Icons.Users className="w-6 h-6 text-violet-600" />
+            <div className="group relative p-6 rounded-3xl bg-white border-2 border-slate-100 hover:border-violet-300 hover:shadow-xl transition-all duration-300">
+              {/* Mini illustration - connected avatars with globe */}
+              <div className="relative h-32 mb-6 flex items-center justify-center">
+                {/* Globe */}
+                <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-violet-100 to-violet-50 border-2 border-violet-200">
+                  {/* Globe lines */}
+                  <div className="absolute inset-2 rounded-full border border-dashed border-violet-300"></div>
+                  <div className="absolute top-1/2 left-0 right-0 h-px bg-violet-200"></div>
+                  <div className="absolute top-0 bottom-0 left-1/2 w-px bg-violet-200"></div>
+                </div>
+                {/* Avatar 1 - India */}
+                <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white shadow-lg border-2 border-violet-300 flex items-center justify-center">
+                  <span className="text-sm">🇮🇳</span>
+                </div>
+                {/* Avatar 2 - USA */}
+                <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white shadow-lg border-2 border-violet-300 flex items-center justify-center">
+                  <span className="text-sm">🇺🇸</span>
+                </div>
+                {/* Connection line */}
+                <div className="absolute top-1/2 left-8 right-8 h-0.5 bg-gradient-to-r from-violet-400 via-violet-300 to-violet-400 -translate-y-1/2"></div>
               </div>
-              <h3 className="font-bold text-slate-900 mb-2">Find Study Partners</h3>
-              <p className="text-sm text-slate-500">
-                Connect with peers who complement your weaknesses. Someone in the US can review your essay while you sleep.
+              <h3 className="font-bold text-lg text-slate-900 mb-2 text-center">Find Study Partners</h3>
+              <p className="text-sm text-slate-500 text-center">
+                Global peers who complement your weak areas. 24/7 collaboration.
               </p>
             </div>
             
             {/* Study Rooms */}
-            <div className="text-center p-6">
-              <div className="w-12 h-12 mx-auto mb-4 rounded-2xl bg-emerald-100 flex items-center justify-center">
-                <Icons.Home className="w-6 h-6 text-emerald-600" />
+            <div className="group relative p-6 rounded-3xl bg-white border-2 border-slate-100 hover:border-emerald-300 hover:shadow-xl transition-all duration-300">
+              {/* Mini illustration - room with activity */}
+              <div className="relative h-32 mb-6 flex items-center justify-center">
+                <div className="relative w-32 h-24 bg-gradient-to-b from-emerald-50 to-emerald-100/50 rounded-2xl border-2 border-emerald-200 overflow-hidden">
+                  {/* Room header */}
+                  <div className="h-6 bg-emerald-500 flex items-center px-2 gap-1">
+                    <div className="w-2 h-2 rounded-full bg-white/50"></div>
+                    <div className="h-2 w-12 bg-white/30 rounded"></div>
+                  </div>
+                  {/* Participants */}
+                  <div className="flex justify-center items-center gap-1 mt-3">
+                    <div className="w-6 h-6 rounded-full bg-brand/20 flex items-center justify-center">
+                      <div className="w-3 h-3 rounded-full bg-brand/40"></div>
+                    </div>
+                    <div className="w-6 h-6 rounded-full bg-violet-200 flex items-center justify-center">
+                      <div className="w-3 h-3 rounded-full bg-violet-400"></div>
+                    </div>
+                    <div className="w-6 h-6 rounded-full bg-emerald-200 flex items-center justify-center">
+                      <div className="w-3 h-3 rounded-full bg-emerald-400"></div>
+                    </div>
+                    <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[8px] font-bold text-slate-500">
+                      +2
+                    </div>
+                  </div>
+                  {/* Activity indicator */}
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                    <span className="text-[8px] font-bold text-emerald-600">LIVE</span>
+                  </div>
+                </div>
               </div>
-              <h3 className="font-bold text-slate-900 mb-2">Study Rooms</h3>
-              <p className="text-sm text-slate-500">
-                Join live rooms for group practice. Solve MCQs together, share resources, and keep each other accountable.
+              <h3 className="font-bold text-lg text-slate-900 mb-2 text-center">Study Rooms</h3>
+              <p className="text-sm text-slate-500 text-center">
+                Live group sessions. Solve MCQs together, stay accountable.
               </p>
             </div>
           </div>

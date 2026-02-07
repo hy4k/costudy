@@ -25,8 +25,8 @@ const performBackendVectorSearch = async (
             },
             body: JSON.stringify({
                 query: query,
-                topK: options?.topK ?? 8,
-                threshold: options?.threshold ?? 0.7,
+                topK: options?.topK ?? 10,
+                threshold: options?.threshold ?? 0.5,
                 chunkType: options?.chunkType ?? null,
             })
         });

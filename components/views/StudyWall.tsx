@@ -449,7 +449,7 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
   const isUnderLimit = charCount > 0 && charCount < MIN_CHARS;
 
   return (
-    <div className="max-w-[92%] mx-auto px-4 sm:px-6 py-12 flex flex-col items-center overflow-visible">
+    <div className="w-full max-w-3xl mx-auto px-3 sm:px-6 py-6 sm:py-12 flex flex-col items-center overflow-visible pb-24 sm:pb-12">
       
       {/* FLOATING ACTION BUTTON */}
       <div className="fixed bottom-10 right-8 sm:bottom-12 sm:right-12 z-10">
@@ -800,174 +800,153 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
         </div>
       )}
 
-      {/* Hero Header */}
-      <header className="w-full text-center mb-16 relative py-12 sm:py-24 px-6 sm:px-10 overflow-hidden rounded-[4rem] sm:rounded-[5.5rem] bg-white/40 backdrop-blur-3xl border border-white/80 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.08)] ring-1 ring-white/50">
-        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-brand/5 blur-[150px] -mr-40 -mt-40 rounded-full animate-pulse pointer-events-none"></div>
+      {/* Hero Header - Compact on mobile */}
+      <header className="w-full text-center mb-6 sm:mb-12 relative py-6 sm:py-16 px-4 sm:px-10 overflow-hidden rounded-2xl sm:rounded-[4rem] bg-white/60 backdrop-blur-2xl border border-white/80 shadow-lg sm:shadow-[0_50px_100px_-20px_rgba(0,0,0,0.08)]">
+        <div className="absolute top-0 right-0 w-[400px] h-[400px] sm:w-[600px] sm:h-[600px] bg-brand/5 blur-[100px] -mr-20 -mt-20 rounded-full animate-pulse pointer-events-none"></div>
         
         <div className="relative z-10 flex flex-col items-center">
-          <h1 className="text-5xl sm:text-8xl md:text-9xl lg:text-[12rem] xl:text-[14rem] font-black tracking-tighter text-slate-900 leading-[0.8] sm:leading-[0.7] mb-6 select-none drop-shadow-2xl antialiased uppercase break-words w-full">
+          <h1 className="text-3xl sm:text-6xl md:text-7xl font-black tracking-tight text-slate-900 leading-none mb-2 sm:mb-4 select-none antialiased uppercase">
             {mode === 'FACULTY' ? 'FACULTY' : 'COSTUDY'}
           </h1>
-          <h2 className="text-sm sm:text-2xl md:text-4xl lg:text-7xl font-black tracking-[0.2em] sm:tracking-[0.5em] text-slate-400 mt-4 uppercase select-none opacity-80 antialiased text-center">
-            {mode === 'FACULTY' ? 'ROOM & NETWORK' : 'CMA SUCCESS UNIVERSE'}
+          <h2 className="text-[10px] sm:text-sm md:text-lg font-bold tracking-[0.15em] sm:tracking-[0.3em] text-slate-400 uppercase select-none opacity-80 antialiased">
+            {mode === 'FACULTY' ? 'ROOM & NETWORK' : 'CMA Success Network'}
           </h2>
 
-          <div className="mt-12 sm:mt-16 w-full flex justify-center px-4">
-            <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
+          {/* Category Pills - Horizontal scroll on mobile */}
+          <div className="mt-6 sm:mt-10 w-full overflow-x-auto no-scrollbar -mx-4 px-4">
+            <div className="flex gap-2 sm:gap-3 sm:flex-wrap sm:justify-center min-w-max sm:min-w-0">
               {categories.map(cat => (
-                <CategoryButton key={cat} label={cat} active={activeCategory === cat} onClick={() => setActiveCategory(cat)} />
+                <button 
+                  key={cat} 
+                  onClick={() => setActiveCategory(cat)}
+                  className={`px-4 py-2 sm:px-5 sm:py-2.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all ${activeCategory === cat ? 'bg-brand text-white shadow-lg' : 'bg-white/80 text-slate-500 hover:bg-slate-100 border border-slate-200'}`}
+                >
+                  {cat}
+                </button>
               ))}
             </div>
           </div>
         </div>
       </header>
 
-      {/* Content Wall */}
-      <div className="w-full mx-auto max-w-6xl">
+      {/* Content Wall - Social Media Feed Width */}
+      <div className="w-full">
           {loading ? (
-            <div className="flex flex-col items-center py-40 gap-8 opacity-40">
-               <Icons.Sparkles className="w-16 h-16 animate-spin text-brand" />
-               <span className="font-black uppercase tracking-[0.4em] text-sm animate-pulse">Syncing Insights...</span>
+            <div className="flex flex-col items-center py-20 sm:py-40 gap-6 opacity-40">
+               <Icons.Sparkles className="w-10 h-10 sm:w-16 sm:h-16 animate-spin text-brand" />
+               <span className="font-bold uppercase tracking-widest text-xs sm:text-sm animate-pulse">Loading feed...</span>
             </div>
           ) : (
-            <div className="space-y-8 sm:space-y-12">
+            <div className="space-y-4 sm:space-y-6">
               {posts.map(post => {
                 const isAuditRequest = post.type === PostType.PEER_AUDIT_REQUEST;
                 const isBounty = post.type === PostType.BOUNTY;
                 
                 return (
-                <article key={post.id} className={`relative bg-white/80 backdrop-blur-3xl border p-8 sm:p-14 rounded-[3rem] sm:rounded-[5rem] shadow-[0_20px_60px_rgba(0,0,0,0.04)] hover:shadow-[0_60px_120px_rgba(255,26,26,0.1)] transition-all duration-700 group ring-1 ${isAuditRequest ? 'border-l-[12px] border-l-slate-800 border-slate-200' : isBounty ? 'border-l-[12px] border-l-brand border-slate-200 bg-slate-50' : 'border-slate-200 ring-slate-100'}`}>
+                <article key={post.id} className={`relative bg-white border p-4 sm:p-8 rounded-2xl sm:rounded-3xl shadow-sm hover:shadow-md transition-all duration-300 ${isAuditRequest ? 'border-l-4 border-l-slate-800 border-slate-200' : isBounty ? 'border-l-4 border-l-brand border-slate-200 bg-slate-50/50' : 'border-slate-200'}`}>
                   {isAuditRequest && (
-                      <div className="absolute top-0 left-0 right-0 h-8 bg-slate-800 flex items-center justify-center rounded-t-[2.5rem] sm:rounded-t-[4.5rem]">
-                          <span className="text-[9px] font-black text-white uppercase tracking-[0.4em]">Peer Audit Case File</span>
+                      <div className="absolute top-0 left-0 right-0 h-6 sm:h-7 bg-slate-800 flex items-center justify-center rounded-t-xl sm:rounded-t-2xl">
+                          <span className="text-[8px] sm:text-[9px] font-bold text-white uppercase tracking-wider">Peer Audit</span>
                       </div>
                   )}
                   {isBounty && (
-                      <div className="absolute top-0 left-0 right-0 h-8 bg-brand flex items-center justify-center rounded-t-[2.5rem] sm:rounded-t-[4.5rem]">
-                          <span className="text-[9px] font-black text-white uppercase tracking-[0.4em]">Active Bounty Assignment</span>
+                      <div className="absolute top-0 left-0 right-0 h-6 sm:h-7 bg-brand flex items-center justify-center rounded-t-xl sm:rounded-t-2xl">
+                          <span className="text-[8px] sm:text-[9px] font-bold text-white uppercase tracking-wider">Bounty</span>
                       </div>
                   )}
                   
-                  <div className={`flex items-center gap-4 sm:gap-5 mb-6 sm:mb-8 ${isAuditRequest || isBounty ? 'mt-6' : ''}`}>
+                  <div className={`flex items-start gap-3 mb-3 sm:mb-4 ${isAuditRequest || isBounty ? 'mt-4 sm:mt-5' : ''}`}>
                      <div className="relative shrink-0 cursor-pointer group/avatar" onClick={() => initiateAlignment(post.author || {})}>
                         {isAuditRequest ? (
-                            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-slate-900 text-white flex items-center justify-center ring-4 ring-slate-50 shadow-sm">
-                                <Icons.Lock className="w-6 h-6" />
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center">
+                                <Icons.Lock className="w-5 h-5" />
                             </div>
                         ) : isBounty ? (
-                            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-brand text-white flex items-center justify-center ring-4 ring-slate-50 shadow-sm">
-                                <Icons.Award className="w-6 h-6" />
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-brand text-white flex items-center justify-center">
+                                <Icons.Award className="w-5 h-5" />
                             </div>
                         ) : (
-                            // Standard Avatar
                             <>
-                                <img src={post.author?.avatar || 'https://i.pravatar.cc/100'} className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl object-cover ring-4 ring-slate-50 shadow-sm group-hover/avatar:ring-violet-200 transition-all" />
-                                <div className="absolute -bottom-1 -right-1 bg-brand text-white p-1 rounded-lg shadow-lg border-2 border-white">
-                                    <Icons.CheckBadge className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                                <img src={post.author?.avatar || 'https://i.pravatar.cc/100'} className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl object-cover" />
+                                <div className="absolute -bottom-0.5 -right-0.5 bg-brand text-white p-0.5 rounded-md">
+                                    <Icons.CheckBadge className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                                 </div>
                             </>
                         )}
-                        
-                        {/* Alignment Trigger Button - Overlay */}
-                        <div className="absolute inset-0 bg-black/60 rounded-2xl flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-all backdrop-blur-sm">
-                            <Icons.Link className="w-6 h-6 text-white" />
-                        </div>
                      </div>
                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3">
-                            <h3 className="font-extrabold text-slate-900 text-lg sm:text-xl tracking-tight truncate">{post.author?.name || 'Anonymous Aspirant'}</h3>
-                            <div className="flex gap-2">
-                                <button 
-                                    onClick={() => initiateAlignment(post.author || {})}
-                                    className="hidden sm:flex items-center gap-1 px-3 py-1 bg-violet-50 text-violet-600 rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-violet-100 transition-colors"
-                                >
-                                    <Icons.Link className="w-3 h-3" /> Align
-                                </button>
-                                {/* TRACK BUTTON - Radar/Scope */}
-                                <button 
-                                    onClick={() => handleTrackUser(post.author || {})}
-                                    className="hidden sm:flex items-center gap-1 px-3 py-1 bg-slate-100 text-slate-500 rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-brand hover:text-white transition-colors"
-                                    title="Add to Academic Radar (Silent Track)"
-                                >
-                                    <Icons.Search className="w-3 h-3" /> Track
-                                </button>
-                            </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-bold text-slate-900 text-sm sm:text-base truncate">{post.author?.name || 'Anonymous'}</h3>
+                            <span className="text-[10px] text-slate-400 font-medium">{post.created_at ? new Date(post.created_at).toLocaleDateString() : 'Just now'}</span>
                         </div>
-                        <div className="flex items-center gap-2 mt-1">
-                           <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-widest">{post.created_at ? new Date(post.created_at).toLocaleDateString() : 'Just now'}</span>
-                           {post.type && <span className="bg-slate-100 px-2 py-0.5 rounded text-[8px] font-black uppercase text-slate-500">{post.type.replace('_', ' ')}</span>}
-                           {isAuditRequest && <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase text-white ${post.auditStatus === 'OPEN' ? 'bg-blue-500' : post.auditStatus === 'COMPLIANT' ? 'bg-emerald-500' : 'bg-rose-500'}`}>Status: {post.auditStatus || 'OPEN'}</span>}
+                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                           {post.type && <span className="bg-slate-100 px-1.5 py-0.5 rounded text-[9px] font-semibold text-slate-500">{post.type.replace('_', ' ')}</span>}
+                           {isAuditRequest && <span className={`px-1.5 py-0.5 rounded text-[9px] font-semibold text-white ${post.auditStatus === 'OPEN' ? 'bg-blue-500' : post.auditStatus === 'COMPLIANT' ? 'bg-emerald-500' : 'bg-rose-500'}`}>{post.auditStatus || 'OPEN'}</span>}
                         </div>
                      </div>
                   </div>
                   
-                  <div className="text-slate-700 text-xl sm:text-3xl leading-snug mb-8 font-semibold tracking-tight antialiased">
+                  <div className="text-slate-700 text-base sm:text-lg leading-relaxed mb-4 sm:mb-6">
                     {post.content}
                   </div>
 
                   {/* Bounty Reward Box */}
                   {isBounty && post.bountyDetails && (
-                      <div className="mb-8 p-6 bg-slate-900 rounded-[2rem] text-white flex items-center justify-between shadow-xl">
-                          <div className="flex items-center gap-4">
-                              <div className="p-3 bg-white/10 rounded-xl">
-                                  <Icons.Award className="w-6 h-6 text-brand" />
+                      <div className="mb-4 p-4 bg-slate-900 rounded-xl text-white flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                              <div className="p-2 bg-white/10 rounded-lg">
+                                  <Icons.Award className="w-5 h-5 text-brand" />
                               </div>
                               <div>
-                                  <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Completion Reward</div>
-                                  <div className="text-2xl font-black">{post.bountyDetails.rewardAmount} Credits</div>
+                                  <div className="text-[9px] font-semibold uppercase text-slate-400">Reward</div>
+                                  <div className="text-lg font-bold">{post.bountyDetails.rewardAmount} Credits</div>
                               </div>
                           </div>
                           <button 
                             onClick={() => handleClaimBounty(post)}
-                            className="px-6 py-3 bg-brand text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-transform active:scale-95 shadow-lg shadow-brand/20"
+                            className="px-4 py-2 bg-brand text-white rounded-xl text-[10px] font-bold uppercase active:scale-95"
                           >
-                              Claim Gig
+                              Claim
                           </button>
                       </div>
                   )}
 
                   {/* Display Tags */}
                   {post.tags && post.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-8 sm:mb-10">
+                      <div className="flex flex-wrap gap-1.5 mb-4">
                           {post.tags.map(tag => (
-                              <span key={tag} className="px-3 py-1 bg-brand/5 text-brand rounded-lg text-[9px] font-black uppercase tracking-widest border border-brand/10">{tag}</span>
+                              <span key={tag} className="px-2 py-1 bg-brand/5 text-brand rounded-md text-[9px] font-semibold">{tag}</span>
                           ))}
                       </div>
                   )}
 
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-6 sm:gap-0 pt-8 sm:pt-12 border-t border-slate-100/60">
-                    <div className="flex gap-6 sm:gap-12 w-full sm:w-auto justify-center sm:justify-start">
+                  {/* Action Bar - Compact on mobile */}
+                  <div className="flex items-center justify-between pt-3 sm:pt-4 border-t border-slate-100">
+                    <div className="flex gap-1">
                       {isAuditRequest ? (
                           <button 
                             onClick={() => openAuditPanel(post)}
                             disabled={post.auditStatus !== 'OPEN'}
-                            className={`flex flex-col items-center gap-3 group/btn ${post.auditStatus !== 'OPEN' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 text-white text-xs font-semibold ${post.auditStatus !== 'OPEN' ? 'opacity-50' : 'active:scale-95'}`}
                           >
-                            <div className="p-4 sm:p-5 rounded-[2.5rem] bg-slate-800 text-white group-hover/btn:bg-slate-900 transition-all hover:scale-110 shadow-xl">
-                              <Icons.Scale className="w-6 h-6 sm:w-10 sm:h-10" />
-                            </div>
-                            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400">Perform Audit</span>
+                            <Icons.Scale className="w-4 h-4" />
+                            <span className="hidden sm:inline">Audit</span>
                           </button>
                       ) : (
-                          // VOUCH BUTTON
-                          <button onClick={() => handleVouch(post.id)} className="flex flex-col items-center gap-3 group/btn">
-                            <div className="p-4 sm:p-5 rounded-[2.5rem] bg-slate-50 text-slate-400 group-hover/btn:bg-blue-50 group-hover/btn:text-blue-600 transition-all hover:scale-110 shadow-sm">
-                              <Icons.Stamp className="w-6 h-6 sm:w-10 sm:h-10" />
-                            </div>
-                            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400">{post.likes || 0} Vouches</span>
+                          <button onClick={() => handleVouch(post.id)} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-50 text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition-colors active:scale-95">
+                            <Icons.Stamp className="w-4 h-4" />
+                            <span className="text-xs font-semibold">{post.likes || 0}</span>
                           </button>
                       )}
                       
-                      <button onClick={() => loadDiscussion(post.id)} className="flex flex-col items-center gap-3 group/btn">
-                        <div className={`p-4 sm:p-5 rounded-[2.5rem] transition-all hover:scale-110 shadow-sm ${openDiscussionId === post.id ? 'bg-slate-900 text-white shadow-xl' : 'bg-slate-50 text-slate-400'}`}>
-                          <Icons.MessageCircle className="w-6 h-6 sm:w-10 sm:h-10" />
-                        </div>
-                        <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-400">Discussion</span>
+                      <button onClick={() => loadDiscussion(post.id)} className={`flex items-center gap-1.5 px-3 py-2 rounded-xl transition-colors active:scale-95 ${openDiscussionId === post.id ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
+                        <Icons.MessageCircle className="w-4 h-4" />
+                        <span className="text-xs font-semibold hidden sm:inline">Chat</span>
                       </button>
                     </div>
-                    <div className="w-full sm:w-auto">
-                        <button onClick={() => handleSummarize(post.id, post.content)} className="w-full sm:w-auto px-6 sm:px-10 py-4 sm:py-5 bg-brand/5 text-brand rounded-[2rem] text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] border border-brand/10 hover:bg-brand hover:text-white transition-all shadow-sm">Summary</button>
-                    </div>
+                    <button onClick={() => handleSummarize(post.id, post.content)} className="px-3 py-2 bg-brand/10 text-brand rounded-xl text-xs font-semibold hover:bg-brand hover:text-white transition-colors active:scale-95">
+                        AI Summary
+                    </button>
                   </div>
 
                   {openDiscussionId === post.id && (

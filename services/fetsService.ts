@@ -17,62 +17,103 @@ export const getCoStudyCloudStatus = (): CoStudyCloudStatus => ({
 });
 
 /**
- * CoStudy Authentication Service
+ * CoStudy Authentication Service with CORS fallback
  */
 export const authService = {
   signUp: async (email: string, pass: string, name: string, role: string) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password: pass,
-      options: {
-        data: {
-          full_name: name,
-          role: role // Critical: Pass role to metadata so the DB trigger can use it
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password: pass,
+        options: {
+          data: {
+            full_name: name,
+            role: role // Critical: Pass role to metadata so the DB trigger can use it
+          }
+        }
+      });
+
+      if (error) {
+        console.error("Supabase signup error:", error);
+        if (error.message.includes('Database error')) {
+          throw new Error("Server synchronization issue. Please try signing in, or try again in a few moments.");
+        } else if (error.message.includes("Failed to fetch") || error.message.includes("CORS")) {
+          // Fallback to local auth service if CORS is blocking
+          console.warn("Using local auth service due to CORS/network issues");
+          return await localAuthService.signUp(email, pass, { full_name: name, role });
+        }
+        throw error;
+      }
+
+      if (data.user) {
+        try {
+          await createUserProfile(data.user.id, {
+            full_name: name,
+            role: role
+          });
+        } catch (e) {
+          console.warn("Manual seeding failed, but App.tsx JIT logic will recover it on mount.");
         }
       }
-    });
 
-    if (error) {
-      if (error.message.includes('Database error')) {
-        throw new Error("Server synchronization issue. Please try signing in, or try again in a few moments.");
-      }
-      throw error;
+      return data;
+    } catch (networkError) {
+      console.warn("Network error during signup, trying local auth service");
+      return await localAuthService.signUp(email, pass, { full_name: name, role });
     }
-
-    if (data.user) {
-      try {
-        await createUserProfile(data.user.id, {
-          full_name: name,
-          role: role
-        });
-      } catch (e) {
-        console.warn("Manual seeding failed, but App.tsx JIT logic will recover it on mount.");
-      }
-    }
-
-    return data;
   },
 
   signIn: async (email: string, pass: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password: pass
-    });
-    if (error) throw error;
-    return data;
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password: pass
+      });
+      
+      if (error) {
+        console.error("Supabase signin error:", error);
+        if (error.message.includes("Failed to fetch") || error.message.includes("CORS")) {
+          // Fallback to local auth service if CORS is blocking
+          console.warn("Using local auth service due to CORS/network issues");
+          return await localAuthService.signIn(email, pass);
+        }
+        throw error;
+      }
+      return data;
+    } catch (networkError) {
+      console.warn("Network error during signin, trying local auth service");
+      return await localAuthService.signIn(email, pass);
+    }
   },
 
   resetPassword: async (email: string) => {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin,
-    });
-    if (error) throw error;
-    return true;
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin,
+      });
+      if (error) throw error;
+      return true;
+    } catch (networkError) {
+      console.error("Reset password error:", networkError);
+      throw networkError;
+    }
   },
 
   signOut: async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.warn("Supabase signout failed, clearing local session");
+        // Even if supabase signout fails, clear local session
+        localStorage.removeItem('costudy_session');
+        return;
+      }
+      // Success, also clear local session
+      localStorage.removeItem('costudy_session');
+    } catch (networkError) {
+      console.warn("Network error during signout, clearing local session");
+      localStorage.removeItem('costudy_session');
+    }
   },
 
   getSession: async () => {
@@ -80,10 +121,15 @@ export const authService = {
       const { data, error } = await supabase.auth.getSession();
       
       if (error) {
+        console.error("Session retrieval error:", error);
         // Fix for "Invalid Refresh Token" loop:
-        if (error.message.includes("Refresh Token Not Found") || error.message.includes("Invalid Refresh Token")) {
-           console.warn("Detected stale session token. Clearing auth state...");
-           await supabase.auth.signOut();
+        if (error.message.includes("Refresh Token Not Found") || error.message.includes("Invalid Refresh Token") || error.message.includes("Failed to fetch")) {
+           console.warn("Detected stale session token or network issue. Clearing auth state...");
+           try {
+             await supabase.auth.signOut();
+           } catch (signOutErr) {
+             console.warn("Sign out also failed:", signOutErr);
+           }
            return null;
         }
         return null;

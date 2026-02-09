@@ -17,6 +17,7 @@ import { Login } from './components/auth/Login';
 import { SignUp } from './components/auth/SignUp';
 import { authService, getUserProfile, createUserProfile } from './services/fetsService';
 import { supabase } from './services/supabaseClient';
+import { localAuthService } from './services/localAuthService';
 import { Icons } from './components/Icons';
 
 function App() {
@@ -122,18 +123,46 @@ function App() {
     checkUser();
 
     // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'USER_UPDATED') && session) {
-        await syncUserIdentity(session.user);
-        setShowAuth(false);
-      } else if (event === 'SIGNED_OUT') {
-        setIsLoggedIn(false);
-        setUser(null);
-        setCurrentView(ViewState.WALL);
-      }
-    });
+    let authSubscription;
+    
+    // Only subscribe to auth state changes if we can successfully connect to Supabase
+    try {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'USER_UPDATED') && session) {
+          await syncUserIdentity(session.user);
+          setShowAuth(false);
+        } else if (event === 'SIGNED_OUT') {
+          setIsLoggedIn(false);
+          setUser(null);
+          setCurrentView(ViewState.WALL);
+        }
+      });
+      authSubscription = subscription;
+    } catch (e) {
+      console.warn("Could not establish auth listener due to network issues:", e);
+      // Fallback: implement manual session checking periodically
+      const sessionCheckInterval = setInterval(async () => {
+        try {
+          const session = await authService.getSession();
+          if (session?.user) {
+            await syncUserIdentity(session.user);
+          } else {
+            setIsLoggedIn(false);
+            setUser(null);
+          }
+        } catch (err) {
+          // Ignore errors during periodic checks
+        }
+      }, 30000); // Check every 30 seconds
+      
+      return () => clearInterval(sessionCheckInterval);
+    }
 
-    return () => subscription.unsubscribe();
+    return () => {
+      if (authSubscription) {
+        authSubscription.unsubscribe();
+      }
+    };
   }, []);
 
   const handleLogout = async () => {

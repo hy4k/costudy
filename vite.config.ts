@@ -18,6 +18,31 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
+      },
+      build: {
+        // Code splitting for better caching and faster initial load
+        rollupOptions: {
+          output: {
+            manualChunks: {
+              // Vendor chunks - separate heavy dependencies
+              'vendor-react': ['react', 'react-dom'],
+              'vendor-supabase': ['@supabase/supabase-js'],
+              'vendor-genai': ['@google/genai'],
+            }
+          }
+        },
+        // Increase warning limit since we're handling it
+        chunkSizeWarningLimit: 600,
+        // Enable minification optimizations
+        minify: 'terser',
+        terserOptions: {
+          compress: {
+            drop_console: true, // Remove console.log in production
+            drop_debugger: true,
+          },
+        },
+        // Enable source maps for debugging (optional, remove for smaller builds)
+        sourcemap: false,
       }
     };
 });

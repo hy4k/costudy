@@ -1,24 +1,38 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Layout } from './components/Layout';
 import { ViewState, UserRole } from './types';
-import { StudyWall } from './components/views/StudyWall';
-import { StudyRooms } from './components/views/StudyRooms';
-import { AIDeck } from './components/views/AIDeck';
-import { Profile } from './components/views/Profile';
-import { TeachersLounge } from './components/views/TeachersLounge';
-import { MockTests } from './components/views/MockTests';
-import { StudentStore } from './components/views/StudentStore';
-import { LibraryVault } from './components/views/LibraryVault';
-import { MentorDashboard } from './components/views/MentorDashboard';
-import { DirectMessages } from './components/views/DirectMessages';
-import { Landing } from './components/views/Landing';
-import { Login } from './components/auth/Login';
-import { SignUp } from './components/auth/SignUp';
+import { Icons } from './components/Icons';
+
+// Lazy load heavy components for better initial load performance
+const StudyWall = lazy(() => import('./components/views/StudyWall').then(m => ({ default: m.StudyWall })));
+const StudyRooms = lazy(() => import('./components/views/StudyRooms').then(m => ({ default: m.StudyRooms })));
+const AIDeck = lazy(() => import('./components/views/AIDeck').then(m => ({ default: m.AIDeck })));
+const Profile = lazy(() => import('./components/views/Profile').then(m => ({ default: m.Profile })));
+const TeachersLounge = lazy(() => import('./components/views/TeachersLounge').then(m => ({ default: m.TeachersLounge })));
+const MockTests = lazy(() => import('./components/views/MockTests').then(m => ({ default: m.MockTests })));
+const StudentStore = lazy(() => import('./components/views/StudentStore').then(m => ({ default: m.StudentStore })));
+const LibraryVault = lazy(() => import('./components/views/LibraryVault').then(m => ({ default: m.LibraryVault })));
+const MentorDashboard = lazy(() => import('./components/views/MentorDashboard').then(m => ({ default: m.MentorDashboard })));
+const DirectMessages = lazy(() => import('./components/views/DirectMessages').then(m => ({ default: m.DirectMessages })));
+const Landing = lazy(() => import('./components/views/Landing').then(m => ({ default: m.Landing })));
+const Login = lazy(() => import('./components/auth/Login').then(m => ({ default: m.Login })));
+const SignUp = lazy(() => import('./components/auth/SignUp').then(m => ({ default: m.SignUp })));
+
+// Keep services as regular imports (needed immediately)
 import { authService, getUserProfile, createUserProfile } from './services/fetsService';
 import { supabase } from './services/supabaseClient';
 import { localAuthService } from './services/localAuthService';
-import { Icons } from './components/Icons';
+
+// Loading fallback component
+const LoadingFallback = () => (
+  <div className="flex items-center justify-center h-full min-h-[400px]">
+    <div className="flex flex-col items-center gap-4">
+      <div className="w-12 h-12 border-4 border-brand border-t-transparent rounded-full animate-spin"></div>
+      <span className="text-slate-500 font-medium">Loading...</span>
+    </div>
+  </div>
+);
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -191,24 +205,30 @@ function App() {
   }
 
   if (showAuth && !isLoggedIn) {
-    return authView === 'LOGIN'
-      ? <Login onLogin={() => setShowAuth(false)} onSwitch={() => setAuthView('SIGNUP')} onBack={() => { setShowAuth(false); setShowLanding(true); }} />
-      : <SignUp onSignUp={() => setShowAuth(false)} onSwitch={() => setAuthView('LOGIN')} onBack={() => { setShowAuth(false); setShowLanding(true); }} />;
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        {authView === 'LOGIN'
+          ? <Login onLogin={() => setShowAuth(false)} onSwitch={() => setAuthView('SIGNUP')} onBack={() => { setShowAuth(false); setShowLanding(true); }} />
+          : <SignUp onSignUp={() => setShowAuth(false)} onSwitch={() => setAuthView('LOGIN')} onBack={() => { setShowAuth(false); setShowLanding(true); }} />}
+      </Suspense>
+    );
   }
 
   // Show landing page for non-logged-in users who haven't skipped it
   if (!isLoggedIn && showLanding) {
     return (
-      <Landing 
-        onGetStarted={() => {
-          setShowLanding(false);
-          handleAuthRequired('SIGNUP');
-        }}
-        onLogin={() => {
-          setShowLanding(false);
-          handleAuthRequired('LOGIN');
-        }}
-      />
+      <Suspense fallback={<LoadingFallback />}>
+        <Landing 
+          onGetStarted={() => {
+            setShowLanding(false);
+            handleAuthRequired('SIGNUP');
+          }}
+          onLogin={() => {
+            setShowLanding(false);
+            handleAuthRequired('LOGIN');
+          }}
+        />
+      </Suspense>
     );
   }
 
@@ -274,7 +294,9 @@ function App() {
       userAvatar={user?.avatar}
       onLoginClick={() => handleAuthRequired('LOGIN')}
     >
-      {renderView()}
+      <Suspense fallback={<LoadingFallback />}>
+        {renderView()}
+      </Suspense>
     </Layout>
   );
 }

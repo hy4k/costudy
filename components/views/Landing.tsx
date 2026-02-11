@@ -104,13 +104,6 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
             </button>
           </div>
 
-<<<<<<< Updated upstream
-          {/* Social Proof */}
-          <div className="mt-16 flex items-center justify-center gap-8 text-slate-400">
-            <div className="text-center">
-              <div className="text-3xl font-black text-slate-900">Part 1 & 2</div>
-              <div className="text-xs font-bold uppercase tracking-wider">Full Coverage</div>
-=======
           {/* Global Pulse Ticker */}
           <div className="mt-16 inline-flex items-center gap-3 px-6 py-3 bg-slate-900 rounded-2xl text-white">
             <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
@@ -131,7 +124,6 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-violet-100 rounded-full mb-4">
               <Icons.Grid className="w-4 h-4 text-violet-600" />
               <span className="text-xs font-bold text-violet-600 uppercase tracking-wider">Flagship Feature</span>
->>>>>>> Stashed changes
             </div>
             <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-4">The Command Deck</h2>
             <p className="text-lg text-slate-500 max-w-2xl mx-auto">
@@ -257,110 +249,6 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
         </div>
       </section>
 
-<<<<<<< Updated upstream
-      {/* What Makes Us Different */}
-      <section className="py-20 px-6 bg-gradient-to-b from-slate-50 to-white overflow-hidden">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-full mb-4">
-              <Icons.Sparkles className="w-4 h-4 text-slate-600" />
-              <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">What Makes Us Different</span>
-            </div>
-            <h2 className="text-4xl font-black text-slate-900">Not Just Another Prep Course</h2>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* The Wall */}
-            <div className="group relative p-6 rounded-3xl bg-white border-2 border-slate-100 hover:border-brand/30 hover:shadow-xl transition-all duration-300">
-              {/* Mini illustration - stacked cards */}
-              <div className="relative h-32 mb-6 flex items-center justify-center">
-                <div className="absolute w-28 h-20 bg-slate-100 rounded-xl -rotate-6 top-4"></div>
-                <div className="absolute w-28 h-20 bg-brand/10 rounded-xl rotate-3 top-2"></div>
-                <div className="relative w-28 h-20 bg-white rounded-xl shadow-lg border border-slate-200 flex flex-col p-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-5 h-5 rounded-full bg-brand/20"></div>
-                    <div className="h-2 w-12 bg-slate-200 rounded"></div>
-                  </div>
-                  <div className="h-2 w-full bg-slate-100 rounded mb-1"></div>
-                  <div className="h-2 w-3/4 bg-slate-100 rounded"></div>
-                  <div className="mt-auto flex gap-1">
-                    <div className="px-2 py-0.5 bg-emerald-100 rounded text-[8px] text-emerald-600 font-bold">MCQ</div>
-                    <div className="px-2 py-0.5 bg-brand/10 rounded text-[8px] text-brand font-bold">Part 1</div>
-                  </div>
-                </div>
-              </div>
-              <h3 className="font-bold text-lg text-slate-900 mb-2 text-center">The Wall</h3>
-              <p className="text-sm text-slate-500 text-center">
-                Knowledge exchange, not social feed. Share MCQs, peer-review essays.
-              </p>
-            </div>
-            
-            {/* Study Partners */}
-            <div className="group relative p-6 rounded-3xl bg-white border-2 border-slate-100 hover:border-violet-300 hover:shadow-xl transition-all duration-300">
-              {/* Mini illustration - connected avatars with globe */}
-              <div className="relative h-32 mb-6 flex items-center justify-center">
-                {/* Globe */}
-                <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-violet-100 to-violet-50 border-2 border-violet-200">
-                  {/* Globe lines */}
-                  <div className="absolute inset-2 rounded-full border border-dashed border-violet-300"></div>
-                  <div className="absolute top-1/2 left-0 right-0 h-px bg-violet-200"></div>
-                  <div className="absolute top-0 bottom-0 left-1/2 w-px bg-violet-200"></div>
-                </div>
-                {/* Avatar 1 - India */}
-                <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white shadow-lg border-2 border-violet-300 flex items-center justify-center">
-                  <span className="text-sm">🇮🇳</span>
-                </div>
-                {/* Avatar 2 - USA */}
-                <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white shadow-lg border-2 border-violet-300 flex items-center justify-center">
-                  <span className="text-sm">🇺🇸</span>
-                </div>
-                {/* Connection line */}
-                <div className="absolute top-1/2 left-8 right-8 h-0.5 bg-gradient-to-r from-violet-400 via-violet-300 to-violet-400 -translate-y-1/2"></div>
-              </div>
-              <h3 className="font-bold text-lg text-slate-900 mb-2 text-center">Find Study Partners</h3>
-              <p className="text-sm text-slate-500 text-center">
-                Global peers who complement your weak areas. 24/7 collaboration.
-              </p>
-            </div>
-            
-            {/* Study Rooms */}
-            <div className="group relative p-6 rounded-3xl bg-white border-2 border-slate-100 hover:border-emerald-300 hover:shadow-xl transition-all duration-300">
-              {/* Mini illustration - room with activity */}
-              <div className="relative h-32 mb-6 flex items-center justify-center">
-                <div className="relative w-32 h-24 bg-gradient-to-b from-emerald-50 to-emerald-100/50 rounded-2xl border-2 border-emerald-200 overflow-hidden">
-                  {/* Room header */}
-                  <div className="h-6 bg-emerald-500 flex items-center px-2 gap-1">
-                    <div className="w-2 h-2 rounded-full bg-white/50"></div>
-                    <div className="h-2 w-12 bg-white/30 rounded"></div>
-                  </div>
-                  {/* Participants */}
-                  <div className="flex justify-center items-center gap-1 mt-3">
-                    <div className="w-6 h-6 rounded-full bg-brand/20 flex items-center justify-center">
-                      <div className="w-3 h-3 rounded-full bg-brand/40"></div>
-                    </div>
-                    <div className="w-6 h-6 rounded-full bg-violet-200 flex items-center justify-center">
-                      <div className="w-3 h-3 rounded-full bg-violet-400"></div>
-                    </div>
-                    <div className="w-6 h-6 rounded-full bg-emerald-200 flex items-center justify-center">
-                      <div className="w-3 h-3 rounded-full bg-emerald-400"></div>
-                    </div>
-                    <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[8px] font-bold text-slate-500">
-                      +2
-                    </div>
-                  </div>
-                  {/* Activity indicator */}
-                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                    <span className="text-[8px] font-bold text-emerald-600">LIVE</span>
-                  </div>
-                </div>
-              </div>
-              <h3 className="font-bold text-lg text-slate-900 mb-2 text-center">Study Rooms</h3>
-              <p className="text-sm text-slate-500 text-center">
-                Live group sessions. Solve MCQs together, stay accountable.
-              </p>
-            </div>
-=======
       {/* ============================================ */}
       {/* FLAGSHIP FEATURE 2: CMA ALIGNMENT NETWORK */}
       {/* ============================================ */}
@@ -510,16 +398,11 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
                 <div className="text-xs text-slate-400">Mumbai ↔ NYC • Delhi ↔ London • Singapore ↔ Toronto</div>
               </div>
             </div>
->>>>>>> Stashed changes
           </div>
         </div>
       </section>
 
-<<<<<<< Updated upstream
-      {/* Student Features Grid - Red/White Theme */}
-=======
       {/* Student Features Grid - Compact */}
->>>>>>> Stashed changes
       <section className="py-20 px-6 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
@@ -533,51 +416,6 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
 
           <div className="grid md:grid-cols-3 gap-6">
             {[
-<<<<<<< Updated upstream
-              {
-                icon: Icons.Brain,
-                title: 'AI Mastermind Tutor',
-                description: 'Get instant answers to any CMA concept. Our AI knows IMA standards, formulas, and exam patterns.',
-              },
-              {
-                icon: Icons.ClipboardList,
-                title: 'Smart Question Bank',
-                description: 'Practice with our curated question bank covering Part 1 and Part 2. Track your weak areas automatically.',
-              },
-              {
-                icon: Icons.Award,
-                title: 'Mock Test Simulations',
-                description: 'Experience the real exam with timed tests, proctored environment, and detailed performance analytics.',
-              },
-              {
-                icon: Icons.Pencil,
-                title: 'Essay Evaluation',
-                description: 'Submit essays and get AI-powered grading based on official IMA rubrics and scoring criteria.',
-              },
-              {
-                icon: Icons.Users,
-                title: 'Global Study Network',
-                description: 'Connect with CMA aspirants worldwide. Find study partners, join group sessions, and stay motivated together.',
-              },
-              {
-                icon: Icons.BarChart,
-                title: 'Progress Analytics',
-                description: 'Track your preparation journey. Identify weak topics and optimize your study schedule.',
-              }
-            ].map((feature, i) => (
-              <div 
-                key={i} 
-                className="group relative p-8 rounded-3xl bg-gradient-to-br from-white to-slate-50 border-2 border-slate-100 hover:border-brand/30 hover:shadow-2xl hover:shadow-brand/10 transition-all duration-300"
-              >
-                <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-brand/5 to-transparent rounded-bl-[3rem] rounded-tr-3xl" />
-                
-                <div className="relative">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand to-brand-600 flex items-center justify-center mb-6 shadow-lg shadow-brand/30 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
-                    <feature.icon className="w-7 h-7 text-white" />
-                  </div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-3">{feature.title}</h3>
-                  <p className="text-slate-500 leading-relaxed">{feature.description}</p>
-=======
               { icon: Icons.Brain, title: 'AI Mastermind', description: 'Instant answers to any CMA concept. Knows IMA standards, formulas, exam patterns.' },
               { icon: Icons.ClipboardList, title: 'Smart Question Bank', description: 'Curated MCQs for Part 1 & 2. Automatic weak area tracking.' },
               { icon: Icons.Award, title: 'Mock Simulations', description: 'Real exam feel with timed tests and performance analytics.' },
@@ -588,7 +426,6 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
               <div key={i} className="group p-6 rounded-2xl bg-slate-50 hover:bg-white hover:shadow-xl border border-transparent hover:border-slate-100 transition-all">
                 <div className="w-12 h-12 rounded-xl bg-brand/10 flex items-center justify-center mb-4 group-hover:bg-brand group-hover:scale-110 transition-all">
                   <feature.icon className="w-6 h-6 text-brand group-hover:text-white transition-colors" />
->>>>>>> Stashed changes
                 </div>
                 <h3 className="font-bold text-slate-900 mb-2">{feature.title}</h3>
                 <p className="text-sm text-slate-500">{feature.description}</p>
@@ -611,38 +448,9 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
           </div>
 
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-<<<<<<< Updated upstream
-            {/* Mentor Card 1 */}
-            <div className="group relative p-8 rounded-3xl bg-white border-2 border-emerald-100 hover:border-emerald-300 hover:shadow-2xl hover:shadow-emerald-100 transition-all duration-300">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-emerald-50 to-transparent rounded-bl-[4rem] rounded-tr-3xl" />
-              
-              <div className="relative">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center mb-6 shadow-lg shadow-emerald-200 group-hover:scale-110 transition-transform">
-                  <Icons.Users className="w-7 h-7 text-white" />
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">Student Dashboard</h3>
-                <p className="text-slate-500 leading-relaxed mb-4">
-                  Track your students' progress, send broadcasts, create private study rooms, and manage your coaching practice.
-                </p>
-                <ul className="space-y-2 text-sm text-slate-600">
-                  <li className="flex items-center gap-2">
-                    <Icons.CheckCircle className="w-4 h-4 text-emerald-500" />
-                    Enrolled student tracking
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Icons.CheckCircle className="w-4 h-4 text-emerald-500" />
-                    Broadcast announcements
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Icons.CheckCircle className="w-4 h-4 text-emerald-500" />
-                    Revenue share on referrals
-                  </li>
-                </ul>
-=======
             <div className="group p-8 rounded-3xl bg-white border-2 border-emerald-100 hover:border-emerald-300 hover:shadow-2xl transition-all">
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center mb-6 shadow-lg shadow-emerald-200 group-hover:scale-110 transition-transform">
                 <Icons.Users className="w-7 h-7 text-white" />
->>>>>>> Stashed changes
               </div>
               <h3 className="text-xl font-bold text-slate-900 mb-3">Student Dashboard</h3>
               <p className="text-slate-500 leading-relaxed mb-4">
@@ -655,38 +463,9 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
               </ul>
             </div>
 
-<<<<<<< Updated upstream
-            {/* Mentor Card 2 */}
-            <div className="group relative p-8 rounded-3xl bg-white border-2 border-emerald-100 hover:border-emerald-300 hover:shadow-2xl hover:shadow-emerald-100 transition-all duration-300">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-emerald-50 to-transparent rounded-bl-[4rem] rounded-tr-3xl" />
-              
-              <div className="relative">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center mb-6 shadow-lg shadow-emerald-200 group-hover:scale-110 transition-transform">
-                  <Icons.CheckBadge className="w-7 h-7 text-white" />
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">Verified Mentor Badge</h3>
-                <p className="text-slate-500 leading-relaxed mb-4">
-                  All mentors are verified by CoStudy. Get a unique code for secure login and build trust with students.
-                </p>
-                <ul className="space-y-2 text-sm text-slate-600">
-                  <li className="flex items-center gap-2">
-                    <Icons.CheckCircle className="w-4 h-4 text-emerald-500" />
-                    Manual verification by CoStudy
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Icons.CheckCircle className="w-4 h-4 text-emerald-500" />
-                    Unique verification code login
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Icons.CheckCircle className="w-4 h-4 text-emerald-500" />
-                    Verified badge on profile
-                  </li>
-                </ul>
-=======
             <div className="group p-8 rounded-3xl bg-white border-2 border-emerald-100 hover:border-emerald-300 hover:shadow-2xl transition-all">
               <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center mb-6 shadow-lg shadow-emerald-200 group-hover:scale-110 transition-transform">
                 <Icons.CheckBadge className="w-7 h-7 text-white" />
->>>>>>> Stashed changes
               </div>
               <h3 className="text-xl font-bold text-slate-900 mb-3">Verified Mentor Badge</h3>
               <p className="text-slate-500 leading-relaxed mb-4">
@@ -757,11 +536,7 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
 
             {/* Pro Plan */}
             <div className="relative p-8 rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white overflow-hidden">
-<<<<<<< Updated upstream
-              <div className="absolute top-0 right-0 w-40 h-40 bg-brand/20 rounded-full blur-3xl" />
-=======
               <div className="absolute top-0 right-0 w-40 h-40 bg-violet-500/20 rounded-full blur-3xl" />
->>>>>>> Stashed changes
               <div className="absolute bottom-0 left-0 w-32 h-32 bg-brand/10 rounded-full blur-2xl" />
               <div className="relative">
                 <div className="absolute top-0 right-0 px-3 py-1 bg-violet-500 rounded-full text-xs font-bold">Most Popular</div>

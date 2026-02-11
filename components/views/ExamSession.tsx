@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Icons } from '../Icons';
 import { examService, ExamConfig, MCQQuestion, EssayQuestion, MCQAnswer, EssayAnswer } from '../../services/examService';
+import { getIntroPageContent, TOTAL_INTRO_PAGES } from './ExamIntroPages';
 
 // ============================================
 // TYPES
@@ -54,10 +55,40 @@ export const ExamSession: React.FC<ExamSessionProps> = ({
     const [saveStatus, setSaveStatus] = useState<'IDLE' | 'SAVING' | 'SAVED' | 'ERROR'>('IDLE');
     
     const essayInputRef = useRef<HTMLTextAreaElement>(null);
-    const TOTAL_INTRO_PAGES = 8;
+    
+    // Persistence key for localStorage (allows navigation away and return)
+    const EXAM_STATE_KEY = `costudy_exam_${session.id}`;
 
-    // Initialize answers maps
+    // Load saved state from localStorage (for resuming after navigation away)
     useEffect(() => {
+        const savedState = localStorage.getItem(EXAM_STATE_KEY);
+        if (savedState) {
+            try {
+                const state = JSON.parse(savedState);
+                if (state.phase && state.phase !== 'CONFIRM' && state.phase !== 'TERMS') {
+                    setPhase(state.phase);
+                    setMcqIndex(state.mcqIndex || 0);
+                    setEssayIndex(state.essayIndex || 0);
+                    setMcqTimeRemaining(state.mcqTimeRemaining ?? config.mcqDurationMinutes * 60);
+                    setEssayTimeRemaining(state.essayTimeRemaining ?? config.essayDurationMinutes * 60);
+                    setIntroPage(state.introPage || 1);
+                    if (state.mcqAnswers) {
+                        setMcqAnswers(new Map(Object.entries(state.mcqAnswers)));
+                    }
+                    if (state.essayAnswers) {
+                        setEssayAnswers(new Map(Object.entries(state.essayAnswers)));
+                    }
+                    if (state.mcqResults) {
+                        setMcqResults(state.mcqResults);
+                    }
+                    return; // Skip normal initialization
+                }
+            } catch (e) {
+                console.error('Failed to load exam state:', e);
+            }
+        }
+        
+        // Normal initialization if no saved state
         const mcqMap = new Map<string, MCQAnswer>();
         mcqQuestions.forEach(q => {
             mcqMap.set(q.id, { selected: null, flagged: false, timeSpent: 0 });
@@ -69,7 +100,31 @@ export const ExamSession: React.FC<ExamSessionProps> = ({
             essayMap.set(q.id, { text: '', wordCount: 0, timeSpent: 0 });
         });
         setEssayAnswers(essayMap);
-    }, [mcqQuestions, essayQuestions]);
+    }, []);
+    
+    // Save state to localStorage whenever important state changes
+    useEffect(() => {
+        if (phase === 'CONFIRM' || phase === 'TERMS') return; // Don't save pre-exam states
+        
+        const stateToSave = {
+            phase,
+            mcqIndex,
+            essayIndex,
+            mcqTimeRemaining,
+            essayTimeRemaining,
+            introPage,
+            mcqAnswers: Object.fromEntries(mcqAnswers),
+            essayAnswers: Object.fromEntries(essayAnswers),
+            mcqResults,
+            savedAt: Date.now()
+        };
+        localStorage.setItem(EXAM_STATE_KEY, JSON.stringify(stateToSave));
+    }, [phase, mcqIndex, essayIndex, mcqTimeRemaining, essayTimeRemaining, introPage, mcqAnswers, essayAnswers, mcqResults]);
+    
+    // Clear saved state when exam is completed
+    const clearSavedState = useCallback(() => {
+        localStorage.removeItem(EXAM_STATE_KEY);
+    }, [EXAM_STATE_KEY]);
 
     // Timer Effects
     useEffect(() => {
@@ -427,34 +482,12 @@ export const ExamSession: React.FC<ExamSessionProps> = ({
                     {/* Main Content */}
                     <div className="flex-1 p-12 overflow-y-auto">
                         <div className="max-w-4xl">
-                            <h1 className="text-xl font-bold text-black mb-8">CMA Exam Simulation</h1>
-                            <h2 className="text-lg font-bold text-black mb-4">Exam Structure</h2>
-                            <p className="mb-6 text-sm text-black leading-relaxed">
-                                This CMA Exam Simulation has two content sections and you will have <strong>{config.mcqDurationMinutes + config.essayDurationMinutes} minutes</strong> to complete both sections.
-                            </p>
-                            <div className="bg-slate-50 p-6 rounded-lg mb-6">
-                                <p className="font-bold text-sm text-black mb-4">Section 1: Multiple-Choice Questions</p>
-                                <ul className="list-disc list-inside text-sm text-slate-700 space-y-2 ml-4">
-                                    <li>{mcqQuestions.length} questions</li>
-                                    <li>Time: {config.mcqDurationMinutes} minutes ({Math.floor(config.mcqDurationMinutes / 60)} hours)</li>
-                                </ul>
-                                
-                                {essayQuestions.length > 0 && (
-                                    <>
-                                        <p className="font-bold text-sm text-black mb-4 mt-6">Section 2: Essay Questions</p>
-                                        <ul className="list-disc list-inside text-sm text-slate-700 space-y-2 ml-4">
-                                            <li>{essayQuestions.length} essay scenarios</li>
-                                            <li>Time: {config.essayDurationMinutes} minutes</li>
-                                            {config.testType === 'CHALLENGE' && (
-                                                <li className="text-amber-600 font-bold">⚠️ Requires 50%+ on MCQ section to unlock</li>
-                                            )}
-                                        </ul>
-                                    </>
-                                )}
-                            </div>
-                            <p className="mb-6 text-sm text-black leading-relaxed italic">
-                                Before you begin, review the navigation features available during the session.
-                            </p>
+                            {getIntroPageContent({
+                                page: introPage,
+                                config,
+                                mcqCount: mcqQuestions.length,
+                                essayCount: essayQuestions.length
+                            })}
                         </div>
                     </div>
                 </div>
@@ -923,7 +956,7 @@ export const ExamSession: React.FC<ExamSessionProps> = ({
                             </div>
                         )}
 
-                        <button onClick={onExit} className="bg-[#8dc63f] hover:bg-[#7db536] text-white px-12 py-3 font-bold shadow-lg uppercase tracking-widest text-sm">
+                        <button onClick={() => { clearSavedState(); onExit(); }} className="bg-[#8dc63f] hover:bg-[#7db536] text-white px-12 py-3 font-bold shadow-lg uppercase tracking-widest text-sm">
                             Return to Dashboard
                         </button>
                     </div>

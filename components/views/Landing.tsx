@@ -421,7 +421,7 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
               { icon: Icons.Award, title: 'Mock Simulations', description: 'Real exam feel with timed tests and performance analytics.' },
               { icon: Icons.Pencil, title: 'Essay Grading', description: 'AI evaluation based on official IMA rubrics.' },
               { icon: Icons.TrendingUp, title: 'Progress Analytics', description: 'Track your journey. Optimize your study schedule.' },
-              { icon: Icons.Users, title: 'Study Rooms', description: 'Join topic-based rooms. Solve doubts together.' },
+              { icon: Icons.BookOpen, title: 'Resource Library', description: 'Access study materials, notes, and official IMA resources.' },
             ].map((feature, i) => (
               <div key={i} className="group p-6 rounded-2xl bg-slate-50 hover:bg-white hover:shadow-xl border border-transparent hover:border-slate-100 transition-all">
                 <div className="w-12 h-12 rounded-xl bg-brand/10 flex items-center justify-center mb-4 group-hover:bg-brand group-hover:scale-110 transition-all">
@@ -431,6 +431,171 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
                 <p className="text-sm text-slate-500">{feature.description}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================ */}
+      {/* STUDY ROOMS - Premium Visual */}
+      {/* ============================================ */}
+      <section className="py-24 px-6 bg-gradient-to-b from-slate-50 via-white to-slate-50 overflow-hidden">
+        <div className="max-w-6xl mx-auto">
+          {/* Section Header */}
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand/10 rounded-full mb-4">
+              <Icons.Users className="w-4 h-4 text-brand" />
+              <span className="text-xs font-bold text-brand uppercase tracking-wider">Collaborative Learning</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-4">Study Rooms</h2>
+            <p className="text-lg text-slate-500 max-w-2xl mx-auto">
+              Join focused study sessions with peers worldwide. Real-time collaboration, 
+              shared goals, and accountability that drives results.
+            </p>
+          </div>
+
+          {/* Main Visual - Room Preview */}
+          <div className="relative">
+            {/* Background Glow */}
+            <div className="absolute -inset-4 bg-gradient-to-r from-brand/20 via-violet-500/20 to-brand/20 rounded-[3rem] blur-3xl opacity-60" />
+            
+            <div className="relative grid lg:grid-cols-2 gap-8 items-stretch">
+              {/* Left: Room Preview Card */}
+              <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden">
+                {/* Room Header */}
+                <div className="bg-gradient-to-r from-brand to-brand-600 px-6 py-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                      <Icons.BookOpen className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-white">Part 1: Financial Planning</h4>
+                      <div className="flex items-center gap-2 text-white/80 text-xs">
+                        <span className="flex items-center gap-1">
+                          <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+                          LIVE
+                        </span>
+                        <span>•</span>
+                        <span>5 members</span>
+                      </div>
+                    </div>
+                  </div>
+                  <button className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors">
+                    Join Room
+                  </button>
+                </div>
+
+                {/* Room Features */}
+                <div className="p-6 space-y-4">
+                  {/* Active Members */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex -space-x-2">
+                      {[...Array(5)].map((_, i) => (
+                        <div key={i} className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 border-2 border-white flex items-center justify-center">
+                          <span className="text-xs font-bold text-slate-500">{['PR', 'JK', 'SM', 'AL', 'RN'][i]}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <span className="text-xs text-slate-500">All focused on Budgeting</span>
+                  </div>
+
+                  {/* Focus Timer */}
+                  <div className="bg-slate-50 rounded-2xl p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm font-bold text-slate-700">Focus Timer</span>
+                      <span className="text-xs text-emerald-600 font-bold">Pomodoro 25</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1 bg-slate-200 rounded-full h-3 overflow-hidden">
+                        <div className="bg-gradient-to-r from-brand to-emerald-500 h-full rounded-full transition-all" style={{width: '65%'}} />
+                      </div>
+                      <span className="font-mono text-lg font-bold text-slate-800">16:23</span>
+                    </div>
+                  </div>
+
+                  {/* Mission Board Preview */}
+                  <div className="border border-slate-100 rounded-2xl p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Icons.Target className="w-4 h-4 text-brand" />
+                      <span className="text-sm font-bold text-slate-700">Today's Mission</span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-5 h-5 rounded bg-emerald-100 flex items-center justify-center">
+                          <Icons.CheckCircle className="w-3 h-3 text-emerald-600" />
+                        </div>
+                        <span className="text-sm text-slate-600 line-through">Complete 20 MCQs on Cost Behavior</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-5 h-5 rounded bg-brand/10 flex items-center justify-center">
+                          <div className="w-2 h-2 rounded-full bg-brand" />
+                        </div>
+                        <span className="text-sm text-slate-700">Review Variance Analysis formulas</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: Feature Cards */}
+              <div className="space-y-4">
+                {[
+                  {
+                    icon: Icons.Target,
+                    title: 'Mission Board',
+                    description: 'Set shared goals with deadlines. Track team progress in real-time. Celebrate wins together.',
+                    color: 'brand',
+                    stat: '3x more likely to complete',
+                  },
+                  {
+                    icon: Icons.Clock,
+                    title: 'Synchronized Focus Timer',
+                    description: 'Pomodoro sessions sync across all room members. Study together, break together.',
+                    color: 'emerald',
+                    stat: '25/45/60 min presets',
+                  },
+                  {
+                    icon: Icons.MessageSquare,
+                    title: 'Discussion Threads',
+                    description: 'Topic-based Q&A with pinned answers. No noise—just high-value exchanges.',
+                    color: 'violet',
+                    stat: 'Instant doubt clearing',
+                  },
+                  {
+                    icon: Icons.Zap,
+                    title: 'Quiz Arena',
+                    description: '1v1 MCQ duels or room-wide battles. Compete on the leaderboard.',
+                    color: 'amber',
+                    stat: 'Gamified learning',
+                  },
+                ].map((feature, i) => (
+                  <div key={i} className="flex gap-4 p-4 bg-white rounded-2xl border border-slate-100 hover:border-slate-200 hover:shadow-lg transition-all group">
+                    <div className={`w-12 h-12 rounded-xl bg-${feature.color}-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform`}>
+                      <feature.icon className={`w-6 h-6 text-${feature.color}-600`} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <h4 className="font-bold text-slate-900">{feature.title}</h4>
+                        <span className={`text-[10px] font-bold text-${feature.color}-600 bg-${feature.color}-50 px-2 py-0.5 rounded-full`}>
+                          {feature.stat}
+                        </span>
+                      </div>
+                      <p className="text-sm text-slate-500">{feature.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* CTA */}
+          <div className="text-center mt-12">
+            <button 
+              onClick={onGetStarted}
+              className="px-8 py-4 bg-brand text-white font-bold rounded-2xl hover:bg-brand-600 transition-all shadow-lg shadow-brand/20 inline-flex items-center gap-2"
+            >
+              <Icons.Users className="w-5 h-5" />
+              Explore Study Rooms
+            </button>
           </div>
         </div>
       </section>

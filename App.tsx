@@ -15,6 +15,7 @@ const StudentStore = lazy(() => import('./components/views/StudentStore').then(m
 const LibraryVault = lazy(() => import('./components/views/LibraryVault').then(m => ({ default: m.LibraryVault })));
 const MentorDashboard = lazy(() => import('./components/views/MentorDashboard').then(m => ({ default: m.MentorDashboard })));
 const DirectMessages = lazy(() => import('./components/views/DirectMessages').then(m => ({ default: m.DirectMessages })));
+const TeachersDeck = lazy(() => import('./components/views/TeachersDeck').then(m => ({ default: m.TeachersDeck })));
 const Landing = lazy(() => import('./components/views/Landing').then(m => ({ default: m.Landing })));
 const Login = lazy(() => import('./components/auth/Login').then(m => ({ default: m.Login })));
 const SignUp = lazy(() => import('./components/auth/SignUp').then(m => ({ default: m.SignUp })));
@@ -274,7 +275,8 @@ function App() {
       case ViewState.ROOMS:
         return <StudyRooms userId={user?.id} />;
       case ViewState.AI_DECK:
-        return <AIDeck />;
+        // Teachers get TeachersDeck, Students get AIDeck
+        return user?.role === UserRole.TEACHER ? <TeachersDeck /> : <AIDeck />;
       case ViewState.TEACHERS:
         return <TeachersLounge userId={user?.id} />;
       case ViewState.PROFILE:

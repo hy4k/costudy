@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase } from './supabaseClient';
 
 export interface InviteStats {
   has_code: boolean;

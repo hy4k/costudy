@@ -42,6 +42,21 @@ function App() {
   const [currentView, setCurrentView] = useState<keyof typeof ViewState>(ViewState.WALL);
   const [user, setUser] = useState<any>(null);
   const [showLanding, setShowLanding] = useState(true); // Show landing by default
+  
+  // Extract invite code from URL (e.g., ?invite=ABC123)
+  const [inviteCode, setInviteCode] = useState<string>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('invite') || '';
+  });
+
+  // If there's an invite code in URL, auto-show signup
+  useEffect(() => {
+    if (inviteCode && !isLoggedIn) {
+      setShowLanding(false);
+      setShowAuth(true);
+      setAuthView('SIGNUP');
+    }
+  }, [inviteCode, isLoggedIn]);
 
   // Unified Identity Sync function
   const syncUserIdentity = async (supabaseUser: any) => {
@@ -209,7 +224,7 @@ function App() {
       <Suspense fallback={<LoadingFallback />}>
         {authView === 'LOGIN'
           ? <Login onLogin={() => setShowAuth(false)} onSwitch={() => setAuthView('SIGNUP')} onBack={() => { setShowAuth(false); setShowLanding(true); }} />
-          : <SignUp onSignUp={() => setShowAuth(false)} onSwitch={() => setAuthView('LOGIN')} onBack={() => { setShowAuth(false); setShowLanding(true); }} />}
+          : <SignUp onSignUp={() => setShowAuth(false)} onSwitch={() => setAuthView('LOGIN')} onBack={() => { setShowAuth(false); setShowLanding(true); }} initialInviteCode={inviteCode} />}
       </Suspense>
     );
   }

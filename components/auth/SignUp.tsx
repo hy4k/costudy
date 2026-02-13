@@ -2,21 +2,34 @@
 import React, { useState, useEffect } from 'react';
 import { Icons } from '../Icons';
 import { authService } from '../../services/fetsService';
+import { validateInviteCode, useInviteCode } from '../../services/inviteService';
 
 interface SignUpProps {
   onSignUp: () => void;
   onSwitch: () => void;
   onBack?: () => void;
+  initialInviteCode?: string; // From URL param ?invite=XXXXXX
 }
 
-export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack }) => {
+export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack, initialInviteCode = '' }) => {
   const [role, setRole] = useState<'STUDENT' | 'TEACHER'>('STUDENT');
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [accessCode, setAccessCode] = useState(''); // New state for mentor verification
+  const [accessCode, setAccessCode] = useState(''); // Mentor verification
+  const [inviteCode, setInviteCode] = useState(initialInviteCode); // Student invite code
+  const [inviteValid, setInviteValid] = useState<boolean | null>(null);
+  const [inviteChecking, setInviteChecking] = useState(false);
+  const [inviteOwnerId, setInviteOwnerId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Auto-validate initial invite code from URL
+  useEffect(() => {
+    if (initialInviteCode && initialInviteCode.length === 6) {
+      checkInviteCode(initialInviteCode);
+    }
+  }, [initialInviteCode]);
 
   // Instant Theme Preview for Role Selection
   useEffect(() => {
@@ -28,8 +41,8 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack }) =>
         root.style.setProperty('--color-brand-200', '#99f6e4');
         root.style.setProperty('--color-brand-300', '#5eead4');
         root.style.setProperty('--color-brand-400', '#2dd4bf');
-        root.style.setProperty('--color-brand-500', '#0d9488'); // Teal 600
-        root.style.setProperty('--color-brand-600', '#0f766e'); // Teal 700
+        root.style.setProperty('--color-brand-500', '#0d9488');
+        root.style.setProperty('--color-brand-600', '#0f766e');
         root.style.setProperty('--color-brand-700', '#115e59');
         root.style.setProperty('--color-brand-800', '#134e4a');
         root.style.setProperty('--color-brand-900', '#042f2e');
@@ -48,6 +61,40 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack }) =>
     }
   }, [role]);
 
+  // Check invite code validity
+  const checkInviteCode = async (code: string) => {
+    if (code.length !== 6) {
+      setInviteValid(null);
+      setInviteOwnerId(null);
+      return;
+    }
+
+    setInviteChecking(true);
+    const result = await validateInviteCode(code);
+    setInviteValid(result.valid);
+    setInviteOwnerId(result.owner_id || null);
+    setInviteChecking(false);
+
+    if (!result.valid && result.error) {
+      setError(result.error);
+    } else {
+      setError(null);
+    }
+  };
+
+  // Handle invite code input change
+  const handleInviteCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+    setInviteCode(value);
+    
+    if (value.length === 6) {
+      checkInviteCode(value);
+    } else {
+      setInviteValid(null);
+      setInviteOwnerId(null);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -60,13 +107,39 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack }) =>
         return;
     }
 
+    // Student Invite Code Validation
+    if (role === 'STUDENT') {
+      if (!inviteCode || inviteCode.length !== 6) {
+        setError("Invite code is required. Get one from a current CoStudy member!");
+        setIsLoading(false);
+        return;
+      }
+      
+      if (inviteValid !== true) {
+        setError("Please enter a valid invite code before signing up.");
+        setIsLoading(false);
+        return;
+      }
+    }
+
     try {
-      await authService.signUp(email, password, name, role);
+      // Create the account
+      const data = await authService.signUp(email, password, name, role);
+      const user = data?.user;
+      
+      // If student, consume the invite code
+      if (role === 'STUDENT' && user?.id && inviteCode) {
+        const useResult = await useInviteCode(inviteCode, user.id);
+        if (!useResult.success) {
+          console.warn("Failed to record invite code usage:", useResult.error);
+          // Don't block signup, just log it
+        }
+      }
+
       // Wait for session propagation
       setTimeout(() => onSignUp(), 800);
     } catch (err: any) {
       console.error("Signup Flow Error:", err);
-      // If the error is the common Supabase "Database error", provide a more helpful message
       if (err.message.includes('Database error')) {
         setError("Account creation hiccup. This email might already be pending verification, or the server is busy. Please try again in 30 seconds.");
       } else {
@@ -134,6 +207,51 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack }) =>
                   {error}
                 </div>
               )}
+
+              {/* Invite Code Input for Students */}
+              {role === 'STUDENT' && (
+                <div className="animate-in slide-in-from-top-4 duration-500">
+                  <div className="relative">
+                    <div className="absolute top-1/2 -translate-y-1/2 left-6 text-brand">
+                      <Icons.Gift className="w-5 h-5" />
+                    </div>
+                    <input 
+                      type="text" 
+                      required
+                      placeholder="INVITE CODE"
+                      value={inviteCode}
+                      onChange={handleInviteCodeChange}
+                      maxLength={6}
+                      className={`w-full border-2 rounded-[1.5rem] px-8 py-5 pl-16 text-white font-mono font-black text-center text-xl tracking-[0.3em] uppercase outline-none transition-all focus:ring-4 ${
+                        inviteValid === true 
+                          ? 'bg-emerald-500/10 border-emerald-500/50 focus:border-emerald-500 focus:ring-emerald-500/10' 
+                          : inviteValid === false 
+                            ? 'bg-brand/10 border-brand/50 focus:border-brand focus:ring-brand/10'
+                            : 'bg-white/5 border-white/10 focus:border-brand/50 focus:ring-brand/5'
+                      } placeholder:text-slate-600 placeholder:font-sans placeholder:text-sm placeholder:tracking-widest`}
+                    />
+                    {/* Status Icon */}
+                    <div className="absolute top-1/2 -translate-y-1/2 right-6">
+                      {inviteChecking && (
+                        <div className="w-5 h-5 border-2 border-slate-500 border-t-brand rounded-full animate-spin" />
+                      )}
+                      {!inviteChecking && inviteValid === true && (
+                        <Icons.CheckCircle className="w-6 h-6 text-emerald-500" />
+                      )}
+                      {!inviteChecking && inviteValid === false && (
+                        <Icons.XCircle className="w-6 h-6 text-brand" />
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-2 ml-4">
+                    {inviteValid === true 
+                      ? '✓ Valid invite code!' 
+                      : '* Get an invite code from a current CoStudy member'
+                    }
+                  </p>
+                </div>
+              )}
+
               <input 
                 type="text" 
                 required
@@ -181,8 +299,8 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack }) =>
 
               <button 
                 type="submit" 
-                disabled={isLoading}
-                className="w-full py-6 bg-brand text-white rounded-[2rem] text-sm font-black uppercase tracking-[0.3em] shadow-2xl shadow-brand/20 hover:shadow-brand/40 transition-all flex items-center justify-center gap-4 hover:-translate-y-1 active:scale-95"
+                disabled={isLoading || (role === 'STUDENT' && inviteValid !== true)}
+                className="w-full py-6 bg-brand text-white rounded-[2rem] text-sm font-black uppercase tracking-[0.3em] shadow-2xl shadow-brand/20 hover:shadow-brand/40 transition-all flex items-center justify-center gap-4 hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
               >
                 {isLoading ? (
                   <><Icons.CloudSync className="w-5 h-5 animate-spin" /> Seeding Identity...</>

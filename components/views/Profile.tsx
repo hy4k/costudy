@@ -4,6 +4,7 @@ import { Icons } from '../Icons';
 import { User, UserRole, AlignmentPurpose, ActiveAlignment, AlignmentRequest, AlignmentDuration, TrackingRecord, ObserverRecord, SignalLevel, SignalConfig } from '../../types';
 import { getUserProfile, updateUserProfile } from '../../services/fetsService';
 import { alignmentService } from '../../services/alignmentService';
+import { InviteCard } from '../InviteCard';
 
 interface ProfileProps {
   onLogout?: () => void;
@@ -520,6 +521,13 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
                     </div>
                 </div>
             </div>
+
+            {/* Invite Card - Students Only */}
+            {!isTeacher && (
+                <div className="animate-in slide-in-from-bottom-6 duration-500">
+                    <InviteCard />
+                </div>
+            )}
 
             {/* ... (Rest of Network Section - Unchanged) ... */}
             {!isTeacher && (

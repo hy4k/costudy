@@ -337,13 +337,23 @@ export const syncStudyTelemetry = (data: any) => {
   console.log('[CoStudy Telemetry]', data);
 };
 
-// --- EXAM MOCK GENERATOR (PROMETRIC STYLE) ---
-export const fetchExamQuestions = async (count: number) => {
-    return new Promise<any[]>((resolve) => {
-        setTimeout(() => {
-            const questions = Array.from({ length: count }).map((_, i) => ({
-                id: `q-${i + 1}`,
-                type: 'MCQ', // Explicit Type
+// --- EXAM QUESTION FETCHER (REAL DATA) ---
+export const fetchExamQuestions = async (mcqCount: number, essayCount: number = 2) => {
+    try {
+        // Fetch MCQs from database (or generate sample if table empty)
+        const { data: mcqData, error: mcqError } = await supabase
+            .from('mcq_questions')
+            .select('*')
+            .eq('is_active', true)
+            .limit(mcqCount);
+        
+        let mcqs = mcqData || [];
+        
+        // If no real MCQs exist, generate sample questions
+        if (mcqs.length < mcqCount) {
+            const sampleMcqs = Array.from({ length: mcqCount - mcqs.length }).map((_, i) => ({
+                id: `mcq-sample-${i + 1}`,
+                type: 'MCQ',
                 question_text: `Sample CMA Question ${i + 1}: Which of the following best describes the strategic advantage of Activity Based Costing (ABC) over traditional volume-based costing in a diverse manufacturing environment?`,
                 option_a: "It reduces the total overhead costs incurred by the production facility.",
                 option_b: "It assigns costs based on resource consumption rather than just volume, providing more accurate product margins.",
@@ -353,19 +363,192 @@ export const fetchExamQuestions = async (count: number) => {
                 part: "Part 1",
                 section: i % 2 === 0 ? "Cost Management" : "Internal Controls"
             }));
-            resolve(questions);
-        }, 1500); // Simulate network latency
-    });
+            mcqs = [...mcqs, ...sampleMcqs];
+        }
+        
+        // Format MCQs
+        const formattedMcqs = mcqs.map(q => ({
+            ...q,
+            type: 'MCQ'
+        }));
+        
+        // Fetch Essays from database
+        const { data: essayData, error: essayError } = await supabase
+            .from('essay_questions')
+            .select('*')
+            .eq('is_active', true)
+            .limit(essayCount * 3); // Fetch extra for random selection
+        
+        let essays = essayData || [];
+        
+        // Randomly select essays if we have more than needed
+        if (essays.length > essayCount) {
+            essays = essays.sort(() => Math.random() - 0.5).slice(0, essayCount);
+        }
+        
+        // If no real essays exist, use fallback
+        if (essays.length < essayCount) {
+            const fallbackEssays = [
+                {
+                    id: 'essay-fallback-1',
+                    type: 'ESSAY',
+                    question_text: 'SCENARIO:\n\nOmega Corp is a US-based manufacturer considering expansion into the European market. The CFO is concerned about foreign currency exchange risk as the Euro has been volatile against the USD.\n\nREQUIRED:\n\n1. Identify and explain the three types of foreign currency risk exposure Omega Corp might face.\n\n2. Recommend a hedging strategy using financial derivatives to mitigate the transaction risk identified in part 1.',
+                    part: 'Part 1',
+                    section: 'Essay Section - Financial Risk',
+                },
+                {
+                    id: 'essay-fallback-2',
+                    type: 'ESSAY',
+                    question_text: 'SCENARIO:\n\nYou are the Controller of TechSolutions Inc. The company has traditionally used a volume-based costing system (direct labor hours) to allocate overhead. Recently, competitors have undercut TechSolutions prices on high-volume products while TechSolutions remains cheaper on low-volume specialty products.\n\nREQUIRED:\n\n1. Analyze why the current costing system might be distorting product costs.\n\n2. Explain how Activity-Based Costing (ABC) could provide more accurate cost information and assist in strategic pricing decisions.',
+                    part: 'Part 1',
+                    section: 'Essay Section - Cost Management',
+                }
+            ];
+            essays = [...essays, ...fallbackEssays.slice(0, essayCount - essays.length)];
+        }
+        
+        // Format essays for exam display
+        const formattedEssays = essays.map(e => ({
+            id: e.id,
+            type: 'ESSAY',
+            question_text: e.scenario 
+                ? `SCENARIO:\n\n${e.scenario}\n\nREQUIRED:\n\n${e.tasks}`
+                : e.question_text || 'Essay question content not available.',
+            part: e.part || 'Part 1',
+            section: `Essay Section - ${e.topic || 'General'}`,
+            answer_guidance: e.answer_guidance,
+            option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: ''
+        }));
+        
+        // Combine: MCQs first, then Essays
+        const shuffledMcqs = formattedMcqs.sort(() => Math.random() - 0.5);
+        
+        return [...shuffledMcqs, ...formattedEssays];
+        
+    } catch (error) {
+        console.error('Error fetching exam questions:', error);
+        // Return minimal fallback on error
+        return Array.from({ length: mcqCount }).map((_, i) => ({
+            id: `q-fallback-${i + 1}`,
+            type: 'MCQ',
+            question_text: `Fallback Question ${i + 1}: Error loading questions. Please check your connection.`,
+            option_a: "Option A",
+            option_b: "Option B", 
+            option_c: "Option C",
+            option_d: "Option D",
+            correct_answer: "A",
+            part: "Part 1",
+            section: "General"
+        }));
+    }
 };
 
-// --- AUTO SAVE SIMULATION ---
+// Fetch only essay questions (for essay-only tests)
+export const fetchEssayQuestions = async (count: number = 2) => {
+    try {
+        const { data, error } = await supabase
+            .from('essay_questions')
+            .select('*')
+            .eq('is_active', true);
+        
+        if (error) throw error;
+        
+        let essays = data || [];
+        
+        // Shuffle and limit
+        essays = essays.sort(() => Math.random() - 0.5).slice(0, count);
+        
+        return essays.map(e => ({
+            id: e.id,
+            type: 'ESSAY',
+            topic: e.topic,
+            scenario: e.scenario,
+            tasks: e.tasks,
+            answer_guidance: e.answer_guidance,
+            citations: e.citations,
+            part: e.part,
+            question_text: `SCENARIO:\n\n${e.scenario}\n\nREQUIRED:\n\n${e.tasks}`
+        }));
+    } catch (error) {
+        console.error('Error fetching essays:', error);
+        return [];
+    }
+};
+
+// --- EXAM SESSION SAVE (REAL) ---
 export const saveExamProgress = async (userId: string, testId: string, progress: any) => {
-    // This would typically be a Supabase upsert to an 'exam_sessions' table
-    return new Promise((resolve) => {
-        console.log(`[AutoSave] Saving progress for ${userId} on test ${testId}`, {
-            answered: progress.answers.filter((a: any) => a[1].selected !== null).length,
-            currentQuestion: progress.currentIndex
-        });
-        setTimeout(() => resolve(true), 600); // Simulate network delay
-    });
+    try {
+        const { data: existingSession } = await supabase
+            .from('exam_sessions')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('test_id', testId)
+            .eq('status', 'in_progress')
+            .maybeSingle();
+        
+        const sessionData = {
+            user_id: userId,
+            test_id: testId,
+            answers: progress.answers,
+            current_index: progress.currentIndex,
+            time_remaining: progress.timeRemaining,
+            last_saved_at: new Date().toISOString(),
+            status: 'in_progress'
+        };
+        
+        if (existingSession) {
+            // Update existing session
+            const { error } = await supabase
+                .from('exam_sessions')
+                .update(sessionData)
+                .eq('id', existingSession.id);
+            
+            if (error) throw error;
+        } else {
+            // Create new session
+            const { error } = await supabase
+                .from('exam_sessions')
+                .insert({
+                    ...sessionData,
+                    started_at: new Date().toISOString()
+                });
+            
+            if (error) throw error;
+        }
+        
+        console.log(`[AutoSave] Saved progress for ${userId} on test ${testId}`);
+        return true;
+    } catch (error) {
+        console.error('[AutoSave] Error saving progress:', error);
+        // Don't throw - auto-save failures shouldn't crash the exam
+        return false;
+    }
+};
+
+// Complete exam session and record results
+export const completeExamSession = async (
+    userId: string, 
+    testId: string, 
+    scoreMcq: number, 
+    scoreEssay?: number
+) => {
+    try {
+        const { error } = await supabase
+            .from('exam_sessions')
+            .update({
+                status: 'completed',
+                completed_at: new Date().toISOString(),
+                score_mcq: scoreMcq,
+                score_essay: scoreEssay
+            })
+            .eq('user_id', userId)
+            .eq('test_id', testId)
+            .eq('status', 'in_progress');
+        
+        if (error) throw error;
+        return true;
+    } catch (error) {
+        console.error('[CompleteExam] Error completing session:', error);
+        return false;
+    }
 };

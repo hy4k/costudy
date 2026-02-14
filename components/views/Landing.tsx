@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Icons } from '../Icons';
 
 interface LandingProps {
@@ -6,497 +6,599 @@ interface LandingProps {
   onLogin: () => void;
 }
 
-// Feature Scene Card - ZooZoo style
-const FeatureScene: React.FC<{
-  visual: React.ReactNode;
-  headline: string;
-  subtext?: string;
+// Intersection Observer hook for scroll animations
+const useInView = (threshold = 0.1) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          observer.disconnect();
+        }
+      },
+      { threshold }
+    );
+
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [threshold]);
+
+  return { ref, inView };
+};
+
+// Animated counter for stats
+const AnimatedCounter: React.FC<{ end: number; suffix?: string; duration?: number }> = ({ 
+  end, suffix = '', duration = 2000 
+}) => {
+  const [count, setCount] = useState(0);
+  const { ref, inView } = useInView();
+
+  useEffect(() => {
+    if (!inView) return;
+    let start = 0;
+    const increment = end / (duration / 16);
+    const timer = setInterval(() => {
+      start += increment;
+      if (start >= end) {
+        setCount(end);
+        clearInterval(timer);
+      } else {
+        setCount(Math.floor(start));
+      }
+    }, 16);
+    return () => clearInterval(timer);
+  }, [inView, end, duration]);
+
+  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>;
+};
+
+// Feature card with social proof styling
+const FeatureCard: React.FC<{
+  icon: React.ReactNode;
+  emoji: string;
+  title: string;
+  description: string;
+  highlight?: string;
+  stats?: { label: string; value: string }[];
   gradient: string;
   delay?: number;
-}> = ({ visual, headline, subtext, gradient, delay = 0 }) => {
-  const [visible, setVisible] = useState(false);
-  
-  useEffect(() => {
-    const timer = setTimeout(() => setVisible(true), delay);
-    return () => clearTimeout(timer);
-  }, [delay]);
-  
+}> = ({ icon, emoji, title, description, highlight, stats, gradient, delay = 0 }) => {
+  const { ref, inView } = useInView(0.2);
+
   return (
-    <div 
+    <div
+      ref={ref}
       className={`
-        relative overflow-hidden rounded-3xl p-8 
-        ${gradient}
-        transform transition-all duration-700 ease-out
-        ${visible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}
-        hover:scale-[1.02] hover:shadow-2xl
-        cursor-pointer group
+        relative overflow-hidden rounded-3xl bg-white border border-slate-200/60
+        shadow-lg shadow-slate-200/50 hover:shadow-2xl hover:shadow-slate-300/50
+        transition-all duration-500 ease-out group
+        ${inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}
       `}
+      style={{ transitionDelay: `${delay}ms` }}
     >
-      {/* Visual/Character Area */}
-      <div className="h-40 flex items-center justify-center mb-6">
-        {visual}
-      </div>
+      {/* Gradient accent */}
+      <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${gradient}`} />
       
-      {/* Text */}
-      <h3 className="text-2xl md:text-3xl font-bold text-slate-900 text-center leading-tight">
-        {headline}
-      </h3>
-      {subtext && (
-        <p className="text-slate-600 text-center mt-2 text-lg">
-          {subtext}
+      <div className="p-6 sm:p-8">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-4">
+          <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center text-white shadow-lg`}>
+            {icon}
+          </div>
+          <span className="text-3xl">{emoji}</span>
+        </div>
+
+        {/* Content */}
+        <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 group-hover:text-slate-800 transition-colors">
+          {title}
+        </h3>
+        <p className="text-slate-600 leading-relaxed mb-4">
+          {description}
         </p>
-      )}
-      
-      {/* Hover glow effect */}
-      <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-colors duration-300 rounded-3xl" />
+
+        {/* Highlight tag */}
+        {highlight && (
+          <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r ${gradient} bg-opacity-10 text-sm font-medium`}>
+            <span className="w-2 h-2 rounded-full bg-current animate-pulse" />
+            {highlight}
+          </div>
+        )}
+
+        {/* Stats row */}
+        {stats && (
+          <div className="mt-5 pt-5 border-t border-slate-100 flex items-center gap-6">
+            {stats.map((stat, i) => (
+              <div key={i}>
+                <div className="text-2xl font-bold text-slate-900">{stat.value}</div>
+                <div className="text-xs text-slate-500 uppercase tracking-wide">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Social proof post (simplified, mobile-optimized)
+const SocialPost: React.FC<{
+  avatar: string;
+  name: string;
+  location: string;
+  time: string;
+  content: React.ReactNode;
+  likes: number;
+  verified?: boolean;
+  delay?: number;
+}> = ({ avatar, name, location, time, content, likes, verified, delay = 0 }) => {
+  const { ref, inView } = useInView(0.15);
+  const [liked, setLiked] = useState(false);
+
+  return (
+    <div
+      ref={ref}
+      className={`
+        bg-white rounded-2xl sm:rounded-3xl border border-slate-200/60 shadow-lg shadow-slate-200/30
+        overflow-hidden transition-all duration-500 ease-out hover:shadow-xl
+        ${inView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}
+      `}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      {/* Header */}
+      <div className="p-4 sm:p-5 pb-0">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-red-400 to-pink-500 flex items-center justify-center text-xl sm:text-2xl shadow-md flex-shrink-0">
+            {avatar}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-slate-900 truncate">{name}</span>
+              {verified && (
+                <span className="w-4 h-4 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Icons.CheckCircle className="w-3 h-3 text-white" />
+                </span>
+              )}
+            </div>
+            <div className="text-sm text-slate-500 truncate">
+              {location} • {time}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="p-4 sm:p-5 text-slate-700 leading-relaxed">
+        {content}
+      </div>
+
+      {/* Engagement */}
+      <div className="px-4 sm:px-5 py-3 border-t border-slate-100 flex items-center justify-between">
+        <button 
+          onClick={() => setLiked(!liked)}
+          className={`flex items-center gap-2 font-medium transition-colors ${liked ? 'text-red-500' : 'text-slate-400 hover:text-red-500'}`}
+        >
+          <span className="text-lg">{liked ? '❤️' : '🤍'}</span>
+          <span>{liked ? likes + 1 : likes}</span>
+        </button>
+        <button className="text-slate-400 hover:text-blue-500 transition-colors flex items-center gap-2">
+          <span className="text-lg">💬</span>
+          <span className="text-sm">Reply</span>
+        </button>
+      </div>
     </div>
   );
 };
 
 export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
-  const [scrollY, setScrollY] = useState(0);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly');
-  
-  useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-white text-slate-900">
-      {/* Custom animations */}
+    <div className="min-h-screen bg-white text-slate-900 overflow-x-hidden">
+      {/* Reduced motion styles */}
       <style>{`
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+          }
+        }
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-20px); }
+          50% { transform: translateY(-8px); }
         }
-        @keyframes wave {
-          0%, 100% { transform: rotate(0deg); }
-          25% { transform: rotate(20deg); }
-          75% { transform: rotate(-20deg); }
+        @keyframes shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
         }
-        @keyframes think {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.1); }
+        .animate-float { animation: float 4s ease-in-out infinite; }
+        .animate-shimmer {
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+          background-size: 200% 100%;
+          animation: shimmer 2s infinite;
         }
-        @keyframes connect-line {
-          0% { width: 0; opacity: 0; }
-          50% { width: 100%; opacity: 1; }
-          100% { width: 100%; opacity: 0.5; }
-        }
-        @keyframes ping-slow {
-          0% { transform: scale(1); opacity: 1; }
-          75%, 100% { transform: scale(2); opacity: 0; }
-        }
-        .animate-float { animation: float 3s ease-in-out infinite; }
-        .animate-wave { animation: wave 1s ease-in-out infinite; }
-        .animate-think { animation: think 2s ease-in-out infinite; }
-        .animate-connect-line { animation: connect-line 2s ease-out forwards; }
-        .animate-ping-slow { animation: ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite; }
       `}</style>
 
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200">
+      {/* Navigation - Sticky, Mobile-optimized */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-b border-slate-100 safe-area-inset">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-black tracking-tight text-slate-900">COSTUDY</span>
+          <div className="flex items-center justify-between h-14 sm:h-16">
+            {/* Logo */}
+            <div className="flex items-center">
+              <span className="text-xl sm:text-2xl font-black tracking-tight text-slate-900">COSTUDY</span>
             </div>
-            <div className="flex items-center gap-4">
-              <button onClick={onLogin} className="text-slate-600 hover:text-slate-900 font-medium transition">
+
+            {/* Desktop nav */}
+            <div className="hidden sm:flex items-center gap-3">
+              <button 
+                onClick={onLogin} 
+                className="px-4 py-2 text-slate-600 hover:text-slate-900 font-medium transition-colors"
+              >
                 Sign In
               </button>
               <button 
                 onClick={onGetStarted} 
-                className="px-5 py-2.5 bg-gradient-to-r from-red-600 to-emerald-600 hover:from-red-500 hover:to-emerald-500 text-white rounded-full font-semibold transition"
+                className="px-5 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-full font-semibold transition-all shadow-lg shadow-red-500/25 hover:shadow-red-500/40 hover:scale-105 active:scale-100"
               >
-                Get Started
+                Get Started Free
               </button>
             </div>
+
+            {/* Mobile menu button */}
+            <button 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="sm:hidden p-2 -mr-2 text-slate-600"
+            >
+              {mobileMenuOpen ? <Icons.X className="w-6 h-6" /> : <Icons.Menu className="w-6 h-6" />}
+            </button>
           </div>
+
+          {/* Mobile menu */}
+          {mobileMenuOpen && (
+            <div className="sm:hidden py-4 border-t border-slate-100 space-y-3">
+              <button 
+                onClick={() => { onLogin(); setMobileMenuOpen(false); }}
+                className="block w-full text-left px-4 py-2 text-slate-600 hover:text-slate-900 font-medium"
+              >
+                Sign In
+              </button>
+              <button 
+                onClick={() => { onGetStarted(); setMobileMenuOpen(false); }}
+                className="block w-full px-4 py-3 bg-red-600 text-white rounded-xl font-semibold text-center"
+              >
+                Get Started Free
+              </button>
+            </div>
+          )}
         </div>
       </nav>
 
-      {/* Hero Section - Big Bold Header */}
-      <section className="pt-32 pb-16 px-4 relative overflow-hidden">
-        {/* Subtle background pattern */}
-        <div 
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: `radial-gradient(circle at 1px 1px, slate 1px, transparent 0)`,
-            backgroundSize: '40px 40px'
-          }}
-        />
+      {/* Hero Section - Mobile First */}
+      <section className="pt-20 sm:pt-24 pb-12 sm:pb-20 px-4 relative overflow-hidden">
+        {/* Background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-b from-red-50/50 via-white to-white pointer-events-none" />
         
-        <div className="max-w-5xl mx-auto relative text-center">
-          {/* Main Logo Text */}
-          <h1 
-            className="text-[8rem] md:text-[12rem] lg:text-[14rem] font-black tracking-tighter leading-none text-slate-900"
-            style={{ 
-              transform: `translateY(${scrollY * 0.1}px)`,
-              transition: 'transform 0.1s ease-out'
-            }}
-          >
-            COSTUDY
+        {/* Decorative elements - hidden on mobile for performance */}
+        <div className="hidden sm:block absolute top-32 left-10 w-72 h-72 bg-red-100 rounded-full blur-3xl opacity-40" />
+        <div className="hidden sm:block absolute top-48 right-10 w-96 h-96 bg-orange-100 rounded-full blur-3xl opacity-30" />
+        
+        <div className="max-w-5xl mx-auto relative">
+          {/* Trust badge - Above the fold */}
+          <div className="flex justify-center mb-6 sm:mb-8">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-slate-200 shadow-sm">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              </span>
+              <span className="text-sm font-medium text-slate-700">Invite-only Beta</span>
+              <span className="text-slate-300">•</span>
+              <span className="text-sm text-slate-500"><AnimatedCounter end={847} suffix="+" /> students</span>
+            </div>
+          </div>
+
+          {/* Main headline - Responsive sizing */}
+          <h1 className="text-center">
+            <span className="block text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-black tracking-tight text-slate-900 leading-none">
+              COSTUDY
+            </span>
+            <span className="block mt-2 sm:mt-3 text-lg sm:text-xl md:text-2xl font-medium tracking-widest text-slate-400 uppercase">
+              CMA Success Universe
+            </span>
           </h1>
-          
-          {/* Tagline */}
-          <p 
-            className="text-2xl md:text-3xl font-medium tracking-[0.3em] text-slate-400 uppercase mt-4"
-            style={{ 
-              transform: `translateY(${scrollY * 0.05}px)`,
-              transition: 'transform 0.1s ease-out'
-            }}
-          >
-            CMA Success Universe
+
+          {/* Value proposition - Clear and immediate */}
+          <p className="mt-6 sm:mt-8 text-center text-lg sm:text-xl md:text-2xl text-slate-600 max-w-2xl mx-auto leading-relaxed px-2">
+            The AI-powered study platform where <span className="text-slate-900 font-semibold">CMA candidates worldwide</span> prepare together, 24/7.
           </p>
-          
-          {/* Simple CTA */}
-          <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
+
+          {/* Primary CTA - Single, prominent */}
+          <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
             <button 
               onClick={onGetStarted}
-              className="px-10 py-4 bg-red-600 hover:bg-red-500 text-white text-xl font-semibold rounded-full transition transform hover:scale-105 shadow-lg hover:shadow-xl"
+              className="w-full sm:w-auto px-8 sm:px-10 py-4 bg-red-600 hover:bg-red-500 text-white text-lg font-bold rounded-2xl sm:rounded-full transition-all shadow-xl shadow-red-500/30 hover:shadow-red-500/50 hover:scale-105 active:scale-100"
             >
-              Join as Student →
+              Get Started Free →
             </button>
             <button 
               onClick={onGetStarted}
-              className="px-10 py-4 bg-emerald-600 hover:bg-emerald-500 text-white text-xl font-semibold rounded-full transition transform hover:scale-105 shadow-lg hover:shadow-xl"
+              className="w-full sm:w-auto px-8 sm:px-10 py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 text-lg font-semibold rounded-2xl sm:rounded-full transition-all"
             >
-              Join as Teacher →
+              I Have an Invite
             </button>
+          </div>
+
+          {/* Quick social proof */}
+          <div className="mt-10 sm:mt-12 flex flex-wrap items-center justify-center gap-6 sm:gap-8 text-sm text-slate-500">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🇮🇳</span>
+              <span>India</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🇺🇸</span>
+              <span>USA</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🇦🇪</span>
+              <span>UAE</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🇬🇧</span>
+              <span>UK</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🇸🇬</span>
+              <span>Singapore</span>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Feature Scenes - ZooZoo Style */}
-      <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto">
-          {/* Section intro */}
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">
-              This is how you pass.
+      {/* Problem → Solution Section */}
+      <section className="py-12 sm:py-20 px-4 bg-slate-50">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-10 sm:mb-14">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+              CMA prep is broken. We fixed it.
             </h2>
-            <p className="text-xl text-slate-500">
-              Six features. Zero fluff.
+            <p className="text-base sm:text-lg text-slate-500">
+              No more studying alone at 2 AM. No more waiting weeks for feedback.
             </p>
           </div>
 
-          {/* Feature Grid - 6 cards */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            
-            {/* Feature 1: Costudying - Global Peer Connection */}
-            <FeatureScene
-              gradient="bg-gradient-to-br from-blue-100 via-indigo-50 to-purple-100"
-              headline="Costudy with someone in New York."
-              subtext="While you sleep, they review your work."
-              delay={0}
-              visual={
-                <div className="relative w-full h-full flex items-center justify-center">
-                  {/* India student */}
-                  <div className="absolute left-4 flex flex-col items-center">
-                    <div className="relative">
-                      <span className="text-4xl">👨‍💻</span>
-                      <span className="absolute -bottom-1 -right-1 text-sm">🇮🇳</span>
-                    </div>
-                    <span className="text-[10px] text-slate-500 mt-1 font-medium">Cochin</span>
-                  </div>
-                  
-                  {/* Connection line with pulse */}
-                  <div className="absolute left-1/4 right-1/4 top-1/2 -translate-y-1/2 h-1 flex items-center">
-                    <div className="w-full h-0.5 bg-gradient-to-r from-blue-400 via-purple-400 to-indigo-400 animate-connect-line rounded-full" />
-                    <div className="absolute left-1/2 -translate-x-1/2 w-3 h-3 bg-purple-400 rounded-full">
-                      <div className="absolute inset-0 bg-purple-400 rounded-full animate-ping-slow" />
-                    </div>
-                  </div>
-                  
-                  {/* US student */}
-                  <div className="absolute right-4 flex flex-col items-center">
-                    <div className="relative">
-                      <span className="text-4xl">👩‍💻</span>
-                      <span className="absolute -bottom-1 -right-1 text-sm">🇺🇸</span>
-                    </div>
-                    <span className="text-[10px] text-slate-500 mt-1 font-medium">New York</span>
-                  </div>
-                </div>
-              }
-            />
+          <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
+            {/* Before */}
+            <div className="bg-white rounded-2xl p-5 sm:p-6 border-2 border-red-100">
+              <div className="flex items-center gap-2 text-red-500 font-semibold mb-4">
+                <span className="text-xl">😩</span>
+                <span>Without CoStudy</span>
+              </div>
+              <ul className="space-y-3 text-slate-600">
+                <li className="flex items-start gap-3">
+                  <span className="text-red-400 mt-0.5">✗</span>
+                  <span>Study alone, no accountability</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-red-400 mt-0.5">✗</span>
+                  <span>Wait days for essay feedback</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-red-400 mt-0.5">✗</span>
+                  <span>Expensive coaching classes</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-red-400 mt-0.5">✗</span>
+                  <span>No idea what real exam feels like</span>
+                </li>
+              </ul>
+            </div>
 
-            {/* Feature 2: Smart Engine (AI Tutor) */}
-            <FeatureScene
-              gradient="bg-gradient-to-br from-emerald-100 via-teal-50 to-cyan-100"
-              headline="Ask anything about CMA."
-              subtext="CoStudy's engine knows it all."
-              delay={100}
-              visual={
-                <div className="relative flex flex-col items-center justify-center h-full">
-                  {/* Chat bubbles */}
-                  <div className="flex flex-col gap-2 w-full max-w-xs">
-                    <div className="self-end bg-slate-900 text-white px-3 py-2 rounded-2xl rounded-br-sm text-xs animate-float" style={{ animationDelay: '0s' }}>
-                      What's transfer pricing? 🤔
-                    </div>
-                    <div className="self-start bg-white border-2 border-emerald-200 px-3 py-2 rounded-2xl rounded-bl-sm text-xs animate-float" style={{ animationDelay: '0.5s' }}>
-                      <span className="font-semibold text-emerald-600">CoStudy:</span> It's when divisions...
-                    </div>
-                  </div>
-                </div>
-              }
-            />
-
-            {/* Feature 3: Study Rooms */}
-            <FeatureScene
-              gradient="bg-gradient-to-br from-amber-100 via-yellow-50 to-orange-100"
-              headline="Study Rooms with Focus Timer."
-              subtext="Synchronized sessions worldwide."
-              delay={200}
-              visual={
-                <div className="relative flex items-center justify-center">
-                  {/* Study Room Card */}
-                  <div className="bg-white rounded-2xl shadow-lg p-4 w-56">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="text-xs font-bold text-amber-600">PART 1 WARRIORS</div>
-                      <div className="flex -space-x-2">
-                        <div className="w-6 h-6 rounded-full bg-blue-400 border-2 border-white"></div>
-                        <div className="w-6 h-6 rounded-full bg-pink-400 border-2 border-white"></div>
-                        <div className="w-6 h-6 rounded-full bg-green-400 border-2 border-white"></div>
-                        <div className="w-5 h-5 rounded-full bg-slate-200 border-2 border-white text-[8px] flex items-center justify-center font-bold">+2</div>
-                      </div>
-                    </div>
-                    <div className="text-center py-3 bg-slate-900 rounded-xl text-white">
-                      <div className="text-2xl font-mono font-bold">24:58</div>
-                      <div className="text-[10px] text-slate-400">Focus Timer</div>
-                    </div>
-                    <div className="mt-3 flex items-center gap-2 text-[10px] text-slate-500">
-                      <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                      5 studying now
-                    </div>
-                  </div>
-                </div>
-              }
-            />
-
-            {/* Feature 4: Mock Exams - Prometric Style */}
-            <FeatureScene
-              gradient="bg-gradient-to-br from-green-100 via-emerald-50 to-teal-100"
-              headline="Mock exams. Prometric authentic."
-              subtext="Same interface. Same pressure."
-              delay={300}
-              visual={
-                <div className="relative flex items-center justify-center">
-                  {/* Prometric-style exam mockup */}
-                  <div className="bg-slate-100 rounded-lg overflow-hidden w-64 shadow-lg border border-slate-300">
-                    {/* Header */}
-                    <div className="bg-slate-200 px-3 py-2 flex items-center justify-between text-[10px]">
-                      <div>
-                        <div className="font-bold text-slate-700">Question: 1</div>
-                        <div className="text-slate-500">Section: 1</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-slate-500">Time Remaining:</div>
-                        <div className="font-mono font-bold text-slate-700">00:44:50</div>
-                      </div>
-                      <button className="px-2 py-1 bg-green-600 text-white rounded text-[9px] font-bold">
-                        Finish Section
-                      </button>
-                    </div>
-                    {/* Body */}
-                    <div className="flex">
-                      {/* Question numbers */}
-                      <div className="bg-slate-200 p-1 flex flex-col gap-0.5">
-                        {[1,2,3,4,5].map(n => (
-                          <div key={n} className={`w-5 h-4 rounded text-[8px] flex items-center justify-center font-bold ${n === 1 ? 'bg-amber-400 text-white' : 'bg-amber-200 text-amber-800'}`}>
-                            {n}
-                          </div>
-                        ))}
-                      </div>
-                      {/* Question area */}
-                      <div className="flex-1 p-2">
-                        <div className="text-[8px] text-slate-600 mb-2">The system used to accumulate and analyze...</div>
-                        <div className="space-y-1">
-                          {['A', 'B', 'C', 'D'].map(opt => (
-                            <div key={opt} className="flex items-center gap-1 text-[8px] bg-white border-l-2 border-green-500 px-1 py-0.5">
-                              <span className="font-bold text-slate-500">{opt}</span>
-                              <span className="text-slate-600">{opt === 'A' ? 'human capital' : opt === 'B' ? 'intellectual capital' : opt === 'C' ? 'natural capital' : 'manufactured'}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    {/* Footer */}
-                    <div className="bg-green-700 px-2 py-1 flex items-center justify-end gap-1">
-                      <button className="px-2 py-0.5 bg-green-600 text-white rounded text-[8px]">← Prev</button>
-                      <button className="px-2 py-0.5 bg-green-600 text-white rounded text-[8px]">Next →</button>
-                    </div>
-                  </div>
-                </div>
-              }
-            />
-
-            {/* Feature 5: Social Wall */}
-            <FeatureScene
-              gradient="bg-gradient-to-br from-rose-100 via-pink-50 to-red-100"
-              headline="The Social Wall."
-              subtext="Share doubts. Get answers. Help others."
-              delay={400}
-              visual={
-                <div className="relative flex items-center justify-center">
-                  {/* Social Wall mockup */}
-                  <div className="bg-white rounded-2xl shadow-lg p-3 w-56">
-                    {/* Post */}
-                    <div className="flex items-start gap-2 mb-3">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-red-400 to-pink-400"></div>
-                      <div className="flex-1">
-                        <div className="text-[10px] font-bold text-slate-800">Priya • <span className="text-slate-400 font-normal">2h ago</span></div>
-                        <div className="text-[9px] text-slate-600 mt-1">Can someone explain the difference between absorption and variable costing? 🤔</div>
-                      </div>
-                    </div>
-                    {/* Engagement */}
-                    <div className="flex items-center gap-3 text-[9px] text-slate-500 border-t pt-2">
-                      <span className="flex items-center gap-1">💬 12</span>
-                      <span className="flex items-center gap-1">❤️ 8</span>
-                      <span className="flex items-center gap-1 text-emerald-600 font-bold">✓ Solved</span>
-                    </div>
-                    {/* Reply preview */}
-                    <div className="mt-2 bg-slate-50 rounded-lg p-2">
-                      <div className="text-[9px] text-slate-600">
-                        <span className="font-bold text-emerald-600">Prof. Kumar:</span> Great question! The key difference is in how fixed manufacturing overhead...
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              }
-            />
-
-            {/* Feature 6: Hire Teachers */}
-            <FeatureScene
-              gradient="bg-gradient-to-br from-violet-100 via-purple-50 to-fuchsia-100"
-              headline="Hire expert teachers."
-              subtext="Solo sessions or split with your room."
-              delay={500}
-              visual={
-                <div className="relative flex items-center justify-center">
-                  {/* Teacher hire mockup */}
-                  <div className="bg-white rounded-2xl shadow-lg p-4 w-56">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white text-xl">
-                        👨‍🏫
-                      </div>
-                      <div>
-                        <div className="text-sm font-bold text-slate-800">Prof. Sharma</div>
-                        <div className="text-[10px] text-emerald-600 font-medium">⭐ 4.9 • 120 sessions</div>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <div className="flex-1 bg-slate-50 rounded-lg p-2 text-center">
-                        <div className="text-[10px] text-slate-500">Solo</div>
-                        <div className="text-sm font-bold text-slate-900">₹500</div>
-                      </div>
-                      <div className="flex-1 bg-emerald-50 rounded-lg p-2 text-center border-2 border-emerald-200">
-                        <div className="text-[10px] text-emerald-600">Room Split</div>
-                        <div className="text-sm font-bold text-emerald-700">₹100<span className="text-[10px] font-normal">/each</span></div>
-                      </div>
-                    </div>
-                    <button className="w-full mt-3 py-2 bg-emerald-600 text-white text-xs font-bold rounded-lg">
-                      Book Session →
-                    </button>
-                  </div>
-                </div>
-              }
-            />
-
+            {/* After */}
+            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-5 sm:p-6 border-2 border-emerald-200">
+              <div className="flex items-center gap-2 text-emerald-600 font-semibold mb-4">
+                <span className="text-xl">🚀</span>
+                <span>With CoStudy</span>
+              </div>
+              <ul className="space-y-3 text-slate-700">
+                <li className="flex items-start gap-3">
+                  <span className="text-emerald-500 mt-0.5">✓</span>
+                  <span>Study rooms with global peers</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-emerald-500 mt-0.5">✓</span>
+                  <span>AI essay grading in 30 seconds</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-emerald-500 mt-0.5">✓</span>
+                  <span>₹333/month for unlimited access</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-emerald-500 mt-0.5">✓</span>
+                  <span>Prometric-authentic mock exams</span>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Essay Feature - Full Width */}
-      <section className="py-20 px-4 bg-gradient-to-b from-white to-slate-50">
-        <div className="max-w-4xl mx-auto">
-          <FeatureScene
-            gradient="bg-gradient-to-br from-violet-100 via-purple-50 to-fuchsia-100"
-            headline="Write essays. Get graded instantly."
-            subtext="CoStudy evaluates like the IMA would."
-            delay={0}
-            visual={
-              <div className="flex items-center justify-center gap-8">
-                {/* Essay input */}
-                <div className="bg-white rounded-xl shadow-lg p-4 w-48">
-                  <div className="text-xs text-violet-600 font-semibold mb-2">YOUR ESSAY</div>
-                  <div className="h-16 bg-slate-100 rounded p-2 text-[8px] text-slate-400 leading-relaxed">
-                    The variance analysis shows that the material price variance is favorable because...
-                  </div>
-                  <div className="mt-2 flex justify-end">
-                    <div className="px-2 py-1 bg-violet-600 text-white text-[10px] rounded font-medium">
-                      Submit →
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Arrow */}
-                <div className="text-3xl animate-float">→</div>
-                
-                {/* Feedback */}
-                <div className="bg-white rounded-xl shadow-lg p-4 w-48 border-2 border-emerald-200">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="text-xs text-emerald-600 font-semibold">FEEDBACK</div>
-                    <span className="text-lg">✨</span>
-                  </div>
-                  <div className="text-2xl font-bold text-emerald-600 mb-1">82/100</div>
-                  <div className="text-[10px] text-slate-500">
-                    Good analysis! Consider adding journal entries...
-                  </div>
-                </div>
-              </div>
-            }
-          />
+      {/* Core Features - Cards */}
+      <section className="py-12 sm:py-20 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-10 sm:mb-14">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+              Everything you need to pass
+            </h2>
+            <p className="text-base sm:text-lg text-slate-500">
+              Built by CMA candidates, for CMA candidates.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+            <FeatureCard
+              icon={<Icons.Sparkles className="w-7 h-7" />}
+              emoji="🧠"
+              title="AI Tutor"
+              description="Ask anything about CMA. Get instant, accurate answers drawn from your study materials."
+              highlight="Available 24/7"
+              gradient="from-violet-500 to-purple-600"
+              delay={0}
+            />
+
+            <FeatureCard
+              icon={<Icons.FileQuestion className="w-7 h-7" />}
+              emoji="📝"
+              title="MCQ Practice"
+              description="Unlimited practice questions by topic. Track weak spots. Master every concept."
+              stats={[{ label: 'Questions', value: '5,000+' }]}
+              gradient="from-blue-500 to-cyan-500"
+              delay={100}
+            />
+
+            <FeatureCard
+              icon={<Icons.Clock className="w-7 h-7" />}
+              emoji="⏱️"
+              title="Mock Exams"
+              description="Full 4-hour simulations. Exact Prometric interface. No surprises on exam day."
+              highlight="Prometric Authentic"
+              gradient="from-amber-500 to-orange-500"
+              delay={200}
+            />
+
+            <FeatureCard
+              icon={<Icons.PenLine className="w-7 h-7" />}
+              emoji="✍️"
+              title="Essay Evaluation"
+              description="Submit essays anytime. Get detailed AI feedback in seconds, not weeks."
+              stats={[{ label: 'Avg Response', value: '30s' }]}
+              gradient="from-emerald-500 to-teal-500"
+              delay={300}
+            />
+
+            <FeatureCard
+              icon={<Icons.Users className="w-7 h-7" />}
+              emoji="🌍"
+              title="Global Study Rooms"
+              description="Join study rooms across timezones. Focus timers. Mission boards. Real accountability."
+              highlight="24/7 Active"
+              gradient="from-pink-500 to-rose-500"
+              delay={400}
+            />
+
+            <FeatureCard
+              icon={<Icons.GraduationCap className="w-7 h-7" />}
+              emoji="👨‍🏫"
+              title="Hire Mentors"
+              description="Book verified CMA instructors. Split the fee with your study room. Premium help, affordable price."
+              stats={[{ label: 'From', value: '₹500/hr' }]}
+              gradient="from-slate-600 to-slate-800"
+              delay={500}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Social Proof - Real Stories */}
+      <section className="py-12 sm:py-20 px-4 bg-gradient-to-b from-slate-50 to-white">
+        <div className="max-w-2xl mx-auto">
+          <div className="text-center mb-10 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-3">
+              See what's happening
+            </h2>
+            <p className="text-base sm:text-lg text-slate-500">
+              Real moments from the CoStudy community
+            </p>
+          </div>
+
+          <div className="space-y-5 sm:space-y-6">
+            <SocialPost
+              avatar="👩‍💻"
+              name="Priya M."
+              location="Cochin 🇮🇳"
+              time="2h ago"
+              verified={true}
+              likes={234}
+              delay={0}
+              content={
+                <p>
+                  Connected with <span className="text-blue-600 font-medium">@sarah_nyc</span> for our study session! She reviews my essays while I sleep. Wake up to feedback. 
+                  <span className="block mt-2 text-emerald-600 font-medium">Timezone difference = superpower 🔥</span>
+                </p>
+              }
+            />
+
+            <SocialPost
+              avatar="🧑‍💼"
+              name="Rahul S."
+              location="Delhi 🇮🇳"
+              time="4h ago"
+              verified={false}
+              likes={189}
+              delay={100}
+              content={
+                <p>
+                  Stuck on transfer pricing for 3 days. Asked CoStudy AI at 2 AM. Got the clearest explanation ever with examples from <span className="font-medium">my own Gleim notes</span>.
+                  <span className="block mt-2 text-slate-900 font-medium">Like having a tutor who never sleeps 🤯</span>
+                </p>
+              }
+            />
+
+            <SocialPost
+              avatar="🔥"
+              name="Part 1 Warriors"
+              location="Global 🌍"
+              time="1h ago"
+              verified={true}
+              likes={312}
+              delay={200}
+              content={
+                <p>
+                  Day 45 of our daily study room streak! 5 members across 4 countries. Same focus timer. Same mission.
+                  <span className="block mt-2">When one person skips, the whole room's streak is at risk. <span className="font-medium text-amber-600">Accountability level: 💯</span></span>
+                </p>
+              }
+            />
+          </div>
         </div>
       </section>
 
       {/* For Teachers Section */}
-      <section className="py-20 px-4 bg-emerald-50">
+      <section className="py-12 sm:py-20 px-4 bg-emerald-50">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
+          <div className="text-center mb-10 sm:mb-12">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 rounded-full text-emerald-700 text-sm font-semibold mb-4">
               <Icons.Award className="w-4 h-4" /> FOR TEACHERS
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">
-              Teach globally. Earn professionally.
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+              Teach globally. Earn fairly.
             </h2>
-            <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-              Join CoStudy as a verified mentor. Set your rates, get discovered by students worldwide, and build your teaching empire.
+            <p className="text-base sm:text-lg text-slate-600 max-w-xl mx-auto">
+              Join as a verified mentor. Set your rates. Get discovered by students worldwide.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="bg-white rounded-2xl p-6 shadow-sm">
-              <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 mb-4">
-                <Icons.CheckBadge className="w-6 h-6" />
+          <div className="grid sm:grid-cols-3 gap-4 sm:gap-6 mb-10">
+            {[
+              { icon: <Icons.CheckBadge className="w-6 h-6" />, title: 'Verified Badge', desc: 'Build instant trust with students' },
+              { icon: <Icons.Users className="w-6 h-6" />, title: 'Flash Sessions', desc: 'Study rooms hire you, split fees' },
+              { icon: <Icons.Wallet className="w-6 h-6" />, title: 'Set Your Rates', desc: 'You decide your worth' },
+            ].map((item, i) => (
+              <div key={i} className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm">
+                <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 mb-4">
+                  {item.icon}
+                </div>
+                <h4 className="text-lg font-bold mb-1">{item.title}</h4>
+                <p className="text-slate-500 text-sm">{item.desc}</p>
               </div>
-              <h4 className="text-xl font-bold mb-2">Verified Badge</h4>
-              <p className="text-slate-500">Get verified by CoStudy. Build trust with students instantly.</p>
-            </div>
-
-            <div className="bg-white rounded-2xl p-6 shadow-sm">
-              <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 mb-4">
-                <Icons.Users className="w-6 h-6" />
-              </div>
-              <h4 className="text-xl font-bold mb-2">Flash Sessions</h4>
-              <p className="text-slate-500">Get pulled into study rooms for 1-hour deep dives. Split fees among students.</p>
-            </div>
-
-            <div className="bg-white rounded-2xl p-6 shadow-sm">
-              <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 mb-4">
-                <Icons.Wallet className="w-6 h-6" />
-              </div>
-              <h4 className="text-xl font-bold mb-2">Set Your Rates</h4>
-              <p className="text-slate-500">You decide your worth. CoStudy handles payments securely.</p>
-            </div>
+            ))}
           </div>
 
-          <div className="text-center mt-10">
+          <div className="text-center">
             <button 
               onClick={onGetStarted}
-              className="px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white text-lg font-semibold rounded-full transition transform hover:scale-105"
+              className="px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white text-lg font-semibold rounded-full transition-all shadow-xl shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:scale-105 active:scale-100"
             >
               Apply as Teacher →
             </button>
@@ -505,165 +607,137 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
       </section>
 
       {/* Pricing Section */}
-      <section className="py-20 px-4">
+      <section className="py-12 sm:py-20 px-4 bg-white">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">Simple, Transparent Pricing</h2>
-            <p className="text-xl text-slate-500 mb-8">Start free. Upgrade when ready.</p>
+          <div className="text-center mb-10 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 mb-3">Simple Pricing</h2>
+            <p className="text-base sm:text-lg text-slate-500 mb-6">Start free. Upgrade when ready.</p>
             
-            {/* Billing Toggle */}
-            <div className="inline-flex items-center gap-4 p-1 bg-slate-100 rounded-full">
+            <div className="inline-flex items-center p-1 bg-slate-100 rounded-full">
               <button
                 onClick={() => setBillingCycle('monthly')}
-                className={`px-6 py-2 rounded-full font-medium transition ${
-                  billingCycle === 'monthly' ? 'bg-red-600 text-white' : 'text-slate-500'
+                className={`px-5 py-2 rounded-full font-medium text-sm transition-all ${
+                  billingCycle === 'monthly' ? 'bg-red-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
                 Monthly
               </button>
               <button
                 onClick={() => setBillingCycle('yearly')}
-                className={`px-6 py-2 rounded-full font-medium transition ${
-                  billingCycle === 'yearly' ? 'bg-red-600 text-white' : 'text-slate-500'
+                className={`px-5 py-2 rounded-full font-medium text-sm transition-all ${
+                  billingCycle === 'yearly' ? 'bg-red-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
-                Yearly <span className="text-emerald-500 text-sm">Save 33%</span>
+                Yearly <span className="text-emerald-400 ml-1">-33%</span>
               </button>
             </div>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+          <div className="grid sm:grid-cols-3 gap-5 sm:gap-6 max-w-4xl mx-auto">
             {/* Free */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-8">
-              <h3 className="text-2xl font-bold mb-2">Free</h3>
-              <p className="text-slate-400 mb-6">Get started</p>
-              <div className="mb-6">
+            <div className="bg-slate-50 rounded-2xl sm:rounded-3xl p-6 sm:p-8">
+              <h3 className="text-xl font-bold mb-2">Free</h3>
+              <div className="mb-5">
                 <span className="text-4xl font-bold">₹0</span>
-                <span className="text-slate-400">/forever</span>
               </div>
-              <ul className="space-y-3 mb-8 text-sm">
-                {['20 AI questions/day', '10 MCQ practice/day', 'Community Wall access', 'Basic study rooms'].map((item, i) => (
+              <ul className="space-y-2.5 mb-6 text-sm">
+                {['20 AI questions/day', '10 MCQ practice/day', 'Wall access', 'Basic study rooms'].map((item, i) => (
                   <li key={i} className="flex items-center gap-2 text-slate-600">
-                    <span className="text-emerald-500">✓</span>
-                    {item}
+                    <span className="text-emerald-500">✓</span> {item}
                   </li>
                 ))}
               </ul>
-              <button onClick={onGetStarted} className="w-full py-3 bg-slate-100 hover:bg-slate-200 rounded-xl font-semibold transition">
+              <button onClick={onGetStarted} className="w-full py-3 bg-slate-200 hover:bg-slate-300 rounded-xl font-semibold transition-colors">
                 Get Started
               </button>
             </div>
 
-            {/* Pro */}
-            <div className="bg-gradient-to-b from-red-50 to-white rounded-2xl border-2 border-red-500 p-8 relative">
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-red-600 text-white rounded-full text-sm font-semibold">
-                Most Popular
+            {/* Pro - Featured */}
+            <div className="bg-gradient-to-b from-red-50 to-white rounded-2xl sm:rounded-3xl border-2 border-red-500 p-6 sm:p-8 relative shadow-xl sm:-my-4">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-red-600 text-white rounded-full text-sm font-semibold">
+                Popular
               </div>
-              <h3 className="text-2xl font-bold mb-2">Pro</h3>
-              <p className="text-slate-400 mb-6">For serious candidates</p>
-              <div className="mb-6">
-                <span className="text-4xl font-bold">
-                  ₹{billingCycle === 'yearly' ? '333' : '499'}
-                </span>
-                <span className="text-slate-400">/month</span>
-                {billingCycle === 'yearly' && (
-                  <div className="text-sm text-slate-500">Billed ₹3,999/year</div>
-                )}
+              <h3 className="text-xl font-bold mb-2">Pro</h3>
+              <div className="mb-5">
+                <span className="text-4xl font-bold">₹{billingCycle === 'yearly' ? '333' : '499'}</span>
+                <span className="text-slate-400">/mo</span>
               </div>
-              <ul className="space-y-3 mb-8 text-sm">
-                {['Unlimited AI questions', 'Unlimited MCQ practice', 'Mock test simulations', 'Essay AI evaluation', 'Priority support'].map((item, i) => (
+              <ul className="space-y-2.5 mb-6 text-sm">
+                {['Unlimited AI questions', 'Unlimited MCQ', 'Mock exams', 'Essay evaluation', 'Priority support'].map((item, i) => (
                   <li key={i} className="flex items-center gap-2 text-slate-600">
-                    <span className="text-emerald-500">✓</span>
-                    {item}
+                    <span className="text-emerald-500">✓</span> {item}
                   </li>
                 ))}
               </ul>
-              <button onClick={onGetStarted} className="w-full py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-semibold transition">
+              <button onClick={onGetStarted} className="w-full py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-semibold transition-colors">
                 Upgrade to Pro
               </button>
             </div>
 
             {/* Mentor */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-8">
-              <h3 className="text-2xl font-bold mb-2">Mentor</h3>
-              <p className="text-slate-400 mb-6">Teach and earn</p>
-              <div className="mb-6">
+            <div className="bg-slate-50 rounded-2xl sm:rounded-3xl p-6 sm:p-8">
+              <h3 className="text-xl font-bold mb-2">Mentor</h3>
+              <div className="mb-5">
                 <span className="text-4xl font-bold">₹1,999</span>
-                <span className="text-slate-400">/month</span>
+                <span className="text-slate-400">/mo</span>
               </div>
-              <ul className="space-y-3 mb-8 text-sm">
-                {['Everything in Pro', 'Student dashboard', 'Revenue share', 'Verified badge', 'Analytics'].map((item, i) => (
+              <ul className="space-y-2.5 mb-6 text-sm">
+                {['Everything in Pro', 'Verified badge', 'Student dashboard', 'Revenue share', 'Analytics'].map((item, i) => (
                   <li key={i} className="flex items-center gap-2 text-slate-600">
-                    <span className="text-emerald-500">✓</span>
-                    {item}
+                    <span className="text-emerald-500">✓</span> {item}
                   </li>
                 ))}
               </ul>
-              <button onClick={onGetStarted} className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold transition">
-                Become a Mentor
+              <button onClick={onGetStarted} className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold transition-colors">
+                Become Mentor
               </button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 px-4">
+      {/* Final CTA */}
+      <section className="py-12 sm:py-20 px-4 bg-slate-900 text-white">
         <div className="max-w-3xl mx-auto text-center">
-          <div className="inline-flex items-center gap-3 px-6 py-3 bg-slate-100 rounded-full mb-8">
-            <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-            </span>
-            <span className="text-slate-600 font-medium">
-              Invite-only beta. Limited spots.
-            </span>
-          </div>
-          
-          <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
             Ready to pass the CMA?
           </h2>
-          
-          <p className="text-xl text-slate-500 mb-10 max-w-xl mx-auto">
-            Join students who study smarter, not harder. Get your invite code from a friend, or request early access.
+          <p className="text-lg sm:text-xl text-slate-400 mb-8">
+            Join <AnimatedCounter end={847} suffix="+" /> candidates studying smarter together.
           </p>
           
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button 
-              onClick={onGetStarted}
-              className="w-full sm:w-auto px-10 py-4 bg-red-600 hover:bg-red-500 text-white text-xl font-semibold rounded-full transition transform hover:scale-105 shadow-lg hover:shadow-xl"
-            >
-              Request Access →
-            </button>
-            <button 
-              onClick={onGetStarted}
-              className="w-full sm:w-auto px-10 py-4 bg-white hover:bg-slate-50 text-slate-900 text-xl font-semibold rounded-full transition border-2 border-slate-200"
-            >
-              I Have an Invite
-            </button>
-          </div>
+          <button 
+            onClick={onGetStarted}
+            className="px-10 sm:px-12 py-4 bg-red-600 hover:bg-red-500 text-white text-lg sm:text-xl font-bold rounded-full transition-all shadow-xl shadow-red-500/30 hover:shadow-red-500/50 hover:scale-105 active:scale-100"
+          >
+            Get Started Free →
+          </button>
+          
+          <p className="mt-6 text-sm text-slate-500">
+            No credit card required • Free tier available forever
+          </p>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-4 border-t border-slate-200">
+      <footer className="py-8 sm:py-12 px-4 bg-slate-950 text-slate-400">
         <div className="max-w-5xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-xl font-black tracking-tight text-slate-900">COSTUDY</span>
-              <span className="text-slate-400">•</span>
-              <span className="text-slate-500 text-sm">CMA Success Universe</span>
+              <span className="text-lg font-black tracking-tight text-white">COSTUDY</span>
+              <span className="text-slate-600">•</span>
+              <span className="text-sm">CMA Success Universe</span>
             </div>
             
-            <div className="flex items-center gap-6 text-sm text-slate-500">
-              <a href="#" className="hover:text-slate-900 transition">About</a>
-              <a href="#" className="hover:text-slate-900 transition">Privacy</a>
-              <a href="#" className="hover:text-slate-900 transition">Terms</a>
-              <a href="mailto:hello@costudy.in" className="hover:text-slate-900 transition">Contact</a>
+            <div className="flex items-center gap-6 text-sm">
+              <a href="#" className="hover:text-white transition-colors">About</a>
+              <a href="#" className="hover:text-white transition-colors">Privacy</a>
+              <a href="#" className="hover:text-white transition-colors">Terms</a>
+              <a href="mailto:hello@costudy.in" className="hover:text-white transition-colors">Contact</a>
             </div>
           </div>
           
-          <div className="text-center mt-8 text-sm text-slate-400">
+          <div className="text-center mt-6 sm:mt-8 text-sm text-slate-600">
             © 2026 CoStudy. Built for CMA candidates worldwide.
           </div>
         </div>

@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS posts (
   content TEXT NOT NULL,
   type TEXT DEFAULT 'QUESTION', -- 'QUESTION', 'RESOURCE', 'BOUNTY', 'PEER_AUDIT_REQUEST'
   tags TEXT[],
-  likes INTEGER DEFAULT 0, -- Used for 'Vouches'
+  vouches INTEGER DEFAULT 0, -- Replaced 'likes'
   
   -- Feature: Peer Audit
   audit_status TEXT DEFAULT 'OPEN', -- 'OPEN', 'COMPLIANT', 'NON_COMPLIANT'
@@ -60,6 +60,14 @@ CREATE TABLE IF NOT EXISTS posts (
   -- Feature: The Bounty Board
   bounty_details JSONB, -- { rewardAmount: number, rewardType: 'CREDITS'|'BADGE', status: 'OPEN'|'CLOSED' }
   
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+CREATE TABLE IF NOT EXISTS vouch_logs (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES user_profiles(id) ON DELETE CASCADE,
+  post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
+  vouch_type TEXT DEFAULT 'GENERAL',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
@@ -202,11 +210,32 @@ CREATE POLICY "Teachers view enrollments" ON student_enrollments FOR SELECT USIN
 CREATE TABLE IF NOT EXISTS study_rooms (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   name TEXT NOT NULL,
-  category TEXT,
-  description TEXT,
-  members_count INTEGER DEFAULT 0,
-  active_count INTEGER DEFAULT 0,
-  color_theme TEXT
+  topic TEXT,
+  room_type TEXT DEFAULT 'PUBLIC', -- 'OPEN', 'PRIVATE', 'MENTOR_LED'
+  max_members INTEGER DEFAULT 10,
+  pomodoro_duration INTEGER DEFAULT 25,
+  is_active BOOLEAN DEFAULT false,
+  pomodoro_end_time TIMESTAMP WITH TIME ZONE,
+  pomodoro_status TEXT DEFAULT 'READY', -- 'READY', 'FOCUS', 'BREAK'
+  created_by UUID REFERENCES user_profiles(id) ON DELETE SET NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+CREATE TABLE IF NOT EXISTS room_members (
+  room_id UUID REFERENCES study_rooms(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES user_profiles(id) ON DELETE CASCADE,
+  joined_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+  is_active BOOLEAN DEFAULT true,
+  PRIMARY KEY (room_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS room_missions (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  room_id UUID REFERENCES study_rooms(id) ON DELETE CASCADE,
+  task_text TEXT NOT NULL,
+  is_completed BOOLEAN DEFAULT false,
+  completed_by UUID REFERENCES user_profiles(id) ON DELETE SET NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
 -- Note: Pre-seed some rooms manually or via migration script if needed
@@ -222,7 +251,7 @@ CREATE TABLE IF NOT EXISTS study_room_messages (
 
 CREATE TABLE IF NOT EXISTS study_room_resources (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  room_id UUID, -- Explicit FK if table exists
+  room_id UUID REFERENCES study_rooms(id) ON DELETE CASCADE,
   user_id UUID REFERENCES user_profiles(id),
   title TEXT,
   file_type TEXT,

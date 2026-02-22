@@ -338,10 +338,10 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ testId, title, questio
              </div>
              <p className="mb-8 text-slate-700 font-medium">Are the details above correct?</p>
              <div className="flex gap-4">
-                <button onClick={() => setPhase('TERMS')} className="bg-[#8dc63f] hover:bg-[#7db536] text-white px-8 py-2 rounded-sm font-bold shadow-sm flex items-center gap-2">
+                <button onClick={() => setPhase('TERMS')} className="bg-[#8dc63f] hover:bg-[#7db536] text-white px-8 py-2 rounded-lg font-bold shadow-sm flex items-center gap-2 transition-all">
                    <Icons.CheckBadge className="w-4 h-4" /> Confirm
                 </button>
-                <button onClick={onExit} className="bg-[#8dc63f] hover:bg-[#7db536] text-white px-8 py-2 rounded-sm font-bold shadow-sm flex items-center gap-2">
+                <button onClick={onExit} className="bg-[#8dc63f] hover:bg-[#7db536] text-white px-8 py-2 rounded-lg font-bold shadow-sm flex items-center gap-2 transition-all">
                    <Icons.Plus className="w-4 h-4 rotate-45" /> Cancel
                 </button>
              </div>
@@ -416,7 +416,7 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ testId, title, questio
 
                     {/* Buttons */}
                     <div className="flex gap-4 mb-4">
-                        <button onClick={onExit} className="bg-[#aecf68] hover:bg-[#a8c64d] text-white px-10 py-3 rounded-sm font-bold shadow-sm flex items-center gap-2 text-sm uppercase transition-colors">
+                        <button onClick={onExit} className="bg-[#aecf68] hover:bg-[#a8c64d] text-white px-10 py-3 rounded-lg font-bold shadow-sm flex items-center gap-2 text-sm uppercase transition-colors">
                             <span className="font-bold text-xl leading-none">×</span> Exit
                         </button>
                         <button 
@@ -424,7 +424,7 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ testId, title, questio
                             disabled={!termsAccepted}
                             className={`px-10 py-3 rounded-sm font-bold shadow-sm flex items-center gap-2 text-sm uppercase transition-colors ${termsAccepted ? 'bg-[#8dc63f] hover:bg-[#7db536] text-white' : 'bg-[#e0e0e0] text-slate-400 cursor-not-allowed'}`}
                         >
-                            <Icons.CheckBadge className="w-5 h-5" /> Continue
+                            <Icons.CheckBadge className="w-5 h-5 px-4 py-2 transition-all" /> Continue
                         </button>
                     </div>
                 </div>
@@ -458,7 +458,7 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ testId, title, questio
                     </div>
                     Progress {introProgress}%
                  </div>
-                 <button className="bg-[#999] text-[#333] px-6 py-2 rounded-sm font-bold text-sm shadow-sm cursor-not-allowed border border-slate-500">Finish Test</button>
+                 <button className="bg-[#999] text-[#333] px-6 py-2 rounded-lg font-bold text-sm shadow-sm cursor-not-allowed border border-slate-500 transition-all">Finish Test</button>
               </div>
            </div>
            {/* ... (Rest of Intro UI) ... */}
@@ -475,11 +475,11 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ testId, title, questio
               <div className="flex-1 p-12 overflow-y-auto"><div className="max-w-4xl">{renderIntroContent(introPage)}</div></div>
            </div>
            <div className="bg-[#4d4d4d] px-4 py-3 flex justify-between items-center border-t border-[#666] shrink-0">
-              <div className="flex gap-1"><button className="p-2 text-white hover:bg-white/10 rounded"><Icons.Trophy className="w-6 h-6" /></button></div>
+              <div className="flex gap-1"><button className="p-2 text-white hover:bg-white/10 rounded-lg px-4 py-2 transition-all"><Icons.Trophy className="w-6 h-6" /></button></div>
               <div className="flex gap-4">
-                 <button onClick={() => setIntroPage(Math.max(1, introPage - 1))} className="bg-[#8dc63f] text-white px-6 py-2 rounded-sm font-bold flex items-center gap-1 text-sm"><Icons.ChevronLeft className="w-4 h-4" /> Previous</button>
-                 <button onClick={() => setIntroPage(Math.min(TOTAL_INTRO_PAGES, introPage + 1))} className="bg-[#8dc63f] text-white px-6 py-2 rounded-sm font-bold flex items-center gap-1 text-sm">Next <Icons.ChevronRight className="w-4 h-4" /></button>
-                 <button className="bg-[#8dc63f] text-white px-6 py-2 rounded-sm font-bold flex items-center gap-1 ml-4 text-sm" onClick={() => setPhase('TEST')}>Start the Test <Icons.ChevronRight className="w-4 h-4" /></button>
+                 <button onClick={() => setIntroPage(Math.max(1, introPage - 1))} className="bg-[#8dc63f] text-white px-6 py-2 rounded-lg font-bold flex items-center gap-1 text-sm transition-all"><Icons.ChevronLeft className="w-4 h-4" /> Previous</button>
+                 <button onClick={() => setIntroPage(Math.min(TOTAL_INTRO_PAGES, introPage + 1))} className="bg-[#8dc63f] text-white px-6 py-2 rounded-lg font-bold flex items-center gap-1 text-sm transition-all">Next <Icons.ChevronRight className="w-4 h-4" /></button>
+                 <button className="bg-[#8dc63f] text-white px-6 py-2 rounded-lg font-bold flex items-center gap-1 ml-4 text-sm transition-all" onClick={() => setPhase('TEST')}>Start the Test <Icons.ChevronRight className="w-4 h-4" /></button>
               </div>
            </div>
         </div>
@@ -538,7 +538,7 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ testId, title, questio
                   </div>
                   Progress {progressPercent}%
                </div>
-               <button onClick={handleFinishTest} className="bg-[#e6e6e6] hover:bg-white text-[#333] px-4 py-2 rounded-sm font-bold text-sm shadow-sm transition-colors border border-slate-400">
+               <button onClick={handleFinishTest} className="bg-[#e6e6e6] hover:bg-white text-[#333] px-4 py-2 rounded-lg font-bold text-sm shadow-sm transition-colors border border-slate-400">
                   Finish Test
                </button>
             </div>
@@ -591,7 +591,7 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ testId, title, questio
                     <div className="absolute top-20 right-20 w-64 bg-[#e0e0e0] border-2 border-slate-400 rounded shadow-xl z-50 p-2 select-none">
                         <div className="bg-slate-700 text-white px-2 py-1 text-xs flex justify-between cursor-move mb-2">
                             <span>Calculator</span>
-                            <button onClick={() => setShowCalculator(false)} className="hover:text-red-300">X</button>
+                            <button onClick={() => setShowCalculator(false)} className="hover:text-red-300 px-4 py-2 transition-all">X</button>
                         </div>
                         <div className="bg-white border border-slate-400 h-10 mb-2 text-right p-1 font-mono text-lg flex items-center justify-end">0</div>
                         <div className="grid grid-cols-4 gap-1">
@@ -604,21 +604,21 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ testId, title, questio
 
                 {/* SECTION REVIEW POPUP - Bottom Left (Authentic) */}
                 {isReviewOpen && (
-                    <div className="absolute bottom-0 left-0 w-72 h-[450px] z-40 bg-[#f0f0f0] border-t border-r border-slate-400 shadow-[5px_-5px_20px_rgba(0,0,0,0.2)] flex flex-col animate-in slide-in-from-left duration-200">
+                    <div className="absolute bottom-0 left-0 w-72 h-[450px] z-40 bg-[#f0f0f0] border-t border-r border-slate-400 shadow-[5px_-5px_20px_rgba(0,0,0,0.2)] flex flex-col animate-in slide-in-from-left duration-200 px-4 py-2 transition-all">
                         <div className="bg-[#4d4d4d] text-white px-3 py-2 font-bold text-xs flex justify-between items-center border-b border-[#666]">
                             <span>Section Review</span>
                             <div className="flex gap-2">
                                 <Icons.Lock className="w-3 h-3 text-white" />
-                                <button onClick={() => setIsReviewOpen(false)} className="hover:text-red-300"><Icons.Plus className="w-3 h-3 rotate-45" /></button>
+                                <button onClick={() => setIsReviewOpen(false)} className="hover:text-red-300 px-4 py-2 transition-all"><Icons.Plus className="w-3 h-3 rotate-45" /></button>
                             </div>
                         </div>
                         <div className="p-4 bg-[#e6e6e6] flex-1 overflow-y-auto">
                             <div className="flex flex-col gap-2 mb-4 bg-[#ccc] p-3 rounded text-xs font-bold text-slate-700">
                                 <span>Filter by:</span>
                                 <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" /> Unattempted</label>
-                                <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" /> Attempted</label>
-                                <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" /> Flagged</label>
-                                <button className="self-end bg-[#8dc63f] text-white px-3 py-1 rounded text-[10px] mt-2 border border-[#7db536] hover:bg-[#7db536]">Clear</button>
+                                <label className="flex items-center gap-2 cursor-pointer focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"><input type="checkbox" /> Attempted</label>
+                                <label className="flex items-center gap-2 cursor-pointer focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"><input type="checkbox" /> Flagged</label>
+                                <button className="self-end bg-[#8dc63f] text-white px-3 py-1 rounded-lg-lg text-[10px] mt-2 border border-[#7db536] hover:bg-[#7db536] transition-all focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">Clear</button>
                             </div>
                             <div className="grid grid-cols-5 gap-1.5">
                                 {questions.map((q, idx) => {
@@ -633,7 +633,7 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ testId, title, questio
                                             }`}
                                         >
                                             {idx + 1}
-                                            {ans?.flagged && <div className="absolute top-0 right-0 p-0.5"><Icons.Flag className="w-2 h-2 fill-current text-white" /></div>}
+                                            {ans?.flagged && <div className="absolute top-0 right-0 p-0.5 px-4 py-2 transition-all"><Icons.Flag className="w-2 h-2 fill-current text-white" /></div>}
                                         </button>
                                     )
                                 })}
@@ -655,7 +655,7 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ testId, title, questio
                         <div className="max-w-6xl mx-auto h-full flex flex-col">
                             <div className="mb-4 border-b border-slate-200 pb-2 flex justify-between items-center">
                                 <h2 className="font-bold text-black text-lg mb-2">{isEssay ? 'Essay Scenario & Response' : 'Multiple-Choice Question'}</h2>
-                                <button onClick={() => setShowCalculator(!showCalculator)} className="flex items-center gap-2 px-2 py-1 bg-slate-100 border border-slate-300 hover:bg-slate-200 text-xs font-bold text-slate-700">
+                                <button onClick={() => setShowCalculator(!showCalculator)} className="flex items-center gap-2 px-2 py-1 bg-slate-100 border border-slate-300 hover:bg-slate-200 text-xs font-bold text-slate-700 transition-all">
                                     <Icons.Grid className="w-3 h-3" /> Calculator
                                 </button>
                             </div>
@@ -682,7 +682,7 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ testId, title, questio
                                         </div>
                                         <textarea 
                                             ref={essayInputRef}
-                                            className="flex-1 border-2 border-slate-300 p-4 font-mono text-sm leading-relaxed outline-none focus:border-blue-400 resize-none shadow-inner"
+                                            className="flex-1 border-2 border-slate-300 p-4 font-mono text-sm leading-relaxed outline-none resize-none shadow-inner focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                             placeholder="Type your response here..."
                                             value={currentAns?.essayText || ''}
                                             onChange={(e) => handleEssayChange(e.target.value)}
@@ -730,13 +730,13 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ testId, title, questio
                  onClick={() => setIsReviewOpen(!isReviewOpen)} 
                  className={`w-10 h-10 rounded flex items-center justify-center text-white border transition-colors ${isReviewOpen ? 'bg-white/20 border-white/40' : 'bg-transparent border-transparent hover:bg-white/10 hover:border-white/20'}`}
                >
-                  <Icons.Grid className="w-6 h-6" />
+                  <Icons.Grid className="w-6 h-6 px-4 py-2 transition-all" />
                </button>
                <button 
                  onClick={() => setIsHelpOpen(!isHelpOpen)}
                  className={`w-10 h-10 rounded flex items-center justify-center text-white border transition-colors ${isHelpOpen ? 'bg-white/20 border-white/40' : 'bg-transparent border-transparent hover:bg-white/10 hover:border-white/20'}`}
                >
-                  <Icons.HelpCircle className="w-6 h-6" />
+                  <Icons.HelpCircle className="w-6 h-6 px-4 py-2 transition-all" />
                </button>
             </div>
             
@@ -746,7 +746,7 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ testId, title, questio
                     {/* HELP MODE: Only Show Continue Button */}
                     <button 
                         onClick={() => setIsHelpOpen(false)}
-                        className="bg-[#8dc63f] hover:bg-[#7db536] text-white px-8 py-2 rounded-sm font-bold flex items-center gap-2 transition-colors text-sm shadow-md"
+                        className="bg-[#8dc63f] hover:bg-[#7db536] text-white px-8 py-2 rounded-lg font-bold flex items-center gap-2 transition-colors text-sm shadow-md"
                     >
                         Continue the Test <Icons.ChevronRight className="w-4 h-4" />
                     </button>
@@ -761,12 +761,12 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ testId, title, questio
                         {currentAns?.flagged ? 'Flagged' : 'Flag'}
                     </button>
 
-                    <div className="h-full w-px bg-[#666] mx-2"></div>
+                    <div className="h-full w-px bg-[#666] mx-2 px-4 py-2 transition-all"></div>
 
                     <button 
                         onClick={() => handleNavigate(Math.max(0, currentIndex - 1))}
                         disabled={currentIndex === 0}
-                        className="bg-[#8dc63f] hover:bg-[#7db536] disabled:opacity-50 disabled:hover:bg-[#8dc63f] text-white px-6 py-2 rounded-sm font-bold flex items-center gap-1 transition-colors text-sm"
+                        className="bg-[#8dc63f] hover:bg-[#7db536] disabled:opacity-50 disabled:hover:bg-[#8dc63f] text-white px-6 py-2 rounded-lg font-bold flex items-center gap-1 transition-colors text-sm"
                     >
                         <Icons.ChevronLeft className="w-4 h-4" /> Previous
                     </button>
@@ -777,7 +777,7 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ testId, title, questio
                                 handleNavigate(currentIndex + 1);
                             }
                         }}
-                        className="bg-[#8dc63f] hover:bg-[#7db536] text-white px-6 py-2 rounded-sm font-bold flex items-center gap-1 transition-colors text-sm"
+                        className="bg-[#8dc63f] hover:bg-[#7db536] text-white px-6 py-2 rounded-lg font-bold flex items-center gap-1 transition-colors text-sm"
                     >
                         Next <Icons.ChevronRight className="w-4 h-4" />
                     </button>
@@ -822,7 +822,7 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ testId, title, questio
                   </div>
                </div>
 
-               <button onClick={onExit} className="bg-[#8dc63f] hover:bg-[#7db536] text-white px-12 py-3 rounded-sm font-bold shadow-lg transition-all uppercase tracking-widest text-sm">
+               <button onClick={onExit} className="bg-[#8dc63f] hover:bg-[#7db536] text-white px-12 py-3 rounded-lg font-bold shadow-lg transition-all uppercase tracking-widest text-sm">
                   Return to Dashboard
                </button>
             </div>

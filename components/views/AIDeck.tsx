@@ -173,39 +173,39 @@ export const AIDeck: React.FC = () => {
 
                 <button
                     onClick={() => setActiveTool('CHAT')}
-                    className={`flex items-center gap-3 p-4 rounded-2xl text-left font-bold text-sm transition-all ${activeTool === 'CHAT' ? 'bg-white shadow-lg text-brand ring-1 ring-slate-100' : 'text-slate-500 hover:bg-slate-100'}`}
+                    className={`flex items-center gap-3 p-4 rounded-xl text-left font-bold text-sm transition-all ${activeTool === 'CHAT' ? 'bg-white shadow-lg text-brand ring-1 ring-slate-100' : 'text-slate-500 hover:bg-slate-100'}`}
                 >
-                    <Icons.MessageCircle className="w-5 h-5" /> Mastermind Chat
+                    <Icons.MessageCircle className="w-5 h-5 px-4 py-2 transition-all" /> Mastermind Chat
                 </button>
                 <button
                     onClick={() => setActiveTool('TOPIC')}
-                    className={`flex items-center gap-3 p-4 rounded-2xl text-left font-bold text-sm transition-all ${activeTool === 'TOPIC' ? 'bg-white shadow-lg text-brand ring-1 ring-slate-100' : 'text-slate-500 hover:bg-slate-100'}`}
+                    className={`flex items-center gap-3 p-4 rounded-xl text-left font-bold text-sm transition-all ${activeTool === 'TOPIC' ? 'bg-white shadow-lg text-brand ring-1 ring-slate-100' : 'text-slate-500 hover:bg-slate-100'}`}
                 >
-                    <Icons.Grid className="w-5 h-5" /> Topic Blueprint
+                    <Icons.Grid className="w-5 h-5 px-4 py-2 transition-all" /> Topic Blueprint
                 </button>
                 <button
                     onClick={() => setActiveTool('NOTES')}
-                    className={`flex items-center gap-3 p-4 rounded-2xl text-left font-bold text-sm transition-all ${activeTool === 'NOTES' ? 'bg-white shadow-lg text-brand ring-1 ring-slate-100' : 'text-slate-500 hover:bg-slate-100'}`}
+                    className={`flex items-center gap-3 p-4 rounded-xl text-left font-bold text-sm transition-all ${activeTool === 'NOTES' ? 'bg-white shadow-lg text-brand ring-1 ring-slate-100' : 'text-slate-500 hover:bg-slate-100'}`}
                 >
-                    <Icons.BookOpen className="w-5 h-5" /> Notes Refiner
+                    <Icons.BookOpen className="w-5 h-5 px-4 py-2 transition-all" /> Notes Refiner
                 </button>
                 <button
                     onClick={() => setActiveTool('FLASHCARDS')}
-                    className={`flex items-center gap-3 p-4 rounded-2xl text-left font-bold text-sm transition-all ${activeTool === 'FLASHCARDS' ? 'bg-white shadow-lg text-brand ring-1 ring-slate-100' : 'text-slate-500 hover:bg-slate-100'}`}
+                    className={`flex items-center gap-3 p-4 rounded-xl text-left font-bold text-sm transition-all ${activeTool === 'FLASHCARDS' ? 'bg-white shadow-lg text-brand ring-1 ring-slate-100' : 'text-slate-500 hover:bg-slate-100'}`}
                 >
-                    <Icons.ClipboardList className="w-5 h-5" /> Formula Cards
+                    <Icons.ClipboardList className="w-5 h-5 px-4 py-2 transition-all" /> Formula Cards
                 </button>
                 <button
                     onClick={() => setActiveTool('ESSAY')}
-                    className={`flex items-center gap-3 p-4 rounded-2xl text-left font-bold text-sm transition-all ${activeTool === 'ESSAY' ? 'bg-white shadow-lg text-brand ring-1 ring-slate-100' : 'text-slate-500 hover:bg-slate-100'}`}
+                    className={`flex items-center gap-3 p-4 rounded-xl text-left font-bold text-sm transition-all ${activeTool === 'ESSAY' ? 'bg-white shadow-lg text-brand ring-1 ring-slate-100' : 'text-slate-500 hover:bg-slate-100'}`}
                 >
-                    <Icons.Pencil className="w-5 h-5" /> Essay Auditor
+                    <Icons.Pencil className="w-5 h-5 px-4 py-2 transition-all" /> Essay Auditor
                 </button>
 
                 <div className="mt-auto space-y-4">
                     <div
                         onClick={() => setChatMode('VAULT_REF')}
-                        className={`p-5 rounded-2xl cursor-pointer transition-all border ${chatMode === 'VAULT_REF' ? 'bg-brand/10 border-brand shadow-lg scale-105' : 'bg-slate-100 border-slate-200'}`}
+                        className={`p-5 rounded-xl cursor-pointer transition-all border ${chatMode === 'VAULT_REF' ? 'bg-brand/10 border-brand shadow-lg scale-105' : 'bg-slate-100 border-slate-200'}`}
                     >
                         <p className="text-[10px] font-black text-brand uppercase tracking-[0.2em] mb-2">Resource Library</p>
                         <div className="flex items-center gap-2">
@@ -214,7 +214,7 @@ export const AIDeck: React.FC = () => {
                         </div>
                     </div>
                     {activeContext && (
-                        <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xl group animate-in slide-in-from-bottom-4 duration-500">
+                        <div className="p-5 rounded-xl bg-white border border-slate-200 shadow-xl group animate-in slide-in-from-bottom-4 duration-500">
                             <div className="flex items-center justify-between mb-3">
                                 <p className="text-[10px] font-black text-brand uppercase tracking-[0.2em]">Study Context</p>
                                 <div className="w-2 h-2 rounded-full bg-brand animate-pulse"></div>
@@ -222,7 +222,7 @@ export const AIDeck: React.FC = () => {
                             <div className="text-[11px] text-slate-500 line-clamp-3 mb-4 font-medium italic leading-relaxed">"{activeContext}"</div>
                             <button
                                 onClick={clearContext}
-                                className="w-full py-2 bg-slate-50 hover:bg-brand/5 text-[9px] text-slate-400 font-black hover:text-brand transition-all uppercase tracking-widest rounded-xl border border-slate-100"
+                                className="w-full py-2 bg-slate-50 hover:bg-brand/5 text-[9px] text-slate-400 font-black hover:text-brand transition-all uppercase tracking-widest rounded-lg border border-slate-100 px-4"
                             >Reset Context</button>
                         </div>
                     )}
@@ -232,7 +232,7 @@ export const AIDeck: React.FC = () => {
             {/* Tool View */}
             <div className="flex-1 p-8 overflow-hidden flex flex-col">
                 {activeTool === 'CHAT' && (
-                    <div className="flex-1 flex flex-col bg-white rounded-[2rem] border border-slate-200 overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.03)] relative">
+                    <div className="flex-1 flex flex-col bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-all relative">
                         {/* Chat Header */}
                         <div className="px-8 py-5 border-b border-slate-100 flex justify-between items-center bg-white/80 backdrop-blur-md z-20">
                             <div className="flex items-center gap-6">
@@ -262,7 +262,7 @@ export const AIDeck: React.FC = () => {
                             <select
                                 value={subject}
                                 onChange={(e) => setSubject(e.target.value)}
-                                className="bg-slate-50 border border-slate-200 text-slate-900 font-bold text-xs rounded-xl px-4 py-2 focus:ring-2 focus:ring-brand outline-none"
+                                className="bg-slate-50 border border-slate-200 text-slate-900 font-bold text-xs rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand outline-none transition-all"
                             >
                                 <option>CMA Part 1</option>
                                 <option>CMA Part 2</option>
@@ -275,7 +275,7 @@ export const AIDeck: React.FC = () => {
                         <div className="flex-1 overflow-y-auto p-10 space-y-8 scroll-smooth no-scrollbar">
                             {messages.map((m, i) => (
                                 <div key={i} className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'}`}>
-                                    <div className={`max-w-[85%] p-6 rounded-3xl text-sm leading-relaxed ${m.role === 'user'
+                                    <div className={`max-w-[85%] p-6 rounded-xl text-sm leading-relaxed ${m.role === 'user'
                                         ? 'bg-brand text-white shadow-lg shadow-brand/10'
                                         : 'bg-slate-50 text-slate-800 border border-slate-100 font-medium'
                                         }`}>
@@ -314,7 +314,7 @@ export const AIDeck: React.FC = () => {
                                     </div>
                                     <button
                                         onClick={clearContext}
-                                        className="ml-4 px-4 py-2 bg-white/50 hover:bg-brand hover:text-white border border-brand/10 text-brand rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-sm flex items-center gap-2"
+                                        className="ml-4 px-4 py-2 bg-white/50 hover:bg-brand hover:text-white border border-brand/10 text-brand rounded-lg text-[9px] font-black uppercase tracking-widest transition-all shadow-sm flex items-center gap-2"
                                         title="Clear Focus"
                                     >
                                         <Icons.Plus className="w-3.5 h-3.5 rotate-45" />
@@ -326,7 +326,7 @@ export const AIDeck: React.FC = () => {
                             <div className="relative max-w-4xl mx-auto">
                                 <input
                                     ref={inputRef}
-                                    className="w-full bg-white border border-slate-200 rounded-2xl px-8 py-5 pr-20 text-sm text-slate-900 font-medium outline-none shadow-sm focus:ring-4 focus:ring-brand/5 focus:border-brand transition-all"
+                                    className="w-full bg-white border border-slate-300 rounded-lg-lg px-4 py-3 pr-20 text-sm text-slate-900 font-medium outline-none shadow-sm transition-all focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                     placeholder={chatMode === 'VAULT_REF' ? "Ask about Part 1 or Part 2 specific content..." : "Ask your CMA US Mentor anything..."}
                                     value={chatInput}
                                     onChange={(e) => setChatInput(e.target.value)}
@@ -336,7 +336,7 @@ export const AIDeck: React.FC = () => {
                                 <button
                                     onClick={handleSendMessage}
                                     disabled={isChatLoading || !chatInput.trim()}
-                                    className="absolute right-3 top-3 bottom-3 px-6 bg-brand text-white rounded-xl hover:bg-brand-600 transition-all disabled:opacity-30 shadow-lg shadow-brand/20 flex items-center justify-center active:scale-95"
+                                    className="absolute right-2 top-2 bottom-2 px-4 py-2 bg-brand text-white rounded-lg-lg hover:bg-brand-600 transition-all disabled:opacity-30 shadow-sm flex items-center justify-center active:scale-95"
                                 >
                                     <Icons.Send className="w-5 h-5" />
                                 </button>
@@ -347,14 +347,14 @@ export const AIDeck: React.FC = () => {
 
                 {activeTool === 'TOPIC' && (
                     <div className="flex-1 flex flex-col gap-8 overflow-hidden">
-                        <div className="bg-white rounded-[3rem] border border-slate-200 p-10 shadow-sm animate-in fade-in duration-500">
+                        <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm hover:shadow-md transition-all animate-in fade-in duration-500">
                             <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-4">Topic Blueprint Generator</h3>
                             <p className="text-slate-500 text-sm mb-8 font-medium italic">Enter any CMA topic (e.g. "Variance Analysis" or "Internal Controls") to generate a complete study guide.</p>
 
                             <input
                                 value={topicInput}
                                 onChange={(e) => setTopicInput(e.target.value)}
-                                className="w-full bg-slate-50 border border-slate-100 rounded-[2rem] px-8 py-5 text-sm font-medium outline-none focus:ring-4 focus:ring-brand/5 focus:bg-white transition-all mb-6"
+                                className="w-full bg-white border border-slate-300 rounded-lg-lg px-4 py-3 text-sm font-medium outline-none transition-all mb-6 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                 placeholder="Enter Topic Name..."
                                 onKeyDown={(e) => e.key === 'Enter' && handleGenerateTopic()}
                             />
@@ -362,24 +362,24 @@ export const AIDeck: React.FC = () => {
                             <button
                                 onClick={handleGenerateTopic}
                                 disabled={isTopicLoading || !topicInput.trim()}
-                                className="w-full py-5 bg-slate-900 text-white rounded-[2rem] text-[10px] font-black uppercase tracking-[0.3em] shadow-xl hover:bg-brand transition-all flex items-center justify-center gap-4 disabled:opacity-50"
+                                className="w-full py-3 px-4 bg-slate-900 text-white rounded-lg-lg text-sm font-black uppercase tracking-[0.1em] shadow-sm hover:bg-brand hover:shadow-md transition-all flex items-center justify-center gap-3 disabled:opacity-50"
                             >
                                 {isTopicLoading ? <><Icons.CloudSync className="w-5 h-5 animate-spin" /> Drafting Blueprint...</> : <><Icons.Grid className="w-5 h-5" /> Generate Guide</>}
                             </button>
                         </div>
 
                         {generatedTopic && (
-                            <div className="flex-1 bg-white rounded-[3rem] border border-slate-200 p-10 shadow-sm overflow-y-auto no-scrollbar animate-in slide-in-from-bottom-8 duration-700">
+                            <div className="flex-1 bg-white rounded-xl border border-slate-200 p-8 shadow-sm hover:shadow-md transition-all overflow-y-auto no-scrollbar animate-in slide-in-from-bottom-8 duration-700">
                                 <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-6">
                                     <span className="text-[10px] font-black text-brand uppercase tracking-[0.4em]">Strategic Blueprint</span>
                                     <div className="flex gap-4">
                                         <button
                                             onClick={() => handleChatAboutContext(generatedTopic, 'Generated Blueprint')}
-                                            className="px-6 py-2 bg-brand/5 text-brand rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-brand hover:text-white transition-all"
+                                            className="px-6 py-2 bg-brand/5 text-brand rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-brand hover:text-white transition-all"
                                         >
                                             Deep Dive
                                         </button>
-                                        <button className="px-6 py-2 bg-slate-100 text-slate-400 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">Save to Vault</button>
+                                        <button className="px-6 py-2 bg-slate-100 text-slate-400 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">Save to Vault</button>
                                     </div>
                                 </div>
                                 <div className="prose prose-slate max-w-none">
@@ -392,38 +392,38 @@ export const AIDeck: React.FC = () => {
 
                 {activeTool === 'NOTES' && (
                     <div className="flex-1 flex flex-col gap-8 overflow-hidden">
-                        <div className="bg-white rounded-[3rem] border border-slate-200 p-10 shadow-sm animate-in fade-in duration-500">
+                        <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm hover:shadow-md transition-all animate-in fade-in duration-500">
                             <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-4">Strategic Notes Refiner</h3>
                             <p className="text-slate-500 text-sm mb-8 font-medium italic">Paste raw material, rough notes, or transcripts. We'll restructure them into professional study guides.</p>
 
                             <textarea
                                 value={noteInput}
                                 onChange={(e) => setNoteInput(e.target.value)}
-                                className="w-full h-40 bg-slate-50 border border-slate-100 rounded-[2rem] p-8 text-sm font-medium outline-none focus:ring-4 focus:ring-brand/5 focus:bg-white transition-all resize-none mb-6"
+                                className="w-full h-40 bg-white border border-slate-300 rounded-lg-lg px-4 py-3 text-sm font-medium outline-none transition-all resize-none mb-6 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                 placeholder="Example: Paste a paragraph about Joint Costing methods here..."
                             />
 
                             <button
                                 onClick={handleGenerateNotes}
                                 disabled={isNotesLoading || !noteInput.trim()}
-                                className="w-full py-5 bg-slate-900 text-white rounded-[2rem] text-[10px] font-black uppercase tracking-[0.3em] shadow-xl hover:bg-brand transition-all flex items-center justify-center gap-4 disabled:opacity-50"
+                                className="w-full py-3 px-4 bg-slate-900 text-white rounded-lg-lg text-sm font-black uppercase tracking-[0.1em] shadow-sm hover:bg-brand transition-all flex items-center justify-center gap-3 disabled:opacity-50"
                             >
                                 {isNotesLoading ? <><Icons.CloudSync className="w-5 h-5 animate-spin" /> Synthesizing Strategy...</> : <><Icons.Brain className="w-5 h-5" /> Refine Notes</>}
                             </button>
                         </div>
 
                         {generatedNotes && (
-                            <div className="flex-1 bg-white rounded-[3rem] border border-slate-200 p-10 shadow-sm overflow-y-auto no-scrollbar animate-in slide-in-from-bottom-8 duration-700">
+                            <div className="flex-1 bg-white rounded-xl border border-slate-200 p-8 shadow-sm hover:shadow-md transition-all overflow-y-auto no-scrollbar animate-in slide-in-from-bottom-8 duration-700">
                                 <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-6">
                                     <span className="text-[10px] font-black text-brand uppercase tracking-[0.4em]">Draft Strategy Guide</span>
                                     <div className="flex gap-4">
                                         <button
                                             onClick={() => handleChatAboutContext(generatedNotes, 'Generated Study Guide')}
-                                            className="px-6 py-2 bg-brand/5 text-brand rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-brand hover:text-white transition-all"
+                                            className="px-6 py-2 bg-brand/5 text-brand rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-brand hover:text-white transition-all"
                                         >
                                             Analyze with Mentor
                                         </button>
-                                        <button className="px-6 py-2 bg-slate-100 text-slate-400 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">Export PDF</button>
+                                        <button className="px-6 py-2 bg-slate-100 text-slate-400 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">Export PDF</button>
                                     </div>
                                 </div>
                                 <div className="prose prose-slate max-w-none">
@@ -436,38 +436,38 @@ export const AIDeck: React.FC = () => {
 
                 {activeTool === 'FLASHCARDS' && (
                     <div className="flex-1 flex flex-col gap-8 overflow-hidden">
-                        <div className="bg-white rounded-[3rem] border border-slate-200 p-10 shadow-sm animate-in fade-in duration-500">
+                        <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm hover:shadow-md transition-all animate-in fade-in duration-500">
                             <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-4">Formula Card Creator</h3>
                             <p className="text-slate-500 text-sm mb-8 font-medium italic">Generate high-impact flashcards for CMA definitions, formulas, and standards.</p>
 
                             <textarea
                                 value={cardTopic}
                                 onChange={(e) => setCardTopic(e.target.value)}
-                                className="w-full h-40 bg-slate-50 border border-slate-100 rounded-[2rem] p-8 text-sm font-medium outline-none focus:ring-4 focus:ring-brand/5 focus:bg-white transition-all resize-none mb-6"
+                                className="w-full h-40 bg-white border border-slate-300 rounded-lg-lg px-4 py-3 text-sm font-medium outline-none transition-all resize-none mb-6 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                 placeholder="Example: CMA Part 2 - Risk Management & Financial Strategy..."
                             />
 
                             <button
                                 onClick={handleGenerateCards}
                                 disabled={isCardsLoading || !cardTopic.trim()}
-                                className="w-full py-5 bg-slate-900 text-white rounded-[2rem] text-[10px] font-black uppercase tracking-[0.3em] shadow-xl hover:bg-brand transition-all flex items-center justify-center gap-4 disabled:opacity-50"
+                                className="w-full py-3 px-4 bg-slate-900 text-white rounded-lg-lg text-sm font-black uppercase tracking-[0.1em] shadow-sm hover:bg-brand transition-all flex items-center justify-center gap-3 disabled:opacity-50"
                             >
                                 {isCardsLoading ? <><Icons.CloudSync className="w-5 h-5 animate-spin" /> Coding Cards...</> : <><Icons.Plus className="w-5 h-5" /> Generate Deck</>}
                             </button>
                         </div>
 
                         {generatedCards && (
-                            <div className="flex-1 bg-white rounded-[3rem] border border-slate-200 p-10 shadow-sm overflow-y-auto no-scrollbar animate-in slide-in-from-bottom-8 duration-700">
+                            <div className="flex-1 bg-white rounded-xl border border-slate-200 p-8 shadow-sm hover:shadow-md transition-all overflow-y-auto no-scrollbar animate-in slide-in-from-bottom-8 duration-700">
                                 <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-6">
                                     <span className="text-[10px] font-black text-brand uppercase tracking-[0.4em]">Strategic Flashcards</span>
                                     <div className="flex gap-4">
                                         <button
                                             onClick={() => handleChatAboutContext(generatedCards, 'Flashcard Deck')}
-                                            className="px-6 py-2 bg-brand/5 text-brand rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-brand hover:text-white transition-all"
+                                            className="px-6 py-2 bg-brand/5 text-brand rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-brand hover:text-white transition-all"
                                         >
                                             Practice Mode
                                         </button>
-                                        <button className="px-6 py-2 bg-slate-100 text-slate-400 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">Save to Vault</button>
+                                        <button className="px-6 py-2 bg-slate-100 text-slate-400 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">Save to Vault</button>
                                     </div>
                                 </div>
                                 <div className="prose prose-slate max-w-none">
@@ -479,38 +479,38 @@ export const AIDeck: React.FC = () => {
                 )}
                 {activeTool === 'ESSAY' && (
                     <div className="flex-1 flex flex-col gap-8 overflow-hidden">
-                        <div className="bg-white rounded-[3rem] border border-slate-200 p-10 shadow-sm animate-in fade-in duration-500">
+                        <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm hover:shadow-md transition-all animate-in fade-in duration-500">
                             <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-4">Essay Sandbox & Auditor</h3>
                             <p className="text-slate-500 text-sm mb-8 font-medium italic">Paste your essay here. The Mastermind will audit it against official IMA rubrics from the Knowledge Vault.</p>
 
                             <textarea
                                 value={essayInput}
                                 onChange={(e) => setEssayInput(e.target.value)}
-                                className="w-full h-64 bg-slate-50 border border-slate-100 rounded-[2rem] p-8 text-sm font-medium outline-none focus:ring-4 focus:ring-brand/5 focus:bg-white transition-all resize-none mb-6"
+                                className="w-full h-64 bg-white border border-slate-300 rounded-lg-lg px-4 py-3 text-sm font-medium outline-none transition-all resize-none mb-6 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                 placeholder="Write or paste your essay response here..."
                             />
 
                             <button
                                 onClick={handleEvaluateEssay}
                                 disabled={isEssayLoading || !essayInput.trim()}
-                                className="w-full py-5 bg-slate-900 text-white rounded-[2rem] text-[10px] font-black uppercase tracking-[0.3em] shadow-xl hover:bg-brand transition-all flex items-center justify-center gap-4 disabled:opacity-50"
+                                className="w-full py-3 px-4 bg-slate-900 text-white rounded-lg-lg text-sm font-black uppercase tracking-[0.1em] shadow-sm hover:bg-brand transition-all flex items-center justify-center gap-3 disabled:opacity-50"
                             >
                                 {isEssayLoading ? <><Icons.CloudSync className="w-5 h-5 animate-spin" /> Performing Audit...</> : <><Icons.Award className="w-5 h-5" /> Audit Essay</>}
                             </button>
                         </div>
 
                         {essayEvaluation && (
-                            <div className="flex-1 bg-white rounded-[3rem] border border-slate-200 p-10 shadow-sm overflow-y-auto no-scrollbar animate-in slide-in-from-bottom-8 duration-700">
+                            <div className="flex-1 bg-white rounded-xl border border-slate-200 p-8 shadow-sm hover:shadow-md transition-all overflow-y-auto no-scrollbar animate-in slide-in-from-bottom-8 duration-700">
                                 <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-6">
                                     <span className="text-[10px] font-black text-brand uppercase tracking-[0.4em]">Official Audit Report</span>
                                     <div className="flex gap-4">
                                         <button
                                             onClick={() => handleChatAboutContext(essayEvaluation, 'Essay Audit Report')}
-                                            className="px-6 py-2 bg-brand/5 text-brand rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-brand hover:text-white transition-all"
+                                            className="px-6 py-2 bg-brand/5 text-brand rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-brand hover:text-white transition-all"
                                         >
                                             Discuss Gaps
                                         </button>
-                                        <button className="px-6 py-2 bg-slate-100 text-slate-400 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">Download Audit</button>
+                                        <button className="px-6 py-2 bg-slate-100 text-slate-400 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">Download Audit</button>
                                     </div>
                                 </div>
                                 <div className="prose prose-slate max-w-none">

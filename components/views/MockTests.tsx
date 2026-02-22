@@ -70,7 +70,7 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId }) => {
         <div className="max-w-7xl mx-auto px-6 py-20">
             <header className="w-full text-center mb-16 relative">
                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[300px] bg-brand/5 blur-[120px] pointer-events-none"></div>
-                 <div className="inline-flex items-center gap-2 mb-8 bg-slate-900 text-white px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em]">
+                 <div className="inline-flex items-center gap-2 mb-8 bg-slate-900 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.3em]">
                     <Icons.CloudSync className="w-4 h-4 text-brand" />
                     CoStudy Assessment Engine
                 </div>
@@ -86,7 +86,7 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId }) => {
                         { label: 'Percentile', value: `${perf.percentile}th`, icon: <Icons.Award className="w-4 h-4" /> },
                         { label: 'Last Attempt', value: '2d ago', icon: <Icons.Clock className="w-4 h-4" /> },
                     ].map((s, i) => (
-                        <div key={i} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center gap-4">
+                        <div key={i} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
                             <div className="p-3 bg-slate-50 rounded-xl text-brand">{s.icon}</div>
                             <div>
                                 <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{s.label}</div>
@@ -105,7 +105,7 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId }) => {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10 w-full max-w-5xl mx-auto">
                     {tests.map(test => (
-                        <div key={test.id} className="bg-white/80 backdrop-blur-2xl border border-slate-200 p-12 rounded-[4rem] shadow-xl hover:shadow-2xl transition-all group relative overflow-hidden">
+                        <div key={test.id} className="bg-white/80 backdrop-blur-2xl border border-slate-200 p-12 rounded-xl shadow-xl hover:shadow-2xl transition-all group relative overflow-hidden">
                             <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:scale-110 transition-transform duration-700"><Icons.Logo className="w-48 h-48" /></div>
                             <div className="relative z-10">
                                 <div className="flex justify-between items-start mb-8">
@@ -124,7 +124,7 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId }) => {
                                 </div>
                                 <button 
                                     onClick={() => startTest(test)}
-                                    className="w-full py-6 bg-brand text-white rounded-[2rem] font-black text-xs uppercase tracking-widest hover:bg-slate-900 transition-all shadow-2xl shadow-brand/20 active:scale-95"
+                                    className="w-full py-6 bg-brand text-white rounded-lg font-black text-xs uppercase tracking-widest hover:bg-slate-900 transition-all shadow-2xl shadow-brand/20 active:scale-95 px-4"
                                 >
                                     Start Session
                                 </button>

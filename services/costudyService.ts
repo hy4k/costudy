@@ -4,40 +4,40 @@ import { supabase } from './supabaseClient';
 import { Post, Comment, StudyRoom, Mentor, PostType, LibraryItem, ManagedStudent, Broadcast, User, Notification, StudySession } from '../types';
 import { getUserProfile } from './fetsService';
 
-// Helper: Default rooms fallback
 const getDefaultRooms = (): StudyRoom[] => [
   {
     id: 'room-1',
     name: 'CMA Part 1 Strategy',
-    category: 'CMA US Part 1',
-    members: 1240,
-    activeOnline: 42,
-    color: 'bg-brand',
-    description: 'Focusing on Internal Controls and Performance Management.',
-    sections: ['Chat', 'Live Audio', 'Whiteboard', 'Resources'],
-    targetTopics: ['Internal Controls', 'Performance Management']
+    topic: 'CMA US Part 1',
+    room_type: 'OPEN',
+    max_members: 10,
+    pomodoro_duration: 25,
+    is_active: true,
+    pomodoro_status: 'READY',
+    created_at: new Date().toISOString()
   },
   {
     id: 'room-2',
     name: 'Part 2 Calculation Lab',
-    category: 'CMA US Part 2',
-    members: 890,
-    activeOnline: 15,
-    color: 'bg-blue-600',
-    description: 'Deep dive into Investment Decisions and Decision Analysis.',
-    sections: ['Chat', 'Formula Share', 'Live Solving'],
-    targetTopics: ['Decision Analysis', 'Investment Decisions']
+    topic: 'CMA US Part 2',
+    room_type: 'MENTOR_LED',
+    max_members: 20,
+    pomodoro_duration: 45,
+    is_active: true,
+    pomodoro_status: 'FOCUS',
+    pomodoro_end_time: new Date(Date.now() + 15 * 60000).toISOString(),
+    created_at: new Date().toISOString()
   },
   {
     id: 'room-3',
     name: 'Ethics & Professional Standards',
-    category: 'Ethics',
-    members: 650,
-    activeOnline: 8,
-    color: 'bg-emerald-600',
-    description: 'IMA Ethics guidelines and professional conduct discussions.',
-    sections: ['Chat', 'Case Studies'],
-    targetTopics: ['IMA Ethics', 'Professional Conduct']
+    topic: 'Ethics',
+    room_type: 'PRIVATE',
+    max_members: 5,
+    pomodoro_duration: 60,
+    is_active: false,
+    pomodoro_status: 'READY',
+    created_at: new Date().toISOString()
   }
 ];
 
@@ -68,22 +68,69 @@ export const costudyService = {
     }
   },
 
-  createPost: async (authorId: string, content: string, type: PostType = PostType.QUESTION, tags: string[] = []) => {
+  subscribeToPosts: (callback: (payload: any) => void) => {
+    return supabase
+      .channel('public:posts')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'posts' }, callback)
+      .subscribe();
+  },
+
+  createPost: async (authorId: string, content: string, type: PostType = PostType.QUESTION, tags: string[] = [], payload: any = {}) => {
+    const postObj: any = {
+      author_id: authorId,
+      content,
+      type,
+      tags,
+      vouches: 0,
+      created_at: new Date().toISOString()
+    };
+
+    if (type === PostType.PEER_AUDIT_REQUEST) {
+      postObj.audit_status = 'OPEN';
+      postObj.subject = payload.subject;
+    } else if (type === PostType.MCQ) {
+      postObj.mcq_data = payload.mcq_data; // Stored in content JSON or separate column based on schema
+      // Will store JSON in content to avoid schema change for now
+      postObj.content = JSON.stringify({ question: content, mcq_data: payload.mcq_data });
+    } else if (type === PostType.RESOURCE) {
+      postObj.resource_data = payload.resource_data;
+      postObj.content = JSON.stringify({ title: payload.title, description: content, url: payload.resource_data.url });
+    } else if (type === PostType.BOUNTY) {
+      postObj.bounty_details = payload.bounty_details;
+    }
+
     const { data, error } = await supabase
       .from('posts')
-      .insert([
-        {
-          author_id: authorId,
-          content,
-          type,
-          tags,
-          likes: 0,
-          created_at: new Date().toISOString()
-        }
-      ])
+      .insert([postObj])
       .select('*, author:user_profiles(*)');
     if (error) throw error;
     return data[0];
+  },
+
+  submitVouch: async (userId: string, postId: string, vouchType: string = 'COMPLIANT') => {
+    // Check if already vouched
+    const { data: existing } = await supabase
+      .from('vouch_logs')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('post_id', postId);
+
+    if (existing && existing.length > 0) throw new Error('Already vouched on this post.');
+
+    // Insert Vouch Log
+    const { error: logError } = await supabase
+      .from('vouch_logs')
+      .insert([{ user_id: userId, post_id: postId, vouch_type: vouchType }]);
+
+    if (logError) throw logError;
+
+    // Update Post count via RPC or directly (simplified for direct update here, ideally an RPC increments safely)
+    // Since we can't easily do concurrent safe increments without RPC, we read then write
+    const { data: post } = await supabase.from('posts').select('vouches').eq('id', postId).single();
+    if (post) {
+      await supabase.from('posts').update({ vouches: (post.vouches || 0) + 1 }).eq('id', postId);
+    }
+    return true;
   },
 
   getPostDiscussion: async (postId: string): Promise<Comment[]> => {
@@ -121,34 +168,116 @@ export const costudyService = {
     try {
       const { data, error } = await supabase
         .from('study_rooms')
-        .select('*')
-        .order('members_count', { ascending: false });
+        .select(`*, members:room_members(count)`)
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching rooms:', error);
-        // Return default rooms if DB is empty or error
-        return getDefaultRooms();
-      }
-
-      if (!data || data.length === 0) {
-        return getDefaultRooms();
+        return [];
       }
 
       return data.map((room: any): StudyRoom => ({
-        id: room.id,
-        name: room.name,
-        category: room.category || 'General',
-        members: room.members_count || 0,
-        activeOnline: room.active_count || Math.floor(Math.random() * 20) + 5,
-        color: room.color_theme || 'bg-brand',
-        description: room.description || '',
-        sections: ['Chat', 'Resources', 'Live Audio'],
-        targetTopics: room.target_topics || []
+        ...room,
+        max_members: room.max_members || 10,
+        room_type: room.room_type || 'OPEN',
+        pomodoro_status: room.pomodoro_status || 'READY',
+        pomodoro_duration: room.pomodoro_duration || 25,
+        members_count: room.members?.[0]?.count || 0
       }));
     } catch (e) {
       console.error('getRooms error:', e);
-      return getDefaultRooms();
+      return [];
     }
+  },
+
+  createRoom: async (roomData: Partial<StudyRoom>) => {
+    const { data, error } = await supabase
+      .from('study_rooms')
+      .insert([roomData])
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  getRoomById: async (roomId: string) => {
+    const { data, error } = await supabase
+      .from('study_rooms')
+      .select('*')
+      .eq('id', roomId)
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  joinRoom: async (roomId: string, userId: string) => {
+    const { data, error } = await supabase
+      .from('room_members')
+      .upsert([{ room_id: roomId, user_id: userId, is_active: true }])
+      .select();
+    if (error) throw error;
+    return data;
+  },
+
+  getRoomMembers: async (roomId: string) => {
+    const { data, error } = await supabase
+      .from('room_members')
+      .select('*, profile:user_profiles(*)')
+      .eq('room_id', roomId)
+      .eq('is_active', true);
+    if (error) return [];
+    return data;
+  },
+
+  getRoomMissions: async (roomId: string) => {
+    const { data, error } = await supabase
+      .from('room_missions')
+      .select('*, profile:user_profiles(name)')
+      .eq('room_id', roomId)
+      .order('created_at', { ascending: true });
+    if (error) return [];
+    return data;
+  },
+
+  createRoomMission: async (roomId: string, text: string) => {
+    const { data, error } = await supabase
+      .from('room_missions')
+      .insert([{ room_id: roomId, task_text: text }])
+      .select('*, profile:user_profiles(name)')
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  toggleRoomMission: async (missionId: string, isCompleted: boolean, userId: string) => {
+    const { data, error } = await supabase
+      .from('room_missions')
+      .update({ is_completed: isCompleted, completed_by: isCompleted ? userId : null })
+      .eq('id', missionId)
+      .select('*, profile:user_profiles(name)')
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  updateRoomTimerStatus: async (roomId: string, status: string, endTime: string | null) => {
+    const { data, error } = await supabase
+      .from('study_rooms')
+      .update({ pomodoro_status: status, pomodoro_end_time: endTime })
+      .eq('id', roomId)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  subscribeToRoom: (roomId: string, callback: (payload: any) => void) => {
+    return supabase
+      .channel(`room:${roomId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'study_rooms', filter: `id=eq.${roomId}` }, callback)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'room_missions', filter: `room_id=eq.${roomId}` }, callback)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'study_room_messages', filter: `room_id=eq.${roomId}` }, callback)
+      .subscribe();
   },
 
   getMentors: async (): Promise<Mentor[]> => {

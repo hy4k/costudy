@@ -156,7 +156,7 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({ userId }) => {
     <div className="max-w-[1600px] mx-auto p-4 sm:p-6 h-[calc(100vh-80px)] flex flex-col md:flex-row gap-6">
       
       {/* SIDEBAR: ROSTER & MISSIONS */}
-      <div className={`w-full md:w-[400px] flex flex-col bg-[#0f172a] text-white rounded-[2.5rem] border border-slate-800 shadow-2xl overflow-hidden shrink-0 ${activeConvoId ? 'hidden md:flex' : 'flex'}`}>
+      <div className={`w-full md:w-[400px] flex flex-col bg-[#0f172a] text-white rounded-xl border border-slate-800 shadow-2xl overflow-hidden shrink-0 ${activeConvoId ? 'hidden md:flex' : 'flex'}`}>
         
         {/* Sidebar Header */}
         <div className="p-8 border-b border-slate-800 bg-slate-900/50">
@@ -167,15 +167,15 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({ userId }) => {
              </div>
              <button 
                 onClick={() => setIsCreatingThread(!isCreatingThread)} 
-                className={`w-12 h-12 rounded-2xl shadow-lg transition-all flex items-center justify-center ${isCreatingThread ? 'bg-slate-800 text-slate-400 rotate-90' : 'bg-brand text-white hover:bg-brand-600 hover:scale-105 active:scale-95'}`}
+                className={`w-12 h-12 rounded-xl shadow-lg transition-all flex items-center justify-center ${isCreatingThread ? 'bg-slate-800 text-slate-400 rotate-90' : 'bg-brand text-white hover:bg-brand-600 hover:scale-105 active:scale-95'}`}
              >
-                <Icons.Plus className="w-5 h-5" />
+                <Icons.Plus className="w-5 h-5 px-4 py-2 transition-all" />
              </button>
           </div>
           
           {/* Thread Creation Interface */}
           {isCreatingThread && (
-             <div className="animate-in slide-in-from-top-4 bg-slate-800 border border-slate-700 rounded-[2rem] p-6 shadow-xl mb-6 relative overflow-hidden">
+             <div className="animate-in slide-in-from-top-4 bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-xl mb-6 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-1 h-full bg-brand"></div>
                 {!selectedPeer ? (
                     <>
@@ -185,7 +185,7 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({ userId }) => {
                             <input 
                               autoFocus
                               placeholder="Search handle..." 
-                              className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-4 py-3 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-brand/50 mb-2 transition-all"
+                              className="w-full bg-slate-900 border border-slate-300 rounded-lg pl-10 pr-4 py-3 text-xs font-bold text-white outline-none mb-2 transition-all focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                               value={searchQuery}
                               onChange={e => handleSearchUsers(e.target.value)}
                             />
@@ -204,12 +204,12 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({ userId }) => {
                     </>
                 ) : (
                     <div className="space-y-5">
-                        <div className="flex items-center justify-between bg-slate-900 p-3 rounded-2xl border border-slate-700">
+                        <div className="flex items-center justify-between bg-slate-900 p-3 rounded-xl border border-slate-700">
                             <div className="flex items-center gap-3">
                                 <img src={selectedPeer.avatar} className="w-8 h-8 rounded-lg object-cover" />
                                 <span className="text-xs font-black text-white">{selectedPeer.name}</span>
                             </div>
-                            <button onClick={() => setSelectedPeer(null)} className="text-[9px] font-black text-slate-500 hover:text-red-400 uppercase tracking-widest">Change</button>
+                            <button onClick={() => setSelectedPeer(null)} className="text-[9px] font-black text-slate-500 hover:text-red-400 uppercase tracking-widest px-4 py-2 transition-all">Change</button>
                         </div>
 
                         <div>
@@ -228,13 +228,13 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({ userId }) => {
                         </div>
 
                         {contextType && (
-                            <div className="animate-in fade-in slide-in-from-bottom-2">
+                            <div className="animate-in fade-in slide-in-from-bottom-2 px-4 py-2 transition-all">
                                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">3. Mission Objective</p>
                                 <input 
                                     placeholder="e.g. Audit Essay #214..."
                                     value={contextTitle}
                                     onChange={(e) => setContextTitle(e.target.value)}
-                                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-brand/50 transition-all"
+                                    className="w-full bg-slate-900 border border-slate-300 rounded-lg px-4 py-3 text-xs font-bold text-white outline-none transition-all focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                 />
                             </div>
                         )}
@@ -242,7 +242,7 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({ userId }) => {
                         <button 
                             onClick={handleStartContextThread}
                             disabled={!contextTitle.trim()}
-                            className="w-full py-4 bg-brand text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] disabled:opacity-50 hover:bg-brand-600 transition-all shadow-xl active:scale-95"
+                            className="w-full py-4 bg-brand text-white rounded-lg text-[10px] font-black uppercase tracking-[0.2em] disabled:opacity-50 hover:bg-brand-600 transition-all shadow-xl active:scale-95 px-4"
                         >
                             Initialize Link
                         </button>
@@ -253,7 +253,7 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({ userId }) => {
           
           <div className="relative group">
              <Icons.Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-brand transition-colors" />
-             <input placeholder="Filter conversations..." className="w-full bg-slate-900 border border-slate-800 rounded-2xl pl-12 pr-4 py-4 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-slate-700 transition-all shadow-sm placeholder:text-slate-600" />
+             <input placeholder="Filter conversations..." className="w-full bg-slate-900 border border-slate-300 rounded-lg pl-12 pr-4 py-4 text-xs font-bold text-white outline-none transition-all shadow-sm placeholder:text-slate-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
           </div>
         </div>
 
@@ -276,13 +276,13 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({ userId }) => {
                <div 
                  key={convo.id} 
                  onClick={() => setActiveConvoId(convo.id)}
-                 className={`p-5 rounded-[2rem] cursor-pointer transition-all border group relative overflow-hidden ${isActive ? 'bg-slate-800 border-slate-700 shadow-xl ring-1 ring-white/10' : 'bg-transparent border-transparent hover:bg-slate-800/50 hover:border-slate-800'}`}
+                 className={`p-5 rounded-xl cursor-pointer transition-all border group relative overflow-hidden ${isActive ? 'bg-slate-800 border-slate-700 shadow-xl ring-1 ring-white/10' : 'bg-transparent border-transparent hover:bg-slate-800/50 hover:border-slate-800'}`}
                >
                  {isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-brand"></div>}
                  
                  <div className="flex items-start gap-4 relative z-10">
                     <div className="relative">
-                       <img src={other?.avatar || 'https://i.pravatar.cc/150'} className="w-12 h-12 rounded-2xl object-cover ring-2 ring-slate-800 shadow-sm" />
+                       <img src={other?.avatar || 'https://i.pravatar.cc/150'} className="w-12 h-12 rounded-xl object-cover ring-2 ring-slate-800 shadow-sm" />
                        <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-[3px] border-slate-900 ${signalColor}`}></div>
                     </div>
                     <div className="flex-1 min-w-0 pt-1">
@@ -309,7 +309,7 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({ userId }) => {
       </div>
 
       {/* MAIN CHAT AREA: "THE COCKPIT" */}
-      <div className={`flex-1 flex flex-col bg-white rounded-[3rem] border border-slate-200 shadow-2xl overflow-hidden relative ${!activeConvoId ? 'hidden md:flex' : 'flex'}`}>
+      <div className={`flex-1 flex flex-col bg-white rounded-xl border border-slate-200 shadow-2xl overflow-hidden relative ${!activeConvoId ? 'hidden md:flex' : 'flex'}`}>
         
         {/* Background Grid */}
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
@@ -322,11 +322,11 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({ userId }) => {
                {/* Top Row: User Info & Controls */}
                <div className="flex justify-between items-center">
                    <div className="flex items-center gap-5">
-                      <button className="md:hidden p-2 -ml-2 text-slate-400 hover:text-slate-900" onClick={() => setActiveConvoId(null)}>
+                      <button className="md:hidden p-2 -ml-2 text-slate-400 hover:text-slate-900 px-4 py-2 transition-all" onClick={() => setActiveConvoId(null)}>
                           <Icons.ChevronLeft className="w-6 h-6" />
                       </button>
                       <div className="relative">
-                          <img src={otherParticipant?.avatar} className="w-14 h-14 rounded-2xl ring-4 ring-slate-50 shadow-lg object-cover" />
+                          <img src={otherParticipant?.avatar} className="w-14 h-14 rounded-xl ring-4 ring-slate-50 shadow-lg object-cover" />
                           <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-[3px] border-white ${signalConfig?.color || 'bg-gray-500'}`}></div>
                       </div>
                       <div>
@@ -363,7 +363,7 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({ userId }) => {
                        <button 
                            onClick={handleMicroConsulting}
                            disabled={isBookingConsult}
-                           className="px-4 py-2 bg-slate-900 text-white hover:bg-brand rounded-xl text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-2 whitespace-nowrap shadow-md disabled:opacity-50"
+                           className="px-4 py-2 bg-slate-900 text-white hover:bg-brand rounded-lg text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-2 whitespace-nowrap shadow-md disabled:opacity-50"
                        >
                            {isBookingConsult ? <Icons.CloudSync className="w-3 h-3 animate-spin" /> : <Icons.Clock className="w-3 h-3" />} 
                            Book 15m SOS
@@ -373,13 +373,13 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({ userId }) => {
                            <>
                                <button 
                                 onClick={() => handleSendMessage("[SYSTEM]: Marked as Compliant ✅")}
-                                className="px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-2 whitespace-nowrap"
+                                className="px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-2 whitespace-nowrap"
                                >
                                    <Icons.CheckCircle className="w-3 h-3" /> Mark Compliant
                                </button>
                                <button 
                                 onClick={() => handleSendMessage("[SYSTEM]: Flagged for Revision 🚩")}
-                                className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-2 whitespace-nowrap"
+                                className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-2 whitespace-nowrap"
                                >
                                    <Icons.AlertCircle className="w-3 h-3" /> Flag Issue
                                </button>
@@ -388,7 +388,7 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({ userId }) => {
                        {activeConversation.contextType === 'MOCK_EXAM' && (
                            <button 
                             onClick={() => handleSendMessage(`[SYSTEM]: Sharing Mock Stats 📊\nScore: 82%\nPercentile: 94th\nWeakness: Ethics`)}
-                            className="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-2 whitespace-nowrap"
+                            className="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-2 whitespace-nowrap"
                            >
                                <Icons.BarChart className="w-3 h-3" /> Share Stats
                            </button>
@@ -396,7 +396,7 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({ userId }) => {
                        {activeConversation.contextType === 'QUESTION' && (
                            <button 
                             onClick={() => handleSendMessage("[SYSTEM]: Vouched for Solution 🏆")}
-                            className="px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-600 border border-amber-200 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-2 whitespace-nowrap"
+                            className="px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-600 border border-amber-200 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-2 whitespace-nowrap"
                            >
                                <Icons.Stamp className="w-3 h-3" /> Vouch
                            </button>
@@ -439,7 +439,7 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({ userId }) => {
                       {!isMe && <img src={m.sender?.avatar} className="w-10 h-10 rounded-xl shadow-sm ring-2 ring-white object-cover" />}
                       
                       <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[80%] sm:max-w-[65%]`}>
-                          <div className={`p-5 rounded-[2rem] text-sm font-medium leading-relaxed shadow-md ${isMe ? 'bg-slate-900 text-white rounded-br-none' : 'bg-white text-slate-900 rounded-bl-none border border-slate-100'}`}>
+                          <div className={`p-5 rounded-xl text-sm font-medium leading-relaxed shadow-md ${isMe ? 'bg-slate-900 text-white rounded-br-none' : 'bg-white text-slate-900 rounded-bl-none border border-slate-100'}`}>
                              {m.content}
                           </div>
                           <span className="text-[9px] text-slate-400 font-bold mt-2 uppercase tracking-widest px-2">{new Date(m.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
@@ -453,10 +453,10 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({ userId }) => {
             {/* Input Area */}
             <div className="p-6 bg-white border-t border-slate-100 relative z-20">
                {isThreadLocked ? (
-                   <div className="text-center py-4 bg-slate-50 rounded-[2rem] border border-dashed border-slate-200 flex flex-col items-center gap-3">
+                   <div className="text-center py-4 bg-slate-50 rounded-xl border border-dashed border-slate-200 flex flex-col items-center gap-3">
                        <Icons.Lock className="w-6 h-6 text-slate-400" />
                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Protocol Archived</p>
-                       <button onClick={() => { setIsCreatingThread(true); setActiveConvoId(null); }} className="text-xs font-bold text-brand hover:text-slate-900 transition-colors">Initialize New Protocol</button>
+                       <button onClick={() => { setIsCreatingThread(true); setActiveConvoId(null); }} className="text-xs font-bold text-brand hover:text-slate-900 transition-colors px-4 py-2">Initialize New Protocol</button>
                    </div>
                ) : (
                    <div className="relative max-w-4xl mx-auto">
@@ -465,16 +465,16 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({ userId }) => {
                         onChange={e => setInputText(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
                         placeholder={`Transmit message to ${otherParticipant?.name}...`}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-[2rem] pl-8 pr-24 py-6 text-sm text-slate-900 font-medium outline-none focus:bg-white focus:ring-4 focus:ring-brand/5 focus:border-brand/30 transition-all placeholder:text-slate-400"
+                        className="w-full bg-slate-50 border border-slate-300 rounded-lg pl-8 pr-24 py-6 text-sm text-slate-900 font-medium outline-none focus:bg-white /30 transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       />
                       <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                          <button className="p-3 text-slate-400 hover:text-slate-900 transition-colors rounded-xl hover:bg-slate-100">
+                          <button className="p-3 text-slate-400 hover:text-slate-900 transition-colors rounded-lg hover:bg-slate-100 px-4 py-2">
                               <Icons.Link className="w-5 h-5" />
                           </button>
                           <button 
                             onClick={() => handleSendMessage()} 
                             disabled={!inputText.trim()}
-                            className="p-3 bg-slate-900 text-white rounded-xl shadow-lg hover:bg-brand active:scale-90 transition-all disabled:opacity-50 disabled:scale-100"
+                            className="p-3 bg-slate-900 text-white rounded-lg shadow-lg hover:bg-brand active:scale-90 transition-all disabled:opacity-50 disabled:scale-100 px-4 py-2"
                           >
                              <Icons.Send className="w-5 h-5" />
                           </button>

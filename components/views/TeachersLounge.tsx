@@ -12,11 +12,11 @@ interface TeachersLoungeProps {
 
 const MentorCard: React.FC<{ mentor: Mentor; matchReasons?: string[] }> = ({ mentor, matchReasons }) => {
   return (
-    <div className={`bg-white/70 backdrop-blur-3xl border ${matchReasons ? 'border-brand/40 ring-1 ring-brand/10 shadow-2xl scale-[1.02]' : 'border-slate-200 shadow-xl'} p-8 rounded-[4rem] transition-all duration-500 group flex flex-col gap-8`}>
+    <div className={`bg-white/70 backdrop-blur-3xl border ${matchReasons ? 'border-brand/40 ring-1 ring-brand/10 shadow-2xl scale-[1.02]' : 'border-slate-200 shadow-xl'} p-8 rounded-xl transition-all duration-500 group flex flex-col gap-8`}>
       <div className="flex justify-between items-start">
         <div className="flex gap-4 items-center">
           <div className="relative">
-            <img src={mentor.img} className="w-20 h-20 rounded-[2rem] object-cover ring-4 ring-white shadow-lg" alt={mentor.name} />
+            <img src={mentor.img} className="w-20 h-20 rounded-xl object-cover ring-4 ring-white shadow-lg" alt={mentor.name} />
             {mentor.isVerified && <div className="absolute -bottom-1 -right-1 bg-brand text-white p-1 rounded-lg shadow-xl border-2 border-white"><Icons.CheckBadge className="w-4 h-4" /></div>}
           </div>
           <div>
@@ -25,7 +25,7 @@ const MentorCard: React.FC<{ mentor: Mentor; matchReasons?: string[] }> = ({ men
           </div>
         </div>
       </div>
-      <button className="w-full py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-brand transition-all shadow-xl">Hire Specialist</button>
+      <button className="w-full py-4 bg-slate-900 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-brand transition-all shadow-xl px-4">Hire Specialist</button>
     </div>
   );
 };
@@ -58,8 +58,8 @@ export const TeachersLounge: React.FC<TeachersLoungeProps> = ({ userId }) => {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-brand/5 blur-[120px] pointer-events-none"></div>
         <h2 className="text-7xl font-black text-slate-900 tracking-tighter leading-[0.7] mb-8 scale-y-110 uppercase">Hiring Built On Trust</h2>
         <div className="mt-16 flex justify-center gap-6">
-          <button onClick={() => setMatchingMode(false)} className={`px-10 py-5 rounded-3xl text-xs font-black uppercase tracking-widest border transition-all ${!matchingMode ? 'bg-slate-900 text-white shadow-2xl' : 'bg-white text-slate-400 border-slate-200'}`}>Explore All</button>
-          <button onClick={() => setMatchingMode(true)} className={`px-10 py-5 rounded-3xl text-xs font-black uppercase tracking-widest border transition-all flex items-center gap-3 ${matchingMode ? 'bg-brand text-white shadow-brand/30 shadow-2xl' : 'bg-white text-slate-400 border-slate-200'}`}><Icons.Sparkles className="w-4 h-4" /> Smart Match</button>
+          <button onClick={() => setMatchingMode(false)} className={`px-10 py-5 rounded-xl text-xs font-black uppercase tracking-widest border transition-all ${!matchingMode ? 'bg-slate-900 text-white shadow-2xl' : 'bg-white text-slate-400 border-slate-200'}`}>Explore All</button>
+          <button onClick={() => setMatchingMode(true)} className={`px-10 py-5 rounded-xl text-xs font-black uppercase tracking-widest border transition-all flex items-center gap-3 ${matchingMode ? 'bg-brand text-white shadow-brand/30 shadow-2xl' : 'bg-white text-slate-400 border-slate-200'}`}><Icons.Sparkles className="w-4 h-4 px-4 py-2 transition-all" /> Smart Match</button>
         </div>
       </header>
 

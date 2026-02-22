@@ -1,5 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { ViewState, UserRole } from './types';
 import { StudyWall } from './components/views/StudyWall';
@@ -12,8 +12,8 @@ import { StudentStore } from './components/views/StudentStore';
 import { LibraryVault } from './components/views/LibraryVault';
 import { MentorDashboard } from './components/views/MentorDashboard';
 import { DirectMessages } from './components/views/DirectMessages';
-import { Login } from './components/auth/Login';
-import { SignUp } from './components/auth/SignUp';
+import { AuthPage } from './components/auth/AuthPage';
+import { LandingPage } from './components/views/LandingPage';
 import { authService, getUserProfile, createUserProfile } from './services/fetsService';
 import { supabase } from './services/supabaseClient';
 import { Icons } from './components/Icons';
@@ -21,12 +21,10 @@ import { Icons } from './components/Icons';
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
-  const [showAuth, setShowAuth] = useState(false);
-  const [authView, setAuthView] = useState<'LOGIN' | 'SIGNUP'>('LOGIN');
-  const [currentView, setCurrentView] = useState<keyof typeof ViewState>(ViewState.WALL);
+  const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState<any>(null);
 
-  // Unified Identity Sync function
   const syncUserIdentity = async (supabaseUser: any) => {
     if (!supabaseUser?.id) {
       setIsLoggedIn(false);
@@ -35,10 +33,7 @@ function App() {
     }
 
     try {
-      // Try to fetch existing profile
       let profile = await getUserProfile(supabaseUser.id);
-      
-      // If no profile exists, create one (JIT provisioning)
       if (!profile) {
         const metadata = supabaseUser.user_metadata || {};
         await createUserProfile(supabaseUser.id, {
@@ -49,20 +44,17 @@ function App() {
       }
 
       if (profile) {
-        // Normalize the role from DB to match our enum
         const roleMap: Record<string, UserRole> = {
           'STUDENT': UserRole.STUDENT,
           'TEACHER': UserRole.TEACHER,
           'PEER_TUTOR': UserRole.PEER_TUTOR
         };
-        
         setUser({
           ...profile,
           role: roleMap[profile.role] || UserRole.STUDENT
         });
         setIsLoggedIn(true);
       } else {
-        // Fallback if profile creation failed
         setUser({
           id: supabaseUser.id,
           name: supabaseUser.email?.split('@')[0] || 'User',
@@ -74,7 +66,6 @@ function App() {
       }
     } catch (e) {
       console.error("Error syncing user identity:", e);
-      // Set minimal user to avoid blocking the app
       setUser({
         id: supabaseUser.id,
         name: supabaseUser.email?.split('@')[0] || 'User',
@@ -104,7 +95,6 @@ function App() {
   };
 
   useEffect(() => {
-    // Check initial session
     const checkUser = async () => {
       try {
         const session = await authService.getSession();
@@ -119,15 +109,13 @@ function App() {
     };
     checkUser();
 
-    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'USER_UPDATED') && session) {
         await syncUserIdentity(session.user);
-        setShowAuth(false);
       } else if (event === 'SIGNED_OUT') {
         setIsLoggedIn(false);
         setUser(null);
-        setCurrentView(ViewState.WALL);
+        navigate('/');
       }
     });
 
@@ -139,95 +127,79 @@ function App() {
       await authService.signOut();
       setIsLoggedIn(false);
       setUser(null);
-      setCurrentView(ViewState.WALL);
+      navigate('/');
     } catch (e) {
       console.error("Logout error:", e);
     }
   };
 
-  const handleAuthRequired = (view: 'LOGIN' | 'SIGNUP' = 'SIGNUP') => {
-    setAuthView(view);
-    setShowAuth(true);
-  };
-
   if (isInitialLoading) {
     return (
-      <div className="h-screen w-full bg-slate-50 flex flex-col items-center justify-center gap-6">
+      <div className="h-screen w-full bg-slate-900 flex flex-col items-center justify-center gap-6">
         <Icons.CloudSync className="w-16 h-16 text-brand animate-spin" />
         <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 animate-pulse">Neural Handshake Active...</span>
       </div>
     );
   }
 
-  if (showAuth && !isLoggedIn) {
-    return authView === 'LOGIN'
-      ? <Login onLogin={() => setShowAuth(false)} onSwitch={() => setAuthView('SIGNUP')} onBack={() => setShowAuth(false)} />
-      : <SignUp onSignUp={() => setShowAuth(false)} onSwitch={() => setAuthView('LOGIN')} onBack={() => setShowAuth(false)} />;
+  // Redirect Logic
+  if (isLoggedIn && (location.pathname === '/' || location.pathname === '/login' || location.pathname === '/home')) {
+    return <Navigate to="/deck" replace />;
   }
 
-  const renderView = () => {
-    if (isLoggedIn && !user && currentView !== ViewState.WALL) {
-      return (
-        <div className="h-full flex flex-col items-center justify-center gap-6 opacity-50">
-          <Icons.CloudSync className="w-12 h-12 text-brand animate-spin" />
-          <span className="text-[10px] font-black uppercase tracking-[0.3em]">Synchronizing Identity...</span>
-        </div>
-      );
-    }
+  if (!isLoggedIn) {
+    return (
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/home" element={<LandingPage />} />
+        <Route path="/login" element={<AuthPage onSuccess={() => navigate('/deck')} />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    );
+  }
 
-    // Role Guard: Prevent Students from accessing Teacher Views and vice versa if URL manipulation was possible (conceptually)
-    // Though UI hides buttons, this is a render-level safety check.
-    if (user?.role === UserRole.TEACHER) {
-      if (currentView === ViewState.ROOMS || currentView === ViewState.TESTS || currentView === ViewState.STORE || currentView === ViewState.WALL) {
-        // Fallback if teacher ends up on student view
-        return <StudyWall setView={(v) => setCurrentView(v as any)} isLoggedIn={isLoggedIn} userId={user?.id} onAuthRequired={handleAuthRequired} mode="FACULTY" />;
-      }
-    }
+  // Authenticated State Loading
+  if (isLoggedIn && !user) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center gap-6 bg-slate-900 opacity-80">
+        <Icons.CloudSync className="w-12 h-12 text-brand animate-spin" />
+        <span className="text-[10px] text-white font-black uppercase tracking-[0.3em]">Synchronizing Identity...</span>
+      </div>
+    );
+  }
 
-    switch (currentView) {
-      case ViewState.WALL:
-        return <StudyWall setView={(v) => setCurrentView(v as any)} isLoggedIn={isLoggedIn} userId={user?.id} onAuthRequired={handleAuthRequired} mode="PUBLIC" />;
-      case ViewState.FACULTY_ROOM:
-        return <StudyWall setView={(v) => setCurrentView(v as any)} isLoggedIn={isLoggedIn} userId={user?.id} onAuthRequired={handleAuthRequired} mode="FACULTY" />;
-      case ViewState.ROOMS:
-        return <StudyRooms userId={user?.id} />;
-      case ViewState.AI_DECK:
-        return <AIDeck />;
-      case ViewState.TEACHERS:
-        return <TeachersLounge userId={user?.id} />;
-      case ViewState.PROFILE:
-        return <Profile onLogout={handleLogout} userId={user?.id} onProfileUpdate={refreshUser} />;
-      case ViewState.TESTS:
-        return <MockTests userId={user?.id} />;
-      case ViewState.STORE:
-        return <StudentStore />;
-      case ViewState.ROOM_DETAIL:
-        return <LibraryVault />;
-      case ViewState.MESSAGES:
-        return <DirectMessages userId={user?.id} />;
-      case ViewState.DASHBOARD:
-        return <MentorDashboard defaultTab="IMPACT" />;
-      // MY_CLASS Removed
-      default:
-        // Default fallback
-        if (user?.role === UserRole.TEACHER) return <StudyWall setView={(v) => setCurrentView(v as any)} isLoggedIn={isLoggedIn} userId={user?.id} onAuthRequired={handleAuthRequired} mode="FACULTY" />;
-        return <StudyWall setView={(v) => setCurrentView(v as any)} isLoggedIn={isLoggedIn} userId={user?.id} onAuthRequired={handleAuthRequired} mode="PUBLIC" />;
-    }
-  };
-
+  // Authenticated Routes wrapper
   return (
     <Layout
-      currentView={currentView as any}
-      setView={(v) => {
-        setCurrentView(v as any);
-      }}
       isLoggedIn={isLoggedIn}
       userName={user?.name}
-      userRole={user?.role} // Pass the normalized role
+      userRole={user?.role}
       userAvatar={user?.avatar}
-      onLoginClick={() => handleAuthRequired('LOGIN')}
+      handleLogout={handleLogout}
     >
-      {renderView()}
+      <Routes>
+        <Route path="/deck" element={<StudyWall setView={() => { }} isLoggedIn={isLoggedIn} userId={user?.id} mode={user?.role === UserRole.TEACHER ? "FACULTY" : "PUBLIC"} />} />
+        <Route path="/rooms" element={<StudyRooms userId={user?.id} />} />
+        <Route path="/rooms/:roomId" element={<StudyRooms userId={user?.id} />} />
+        <Route path="/ai" element={<AIDeck />} />
+        <Route path="/alignments" element={<TeachersLounge userId={user?.id} />} />
+        <Route path="/profile/:id" element={<Profile onLogout={handleLogout} userId={user?.id} onProfileUpdate={refreshUser} />} />
+        <Route path="/profile" element={<Profile onLogout={handleLogout} userId={user?.id} onProfileUpdate={refreshUser} />} />
+        <Route path="/mentor-dashboard" element={<MentorDashboard defaultTab="IMPACT" />} />
+        <Route path="/messages" element={<DirectMessages userId={user?.id} />} />
+        <Route path="/tests" element={<MockTests userId={user?.id} />} />
+        <Route path="/store" element={<StudentStore />} />
+        <Route path="/library" element={<LibraryVault />} />
+        <Route path="*" element={
+          <div className="flex flex-col items-center justify-center h-full gap-4 p-8 text-center animate-in fade-in duration-500">
+            <h1 className="text-4xl sm:text-6xl font-black text-slate-900 tracking-tighter">404</h1>
+            <p className="text-slate-500 font-bold uppercase tracking-widest text-sm">Zone Not Found Or Restricted</p>
+            <button onClick={() => navigate('/deck')} className="mt-4 px-8 py-4 bg-slate-900 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-brand transition-all shadow-xl hover:-translate-y-1 active:scale-95">
+              Return to Deck
+            </button>
+          </div>
+        } />
+      </Routes>
     </Layout>
   );
 }

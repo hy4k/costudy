@@ -273,7 +273,7 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
               </p>
            </div>
            {onLogout && (
-             <button onClick={onLogout} className="px-12 py-5 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-2xl hover:bg-brand transition-all">
+             <button onClick={onLogout} className="px-12 py-5 bg-slate-900 text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-2xl hover:bg-brand transition-all">
                Sign Out Universe
              </button>
            )}
@@ -299,16 +299,16 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
             <input 
                 type="file" 
                 ref={fileInputRef} 
-                className="hidden" 
+                className="hidden focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" 
                 accept="image/*" 
                 onChange={handleFileChange} 
             />
 
             {/* BOUNDARY SETTINGS MODAL */}
             {boundaryTarget && (
-                <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xl flex items-center justify-center p-6 animate-in fade-in duration-300">
-                    <div className="bg-white rounded-[3rem] w-full max-w-lg p-10 shadow-2xl relative animate-in zoom-in-95 duration-300">
-                        <button onClick={() => setBoundaryTarget(null)} className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-900"><Icons.Plus className="w-6 h-6 rotate-45" /></button>
+                <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-2xl border border-white/10 flex items-center justify-center p-6 animate-in fade-in duration-300">
+                    <div className="bg-white rounded-xl w-full max-w-lg p-10 shadow-2xl relative animate-in zoom-in-95 duration-300">
+                        <button onClick={() => setBoundaryTarget(null)} className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-900 px-4 py-2 transition-all"><Icons.Plus className="w-6 h-6 rotate-45" /></button>
                         
                         <div className="mb-8 text-center">
                             <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-2">Protocol Boundary</h3>
@@ -318,7 +318,7 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
                         <div className="space-y-4">
                             <button 
                                 onClick={() => handleBoundaryAction('PAUSE')}
-                                className="w-full p-5 rounded-2xl bg-amber-50 border border-amber-100 text-left hover:border-amber-300 transition-all group"
+                                className="w-full p-5 rounded-lg bg-amber-50 border border-amber-100 text-left hover:border-amber-300 transition-all group px-4 py-2"
                             >
                                 <div className="flex justify-between items-center mb-1">
                                     <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest">Pause Protocol (7 Days)</span>
@@ -329,7 +329,7 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
 
                             <button 
                                 onClick={() => handleBoundaryAction('RESTRICT', ['NO_ESSAYS'])}
-                                className="w-full p-5 rounded-2xl bg-blue-50 border border-blue-100 text-left hover:border-blue-300 transition-all group"
+                                className="w-full p-5 rounded-lg bg-blue-50 border border-blue-100 text-left hover:border-blue-300 transition-all group px-4 py-2"
                             >
                                 <div className="flex justify-between items-center mb-1">
                                     <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Restrict Scope</span>
@@ -340,7 +340,7 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
 
                             <button 
                                 onClick={() => handleBoundaryAction('END')}
-                                className="w-full p-5 rounded-2xl bg-slate-50 border border-slate-200 text-left hover:border-rose-300 hover:bg-rose-50 transition-all group"
+                                className="w-full p-5 rounded-lg bg-slate-50 border border-slate-200 text-left hover:border-rose-300 hover:bg-rose-50 transition-all group px-4 py-2"
                             >
                                 <div className="flex justify-between items-center mb-1">
                                     <span className="text-[10px] font-black text-slate-500 group-hover:text-rose-600 uppercase tracking-widest">Conclude Contract</span>
@@ -354,7 +354,7 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
             )}
 
             {/* Main Identity Header */}
-            <div className="relative bg-white/70 backdrop-blur-3xl border border-white p-12 sm:p-20 rounded-[4rem] sm:rounded-[6.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.1)] overflow-hidden min-h-[60vh] flex flex-col justify-center">
+            <div className="relative bg-white/70 backdrop-blur-3xl border border-white p-12 sm:p-20 rounded-xl sm:rounded-[6.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.1)] overflow-hidden min-h-[60vh] flex flex-col justify-center">
                 <div className={`absolute top-0 right-0 w-[800px] h-[800px] ${isTeacher ? 'bg-emerald-500/5' : 'bg-brand/5'} blur-[150px] rounded-full -mr-60 -mt-60 pointer-events-none`}></div>
                 <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/5 blur-[120px] rounded-full -ml-40 -mb-40 pointer-events-none"></div>
 
@@ -362,7 +362,7 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
                     {/* Avatar Logic */}
                     <div className="relative group shrink-0">
                         <div 
-                          className={`w-64 h-64 sm:w-96 sm:h-96 ${isTeacher ? 'rounded-[3rem]' : 'rounded-[4.5rem] sm:rounded-[6rem]'} overflow-hidden ring-[1.5rem] sm:ring-[2rem] ring-white shadow-2xl transition-all duration-700 relative ${isEditing ? 'cursor-pointer hover:ring-brand/10 active:scale-95' : ''}`}
+                          className={`w-64 h-64 sm:w-96 sm:h-96 ${isTeacher ? 'rounded-xl' : 'rounded-[4.5rem] sm:rounded-[6rem]'} overflow-hidden ring-[1.5rem] sm:ring-[2rem] ring-white shadow-2xl transition-all duration-700 relative ${isEditing ? 'cursor-pointer hover:ring-brand/10 active:scale-95' : ''}`}
                           onClick={handleAvatarClick}
                         >
                             <img 
@@ -378,15 +378,15 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
                             )}
                         </div>
                         {isTeacher ? (
-                             <div className="absolute -bottom-6 -right-6 bg-emerald-600 text-white p-6 sm:p-8 rounded-[2rem] shadow-2xl border-[6px] sm:border-[8px] border-white flex items-center gap-2">
+                             <div className="absolute -bottom-6 -right-6 bg-emerald-600 text-white p-6 sm:p-8 rounded-xl shadow-2xl border-[6px] sm:border-[8px] border-white flex items-center gap-2">
                                 <Icons.CheckBadge className="w-10 h-10 sm:w-12 sm:h-12" />
                              </div>
                         ) : isExpert ? (
-                            <div className="absolute -bottom-6 -right-6 bg-amber-400 text-white p-6 sm:p-8 rounded-[2.5rem] sm:rounded-[3rem] shadow-2xl border-[6px] sm:border-[8px] border-white animate-pulse">
+                            <div className="absolute -bottom-6 -right-6 bg-amber-400 text-white p-6 sm:p-8 rounded-xl sm:rounded-xl shadow-2xl border-[6px] sm:border-[8px] border-white animate-pulse">
                                <Icons.Stamp className="w-10 h-10 sm:w-12 sm:h-12" />
                             </div>
                         ) : (
-                            <div className="absolute -bottom-6 -right-6 bg-slate-900 text-brand p-6 sm:p-8 rounded-[2.5rem] sm:rounded-[3rem] shadow-2xl border-[6px] sm:border-[8px] border-white animate-pulse">
+                            <div className="absolute -bottom-6 -right-6 bg-slate-900 text-brand p-6 sm:p-8 rounded-xl sm:rounded-xl shadow-2xl border-[6px] sm:border-[8px] border-white animate-pulse">
                                <Icons.Trophy className="w-10 h-10 sm:w-12 sm:h-12" />
                             </div>
                         )}
@@ -397,7 +397,7 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
                         {isEditing ? (
                             <div className="space-y-8 w-full max-w-2xl animate-in slide-in-from-bottom-6 duration-500">
                                 {/* SIGNAL LEVEL SELECTOR */}
-                                <div className="bg-slate-50 p-6 rounded-[2.5rem] border border-slate-100">
+                                <div className="bg-slate-50 p-6 rounded-xl border border-slate-100">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mb-4 block ml-2">Signal Level (Visibility)</label>
                                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                         {(Object.keys(SignalConfig) as SignalLevel[]).map(level => {
@@ -407,7 +407,7 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
                                                 <button
                                                     key={level}
                                                     onClick={() => setEditForm(prev => ({ ...prev, signalLevel: level }))}
-                                                    className={`p-4 rounded-2xl border-2 text-left transition-all ${isSelected ? 'border-brand bg-white shadow-lg scale-[1.02]' : 'border-transparent bg-white/50 hover:bg-white text-slate-400'}`}
+                                                    className={`p-4 rounded-xl border-2 text-left transition-all ${isSelected ? 'border-brand bg-white shadow-lg scale-[1.02]' : 'border-transparent bg-white/50 hover:bg-white text-slate-400'}`}
                                                 >
                                                     <div className={`w-3 h-3 rounded-full mb-2 ${cfg.color}`}></div>
                                                     <div className={`text-[9px] font-black uppercase tracking-widest leading-tight ${isSelected ? 'text-slate-900' : 'text-slate-500'}`}>{cfg.label}</div>
@@ -417,11 +417,11 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-4 py-2 transition-all">
                                     <div className="space-y-2 text-left">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] ml-4">Full Name</label>
                                         <input 
-                                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-[2rem] px-8 py-5 text-lg font-black text-slate-900 outline-none focus:ring-4 focus:ring-brand/5 focus:border-brand/30 transition-all"
+                                            className="w-full bg-slate-50 border-2 border-slate-300 rounded-lg px-8 py-5 text-lg font-black text-slate-900 outline-none /30 transition-all focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                             value={editForm.name}
                                             onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
                                             placeholder="Enter Legal Name"
@@ -430,7 +430,7 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
                                     <div className="space-y-2 text-left">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] ml-4">Handle</label>
                                         <input 
-                                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-[2rem] px-8 py-5 text-lg font-black text-slate-900 outline-none focus:ring-4 focus:ring-brand/5 focus:border-brand/30 transition-all"
+                                            className="w-full bg-slate-50 border-2 border-slate-300 rounded-lg px-8 py-5 text-lg font-black text-slate-900 outline-none /30 transition-all focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                             value={editForm.handle}
                                             onChange={(e) => setEditForm(prev => ({ ...prev, handle: e.target.value.toLowerCase().replace(/\s/g, '_') }))}
                                             placeholder="@handle"
@@ -441,7 +441,7 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
                                 <div className="space-y-2 text-left">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] ml-4">{isTeacher ? 'Professional Bio' : 'Personal Bio'}</label>
                                     <textarea 
-                                        className="w-full h-32 bg-slate-50 border-2 border-slate-100 rounded-[2.5rem] p-8 text-slate-700 font-medium text-base outline-none focus:ring-4 focus:ring-brand/5 focus:border-brand/30 transition-all leading-relaxed resize-none"
+                                        className="w-full h-32 bg-slate-50 border-2 border-slate-300 rounded-lg p-8 text-slate-700 font-medium text-base outline-none /30 transition-all leading-relaxed resize-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                         value={editForm.bio}
                                         onChange={(e) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
                                         placeholder="Briefly describe your profile..."
@@ -452,13 +452,13 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
                                     <button 
                                         onClick={handleSave}
                                         disabled={isSaving}
-                                        className={`flex-1 py-5 rounded-[2rem] text-[11px] font-black uppercase tracking-widest transition-all shadow-xl active:scale-95 ${saveStatus === 'SUCCESS' ? 'bg-emerald-600 text-white' : 'bg-slate-900 text-white'}`}
+                                        className={`flex-1 py-5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all shadow-xl active:scale-95 ${saveStatus === 'SUCCESS' ? 'bg-emerald-600 text-white' : 'bg-slate-900 text-white'}`}
                                     >
                                         {isSaving ? 'Saving...' : saveStatus === 'SUCCESS' ? 'Saved' : 'Confirm Updates'}
                                     </button>
                                     <button 
                                         onClick={() => setIsEditing(false)}
-                                        className="px-8 py-5 bg-white border border-slate-200 text-slate-400 rounded-[2rem] text-[11px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all"
+                                        className="px-8 py-5 bg-white border border-slate-200 text-slate-400 rounded-lg text-[11px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all"
                                     >
                                         Cancel
                                     </button>
@@ -468,17 +468,17 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
                             <div className="w-full animate-in fade-in duration-500">
                                 <div className="flex flex-wrap items-center justify-center xl:justify-start gap-4 mb-6">
                                     {isExpert && (
-                                        <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] shadow-lg bg-amber-400 text-white">
+                                        <div className="inline-flex items-center gap-3 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.4em] shadow-lg bg-amber-400 text-white">
                                             <Icons.Stamp className="w-4 h-4" />
                                             Certified Peer Expert
                                         </div>
                                     )}
-                                    <div className={`inline-flex items-center gap-3 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] shadow-lg ${isTeacher ? 'bg-emerald-600 text-white' : 'bg-slate-900 text-brand'}`}>
+                                    <div className={`inline-flex items-center gap-3 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.4em] shadow-lg ${isTeacher ? 'bg-emerald-600 text-white' : 'bg-slate-900 text-brand'}`}>
                                         <Icons.Award className="w-4 h-4" />
                                         {isTeacher ? 'Accredited Faculty' : 'Master Tier Scholar'}
                                     </div>
                                     {/* Signal Level Badge */}
-                                    <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-[9px] font-black uppercase tracking-widest border bg-white ${currentSignal.color.replace('bg-', 'text-')} border-slate-100`}>
+                                    <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest border bg-white ${currentSignal.color.replace('bg-', 'text-')} border-slate-100`}>
                                         <div className={`w-2 h-2 rounded-full ${currentSignal.color}`}></div>
                                         {currentSignal.label}
                                     </div>
@@ -507,13 +507,13 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
                                 <div className="flex flex-wrap gap-4 justify-center xl:justify-start">
                                     <button 
                                         onClick={() => setIsEditing(true)}
-                                        className={`px-10 py-5 text-white rounded-[2rem] text-[11px] font-black uppercase tracking-widest transition-all shadow-xl active:scale-95 hover:scale-105 ${themeBg} shadow-brand/20`}
+                                        className={`px-10 py-5 text-white rounded-xl text-[11px] font-black uppercase tracking-widest transition-all shadow-xl active:scale-95 hover:scale-105 ${themeBg} shadow-brand/20`}
                                     >
                                         Edit Identity
                                     </button>
                                     <button 
                                         onClick={onLogout}
-                                        className="px-10 py-5 bg-white border border-slate-200 text-slate-400 rounded-[2rem] text-[11px] font-black uppercase tracking-widest hover:bg-slate-900 hover:text-white transition-all shadow-sm active:scale-95"
+                                        className="px-10 py-5 bg-white border border-slate-200 text-slate-400 rounded-lg text-[11px] font-black uppercase tracking-widest hover:bg-slate-900 hover:text-white transition-all shadow-sm active:scale-95"
                                     >
                                         Sign Out
                                     </button>
@@ -528,18 +528,18 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
             {!isTeacher && (
                 <div className="animate-in slide-in-from-bottom-8 duration-700">
                     <div className="flex justify-center mb-12">
-                        <div className="flex gap-4 p-2 bg-white rounded-3xl border border-slate-200 shadow-xl">
+                        <div className="flex gap-4 p-2 bg-white rounded-xl border border-slate-200 shadow-xl">
                             <button 
                                 onClick={() => setNetworkTab('CONTRACTS')} 
-                                className={`px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${networkTab === 'CONTRACTS' ? 'bg-violet-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-900'}`}
+                                className={`px-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${networkTab === 'CONTRACTS' ? 'bg-violet-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-900'}`}
                             >
                                 CAN Contracts
                             </button>
                             <button 
                                 onClick={() => setNetworkTab('RADAR')} 
-                                className={`px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${networkTab === 'RADAR' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-900'}`}
+                                className={`px-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${networkTab === 'RADAR' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-900'}`}
                             >
-                                <Icons.Search className="w-3 h-3" /> Academic Radar
+                                <Icons.Search className="w-3 h-3 px-4 py-2 transition-all" /> Academic Radar
                             </button>
                         </div>
                     </div>
@@ -547,12 +547,12 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
                     {networkTab === 'CONTRACTS' ? (
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                             {/* Active Alignments */}
-                            <div className="bg-white border border-slate-200 rounded-[3rem] p-10 lg:p-14 shadow-xl flex flex-col relative overflow-hidden min-h-[600px]">
+                            <div className="bg-white border border-slate-200 rounded-xl p-10 lg:p-14 shadow-xl flex flex-col relative overflow-hidden min-h-[600px]">
                                 <div className="absolute top-0 right-0 p-10 opacity-[0.03]"><Icons.Link className="w-48 h-48" /></div>
                                 
                                 <div className="flex items-center justify-between mb-10 relative z-10">
                                     <div className="flex items-center gap-4">
-                                        <div className="p-4 bg-violet-100 rounded-2xl text-violet-600"><Icons.Link className="w-6 h-6" /></div>
+                                        <div className="p-4 bg-violet-100 rounded-xl text-violet-600"><Icons.Link className="w-6 h-6" /></div>
                                         <div>
                                             <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Alignment Hub</h3>
                                             <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Protocol Management</div>
@@ -566,7 +566,7 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
 
                                 {activeAlignTab === 'ACTIVE' ? (
                                     activeAlignments.length > 0 ? (
-                                        <div className="space-y-6 relative z-10 flex-1 overflow-y-auto no-scrollbar pr-2">
+                                        <div className="space-y-6 relative z-10 flex-1 overflow-y-auto no-scrollbar pr-2 px-4 py-2 transition-all">
                                             {activeAlignments.map(align => {
                                                 const daysLeft = getDaysRemaining(align.startDate, align.duration);
                                                 const progress = getProgress(align.startDate, align.duration);
@@ -574,10 +574,10 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
                                                 const isPaused = align.status === 'PAUSED';
 
                                                 return (
-                                                    <div key={align.id} className={`p-6 border rounded-[2rem] flex flex-col gap-4 group transition-all relative overflow-hidden ${isPaused ? 'bg-slate-100 border-slate-200 grayscale opacity-80' : isUrgent ? 'bg-orange-50 border-orange-200' : 'bg-slate-50 border-slate-100 hover:border-violet-200'}`}>
+                                                    <div key={align.id} className={`p-6 border rounded-xl flex flex-col gap-4 group transition-all relative overflow-hidden ${isPaused ? 'bg-slate-100 border-slate-200 grayscale opacity-80' : isUrgent ? 'bg-orange-50 border-orange-200' : 'bg-slate-50 border-slate-100 hover:border-violet-200'}`}>
                                                         <div className="flex items-start justify-between">
                                                             <div className="flex items-center gap-4">
-                                                                <img src={align.peerAvatar} className="w-14 h-14 rounded-2xl object-cover ring-2 ring-white shadow-md" />
+                                                                <img src={align.peerAvatar} className="w-14 h-14 rounded-xl object-cover ring-2 ring-white shadow-md" />
                                                                 <div>
                                                                     <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">{align.peerName}</h4>
                                                                     <div className="text-[10px] font-bold text-violet-500 uppercase tracking-widest mb-1">{align.purpose}</div>
@@ -587,7 +587,7 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
                                                             {/* Manage Boundary Button (Gear) */}
                                                             <button 
                                                                 onClick={() => setBoundaryTarget(align)}
-                                                                className="p-2 hover:bg-white rounded-xl transition-all text-slate-400 hover:text-slate-900"
+                                                                className="p-2 hover:bg-white rounded-lg transition-all text-slate-400 hover:text-slate-900 px-4 py-2"
                                                             >
                                                                 <Icons.Plus className="w-4 h-4 rotate-0" /> {/* Gear substitute */}
                                                             </button>
@@ -626,10 +626,10 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
                                     archivedAlignments.length > 0 ? (
                                         <div className="space-y-6 relative z-10 flex-1 overflow-y-auto no-scrollbar pr-2">
                                             {archivedAlignments.map(align => (
-                                                <div key={align.id} className="p-6 bg-slate-100 border border-slate-200 rounded-[2rem] flex flex-col gap-4 grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all">
+                                                <div key={align.id} className="p-6 bg-slate-100 border border-slate-200 rounded-xl flex flex-col gap-4 grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all">
                                                     <div className="flex items-center justify-between">
                                                         <div className="flex items-center gap-4">
-                                                            <img src={align.peerAvatar} className="w-12 h-12 rounded-2xl object-cover ring-2 ring-slate-200" />
+                                                            <img src={align.peerAvatar} className="w-12 h-12 rounded-xl object-cover ring-2 ring-slate-200" />
                                                             <div>
                                                                 <h4 className="text-sm font-black text-slate-700 uppercase tracking-tight">{align.peerName}</h4>
                                                                 <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ended: {align.duration}</div>
@@ -637,7 +637,7 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
                                                         </div>
                                                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest bg-slate-200 px-3 py-1 rounded-lg">Expired</span>
                                                     </div>
-                                                    <button onClick={() => handleRenewAlignment(align.id)} className="w-full py-3 bg-white border border-slate-300 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:border-violet-500 hover:text-violet-600 transition-all shadow-sm">
+                                                    <button onClick={() => handleRenewAlignment(align.id)} className="w-full py-3 bg-white border border-slate-300 text-slate-500 rounded-lg text-[10px] font-black uppercase tracking-widest hover:border-violet-500 hover:text-violet-600 transition-all shadow-sm px-4">
                                                         Renegotiate Contract
                                                     </button>
                                                 </div>
@@ -653,7 +653,7 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
                             </div>
 
                             {/* Pending Treaties */}
-                            <div className="bg-slate-900 text-white rounded-[3rem] p-10 lg:p-14 shadow-2xl flex flex-col relative overflow-hidden h-fit">
+                            <div className="bg-slate-900 text-white rounded-xl p-10 lg:p-14 shadow-2xl flex flex-col relative overflow-hidden h-fit">
                                 <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-violet-500/20 blur-[80px] rounded-full pointer-events-none"></div>
                                 <div className="flex items-center justify-between mb-10 relative z-10">
                                     <div>
@@ -667,7 +667,7 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
                                 {pendingRequests.length > 0 ? (
                                     <div className="space-y-6 relative z-10">
                                         {pendingRequests.map(req => (
-                                            <div key={req.id} className="p-6 bg-white/5 border border-white/10 rounded-[2rem] hover:bg-white/10 transition-all">
+                                            <div key={req.id} className="p-6 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all">
                                                 <div className="flex items-center gap-4 mb-4">
                                                     <img src={req.senderAvatar} className="w-10 h-10 rounded-xl object-cover ring-2 ring-white/20" />
                                                     <div>
@@ -679,8 +679,8 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
                                                     <p className="text-xs font-medium italic text-slate-300 leading-relaxed">"{req.note}"</p>
                                                 </div>
                                                 <div className="flex gap-3">
-                                                    <button onClick={() => handleAcceptRequest(req)} className="flex-1 py-3 bg-violet-600 hover:bg-violet-500 text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-lg">Sign Contract</button>
-                                                    <button onClick={() => handleRejectRequest(req.id)} className="px-6 py-3 bg-white/10 hover:bg-white/20 text-slate-300 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all">Decline</button>
+                                                    <button onClick={() => handleAcceptRequest(req)} className="flex-1 py-3 bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-[9px] font-black uppercase tracking-widest transition-all shadow-lg px-4">Sign Contract</button>
+                                                    <button onClick={() => handleRejectRequest(req.id)} className="px-6 py-3 bg-white/10 hover:bg-white/20 text-slate-300 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all">Decline</button>
                                                 </div>
                                             </div>
                                         ))}
@@ -697,11 +697,11 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
                         // --- RADAR VIEW (TRACKING) ---
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
                             {/* YOU TRACK (DASHBOARD) */}
-                            <div className="lg:col-span-2 bg-slate-900 text-white rounded-[3rem] p-10 lg:p-14 shadow-2xl relative overflow-hidden">
+                            <div className="lg:col-span-2 bg-slate-900 text-white rounded-xl p-10 lg:p-14 shadow-2xl relative overflow-hidden">
                                 <div className="absolute top-0 right-0 p-10 opacity-10"><Icons.Search className="w-64 h-64 text-brand" /></div>
                                 
                                 <div className="flex items-center gap-4 mb-10 relative z-10">
-                                    <div className="p-4 bg-brand rounded-2xl text-white"><Icons.Search className="w-6 h-6" /></div>
+                                    <div className="p-4 bg-brand rounded-xl text-white"><Icons.Search className="w-6 h-6" /></div>
                                     <div>
                                         <h3 className="text-2xl font-black uppercase tracking-tighter">Your Scope</h3>
                                         <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Subjects Tracked: {trackingList.length}</div>
@@ -710,10 +710,10 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
 
                                 <div className="grid grid-cols-1 gap-6 relative z-10">
                                     {trackingList.map(track => (
-                                        <div key={track.id} className="bg-white/5 border border-white/10 p-6 rounded-[2rem] hover:bg-white/10 transition-all group">
+                                        <div key={track.id} className="bg-white/5 border border-white/10 p-6 rounded-xl hover:bg-white/10 transition-all group">
                                             <div className="flex items-center justify-between mb-6">
                                                 <div className="flex items-center gap-4">
-                                                    <img src={track.targetAvatar} className="w-12 h-12 rounded-2xl object-cover ring-2 ring-white/10" />
+                                                    <img src={track.targetAvatar} className="w-12 h-12 rounded-xl object-cover ring-2 ring-white/10" />
                                                     <div>
                                                         <h4 className="text-sm font-black uppercase tracking-tight">{track.targetName}</h4>
                                                         <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Tracked Since {new Date(track.trackedSince).toLocaleDateString()}</span>
@@ -752,7 +752,7 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
                             </div>
 
                             {/* TRACKED BY (AUDIENCE) */}
-                            <div className="bg-white border border-slate-200 rounded-[3rem] p-10 shadow-xl relative overflow-hidden">
+                            <div className="bg-white border border-slate-200 rounded-xl p-10 shadow-xl relative overflow-hidden">
                                 <div className="flex items-center gap-4 mb-8">
                                     <div className="p-3 bg-slate-100 rounded-xl text-slate-500"><Icons.Users className="w-5 h-5" /></div>
                                     <div>
@@ -763,7 +763,7 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
 
                                 <div className="space-y-4">
                                     {observerList.map(obs => (
-                                        <div key={obs.id} className="flex items-center gap-4 p-4 hover:bg-slate-50 rounded-2xl transition-all border border-transparent hover:border-slate-100">
+                                        <div key={obs.id} className="flex items-center gap-4 p-4 hover:bg-slate-50 rounded-xl transition-all border border-transparent hover:border-slate-100">
                                             <img src={obs.observerAvatar} className="w-10 h-10 rounded-xl object-cover grayscale opacity-70" />
                                             <div>
                                                 <div className="text-xs font-black text-slate-700 uppercase tracking-wide">{obs.observerName}</div>
@@ -785,9 +785,9 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
             )}
 
             {/* Authenticated Footer */}
-            <div className="bg-white border border-slate-200 rounded-[3rem] p-10 flex flex-col md:flex-row items-center justify-between gap-8 shadow-sm">
+            <div className="bg-white border border-slate-200 rounded-xl p-10 flex flex-col md:flex-row items-center justify-between gap-8 shadow-sm">
                 <div className="flex items-center gap-6">
-                    <div className={`p-4 rounded-2xl ${themeBgLight} ${themeBrand}`}><Icons.Fingerprint className="w-8 h-8" /></div>
+                    <div className={`p-4 rounded-xl ${themeBgLight} ${themeBrand}`}><Icons.Fingerprint className="w-8 h-8" /></div>
                     <div>
                         <span className="text-[11px] font-black text-slate-900 uppercase tracking-[0.3em] block mb-1">Session Active</span>
                         <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">

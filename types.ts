@@ -222,7 +222,7 @@ export interface Post {
   author?: Partial<User>;
   content: string;
   created_at: string;
-  likes: number; // Used for Vouches
+  vouches: number; // Used for Vouches
   tags: string[];
   subject?: string;
   // Peer Audit Specifics
@@ -282,13 +282,32 @@ export interface Comment {
 export interface StudyRoom {
   id: string;
   name: string;
-  category: string;
-  members: number;
-  activeOnline: number;
-  color: string;
-  description: string;
-  sections: string[];
-  targetTopics: string[];
+  topic?: string;
+  room_type: 'OPEN' | 'PRIVATE' | 'MENTOR_LED';
+  max_members: number;
+  pomodoro_duration: number;
+  is_active: boolean;
+  pomodoro_end_time?: string;
+  pomodoro_status: 'READY' | 'FOCUS' | 'BREAK';
+  created_by?: string;
+  created_at: string;
+}
+
+export interface RoomMission {
+  id: string;
+  room_id: string;
+  task_text: string;
+  is_completed: boolean;
+  completed_by?: string;
+  created_at: string;
+}
+
+export interface RoomMember {
+  room_id: string;
+  user_id: string;
+  joined_at: string;
+  is_active: boolean;
+  profile?: Partial<User>;
 }
 
 export interface MentorOffering {

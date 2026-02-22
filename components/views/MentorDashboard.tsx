@@ -176,15 +176,15 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
             <div className="max-w-7xl mx-auto px-6 lg:px-12 py-16 animate-in fade-in zoom-in-95 duration-500 specialist-mode">
                 <button
                     onClick={() => setSelectedStudent(null)}
-                    className="flex items-center gap-3 text-slate-400 hover:text-brand font-black uppercase tracking-widest text-xs mb-10 transition-colors"
+                    className="flex items-center gap-3 text-slate-400 hover:text-brand font-black uppercase tracking-widest text-xs mb-10 transition-colors px-4 py-2"
                 >
                     <Icons.Plus className="w-4 h-4 rotate-45" /> Back to Student List
                 </button>
 
-                <div className="bg-white rounded-[4rem] border border-slate-200 shadow-2xl overflow-hidden relative">
+                <div className="bg-white rounded-xl border border-slate-200 shadow-2xl overflow-hidden relative">
                     {/* Header */}
                     <div className="bg-slate-50/50 p-12 border-b border-slate-100 flex flex-col md:flex-row items-start md:items-center gap-8">
-                        <img src={selectedStudent.avatar} className="w-32 h-32 rounded-[2.5rem] shadow-xl ring-4 ring-white object-cover" />
+                        <img src={selectedStudent.avatar} className="w-32 h-32 rounded-xl shadow-xl ring-4 ring-white object-cover" />
                         <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
                                 <h2 className="text-4xl font-black text-slate-900 uppercase tracking-tight">{selectedStudent.name}</h2>
@@ -192,10 +192,10 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
                             </div>
                             <div className="text-slate-400 font-bold uppercase tracking-widest text-xs mb-6">@{selectedStudent.handle} • {selectedStudent.examFocus} Track</div>
                             <div className="flex gap-4">
-                                <button className="px-6 py-3 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-brand transition-all shadow-lg flex items-center gap-2">
+                                <button className="px-6 py-3 bg-slate-900 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-brand transition-all shadow-lg flex items-center gap-2">
                                     <Icons.MessageCircle className="w-4 h-4" /> Message
                                 </button>
-                                <button className="px-6 py-3 bg-white border border-slate-200 text-slate-500 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:border-brand hover:text-brand transition-all shadow-sm">
+                                <button className="px-6 py-3 bg-white border border-slate-200 text-slate-500 rounded-lg text-[10px] font-black uppercase tracking-widest hover:border-brand hover:text-brand transition-all shadow-sm">
                                     Assign Task
                                 </button>
                             </div>
@@ -226,18 +226,18 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
                                         ))}
                                     </div>
                                 ) : (
-                                    <div className="p-8 bg-slate-50 border border-slate-100 rounded-3xl text-center">
+                                    <div className="p-8 bg-slate-50 border border-slate-100 rounded-xl text-center">
                                         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No diagnostic data available yet.</p>
                                     </div>
                                 )}
                             </div>
 
                             <div className="grid grid-cols-2 gap-6">
-                                <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                                <div className="p-6 bg-slate-50 rounded-xl border border-slate-100">
                                     <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Streak</div>
                                     <div className="text-2xl font-black text-slate-900">{selectedStudent.reputation?.consistencyScore?.streak || 0} Days</div>
                                 </div>
-                                <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                                <div className="p-6 bg-slate-50 rounded-xl border border-slate-100">
                                     <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Goal</div>
                                     <div className="text-sm font-bold text-slate-900 leading-tight">"{selectedStudent.strategicMilestone || 'Not Set'}"</div>
                                 </div>
@@ -245,22 +245,22 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
                         </div>
 
                         {/* Recent Activity / Notes */}
-                        <div className="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+                        <div className="bg-slate-900 text-white p-8 rounded-xl shadow-2xl relative overflow-hidden">
                             <div className="absolute top-0 right-0 p-8 opacity-10"><Icons.ClipboardList className="w-32 h-32 text-brand" /></div>
                             <h3 className="text-[10px] font-black text-brand uppercase tracking-[0.4em] mb-8 relative z-10">Notes</h3>
 
                             <div className="space-y-6 relative z-10">
-                                <div className="p-4 bg-white/10 rounded-2xl border border-white/5">
+                                <div className="p-4 bg-white/10 rounded-xl border border-white/5">
                                     <div className="text-[8px] font-black text-slate-400 uppercase mb-1">2 Hours Ago</div>
                                     <p className="text-sm font-medium leading-snug">Completed "Internal Controls" Mock Test. Score: 72%.</p>
                                 </div>
-                                <div className="p-4 bg-white/10 rounded-2xl border border-white/5">
+                                <div className="p-4 bg-white/10 rounded-xl border border-white/5">
                                     <div className="text-[8px] font-black text-slate-400 uppercase mb-1">Yesterday</div>
                                     <p className="text-sm font-medium leading-snug">Joined "Part 1 Strategy" Group.</p>
                                 </div>
                             </div>
 
-                            <button className="w-full mt-8 py-4 bg-brand text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-slate-900 transition-all relative z-10">
+                            <button className="w-full mt-8 py-4 bg-brand text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-slate-900 transition-all relative z-10 px-4">
                                 Add Note
                             </button>
                         </div>
@@ -290,13 +290,13 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
                     </div>
 
                     <div className="flex gap-4">
-                        <button onClick={() => setActiveTab('REVENUE')} className="px-8 py-5 bg-white border border-slate-200 rounded-[2rem] text-slate-900 font-black text-[10px] uppercase tracking-widest hover:border-brand transition-all flex items-center gap-3 shadow-sm">
+                        <button onClick={() => setActiveTab('REVENUE')} className="px-8 py-5 bg-white border border-slate-200 rounded-lg text-slate-900 font-black text-[10px] uppercase tracking-widest hover:border-brand transition-all flex items-center gap-3 shadow-sm">
                             <Icons.DollarSign className="w-4 h-4 text-brand" /> ₹{user?.user_metadata?.wallet || '12,400'}
                         </button>
-                        <button onClick={() => setActiveTab('BROADCAST')} className="px-8 py-5 bg-brand text-white rounded-[2rem] text-[10px] font-black uppercase tracking-widest shadow-xl shadow-brand/30 active:scale-95 transition-all flex items-center gap-3">
+                        <button onClick={() => setActiveTab('BROADCAST')} className="px-8 py-5 bg-brand text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-xl shadow-brand/30 active:scale-95 transition-all flex items-center gap-3">
                             <Icons.Sparkles className="w-4 h-4" /> Create Announcement
                         </button>
-                        <button onClick={() => setActiveTab('TEACHERS_DECK')} className="px-8 py-5 bg-emerald-600 text-white rounded-[2rem] text-[10px] font-black uppercase tracking-widest shadow-xl shadow-emerald-500/20 active:scale-95 transition-all flex items-center gap-3">
+                        <button onClick={() => setActiveTab('TEACHERS_DECK')} className="px-8 py-5 bg-emerald-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-xl shadow-emerald-500/20 active:scale-95 transition-all flex items-center gap-3">
                             <Icons.Sparkles className="w-4 h-4 text-emerald-300" /> Launch Teachers Deck
                         </button>
                     </div>
@@ -311,7 +311,7 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
                         className={`pb-5 text-[10px] font-black uppercase tracking-[0.4em] transition-all relative whitespace-nowrap ${activeTab === tab ? 'text-brand' : 'text-slate-400 hover:text-slate-600'}`}
                     >
                         {tab === 'TEACHERS_DECK' ? 'TEACHERS DECK' : tab}
-                        {activeTab === tab && <div className="absolute bottom-0 left-0 right-0 h-1 bg-brand rounded-full"></div>}
+                        {activeTab === tab && <div className="absolute bottom-0 left-0 right-0 h-1 bg-brand rounded-lg px-4 py-2 transition-all"></div>}
                     </button>
                 ))}
             </div>
@@ -325,14 +325,14 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
                         { label: 'Interventions', value: '3', color: 'text-rose-500' },
                         { label: 'Rating', value: '4.9', color: 'text-amber-500' }
                     ].map((s, i) => (
-                        <div key={i} className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm">
+                        <div key={i} className="bg-white p-8 rounded-xl border border-slate-100 shadow-sm">
                             <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">{s.label}</div>
                             <div className={`text-4xl font-black ${s.color}`}>{s.value}</div>
                         </div>
                     ))}
 
                     {/* Impact Registry Table */}
-                    <div className="lg:col-span-4 bg-white rounded-[4rem] border border-slate-100 shadow-xl overflow-hidden mt-4">
+                    <div className="lg:col-span-4 bg-white rounded-xl border border-slate-100 shadow-xl overflow-hidden mt-4">
                         <div className="px-10 py-8 bg-slate-50/50 border-b border-slate-100 flex justify-between items-center">
                             <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Student List</h3>
                             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">Synchronized with AI Data</span>
@@ -378,7 +378,7 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
                                                 {isLoadingDetail && selectedStudent?.id === s.id ? (
                                                     <Icons.CloudSync className="w-5 h-5 animate-spin text-brand" />
                                                 ) : (
-                                                    <button className="p-3 bg-slate-900 text-white rounded-xl hover:bg-brand transition-all active:scale-90 shadow-sm group-hover:shadow-lg">
+                                                    <button className="p-3 bg-slate-900 text-white rounded-lg hover:bg-brand transition-all active:scale-90 shadow-sm group-hover:shadow-lg px-4 py-2">
                                                         <Icons.Search className="w-4 h-4" />
                                                     </button>
                                                 )}
@@ -401,7 +401,7 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
 
             {activeTab === 'BROADCAST' && (
                 <div className="max-w-4xl mx-auto space-y-12">
-                    <div className="bg-white p-12 rounded-[4rem] shadow-2xl border border-slate-100">
+                    <div className="bg-white p-12 rounded-xl shadow-2xl border border-slate-100">
                         <h3 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-4">New Announcement</h3>
                         <p className="text-slate-500 font-medium italic text-lg mb-10">Post an update to your students.</p>
 
@@ -410,13 +410,13 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
                                 value={bTitle}
                                 onChange={(e) => setBTitle(e.target.value)}
                                 placeholder="Announcement Title"
-                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-8 py-5 text-xl font-black outline-none focus:border-brand transition-all"
+                                className="w-full bg-slate-50 border border-slate-300 rounded-lg px-8 py-5 text-xl font-black outline-none transition-all focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                             />
                             <textarea
                                 value={bContent}
                                 onChange={(e) => setBContent(e.target.value)}
                                 placeholder="Content..."
-                                className="w-full h-48 bg-slate-50 border border-slate-100 rounded-[2rem] p-8 text-lg font-medium outline-none focus:border-brand transition-all resize-none"
+                                className="w-full h-48 bg-slate-50 border border-slate-300 rounded-lg p-8 text-lg font-medium outline-none transition-all resize-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                             />
                             <div className="flex gap-4">
                                 {(['GENERAL', 'URGENT', 'RESOURCE'] as const).map(type => (
@@ -432,18 +432,18 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
                             <button
                                 onClick={handleBroadcast}
                                 disabled={isBroadcasting || !bTitle || !bContent}
-                                className="w-full py-8 bg-brand text-white rounded-[2.5rem] font-black text-sm uppercase tracking-[0.4em] shadow-2xl active:scale-95 disabled:opacity-50 transition-all"
+                                className="w-full py-8 bg-brand text-white rounded-lg font-black text-sm uppercase tracking-[0.4em] shadow-2xl active:scale-95 disabled:opacity-50 transition-all px-4"
                             >
                                 {isBroadcasting ? 'POSTING...' : 'POST ANNOUNCEMENT'}
                             </button>
                         </div>
                     </div>
 
-                    <div className="bg-slate-900 text-white p-12 rounded-[4rem] shadow-2xl">
+                    <div className="bg-slate-900 text-white p-12 rounded-xl shadow-2xl">
                         <h4 className="text-[10px] font-black text-brand uppercase tracking-[0.5em] mb-8">ANNOUNCEMENT HISTORY</h4>
                         <div className="space-y-6">
                             {broadcasts.map(b => (
-                                <div key={b.id} className="p-6 bg-white/5 border border-white/5 rounded-3xl hover:bg-white/10 transition-all">
+                                <div key={b.id} className="p-6 bg-white/5 border border-white/5 rounded-xl hover:bg-white/10 transition-all">
                                     <div className="flex justify-between items-center mb-4">
                                         <span className="px-3 py-1 bg-brand rounded-lg text-[8px] font-black uppercase text-white">{b.type}</span>
                                         <span className="text-[8px] font-black text-slate-500 uppercase">{new Date(b.created_at).toLocaleDateString()}</span>
@@ -465,14 +465,14 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
                 <div className="max-w-5xl mx-auto space-y-12 animate-in fade-in">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                         {/* Create Bounty */}
-                        <div className="bg-white p-10 rounded-[3.5rem] shadow-xl border border-slate-100">
+                        <div className="bg-white p-10 rounded-xl shadow-xl border border-slate-100">
                             <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-6">Post New Bounty</h3>
                             <div className="space-y-6">
                                 <textarea
                                     value={bountyTask}
                                     onChange={(e) => setBountyTask(e.target.value)}
                                     placeholder="Describe the task (e.g. 'Summarize new IMA Ethics Update')"
-                                    className="w-full h-32 bg-slate-50 border border-slate-200 rounded-3xl p-6 text-sm font-medium outline-none focus:ring-4 focus:ring-brand/5 resize-none"
+                                    className="w-full h-32 bg-slate-50 border border-slate-300 rounded-lg p-6 text-sm font-medium outline-none resize-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                 />
                                 <div className="flex gap-4">
                                     <div className="flex-1">
@@ -481,7 +481,7 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
                                             type="number"
                                             value={bountyReward}
                                             onChange={(e) => setBountyReward(Number(e.target.value))}
-                                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-black text-slate-900 outline-none"
+                                            className="w-full bg-slate-50 border border-slate-300 rounded-lg px-4 py-3 font-black text-slate-900 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                         />
                                     </div>
                                     <div className="flex-1">
@@ -499,7 +499,7 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
                                 <button
                                     onClick={handleCreateBounty}
                                     disabled={!bountyTask}
-                                    className="w-full py-5 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-[0.2em] hover:bg-brand transition-all shadow-lg active:scale-95 disabled:opacity-50"
+                                    className="w-full py-5 bg-slate-900 text-white rounded-lg text-xs font-black uppercase tracking-[0.2em] hover:bg-brand transition-all shadow-lg active:scale-95 disabled:opacity-50 px-4"
                                 >
                                     Deploy Bounty
                                 </button>
@@ -507,7 +507,7 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
                         </div>
 
                         {/* Active Bounties List */}
-                        <div className="bg-slate-900 text-white p-10 rounded-[3.5rem] shadow-2xl relative overflow-hidden">
+                        <div className="bg-slate-900 text-white p-10 rounded-xl shadow-2xl relative overflow-hidden">
                             <div className="absolute top-0 right-0 p-10 opacity-10"><Icons.Award className="w-40 h-40 text-brand" /></div>
                             <h3 className="text-xl font-black uppercase tracking-widest mb-8 relative z-10">Active Gigs</h3>
                             <div className="space-y-4 relative z-10 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
@@ -517,7 +517,7 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
                                     </div>
                                 ) : (
                                     bounties.map(b => (
-                                        <div key={b.id} className="p-5 bg-white/10 rounded-2xl border border-white/5 hover:bg-white/20 transition-all cursor-pointer">
+                                        <div key={b.id} className="p-5 bg-white/10 rounded-xl border border-white/5 hover:bg-white/20 transition-all cursor-pointer">
                                             <div className="flex justify-between items-start mb-2">
                                                 <span className="px-2 py-1 bg-brand text-white text-[8px] font-black uppercase rounded">{b.type}</span>
                                                 <span className="text-[10px] font-black text-brand">{b.reward} PTS</span>
@@ -540,17 +540,17 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
                 <div className="space-y-12 animate-in fade-in duration-500">
                     <div className="flex justify-between items-center">
                         <h3 className="text-3xl font-black text-slate-900 uppercase tracking-tight">Managed Clusters</h3>
-                        <button className="px-8 py-4 bg-brand text-white rounded-[2rem] text-[10px] font-black uppercase tracking-widest shadow-xl hover:bg-slate-900 transition-all active:scale-95 flex items-center gap-2">
+                        <button className="px-8 py-4 bg-brand text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-xl hover:bg-slate-900 transition-all active:scale-95 flex items-center gap-2">
                             <Icons.Plus className="w-4 h-4" /> Initialize Room
                         </button>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {myRooms.length > 0 ? myRooms.map(room => (
-                            <div key={room.id} className="bg-white p-10 rounded-[3.5rem] border border-slate-100 shadow-lg hover:shadow-2xl hover:border-emerald-200 transition-all group cursor-pointer flex flex-col h-full">
+                            <div key={room.id} className="bg-white p-10 rounded-xl border border-slate-100 shadow-lg hover:shadow-2xl hover:border-emerald-200 transition-all group cursor-pointer flex flex-col h-full">
                                 <div className="flex justify-between items-start mb-8">
                                     <span className="bg-emerald-50 text-emerald-600 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest border border-emerald-100">{room.category}</span>
-                                    <div className="p-3 bg-emerald-50 rounded-2xl text-emerald-600">
+                                    <div className="p-3 bg-emerald-50 rounded-xl text-emerald-600">
                                         <Icons.Users className="w-5 h-5" />
                                     </div>
                                 </div>
@@ -567,13 +567,13 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
                                         <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest block mb-1">Active</span>
                                         <span className="text-lg font-black text-emerald-500">{room.activeOnline}</span>
                                     </div>
-                                    <button className="p-3 bg-slate-900 text-white rounded-xl hover:bg-emerald-600 transition-all shadow-md">
+                                    <button className="p-3 bg-slate-900 text-white rounded-lg hover:bg-emerald-600 transition-all shadow-md px-4 py-2">
                                         <Icons.Plus className="w-4 h-4" />
                                     </button>
                                 </div>
                             </div>
                         )) : (
-                            <div className="col-span-full py-32 text-center bg-white border border-dashed border-slate-200 rounded-[4rem] opacity-50 flex flex-col items-center gap-6">
+                            <div className="col-span-full py-32 text-center bg-white border border-dashed border-slate-200 rounded-xl opacity-50 flex flex-col items-center gap-6">
                                 <Icons.Users className="w-20 h-20 text-slate-300" />
                                 <span className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-400">No active classrooms initialized</span>
                             </div>
@@ -584,25 +584,25 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
 
             {activeTab === 'REVENUE' && (
                 <div className="max-w-4xl mx-auto animate-in fade-in duration-700">
-                    <div className="bg-white p-16 rounded-[5rem] shadow-2xl border border-slate-100 text-center">
-                        <div className="w-24 h-24 bg-brand/5 text-brand rounded-[2rem] flex items-center justify-center mx-auto mb-10 shadow-xl border border-brand/10">
+                    <div className="bg-white p-16 rounded-xl shadow-2xl border border-slate-100 text-center">
+                        <div className="w-24 h-24 bg-brand/5 text-brand rounded-xl flex items-center justify-center mx-auto mb-10 shadow-xl border border-brand/10">
                             <Icons.DollarSign className="w-12 h-12" />
                         </div>
                         <h3 className="text-5xl font-black text-slate-900 uppercase tracking-tighter mb-4">Earnings</h3>
                         <p className="text-slate-500 font-medium italic mb-16">Track your earnings and withdrawals.</p>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-                            <div className="p-10 bg-slate-900 text-white rounded-[3rem] shadow-2xl">
+                            <div className="p-10 bg-slate-900 text-white rounded-xl shadow-2xl">
                                 <span className="text-[10px] font-black text-brand uppercase tracking-[0.4em] mb-4 block">Available Balance</span>
                                 <div className="text-6xl font-black">₹12,400</div>
                             </div>
-                            <div className="p-10 bg-brand/5 border border-brand/10 rounded-[3rem]">
+                            <div className="p-10 bg-brand/5 border border-brand/10 rounded-xl">
                                 <span className="text-[10px] font-black text-brand uppercase tracking-[0.4em] mb-4 block">Lifetime Earnings</span>
                                 <div className="text-6xl font-black text-slate-900">₹84,200</div>
                             </div>
                         </div>
 
-                        <button className="px-16 py-8 bg-brand text-white rounded-[3rem] font-black text-sm uppercase tracking-[0.5em] shadow-2xl hover:bg-slate-900 transition-all active:scale-95">
+                        <button className="px-16 py-8 bg-brand text-white rounded-lg font-black text-sm uppercase tracking-[0.5em] shadow-2xl hover:bg-slate-900 transition-all active:scale-95">
                             Withdraw Funds
                         </button>
                     </div>
@@ -610,7 +610,7 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
             )}
 
             {activeTab === 'TEACHERS_DECK' && (
-                <div className="h-[calc(100vh-350px)] rounded-[3rem] overflow-hidden border border-white/5 shadow-2xl">
+                <div className="h-[calc(100vh-350px)] rounded-xl overflow-hidden border border-white/5 shadow-2xl">
                     <TeachersDeck />
                 </div>
             )}

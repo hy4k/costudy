@@ -304,15 +304,24 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
             <span className="block text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-black tracking-tight text-slate-900 leading-none">
               COSTUDY
             </span>
-            <span className="block mt-2 sm:mt-3 text-lg sm:text-xl md:text-2xl font-medium tracking-widest text-slate-400 uppercase">
-              CMA Success Universe
-            </span>
           </h1>
 
           {/* Value proposition - Clear and immediate */}
           <p className="mt-6 sm:mt-8 text-center text-lg sm:text-xl md:text-2xl text-slate-600 max-w-2xl mx-auto leading-relaxed px-2">
-            The AI-powered study platform where <span className="text-slate-900 font-semibold">CMA candidates worldwide</span> prepare together, 24/7.
+            Don't study alone. Join a global squad for CMA US right now.
           </p>
+
+          <div className="flex justify-center mt-6">
+            <div className="inline-flex items-center gap-2 px-6 py-3 bg-red-50 rounded-full border border-red-100 shadow-sm">
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+              </span>
+              <span className="text-lg font-medium text-slate-700">
+                <AnimatedCounter end={847} /> students studying right now
+              </span>
+            </div>
+          </div>
 
           {/* Primary CTA - Single, prominent */}
           <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
@@ -320,13 +329,7 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
               onClick={onGetStarted}
               className="w-full sm:w-auto px-8 sm:px-10 py-4 bg-red-600 hover:bg-red-500 text-white text-lg font-bold rounded-2xl sm:rounded-full transition-all shadow-xl shadow-red-500/30 hover:shadow-red-500/50 hover:scale-105 active:scale-100"
             >
-              Get Started Free →
-            </button>
-            <button 
-              onClick={onGetStarted}
-              className="w-full sm:w-auto px-8 sm:px-10 py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 text-lg font-semibold rounded-2xl sm:rounded-full transition-all"
-            >
-              I Have an Invite
+              Enter The Campus →
             </button>
           </div>
 

@@ -4,6 +4,7 @@ import Landing from './pages/Landing'
 import Chat from './pages/Chat'
 import Dashboard from './pages/Dashboard'
 import StudyRooms from './pages/StudyRooms'
+import Exams from './pages/Exams'
 
 function App() {
   const [user, setUser] = useState(null)
@@ -15,6 +16,7 @@ function App() {
         <Route path="/chat" element={<Chat user={user} />} />
         <Route path="/dashboard" element={<Dashboard user={user} />} />
         <Route path="/study-rooms" element={<StudyRooms user={user} />} />
+        <Route path="/exams" element={<Exams user={user} />} />
       </Routes>
     </BrowserRouter>
   )

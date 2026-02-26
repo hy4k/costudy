@@ -31,6 +31,11 @@ export default function Landing({ onLogin }) {
       icon: '📊',
       title: 'Track Progress',
       desc: 'Monitor your learning journey with detailed analytics'
+    },
+    {
+      icon: '📝',
+      title: 'Mock Tests',
+      desc: 'Practice with AI-generated questions and ace your exams'
     }
   ]
 

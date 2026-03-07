@@ -14,13 +14,19 @@ Inputs: `costudy-uiux-audit.md`, `costudy-technical-audit.md`, codebase review, 
   - Discoverability and cohesion for key features (vouch, alignments, AI decks, mock exams).
 - This plan organizes work into a **priority matrix** across **Impact (High/Low)** and **Effort (High/Low)** and references underlying reports where details live.
 
+### 1.1 Audit completion status (plan phases 0–8)
+
+- **Delivered**: `costudy-uiux-audit.md`, `costudy-technical-audit.md`, and this action plan. Phases 0–5 and 7 are complete; Phase 6 automated checks are documented (Lighthouse/axe blocked in headless environment; complexity and npm audit run).
+- **Done as follow-up**: Quick win **#1** – hard-coded Supabase anon key removed; `services/supabaseClient.ts` now requires `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. `.env.example` added for frontend.
+- **Run locally**: Lighthouse and axe-cli (see costudy-technical-audit.md §2.3); then continue with quick wins #2–5 and the themed initiatives.
+
 ---
 
 ## 2. Priority Matrix
 
 ### 2.1 High Impact / Low Effort (Do First – “Quick Wins”)
 
-1. **Remove hard-coded Supabase anon key**
+1. **Remove hard-coded Supabase anon key** ✅ *Done*
    - **Impact**: High (security posture, best practices).
    - **Effort**: Low.
    - **Action**:

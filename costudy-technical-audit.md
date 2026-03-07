@@ -280,11 +280,11 @@ Key tables and concepts:
 ### 4.1 Supabase Client Configuration
 
 - `services/supabaseClient.ts`:
-  - `SUPABASE_URL` from `VITE_SUPABASE_URL` with fallback to `https://supabase.fets.in`.
-  - `SUPABASE_KEY` from `VITE_SUPABASE_ANON_KEY` with a **hard-coded anon key fallback**.
+  - `SUPABASE_URL` required from `VITE_SUPABASE_URL` (no fallback).
+  - `SUPABASE_KEY` now required from `VITE_SUPABASE_ANON_KEY` (no fallback); `.env.example` added.
   - Auth config: `autoRefreshToken: false`, `persistSession: true`, `detectSessionInUrl: true`.
 
-**Risk**: Hard-coded anonymous key in the client is a **secrets smell**, even if it’s an anon key. It should be removed and enforced via env variables only.
+**Status**: Hard-coded anon key has been removed (env-only). **Previous risk**: Hard-coded anonymous key in the client was a **secrets smell**, even if it’s an anon key. It should be removed and enforced via env variables only.
 
 **Recommendation**: Remove the fallback value and fail-fast if env vars are missing:
 
@@ -426,9 +426,9 @@ Each feature table below uses:
 
 ### 6.1 High-Impact Issues
 
-1. **Secrets in code**:
-   - Hard-coded `SUPABASE_KEY` fallback in `supabaseClient.ts`.
-   - **Action**: remove fallback, enforce env-based configuration only.
+1. **Secrets in code** (addressed):
+   - Hard-coded `SUPABASE_KEY` fallback in `supabaseClient.ts` has been removed; env-only configuration enforced.
+   - **Action**: ensure `.env` is populated from `.env.example` in each environment.
 2. **RLS gaps for room resources/messages**:
    - `study_room_messages` and `study_room_resources` currently have permissive `FOR ALL USING (true)` RLS.
    - **Action**: tighten to membership-based policies mirroring `study_room_members`.

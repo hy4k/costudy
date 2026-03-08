@@ -8,12 +8,12 @@ interface LandingProps {
 }
 
 const FEATURES = [
-  { title: 'AI Tutor', description: 'Ask anything about CMA. Get instant answers from your actual study materials — Gleim, Wiley, Hock. Real knowledge, not generic AI.' },
-  { title: 'Study Rooms', description: 'Join rooms across timezones. Pomodoro timers. Mission boards. When your room studies, you study. Real accountability.' },
-  { title: 'Unlimited MCQs', description: '5,000+ practice questions by topic. Track your weak spots. See exactly what to focus on. Master every concept.' },
-  { title: 'Essay Grading', description: 'Submit essays anytime. Get detailed AI feedback in 30 seconds. No more waiting weeks. Practice until perfect.' },
-  { title: 'Mock Exams', description: 'Full 4-hour simulations. Exact Prometric interface. Time pressure included. No surprises on exam day.' },
+  { title: 'Study Room', description: 'Join rooms across timezones. Pomodoro timers. Mission boards. When your room studies, you study. Real accountability.' },
+  { title: 'Study with a Buddy', description: 'Find your accountability partner. Align goals, track progress together, and push each other to pass.' },
+  { title: 'Mock Exam in Real Platform', description: 'Full 4-hour simulations on the exact Prometric interface. Time pressure included. No surprises on exam day.' },
   { title: 'Hire Mentors', description: 'Book verified CMA instructors. Your study room can split the cost. Premium help, affordable for everyone.' },
+  { title: 'Essay Grading', description: 'Submit essays anytime. Get detailed AI feedback in 30 seconds. No more waiting weeks. Practice until perfect.' },
+  { title: 'AI Tutor', description: 'Ask anything about CMA. Get instant answers from your actual study materials — Gleim, Wiley, Hock. Real knowledge, not generic AI.' },
 ];
 
 export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
@@ -81,9 +81,14 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
       {/* Features Section */}
       <section ref={featuresRef} className="py-20 sm:py-28 px-6 bg-gradient-to-b from-slate-50 to-white">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-center text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 mb-14 tracking-tight uppercase">
-            Never Study Alone Again
-          </h2>
+          <div className="text-center mb-14">
+            <p className="text-sm font-bold text-red-600 tracking-[0.3em] uppercase mb-3">Your Mission</p>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+              Six Pillars.
+              <br />
+              <span className="bg-gradient-to-r from-red-600 to-red-500 bg-clip-text text-transparent">One Clear Path.</span>
+            </h2>
+          </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {FEATURES.map((f, i) => (

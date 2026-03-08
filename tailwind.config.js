@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: ['./index.html', './App.tsx', './index.tsx', './components/**/*.{tsx,ts,jsx,js}', './lib/**/*.{ts,tsx}', './services/**/*.{tsx,ts,jsx,js}'],
   theme: {
     extend: {
@@ -7,7 +8,8 @@ export default {
         'gradient-conic': 'conic-gradient(var(--tw-gradient-stops))',
       },
       fontFamily: {
-        sans: ['Plus Jakarta Sans', 'sans-serif'],
+        sans: ['Geist', 'system-ui', 'sans-serif'],
+        mono: ['Geist Mono', 'monospace'],
       },
       colors: {
         brand: {

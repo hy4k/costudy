@@ -93,12 +93,17 @@ function App() {
           'TEACHER': UserRole.TEACHER,
           'PEER_TUTOR': UserRole.PEER_TUTOR
         };
+        const normalizedRole = roleMap[profile.role] || UserRole.STUDENT;
         
         setUser({
           ...profile,
-          role: roleMap[profile.role] || UserRole.STUDENT
+          role: normalizedRole
         });
         setIsLoggedIn(true);
+        // Teachers default to Faculty Room view for correct nav highlight
+        if (normalizedRole === UserRole.TEACHER) {
+          setCurrentView(ViewState.FACULTY_ROOM);
+        }
       } else {
         // Fallback if profile creation failed
         setUser({

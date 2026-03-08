@@ -1,8 +1,11 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ['./index.html', './App.tsx', './index.tsx', './components/**/*.{tsx,ts,jsx,js}', './services/**/*.{tsx,ts,jsx,js}'],
+  content: ['./index.html', './App.tsx', './index.tsx', './components/**/*.{tsx,ts,jsx,js}', './lib/**/*.{ts,tsx}', './services/**/*.{tsx,ts,jsx,js}'],
   theme: {
     extend: {
+      backgroundImage: {
+        'gradient-conic': 'conic-gradient(var(--tw-gradient-stops))',
+      },
       fontFamily: {
         sans: ['Plus Jakarta Sans', 'sans-serif'],
       },

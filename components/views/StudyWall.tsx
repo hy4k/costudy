@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Icons } from '../Icons';
+import { CoStudyLogo } from '../CoStudyLogo';
 import { Post, UserRole, UserLevel, Comment, ViewState, PostType, User, AlignmentPurpose, AlignmentDuration } from '../../types';
 import { summarizePost } from '../../services/geminiService';
 import { costudyService } from '../../services/costudyService';
@@ -449,7 +450,7 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
   const isUnderLimit = charCount > 0 && charCount < MIN_CHARS;
 
   return (
-    <div className="w-full max-w-3xl mx-auto px-3 sm:px-6 py-6 sm:py-12 flex flex-col items-center overflow-visible pb-24 sm:pb-12">
+    <div className="w-full max-w-4xl mx-auto px-3 sm:px-6 py-6 sm:py-12 flex flex-col items-center overflow-visible pb-24 sm:pb-12">
       
       {/* FLOATING ACTION BUTTON */}
       <div className="fixed bottom-10 right-8 sm:bottom-12 sm:right-12 z-10">
@@ -805,9 +806,15 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
         <div className="absolute top-0 right-0 w-[400px] h-[400px] sm:w-[600px] sm:h-[600px] bg-brand/5 blur-[100px] -mr-20 -mt-20 rounded-full animate-pulse pointer-events-none"></div>
         
         <div className="relative z-10 flex flex-col items-center">
-          <h1 className="text-3xl sm:text-6xl md:text-7xl font-black tracking-tight text-slate-900 leading-none mb-2 sm:mb-4 select-none antialiased uppercase">
-            {mode === 'FACULTY' ? 'FACULTY' : 'COSTUDY'}
-          </h1>
+          {mode === 'FACULTY' ? (
+            <h1 className="text-3xl sm:text-6xl md:text-7xl font-black tracking-tight text-slate-900 leading-none mb-2 sm:mb-4 select-none antialiased uppercase">
+              FACULTY
+            </h1>
+          ) : (
+            <div className="mb-2 sm:mb-4">
+              <CoStudyLogo size="xl" variant="light" showIcon={false} className="justify-center" />
+            </div>
+          )}
           <h2 className="text-[10px] sm:text-sm md:text-lg font-bold tracking-[0.15em] sm:tracking-[0.3em] text-slate-400 uppercase select-none opacity-80 antialiased">
             {mode === 'FACULTY' ? 'ROOM & NETWORK' : 'CMA Success Network'}
           </h2>

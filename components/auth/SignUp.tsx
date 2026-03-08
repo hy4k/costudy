@@ -1,6 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { Icons } from '../Icons';
+import { CoStudyLogo } from '../CoStudyLogo';
 import { authService } from '../../services/fetsService';
 import { validateInviteCode, useInviteCode } from '../../services/inviteService';
 
@@ -31,21 +31,21 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack, init
     }
   }, [initialInviteCode]);
 
-  // Instant Theme Preview for Role Selection
+  // Instant Theme Preview for Role Selection (Emerald to match Layout.tsx)
   useEffect(() => {
     const root = document.documentElement;
     if (role === 'TEACHER') {
-        // Teacher Theme (Teal/Specialist)
-        root.style.setProperty('--color-brand-50', '#f0fdfa');
-        root.style.setProperty('--color-brand-100', '#ccfbf1');
-        root.style.setProperty('--color-brand-200', '#99f6e4');
-        root.style.setProperty('--color-brand-300', '#5eead4');
-        root.style.setProperty('--color-brand-400', '#2dd4bf');
-        root.style.setProperty('--color-brand-500', '#0d9488');
-        root.style.setProperty('--color-brand-600', '#0f766e');
-        root.style.setProperty('--color-brand-700', '#115e59');
-        root.style.setProperty('--color-brand-800', '#134e4a');
-        root.style.setProperty('--color-brand-900', '#042f2e');
+        // Teacher Theme (Emerald/Specialist) - matches Layout.tsx
+        root.style.setProperty('--color-brand-50', '#ecfdf5');
+        root.style.setProperty('--color-brand-100', '#d1fae5');
+        root.style.setProperty('--color-brand-200', '#a7f3d0');
+        root.style.setProperty('--color-brand-300', '#6ee7b7');
+        root.style.setProperty('--color-brand-400', '#34d399');
+        root.style.setProperty('--color-brand-500', '#10b981');
+        root.style.setProperty('--color-brand-600', '#059669');
+        root.style.setProperty('--color-brand-700', '#047857');
+        root.style.setProperty('--color-brand-800', '#065f46');
+        root.style.setProperty('--color-brand-900', '#064e3b');
     } else {
         // Student Theme (Red/Brand)
         root.style.setProperty('--color-brand-50', '#fff1f1');
@@ -156,10 +156,7 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack, init
         <div className="grid grid-cols-1 lg:grid-cols-12">
           {/* Header Area */}
           <div className="lg:col-span-12 p-12 lg:p-16 pb-0 flex justify-between items-center">
-             <div className="flex items-center gap-4">
-                <Icons.Logo className="w-12 h-12" />
-                <span className="text-2xl font-black tracking-tighter text-white uppercase">CoStudy</span>
-             </div>
+             <CoStudyLogo size="md" variant="dark" />
              <div className="flex items-center gap-6">
                 {onBack && (
                    <button onClick={onBack} className="text-[10px] font-black text-slate-500 hover:text-white uppercase tracking-widest transition-all flex items-center gap-2">

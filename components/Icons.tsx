@@ -6,12 +6,22 @@ export const Icons = {
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" {...props}>
       <defs>
         <linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="var(--color-brand-500)" />
-          <stop offset="100%" stopColor="var(--color-brand-900)" />
+          <stop offset="0%" stopColor="#ff1a1a" />
+          <stop offset="100%" stopColor="#890b0b" />
         </linearGradient>
+        <filter id="logoShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="1.5" floodColor="#0a0a0a" floodOpacity="0.15" />
+        </filter>
       </defs>
-      <path d="M50 15 L85 35 L85 75 L50 95 L15 75 L15 35 Z" fill="url(#brandGrad)" opacity="0.9" />
-      <circle cx="50" cy="55" r="10" fill="white" />
+      <path 
+        d="M50 12 L88 32 L88 72 L50 92 L12 72 L12 32 Z" 
+        fill="url(#brandGrad)" 
+        stroke="#0a0a0a" 
+        strokeWidth="1.5" 
+        strokeLinejoin="round"
+        filter="url(#logoShadow)"
+      />
+      <circle cx="50" cy="55" r="8" fill="white" />
     </svg>
   ),
   Home: (props: any) => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,

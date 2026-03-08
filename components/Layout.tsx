@@ -1,7 +1,7 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { ViewState, CoStudyCloudStatus, UserRole, Notification } from '../types';
 import { Icons } from './Icons';
+import { CoStudyLogo } from './CoStudyLogo';
 import { getCoStudyCloudStatus } from '../services/fetsService';
 import { notificationService } from '../services/costudyService';
 import { supabase } from '../services/supabaseClient';
@@ -270,11 +270,8 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
                 {isMobileMenuOpen ? <Icons.Plus className="w-6 h-6 rotate-45" /> : <Icons.Grid className="w-6 h-6" />}
             </button>
 
-            <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setView(userRole === UserRole.TEACHER ? ViewState.FACULTY_ROOM : ViewState.WALL)}>
-                <div className="group-hover:rotate-12 transition-transform duration-500">
-                    <Icons.Logo className="w-8 h-8 sm:w-10 sm:h-10" />
-                </div>
-                <span className="text-xl sm:text-2xl font-black tracking-tighter text-slate-900 uppercase block">CoStudy</span>
+            <div className="cursor-pointer group" onClick={() => setView(userRole === UserRole.TEACHER ? ViewState.FACULTY_ROOM : ViewState.WALL)}>
+                <CoStudyLogo size="sm" variant="light" className="group-hover:opacity-90 transition-opacity" />
             </div>
         </div>
 

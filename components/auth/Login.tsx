@@ -1,6 +1,6 @@
-
 import React, { useState } from 'react';
 import { Icons } from '../Icons';
+import { CoStudyLogo } from '../CoStudyLogo';
 import { authService } from '../../services/fetsService';
 
 interface LoginProps {
@@ -47,10 +47,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSwitch, onBack }) => {
         {/* Brand Side */}
         <div className={`p-16 flex flex-col justify-center border-r border-white/5 bg-gradient-to-br transition-all duration-700 ${loginType === 'TEACHER' ? 'from-emerald-900/20' : 'from-white/[0.02]'} to-transparent`}>
           <div className="flex items-center justify-between mb-16 animate-in slide-in-from-left duration-700">
-             <div className="flex items-center gap-4">
-                <Icons.Logo className="w-16 h-16" />
-                <span className="text-4xl font-black tracking-tighter text-white uppercase">CoStudy</span>
-             </div>
+             <CoStudyLogo size="lg" variant="dark" />
              {onBack && (
                <button onClick={onBack} className="lg:hidden text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                  <Icons.Plus className="rotate-45 w-4 h-4" /> Universe

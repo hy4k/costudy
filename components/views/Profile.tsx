@@ -352,7 +352,7 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
             )}
 
             {/* Main Identity Header */}
-            <div className="relative bg-white/70 backdrop-blur-3xl border border-white p-12 sm:p-20 rounded-[4rem] sm:rounded-[6.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.1)] overflow-hidden min-h-[60vh] flex flex-col justify-center">
+            <div className="relative bg-white/70 dark:bg-slate-900/70 backdrop-blur-3xl border border-white dark:border-slate-800 p-12 sm:p-20 rounded-[4rem] sm:rounded-[6.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.1)] overflow-hidden min-h-[60vh] flex flex-col justify-center">
                 <div className={`absolute top-0 right-0 w-[800px] h-[800px] ${isTeacher ? 'bg-emerald-500/5' : 'bg-brand/5'} blur-[150px] rounded-full -mr-60 -mt-60 pointer-events-none`}></div>
                 <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/5 blur-[120px] rounded-full -ml-40 -mb-40 pointer-events-none"></div>
 
@@ -552,7 +552,7 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
                     {networkTab === 'CONTRACTS' ? (
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                             {/* Active Alignments */}
-                            <div className="bg-white border border-slate-200 rounded-[3rem] p-10 lg:p-14 shadow-xl flex flex-col relative overflow-hidden min-h-[600px]">
+                            <div className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 rounded-[3rem] p-10 lg:p-14 shadow-xl flex flex-col relative overflow-hidden min-h-[600px]">
                                 <div className="absolute top-0 right-0 p-10 opacity-[0.03]"><Icons.Link className="w-48 h-48" /></div>
                                 
                                 <div className="flex items-center justify-between mb-10 relative z-10">

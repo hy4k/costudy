@@ -223,9 +223,9 @@ function App() {
 
   if (isInitialLoading) {
     return (
-      <div className="h-screen w-full bg-slate-50 flex flex-col items-center justify-center gap-6">
+      <div className="h-screen w-full bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center gap-6">
         <Icons.CloudSync className="w-16 h-16 text-brand animate-spin" />
-        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 animate-pulse">Neural Handshake Active...</span>
+        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 dark:text-slate-500 animate-pulse">Neural Handshake Active...</span>
       </div>
     );
   }

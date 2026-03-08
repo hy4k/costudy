@@ -23,6 +23,19 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
+
+  useEffect(() => {
+    const dark = localStorage.getItem('costudy-theme') === 'dark';
+    setIsDark(dark);
+  }, []);
+
+  const toggleDark = () => {
+    const next = !isDark;
+    setIsDark(next);
+    document.documentElement.classList.toggle('dark', next);
+    localStorage.setItem('costudy-theme', next ? 'dark' : 'light');
+  };
   
   // Panic Button State
   const [showPanicModal, setShowPanicModal] = useState(false);
@@ -153,7 +166,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
         return (
             <button 
                 onClick={() => handleNavClick(view)}
-                className={`w-full py-4 px-6 text-left text-sm font-black uppercase tracking-widest rounded-xl transition-all ${currentView === view ? 'bg-brand text-white shadow-lg' : 'text-slate-500 hover:bg-slate-100'}`}
+                className={`w-full py-4 px-6 text-left text-sm font-black uppercase tracking-widest rounded-xl transition-all ${currentView === view ? 'bg-brand text-white shadow-lg' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
             >
                 {label}
             </button>
@@ -200,7 +213,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
   };
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-slate-50 text-slate-900 selection:bg-brand selection:text-white relative">
+    <div className="flex flex-col h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 selection:bg-brand selection:text-white relative transition-colors">
       {/* PANIC BUTTON (Exam Week Simulation) */}
       {isLoggedIn && userRole === UserRole.STUDENT && (
           <>
@@ -260,18 +273,18 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
       )}
 
       {/* Lowered z-index from 30 to 10 to ensure system icons are clickable */}
-      <nav className="h-20 flex items-center justify-between px-6 sm:px-8 bg-white/80 backdrop-blur-2xl border-b border-slate-200 z-40 relative">
+      <nav className="h-20 flex items-center justify-between px-6 sm:px-8 bg-white/80 dark:bg-slate-950/90 backdrop-blur-2xl border-b border-slate-200 dark:border-slate-800 z-40 relative">
         <div className="flex items-center gap-4 sm:gap-6">
             {/* Mobile Menu Toggle */}
             <button 
-                className="lg:hidden p-2 text-slate-500 hover:text-slate-900 transition-colors"
+                className="lg:hidden p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
                 {isMobileMenuOpen ? <Icons.Plus className="w-6 h-6 rotate-45" /> : <Icons.Grid className="w-6 h-6" />}
             </button>
 
             <div className="cursor-pointer group" onClick={() => setView(userRole === UserRole.TEACHER ? ViewState.FACULTY_ROOM : ViewState.WALL)}>
-                <CoStudyLogo size="sm" variant="light" className="group-hover:opacity-90 transition-opacity" />
+                <CoStudyLogo size="sm" variant={isDark ? 'dark' : 'light'} className="group-hover:opacity-90 transition-opacity" />
             </div>
         </div>
 
@@ -280,14 +293,21 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
         </div>
 
         <div className="flex gap-3 items-center">
-          <div className="hidden lg:block h-8 w-px bg-slate-200 mx-2"></div>
+          <button
+            onClick={toggleDark}
+            className="p-2.5 rounded-xl text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors"
+            aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {isDark ? <Icons.Sun className="w-5 h-5" /> : <Icons.Moon className="w-5 h-5" />}
+          </button>
+          <div className="hidden lg:block h-8 w-px bg-slate-200 dark:bg-slate-700 mx-2"></div>
           {isLoggedIn ? (
             <div className="flex gap-4 items-center">
               {/* NOTIFICATION BELL */}
               <div className="relative" ref={notificationRef}>
                   <button 
                     onClick={() => setShowNotifications(!showNotifications)} 
-                    className={`p-2.5 rounded-xl transition-all relative ${showNotifications ? 'bg-brand text-white shadow-lg' : 'bg-slate-100 text-slate-500 hover:text-brand'}`}
+                    className={`p-2.5 rounded-xl transition-all relative ${showNotifications ? 'bg-brand text-white shadow-lg' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-brand'}`}
                   >
                      <Icons.Bell className="w-5 h-5" />
                      {unreadCount > 0 && (
@@ -297,9 +317,9 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
 
                   {/* NOTIFICATION DROPDOWN */}
                   {showNotifications && (
-                      <div className="absolute top-full right-0 mt-4 w-72 sm:w-96 bg-white rounded-[2rem] border border-slate-100 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.1)] overflow-hidden animate-in slide-in-from-top-4 z-20">
-                          <div className="p-6 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
-                              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Notifications</h4>
+                      <div className="absolute top-full right-0 mt-4 w-72 sm:w-96 bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.1)] overflow-hidden animate-in slide-in-from-top-4 z-20">
+                          <div className="p-6 border-b border-slate-50 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center">
+                              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Notifications</h4>
                               {unreadCount > 0 && (
                                   <button onClick={handleMarkAllRead} className="text-[9px] font-bold text-brand hover:underline">Mark all read</button>
                               )}
@@ -311,17 +331,17 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
                                       <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">All caught up</p>
                                   </div>
                               ) : (
-                                  <div className="divide-y divide-slate-50">
+                                  <div className="divide-y divide-slate-50 dark:divide-slate-700">
                                       {notifications.map(note => (
                                           <div 
                                             key={note.id} 
                                             onClick={() => handleNotificationClick(note)}
-                                            className={`p-5 flex gap-4 hover:bg-slate-50 transition-colors cursor-pointer ${!note.is_read ? 'bg-brand/[0.02]' : ''}`}
+                                            className={`p-5 flex gap-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer ${!note.is_read ? 'bg-brand/[0.02] dark:bg-brand/10' : ''}`}
                                           >
                                               <div className={`mt-1 p-2 rounded-xl shrink-0 ${
                                                   note.type === 'MESSAGE' ? 'bg-brand/10 text-brand' : 
                                                   note.type === 'ALERT' ? 'bg-amber-500/10 text-amber-500' :
-                                                  'bg-slate-100 text-slate-400'
+                                                  'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500'
                                               }`}>
                                                   {note.type === 'MESSAGE' ? <Icons.MessageCircle className="w-4 h-4" /> : 
                                                    note.type === 'ALERT' ? <Icons.Bell className="w-4 h-4" /> :
@@ -347,8 +367,8 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
 
               <button onClick={() => setView(ViewState.PROFILE)} className="flex items-center gap-3 group">
                 <div className="text-right hidden sm:block">
-                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{userRole === UserRole.TEACHER ? 'Specialist' : 'Scholar'}</div>
-                    <div className="text-[11px] font-black text-slate-900 uppercase tracking-tighter">{userName || 'My Account'}</div>
+                    <div className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none mb-1">{userRole === UserRole.TEACHER ? 'Specialist' : 'Scholar'}</div>
+                    <div className="text-[11px] font-black text-slate-900 dark:text-white uppercase tracking-tighter">{userName || 'My Account'}</div>
                 </div>
                 <img 
                   src={userAvatar || `https://i.pravatar.cc/100?u=${userName || 'me'}`} 
@@ -360,7 +380,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
           ) : (
             <button 
               onClick={onLoginClick}
-              className="px-6 sm:px-8 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-brand transition-all shadow-xl active:scale-95 whitespace-nowrap"
+              className="px-6 sm:px-8 py-3 bg-slate-900 dark:bg-slate-800 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-brand transition-all shadow-xl active:scale-95 whitespace-nowrap"
             >
               Log In
             </button>
@@ -370,7 +390,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-          <div className="fixed inset-0 top-20 z-40 bg-white/95 backdrop-blur-xl lg:hidden animate-in slide-in-from-top-10 duration-300 flex flex-col p-6 overflow-y-auto">
+          <div className="fixed inset-0 top-20 z-40 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl lg:hidden animate-in slide-in-from-top-10 duration-300 flex flex-col p-6 overflow-y-auto">
               <div className="space-y-2">
                   {renderNavItems(true)}
               </div>

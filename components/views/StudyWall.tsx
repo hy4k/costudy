@@ -850,7 +850,7 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
                 const isBounty = post.type === PostType.BOUNTY;
                 
                 return (
-                <article key={post.id} className={`relative bg-white border p-4 sm:p-8 rounded-2xl sm:rounded-3xl shadow-sm hover:shadow-md transition-all duration-300 ${isAuditRequest ? 'border-l-4 border-l-slate-800 border-slate-200' : isBounty ? 'border-l-4 border-l-brand border-slate-200 bg-slate-50/50' : 'border-slate-200'}`}>
+                <article key={post.id} className={`relative bg-white dark:bg-slate-900/80 border p-4 sm:p-8 rounded-2xl sm:rounded-3xl shadow-sm hover:shadow-md transition-all duration-300 ${isAuditRequest ? 'border-l-4 border-l-slate-800 border-slate-200 dark:border-slate-700' : isBounty ? 'border-l-4 border-l-brand border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50' : 'border-slate-200 dark:border-slate-700'}`}>
                   {isAuditRequest && (
                       <div className="absolute top-0 left-0 right-0 h-6 sm:h-7 bg-slate-800 flex items-center justify-center rounded-t-xl sm:rounded-t-2xl">
                           <span className="text-[8px] sm:text-[9px] font-bold text-white uppercase tracking-wider">Peer Audit</span>
@@ -883,7 +883,7 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
                      </div>
                      <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-bold text-slate-900 text-sm sm:text-base truncate">{post.author?.name || 'Anonymous'}</h3>
+                            <h3 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base truncate">{post.author?.name || 'Anonymous'}</h3>
                             <span className="text-[10px] text-slate-400 font-medium">{post.created_at ? new Date(post.created_at).toLocaleDateString() : 'Just now'}</span>
                         </div>
                         <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
@@ -893,7 +893,7 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
                      </div>
                   </div>
                   
-                  <div className="text-slate-700 text-base sm:text-lg leading-relaxed mb-4 sm:mb-6">
+                  <div className="text-slate-700 dark:text-slate-300 text-base sm:text-lg leading-relaxed mb-4 sm:mb-6">
                     {post.content}
                   </div>
 

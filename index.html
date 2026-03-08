@@ -9,9 +9,7 @@
     <link href="https://geistfont.vercel.app/geist.css" rel="stylesheet">
   <script>
     (function(){
-      var s=localStorage.getItem('costudy-theme');
-      var d=window.matchMedia('(prefers-color-scheme: dark)').matches;
-      if(s==='dark'||(!s&&d))document.documentElement.classList.add('dark');
+      if(localStorage.getItem('costudy-theme')==='dark')document.documentElement.classList.add('dark');
     })();
   </script>
   <script type="importmap">

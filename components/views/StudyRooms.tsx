@@ -278,7 +278,7 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
     
     if (!selectedRoom) {
         return (
-            <div className="min-h-screen bg-slate-50">
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
                 <div className="max-w-6xl mx-auto px-6 py-12">
                     {/* Header */}
                     <div className="mb-12">
@@ -362,9 +362,9 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
     ];
 
     return (
-        <div className="min-h-screen bg-slate-100 flex">
+        <div className="min-h-screen bg-slate-100 dark:bg-slate-950 flex">
             {/* Sidebar */}
-            <div className="w-72 bg-white border-r border-slate-200 flex flex-col">
+            <div className="w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col">
                 {/* Room Header */}
                 <div className="p-6 border-b border-slate-200">
                     <button 

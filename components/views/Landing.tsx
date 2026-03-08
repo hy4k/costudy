@@ -22,9 +22,7 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
   const featuresRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem('costudy-theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const dark = stored === 'dark' || (!stored && prefersDark);
+    const dark = localStorage.getItem('costudy-theme') === 'dark';
     setIsDark(dark);
     document.documentElement.classList.toggle('dark', dark);
   }, []);

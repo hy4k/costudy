@@ -1,521 +1,562 @@
-## CoStudy UI/UX Audit Report
+# CoStudy UI/UX Audit Report
 
-Last updated: 2026-03-07  
-Scope: `costudy-frontend` (Vite + React 19 + Tailwind CDN), with emphasis on CMA US flows.
-
----
-
-## 1. Executive Summary
-
-- **Overall UI/UX health**: **72/100** – strong conceptual direction (mission-style language, exam focus, AI tooling) with inconsistent visual hierarchy, mixed light/dark usage, and missing systematic design tokens.
-- **Brand alignment**: The app leans toward **“premium exam product”** but not yet the requested **dark, cinematic, military/mission console**. Most core screens are light (`bg-slate-50`/`bg-white`) with branded red/emerald accents, and FETS Yellow (`#FFD633`) is **not used anywhere**.
-- **System quality**: Individual screens (Study Rooms, Mock Tests, Library Vault, Direct Messages, AI Decks, Mentor Dashboard) are **ambitious and visually rich**, but the system lacks a unified design language (shared layout primitives, typography scale, spacing, and motion rules).
-- **Top opportunities**:
-  - Introduce a **global mission-style theme system** (dark base, FETS Yellow accent, brand role palettes), and re-skin key views to match.
-  - Normalize **page shells** (headers, subheaders, stat bars, pill navs) and **cards** across StudyWall, StudyRooms, MockTests, AIDeck, MentorDashboard, LibraryVault.
-  - Tighten **accessibility and responsiveness** (focus outlines, ARIA, semantic regions, small-screen nav behavior).
+> **Audit Date**: March 8, 2026  
+> **Scope**: Phase 0 (Environment & Repo) + Phase 1 (Design System & Branding)  
+> **Repo**: `costudy-frontend` on `main` (6 commits ahead of `origin/main`)
 
 ---
 
-## 2. Design System Assessment
+## Phase 0 — Environment & Repo State
 
-### 2.1 Tokens, Tailwind, and Theming
+### 0.1 Repository Structure
 
-- **Tailwind setup**
-  - Defined via CDN and inline config in `[index.html](index.html)`:
-    - `fontFamily.sans` → `Plus Jakarta Sans`.
-    - `colors.brand` → CSS variables `--color-brand-50..900`.
-    - Custom `slate` palette overrides.
-  - No standalone `tailwind.config.*` file; theming is centralized in `index.html`.
+The frontend has a **flat root-level structure** — no `src/` directory. All application code lives at the repo root:
 
-- **Color system**
-  - **Default student palette** in `[index.html](index.html)` (`:root`):
-    - Brand red scale defined as CSS vars (`--color-brand-50..900`), base `--color-brand-500: #ff1a1a`.
-  - **Runtime teacher palette**:
-    - `[components/Layout.tsx](components/Layout.tsx)` and `[components/auth/SignUp.tsx](components/auth/SignUp.tsx)` override `--color-brand-*` when `userRole` / `role` is teacher, using an emerald/teal scale.
-  - **FETS Yellow**:
-    - `#FFD633` / `#ffd633` **does not appear** anywhere in the codebase.
-    - Current brand accent is effectively **red vs emerald**, not FETS Yellow.
-  - **Other color usage**:
-    - Frequent use of `bg-slate-50`, `bg-white`, `bg-slate-900`, and translucent whites (`bg-white/5`) in view components.
-    - Many CTA and badges hard-code color tokens (`bg-red-600`, `bg-emerald-600`, `bg-slate-900`) instead of using `brand` or role-based tokens.
+| Path | Purpose |
+|---|---|
+| `index.html`, `index.tsx`, `App.tsx` | Entry shell |
+| `components/Layout.tsx` | App shell (nav, notifications, panic button) |
+| `components/Icons.tsx` | Inline SVG icon library (78 icons) |
+| `components/auth/Login.tsx`, `SignUp.tsx` | Auth screens |
+| `components/views/*.tsx` | 14 view components (StudyWall, AIDeck, MockTests…) |
+| `components/InviteCard.tsx`, `InviteCodeInput.tsx` | Shared invite UI |
+| `services/*.ts` | 13 service modules (Supabase, Gemini, chat, exams…) |
+| `types.ts` | Central domain types (729 lines, 40+ interfaces) |
+| `main.css` | Global styles (Tailwind directives + custom CSS) |
+| `tailwind.config.js`, `postcss.config.js` | Build-time Tailwind setup |
+| `database.sql`, `migrations/*.sql` | Local SQL reference |
 
-- **Typography**
-  - Global font: Plus Jakarta Sans via Google Fonts in `[index.html](index.html)`.
-  - Pattern:
-    - Headings often use **heavy weights and tight tracking** (e.g., `font-black uppercase tracking-[0.4em]`), strongly supporting the mission aesthetic.
-    - However, there is **no explicit typography scale**; sizes are chosen ad hoc (`text-7xl`, `text-8xl`, `text-[10px]`, etc.).
-  - Issue:
-    - Repeated use of very small uppercase text (`text-[8px]`, `text-[9px]`, `text-[10px]`) for labels may hurt accessibility and legibility on smaller screens.
+**Remote branches**: `design-overhaul`, `main`, `master`, `pre-claude-code-backup`
 
-- **Spacing & layout**
-  - Positive:
-    - Many views use generous paddings and rounded “console card” shells (`rounded-[3rem]`, `rounded-[4rem]`).
-    - Complex dashboards (MentorDashboard, LibraryVault, MockTests) generally use grid layouts and clear sections.
-  - Gaps:
-    - There is **no shared spacing token system**; margins/paddings vary widely (`p-6`, `p-8`, `p-10`, `p-12`, `p-16`).
-    - Cards and headers are styled uniquely per view, increasing cognitive load.
+### 0.2 Dependencies (package.json)
 
-- **Radius / elevation**
-  - Radius:
-    - Uses large radii (`rounded-[4.5rem]`, `rounded-[5rem]`, `rounded-[3rem]`) to create a “pill-panel” aesthetic.
-    - Inconsistent use of smaller radii (`rounded-xl`, `rounded-2xl`) inside those shells; still coherent visually but not tokenized.
-  - Shadows:
-    - Rich, cinematic shadows (`shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)]`, `shadow-2xl`) help with depth.
-    - Shadows are hand-tuned on each component instead of referenced via a system (e.g. `shadow-mission-1`, `shadow-mission-2`).
+| Category | Packages | Notes |
+|---|---|---|
+| **Production** | `react` ^19.2.0, `react-dom` ^19.2.0, `@supabase/supabase-js` **latest**, `@google/genai` ^1.30.0 | Only 4 deps. **Supabase pinned to `latest`** — risky for reproducibility. |
+| **Dev** | `typescript` ~5.8.2, `vite` ^6.2.0, `tailwindcss` ^3.4.19, `postcss`, `autoprefixer`, `dotenv`, `@types/node`, `@vitejs/plugin-react` | Lean setup. No linters (ESLint), no test framework, no Prettier. |
 
-- **Animations & motion**
-  - Global:
-    - `public/index.css` defines `.fade-in` and `.skeleton` shimmer utilities.
-  - Components:
-    - Frequent use of `animate-spin`, `animate-pulse`, and `animate-bounce`.
-    - Panels and overlays use “animate-in” classes (likely from a Tailwind plugin) for entrance transitions.
-  - Issue:
-    - Motion feels **lively but not orchestrated** – there is no shared rhythm between pages or a motion spec (durations, easings, max concurrent animations).
+**Issues found**:
+- `@supabase/supabase-js: "latest"` — unpinned, will resolve to whatever is newest at install time. Should be pinned to a specific major version (e.g., `^2.49.0`).
+- `npm audit` reports **2 high severity vulnerabilities** in the dependency tree.
+- No `eslint`, `prettier`, or test dependencies — no automated quality gates.
 
-### 2.2 Dark Mode & Cinematic/Mission Aesthetic
+### 0.3 TypeScript Configuration (tsconfig.json)
 
-- **Current baseline**
-  - The **global shell** (`Layout`) uses `bg-slate-50` + `bg-white/80` nav, which reads as a **light SaaS dashboard**, not a mission console:
-    - See root `<div>` in `[components/Layout.tsx](components/Layout.tsx)` (`bg-slate-50 text-slate-900`).
-  - Many mission-like views (AIDeck, TeachersDeck, DirectMessages, Profile CAN network, LibraryVault overlays) are designed on **dark backdrops** with neon-esque glows and brand accents.
+```
+Target: ES2022 | Module: ESNext | JSX: react-jsx
+```
 
-- **Mismatch**
-  - Landing page (`Landing.tsx`) is fully **light and marketing-style**, with red hero typography and white backgrounds – not dark/cinematic.
-  - The app shell around mission views remains light, so the global navigation and background do not match the inner “console” aesthetics.
+| Setting | Value | Assessment |
+|---|---|---|
+| `strict` | **not set** (false) | No strictNullChecks, no noImplicitAny. Weakest TS configuration possible. |
+| `skipLibCheck` | true | Skips type-checking of `.d.ts` files — hides issues. |
+| `allowJs` | true | Allows untyped JS files — currently none exist, can be removed. |
+| `paths` | `@/* → ./*` | Root alias, working correctly with Vite resolve config. |
+| `noEmit` | true | Vite handles transpilation; TSC is diagnostic-only. |
 
-- **Recommendations**
-  - **Introduce a dark global theme**:
-    - Change `body` and `Layout` root backgrounds to `bg-slate-950` / `bg-slate-900`, and ensure all views render on top of dark surfaces, using translucent panels (`bg-slate-900/70`, `bg-slate-800/70`) for content.
-  - **Add FETS Yellow as a first-class accent**:
-    - Extend `index.html` CSS vars:
-      - `--color-fets-yellow: #FFD633;`
-    - Map to Tailwind via `tailwind.config` inline:
-      - `colors: { brandAccent: '#FFD633', ... }` or update `brand.400`/`brandAccent` to use FETS Yellow for cross-role highlights (e.g., mission indicators, important CTAs, timers).
-    - Use FETS Yellow consistently for:
-      - Critical CTAs (start mock exam, join room, confirm AI call).
-      - Status beacons (online, engine active, countdown thresholds).
-  - **Rationalize palettes**:
-    - **Role base** (student vs teacher) remains red/emerald.
-    - **Mission accent** (FETS Yellow) is used for shared mission-critical cues, not for every button.
+**Impact**: With `strict: false`, there's no protection against `null`/`undefined` access, implicit `any` types, or missing return types. The codebase uses `any` in several critical spots (e.g., `user` state in App.tsx line 44, Supabase responses).
 
----
+### 0.4 Vite Configuration (vite.config.ts)
 
-## 3. Component Inventory (High-Level)
+| Setting | Value | Notes |
+|---|---|---|
+| Server port | 3000 | Bound to 0.0.0.0 (all interfaces) |
+| Manual chunks | `vendor-react`, `vendor-supabase`, `vendor-genai` | Good separation. Each chunk cached independently. |
+| Minification | esbuild | Fast, default choice. |
+| Source maps | **disabled** in prod | Saves ~30% build size; debugging in production requires re-enabling. |
+| Chunk size warning | 600KB | Elevated from default 500KB. |
 
-Below ratings are 1–10 for **Visual Design Quality**, reflecting premium, dark, cinematic, mission alignment.
+**Gemini API key injection** (`vite.config.ts:14-15`):
+```js
+'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+```
+The key is loaded from `.env` `GEMINI_API_KEY` and baked into the client bundle at build time. This means the API key is **visible in the browser** to anyone who inspects the built JS. This is a known Gemini client-side usage pattern but carries abuse risk.
 
-### 3.1 Global Shell & Auth
+### 0.5 index.html — Stale Import Map
 
-- **`Layout` (app shell)** – file: `components/Layout.tsx`  
-  - **Purpose**: Global nav, notifications, mission panic button, and shell around all in-app views.
-  - **Visual design (7/10)**:
-    - Strong mission language (“Panic Protocol”, “Exam SOS”), 3D nav buttons (`.container-button` / `.tilt-btn`), and notification panel with good hierarchy.
-    - Light background (`bg-slate-50` + `bg-white/80`) undercuts mission console mood.
-    - Teacher/student theme switching via CSS variables is a strong foundation.
-  - **Interactions**:
-    - Hoverable 3D nav buttons, animated notification dropdown, panic modal with simulated wait/cost.
-    - Mobile nav overlay is solid; hamburger toggles correctly.
-  - **Accessibility**:
-    - Buttons use `<button>` semantics; notification dropdown uses divs without ARIA (`role="menu"`, `aria-expanded` missing).
-    - Panic modal lacks `role="dialog"` and focus trapping.
-  - **Responsiveness**:
-    - Desktop nav works well; mobile nav uses full-screen overlay.
-    - Fixed-height nav may feel cramped on very small devices but generally acceptable.
-  - **Code quality**:
-    - Well-organized, uses internal `NavButton`, clear separation for notifications.
-    - Some inline style usage (`style={{ width: '130px' }}`) instead of Tailwind.
+`index.html` lines 9-19 contain a `<script type="importmap">` that maps `react`, `react-dom`, `@google/genai`, and `@supabase/supabase-js` to CDN URLs (`aistudiocdn.com`, `cdn.jsdelivr.net`).
 
-- **`Login` & `SignUp` (auth shell)** – files: `components/auth/Login.tsx`, `components/auth/SignUp.tsx`  
-  - **Purpose**: High-impact entry gateway with strong branding and role selection.
-  - **Visual design (8.5/10)**:
-    - Both screens embrace **dark, cinematic, mission aesthetic**:
-      - Dark backgrounds (`bg-slate-950`), glass panels, heavy uppercase labels, glowing gradients.
-      - Role-specific styling (Aspirant vs Mentor) with color-coded CTAs.
-    - SignUp “Choose Your Path” panel is especially strong – feels like onboarding into a mission.
-  - **Interactions**:
-    - Role toggles change theme in real time via CSS vars.
-    - Invite code validation adds micro-feedback (check/x icons, loading spinners).
-  - **Accessibility**:
-    - Inputs are labeled via placeholders only; use of proper `<label>` tags is inconsistent.
-    - Contrast: excellent for most text; some small grey-on-dark text may be borderline for WCAG.
-  - **Responsiveness**:
-    - Grid collapses to single-column on mobile; still readable and visually clear.
-  - **Code quality**:
-    - Clear separation of concerns (role-based behaviors, invite code handling).
-    - Could extract shared input and banner components for reuse.
+**This is dead code.** Vite resolves these imports from `node_modules` during development and bundles them during production build. The importmap is ignored but is confusing and should be removed. It's a leftover from an earlier CDN-only architecture.
 
-### 3.2 Core Views
+### 0.6 Environment Variables — CRITICAL MISMATCH
 
-Below are summarized; per-page details are in section 4.
+| File | Variable | Value |
+|---|---|---|
+| `.env` | `VITE_SUPABASE_KEY` | `eyJ0eX...iPCg` (anon JWT) |
+| `.env` | `SUPABASE_SERVICE_KEY` | `eyJ0eX...3ebQ` (service role JWT) |
+| `supabaseClient.ts` | reads | `VITE_SUPABASE_ANON_KEY` |
+| `.env.example` | documents | `VITE_SUPABASE_ANON_KEY` |
 
-- **`Landing`** – `components/views/Landing.tsx`  
-  - **Visual (6.5/10)**:
-    - Clean, minimal marketing page with large COSTUDY hero type and red accent.
-    - Not aligned with dark/mission aesthetic; feels like a different product brand.
-  - **Interactions**: simple scroll CTA and beta request form; effective but not immersive.
+**Three critical issues**:
 
-- **`StudyWall`** – `components/views/StudyWall.tsx`  
-  - **Visual (7.5/10)**:
-    - Feels like a social mission feed with categories like “Audit Desk”, “Bounty Board”.
-    - Uses cards, tags, statuses; decent density for a social wall.
-  - **Interactions**:
-    - Category filters, post creation modal, alignment (CAN) contract flow, audit/bounty features.
-    - Complex but powerful; needs clearer empty/loading states and visual grouping.
+1. **Name mismatch**: `.env` defines `VITE_SUPABASE_KEY`, but `supabaseClient.ts` reads `VITE_SUPABASE_ANON_KEY`. Result: the client gets `undefined`, falls back to a placeholder URL/key, and **all Supabase operations silently fail in development**.
 
-- **`StudyRooms`** – `components/views/StudyRooms.tsx`  
-  - **Visual (8/10)**:
-    - Strong “operations board” layout with tabs: Mission, Focus, Resources, Discussion, Quiz, Calendar, Mentors.
-    - Mission cards, discussion tiles, calendar events, mentors – visually coherent.
-  - **Interactions**:
-    - Simulated focus sessions with timers, discussions, resource lists.
-    - Currently uses mock data; UI feels mission-like but could benefit from consistent timer and status styling across views.
+2. **Service role key in frontend `.env`**: `SUPABASE_SERVICE_KEY` is a service-role JWT with **full database access bypassing RLS**. Even though it's not `VITE_`-prefixed (so Vite won't expose it to the browser), it should **never** be in a frontend repo's `.env`. If anyone copies `.env` to `.env.production` or a CI pipeline reads it, this key could leak.
 
-- **`AIDeck`** – `components/views/AIDeck.tsx`  
-  - **Visual (7.5/10)**:
-    - Light shell with white card interior; good contrast but not fully cinematic.
-    - Sidebar tools (Chat, Topic Blueprint, Notes, Flashcards, Essay Auditor) are clearly delineated with icons and copy.
-  - **Interactions**:
-    - Tool switching, chat modes (Global/Library/Active), context chips.
-    - Strong mental model but token/cost awareness UI is minimal.
+3. **`.env.production`** has `VITE_SUPABASE_URL` but no anon key — relies on deployment environment to inject it. The `GEMINI_API_KEY` placeholder value (`your_gemini_api_key_here`) would bake a string literal into the bundle if used as-is.
 
-- **`TeachersDeck`** – `components/views/TeachersDeck.tsx`  
-  - **Visual (8/10)**:
-    - Dark, emerald-accented educator console with Teacher Mastermind persona.
-    - Good alignment with mission-style for faculty persona.
-  - **Interactions**:
-    - Chat plus resource generation tools (lesson plans, rubrics, etc.).
+**Recommended fix**: Rename `VITE_SUPABASE_KEY` → `VITE_SUPABASE_ANON_KEY` in `.env`, remove `SUPABASE_SERVICE_KEY` from frontend `.env` entirely.
 
-- **`MentorDashboard`** – `components/views/MentorDashboard.tsx`  
-  - **Visual (8/10)**:
-    - Strong use of **subdomain redirect simulation** and multi-section dashboard with detail overlays.
-    - Once loaded, “specialist-mode” dashboard feels like a command center.
-  - **Interactions**:
-    - Tabs for Impact, Broadcast, Classrooms, Revenue, Bounties, Teacher Deck.
-    - Good use of overlays and progress bars; some button microcopy is still generic.
+### 0.7 Dev Server Sanity Check
 
-- **`MockTests` / `ExamSession` / `ExamIntroPages`** – `components/views/MockTests.tsx`, `components/views/ExamSession.tsx`, `components/views/ExamIntroPages.tsx`  
-  - **Visual (8.5/10)**:
-    - Exam Portal and simulation are meticulously themed to **Prometric exam** with custom intros, timers, navigation states.
-    - `ExamIntroPages` uses detailed content and even mimics exam tutorial flows.
-  - **Interactions**:
-    - Rich exam experience: intros, timers, auto-save, MCQ+ESSAY separation, score calculation.
-    - UX is exam-accurate but could add more clear “mission-style” overlays explaining risk and progress.
-
-- **`DirectMessages`** – `components/views/DirectMessages.tsx`  
-  - **Visual (8/10)**:
-    - Dark inbox shell with neon brand accent and mission-like microcopy (“Micro-Consulting Session”, “Initialize Link”).
-  - **Interactions**:
-    - Conversation list, context-based threads (QUESTION, ESSAY, MOCK_EXAM, CONCEPT), micro-consult booking simulation.
-    - Real-time updates via Supabase channels.
-
-- **`LibraryVault`** – `components/views/LibraryVault.tsx`  
-  - **Visual (8.5/10)**:
-    - One of the most cinematic UIs: dark overlays, RAG architecture panel, vector search overlay with mission logs.
-  - **Interactions**:
-    - Ingestion logs simulate RAG pipeline; vector search results show similarity, document/page metadata.
-    - Clear sense of **“neural engine”** running; close alignment with mission narrative.
-
-- **`StudentStore`** – `components/views/StudentStore.tsx`  
-  - **Visual (7.5/10)**:
-    - Bright, premium marketplace cards with brand glow.
-    - Feels more like a Fintech pricing page than a military console, but overall high quality.
-
-- **`Profile`** – `components/views/Profile.tsx`  
-  - **Visual (8/10)**:
-    - Deep focus on **alignments, CAN network, signal levels**, radar-like views.
-    - Mission language and high-density panels match concept well.
-
-- **`TeachersLounge`** – `components/views/TeachersLounge.tsx`  
-  - **Visual (7.5/10)**:
-    - Mentor cards, trust emphasis, and Smart Match toggle.
-    - Slightly more “ed-tech marketplace” than “black-ops hiring board”, but close.
-
-### 3.3 Shared Utilities
-
-- **`Icons`** – `components/Icons.tsx`
-  - Rich inline icon set; consistent brand style.
-  - Good candidate for centralizing iconography and semantics (e.g., mapping icons to roles/statuses).
-- **`InviteCard` / `InviteCodeInput`**
-  - Invite-focused components that combine metrics, copy, and call-to-action buttons.
-  - Visuals align more with Landing/marketing style than core console; still coherent.
+| Check | Result |
+|---|---|
+| `npm install` | Clean install, 223 packages, 2 high severity vulns |
+| `npm run dev` | Starts in ~1.2s on port 3002 (3000/3001 were occupied) |
+| Console warnings | `[CoStudy] Supabase config missing` (due to env var mismatch above) |
+| Landing renders | Yes — but auth/data features non-functional without correct env vars |
 
 ---
 
-## 4. Page-by-Page UI/UX Analysis
+## Phase 1 — Design System & Branding Recon
 
-For each page: **Visual hierarchy**, **Whitespace**, **Typography**, **Color/Contrast**, **Alignment**, **Responsive behavior**, **Dark-mode fit**, **Animation/motion**.
+### 1.1 Color System
 
-### 4.1 Landing (`Landing.tsx`)
+#### Brand Palette (CSS Variables)
 
-- **Visual hierarchy (6/10)**:
-  - Strong central “COSTUDY” wordmark and “Don’t study alone.” tagline.
-  - Features and beta CTA sections are clear, but storytelling around **mission / alignments / AI decks** is absent.
-- **Whitespace & layout (7/10)**:
-  - Good vertical spacing and distinct sections (hero, features, stats, beta CTA, footer).
-  - On very large screens, hero may feel too sparse; could benefit from background storytelling (mission overlays, exam imagery).
-- **Typography & color**:
-  - Heavy red hero, white background, slate type – clean but conventional SaaS.
-  - Does not use FETS Yellow; no mission-style label typography.
-- **Responsiveness**:
-  - Well-behaved across breakpoints; CTAs reflow correctly.
-- **Dark/cinematic fit**:
-  - **Low** – this is the furthest from the desired aesthetic. Needs a redesigned hero (dark mission room, FETS yellow HUD elements, exam telemetry, AI callouts).
-- **Key recommendations**:
-  - Convert Landing into a **scroll-based mission briefing**:
-    - Dark background, cinematic hero panel with mission timer (“Next CMA window: X days”), FETS Yellow progress indicators.
-    - Replace simple feature grid with **“Mission modules”** that map to StudyRooms, AI Deck, MockTests, Mentors.
+The brand palette is defined in `main.css` `:root` and dynamically swapped via JavaScript in `Layout.tsx` and `SignUp.tsx` based on user role.
 
-### 4.2 StudyWall (`StudyWall.tsx`)
+**Student Theme (Default — Red)**:
+| Token | Hex | Usage |
+|---|---|---|
+| `--color-brand-50` | `#fff1f1` | Tinted backgrounds |
+| `--color-brand-100` | `#ffdfdf` | Light accents |
+| `--color-brand-200` | `#ffc5c5` | Hover states |
+| `--color-brand-300` | `#ff9d9d` | Secondary elements |
+| `--color-brand-400` | `#ff6464` | Medium emphasis |
+| `--color-brand-500` | `#ff1a1a` | **Primary brand** |
+| `--color-brand-600` | `#ed0000` | Hover/active |
+| `--color-brand-700` | `#c80000` | Dark variant |
+| `--color-brand-800` | `#a50404` | Very dark |
+| `--color-brand-900` | `#890b0b` | Deepest |
 
-- **Visual hierarchy (7/10)**:
-  - Category chips (All Feed, Audit Desk, Bounty Board, etc.) give good top-level segmentation.
-  - Within each post card, author, tags, and content are laid out, but **actions and summaries** (e.g., AI summarization) could be more visually distinct.
-- **Whitespace & density (7/10)**:
-  - Balanced for a feed; could tighten between header filters and first post.
-  - Comments/discussions risks vertical bloat; consider collapsible controls.
-- **Color & contrast**:
-  - Uses brand colors for categories and callouts; generally accessible but some subcopy uses subdued greys.
-- **Dark-mode fit**:
-  - Feels more like a neutral content feed; would need a dark shell and brand-accented cards to match mission dashboard.
-- **Interactions**:
-  - Many: create post, tags, alignment CAN modal, summarization, bounty/audit flows.
-  - Need consistent loading states and non-blocking error feedback (avoid `alert`).
+**Teacher Theme — INCONSISTENT across files**:
 
-### 4.3 StudyRooms (`StudyRooms.tsx`)
+| File | Colors Used | Hue Family |
+|---|---|---|
+| `Layout.tsx` (lines 37-47) | Emerald (#10b981 → #064e3b) | Green/Emerald |
+| `SignUp.tsx` (lines 38-48) | Teal (#0d9488 → #042f2e) | Blue-Green/Teal |
+| `Login.tsx` (hardcoded) | `emerald-500` via Tailwind | Green/Emerald |
 
-- **Visual hierarchy (8/10)**:
-  - Clear primary nav via room selection and tabs.
-  - Missions, discussions, resources, calendar, and mentors each have differentiated layouts.
-- **Whitespace (8/10)**:
-  - Good breathing room inside each tab; supports reading longer descriptions.
-- **Color & contrast**:
-  - Thoughtful mix of whites, slates, and brand accents on a light base.
-  - For mission-style, consider darkening container backgrounds.
-- **Dark-mode fit**:
-  - Conceptually strong (mission board, focus timer, mentors), but light base backgrounds dilute the cinematic feel.
-- **Interactions**:
-  - Pomodoro timer, mission progress, pinned discussions, calendaring – conceptually rich.
-  - Currently driven by mock data; design should anticipate real-time updates and variable content size.
+**Issue**: A teacher signing up sees Teal branding, then after login sees Emerald branding. This creates a subtle but noticeable visual inconsistency during the most critical first-use experience.
 
-### 4.4 AIDeck (`AIDeck.tsx`)
+#### Neutral Palette
 
-- **Visual hierarchy (7.5/10)**:
-  - Sidebar clearly lists tools; active tool state is visually indicated.
-  - Chat header with mode toggles (Global, Library, Active) is clear, but cost/latency indicators are missing.
-- **Whitespace**:
-  - Plenty in main chat and tools; some text areas (notes/essay) could benefit from subtle grid/background.
-- **Color/contrast**:
-  - Light card backgrounds (`bg-white`) with brand accents; accessible but not cinematic.
-- **Dark-mode fit**:
-  - As-is, more “productivity app” than mission console. Converting card/container backgrounds to darker tones would align it with TeachersDeck and DirectMessages.
-- **Interactions**:
-  - Chat with context modes, note refiner, flashcards, topic blueprint, essay auditor.
-  - Very strong tool multiply; consider a consistent header that surfaces token usage, cost, and latency across tools.
+Slate scale hardcoded in `tailwind.config.js` (lines 23-34): `slate-50` (#f8fafc) through `slate-900` (#0f172a). This is the standard Tailwind slate palette, which is fine but redundant since Tailwind includes it by default.
 
-### 4.5 TeachersDeck (`TeachersDeck.tsx`)
+#### Missing: FETS Yellow (#FFD633)
 
-- **Visual hierarchy (8/10)**:
-  - Clear teacher persona and tool segmentation.
-- **Color & dark-mode**:
-  - Strong dark base with emerald accent aligns well with **teacher specialist mission**.
-- **Interactions**:
-  - Chat plus resource generation; mostly text-driven, but layout is robust and responsive.
+**Zero occurrences** of `#FFD633`, `fets-yellow`, or any yellow accent across the entire codebase (all `.tsx`, `.ts`, `.css`, `.html`, `.js` files searched).
 
-### 4.6 MentorDashboard (`MentorDashboard.tsx`)
+The audit plan identified FETS Yellow as a desired signature accent. Its complete absence means:
+- No visual connection to the FETS brand identity
+- No warm accent to complement the cool red/slate palette
+- CTAs, badges, highlights, and achievement markers all default to brand-red or emerald-green
+- The design feels monochromatic (red + grey) with no energetic contrast
 
-- **Visual hierarchy (8/10)**:
-  - Subdomain redirect simulation is unique and on-brand.
-  - Once loaded, dashboards, student detail views, and notes have good structure.
-- **Color/contrast**:
-  - Mix of white cards and darker info panels; consistent with teacher emerald accent.
-- **Dark-mode fit**:
-  - Very close to mission aesthetic, especially in student detail view and notes panel.
-- **Interactions**:
-  - Tabbed dashboards, broadcast forms, bounties.
-  - Alerts via `alert` are functional but not mission-style; replace with inline toasts/panels.
+#### Color Usage Patterns Across Components
 
-### 4.7 MockTests & ExamSession
+| Pattern | Count (approx.) | Files |
+|---|---|---|
+| Light backgrounds (`bg-white`, `bg-slate-50`, `bg-slate-100`) | 300+ | All views |
+| Dark backgrounds (`bg-slate-900`, `bg-slate-950`, `bg-black`) | ~89 | Mainly auth, some badges/tags |
+| Emerald/Teal (teacher elements) | ~71 | TeachersDeck, Login, SignUp, Profile, MentorDashboard |
+| Direct `red-600`/`red-500` (bypassing brand vars) | ~40 | Landing page exclusively |
 
-- **Visual hierarchy (9/10)**:
-  - Exam header, stats bar, exam cards, and active session strongly guided.
-  - Intro/tutorial content is long but well broken into pages.
-- **Color/contrast**:
-  - Mostly white backgrounds mimicking Prometric; appropriate for exam simulation but visually separate from app’s mission console.
-- **Dark-mode fit**:
-  - We should keep exam interior close to Prometric style, but outer shell (headers/nav) can still embrace dark mission theme.
+**Issue**: The Landing page uses hardcoded `red-600` / `red-500` Tailwind classes instead of `brand` CSS variables. If the brand palette ever changes, Landing won't update.
 
-### 4.8 DirectMessages (`DirectMessages.tsx`)
+### 1.2 Typography
 
-- **Visual hierarchy (8/10)**:
-  - Sidebar vs active chat separation is very clear.
-  - Thread creation “Initialize Link” interface is well structured.
-- **Dark-mode fit**:
-  - Excellent: uses dark backgrounds, brand accents, console-like layout.
-- **Interactions**:
-  - Real-time chat, context threads, micro-consultation triggers.
-  - Some microcopy (“Micro-Consulting Session Confirmed”) is delightful and on-theme.
+#### Font Stack
 
-### 4.9 LibraryVault (`LibraryVault.tsx`)
+Single font family: **Plus Jakarta Sans** (weights 300-800), loaded from Google Fonts CDN.
 
-- **Visual hierarchy (9/10)**:
-  - Clear header, search bar, category filters, ingestion logs, and overlays.
-- **Dark-mode & cinematic**:
-  - Very strong: RAG overlays, architecture diagram, and vector search result list feel like a **neural operations center**.
+```html
+<!-- index.html line 8 -->
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+```
 
-### 4.10 StudentStore (`StudentStore.tsx`)
+Configured as default `sans` in `tailwind.config.js` line 7-8.
 
-- **Visual hierarchy (7.5/10)**:
-  - Product cards, pricing, and CTAs are clear and well-structured.
-- **Brand fit**:
-  - Looks like a premium pricing page; some mission accent language present but less pronounced.
+**Assessment**: Plus Jakarta Sans is a good geometric sans-serif with personality — slightly warmer than Inter, with a professional but approachable feel. However, using it as the **only** font means there's no typographic contrast between display/headline text and body/UI text. For a mission/cinematic aesthetic, a secondary display font (monospace for data, or a condensed military-style typeface for labels) would add depth.
 
-### 4.11 Profile (`Profile.tsx`)
+#### Weight Distribution
 
-- **Visual hierarchy (8/10)**:
-  - Strong emphasis on alignment contracts, radar, tracking.
-  - Tabs for contracts vs radar, CAN network data, and signals.
-- **Dark-mode fit**:
-  - Mixed light/dark, but CAN section leans mission-style.
+| Weight | Tailwind Class | Occurrences | Usage |
+|---|---|---|---|
+| 900 (Black) | `font-black` | **695+** | Headings, labels, buttons, micro-text, stats — **everywhere** |
+| 700 (Bold) | `font-bold` | **695+** | Secondary text, descriptions, form labels |
+| 500 (Medium) | `font-medium` | ~150 | Body text, descriptions |
+| 600 (Semibold) | `font-semibold` | ~30 | Rare, inconsistent usage |
 
-### 4.12 TeachersLounge (`TeachersLounge.tsx`)
+**Issue**: `font-black` and `font-bold` combined account for ~90% of all text styling. This creates a "wall of heavy text" effect where nothing stands out because everything is maximally bold. The hierarchy collapses — a section heading at `font-black` carries no more visual weight than a label at `font-black`.
 
-- **Visual hierarchy (7.5/10)**:
-  - Hero heading and Smart Match toggle are clear.
-  - Mentor cards highlight identity and specialties effectively.
-- **Brand fit**:
-  - Close to **trust-driven mission recruiting**, but backgrounds and tokens still lean SaaS.
+#### The "Mission Label" Micro-Text Pattern
+
+The most distinctive typographic pattern in CoStudy is a recurring micro-text treatment:
+
+```
+text-[9px] / text-[10px] / text-[11px] + font-black + uppercase + tracking-widest
+```
+
+This pattern appears **225+ times** across all components. Examples:
+
+- `text-[10px] font-black uppercase tracking-[0.4em] text-slate-400` (App.tsx line 219)
+- `text-[10px] font-black text-slate-500 uppercase tracking-widest` (Layout.tsx line 214)
+- `text-[9px] font-bold text-slate-300 mt-1 block uppercase` (Layout.tsx line 337)
+- `text-xs font-black text-slate-500 uppercase tracking-widest` (Layout.tsx line 232)
+
+**Assessment**: This is CoStudy's strongest design identity element. It evokes military/mission control briefings and is consistent with the cinematic direction. However:
+- The sizes vary arbitrarily (9px, 10px, 11px, 12px) without clear rules for when to use which
+- `tracking-widest`, `tracking-[0.2em]`, `tracking-[0.3em]`, `tracking-[0.4em]` vary without rationale
+- `uppercase` is used 346+ times — should be a design token, not manually applied each time
+
+#### Heading Hierarchy (Lack Thereof)
+
+Text sizes used for headings across the codebase:
+
+| Size | Example Location | Context |
+|---|---|---|
+| `text-[15vw]`-`text-[180px]` | Landing hero | "COSTUDY" display |
+| `text-7xl` | Login.tsx | Brand statement |
+| `text-5xl` | Landing features heading | Section title |
+| `text-4xl` | SignUp.tsx, various | Page titles |
+| `text-3xl` | Login.tsx form | Form heading |
+| `text-2xl` | SignUp.tsx role cards | Card titles |
+| `text-xl` | Landing feature boxes, Profile | Subheadings |
+| `text-lg` | Various | Large body text |
+
+There is no standardized heading hierarchy (H1–H4 mapping). Sizes are chosen ad hoc per component, leading to inconsistency across views.
+
+### 1.3 Spacing & Layout
+
+#### Container Widths
+
+No consistent container system. `max-w-*` values used across views:
+
+| Width | Location | Context |
+|---|---|---|
+| `max-w-7xl` (80rem) | Landing nav | Widest content |
+| `max-w-6xl` (72rem) | Landing features | Feature grid |
+| `max-w-5xl` (64rem) | Landing footer | Footer content |
+| `max-w-4xl` (56rem) | Landing stats | Stats section |
+| `max-w-3xl` (48rem) | Landing CTA | Beta form |
+| `max-w-[1200px]` | SignUp | Auth container |
+| `max-w-[1100px]` | Login | Auth container |
+| `max-w-lg` / `max-w-md` | Various modals | Modal content |
+
+**Issue**: No single "page container" convention. Each view sets its own max-width, creating inconsistent content widths as users navigate between views.
+
+#### Border Radius Scale
+
+The codebase uses an extreme range of border radii, mixing Tailwind defaults with arbitrary values:
+
+| Radius | Occurrences | Usage |
+|---|---|---|
+| `rounded-full` | Common | Avatars, pills, indicators |
+| `rounded-[4.5rem]` | 2 | Auth screen outer containers |
+| `rounded-[3rem]` | ~10 | Panic modal, role cards, error banners |
+| `rounded-[2rem]` | ~25 | Primary buttons, notification dropdown |
+| `rounded-[1.5rem]` | ~30 | Input fields (auth screens) |
+| `rounded-2xl` | Common | Cards, panels |
+| `rounded-xl` | Common | Buttons, inputs, badges |
+| `rounded-lg` | Occasional | Smaller elements |
+
+**Issue**: 6+ distinct radius values with no clear system. A card might be `rounded-2xl` in one view and `rounded-[3rem]` in another. The arbitrary values (`[1.5rem]`, `[2rem]`, `[3rem]`, `[4.5rem]`) should be formalized into the Tailwind config.
+
+#### Padding
+
+Padding varies significantly and inconsistently:
+
+- Auth screens: `p-12`, `p-16` (very generous)
+- Cards: `p-4`, `p-5`, `p-6`, `p-8`, `p-10` (no standard)
+- Buttons: `py-3 px-6` to `py-6 px-10` (huge range)
+- Section padding: `py-20`, `py-24`, `py-32` (Landing sections)
+
+### 1.4 UI Primitives Inventory
+
+#### Navigation (Layout.tsx)
+
+The nav bar uses a unique **3D tilt button** system defined in `main.css` (lines 38-113):
+- A 3×2 CSS grid creates hover zones that trigger `rotateX`/`rotateY` transforms
+- Active state fills with brand color
+- Mobile: falls back to simple full-width buttons with `font-black uppercase tracking-widest`
+
+**Assessment**: The tilt buttons are a strong, distinctive UI element that supports the mission aesthetic. However, they're implemented entirely in CSS with magic numbers and would be hard to maintain or variant-ize.
+
+#### Buttons (No Standard Variants)
+
+Buttons are styled inline throughout the codebase with no shared component or Tailwind `@apply` abstraction. Identified variants:
+
+| Variant | Example Classes | Used In |
+|---|---|---|
+| **Primary CTA** | `bg-brand text-white rounded-[2rem] text-sm font-black uppercase tracking-[0.3em] shadow-2xl` | SignUp submit |
+| **Login** | `bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest` | Layout login button |
+| **Landing CTA** | `bg-red-600 text-white rounded-full text-lg font-bold shadow-xl` | Landing hero |
+| **Ghost** | `text-slate-500 hover:text-white uppercase tracking-widest text-[10px] font-black` | Auth navigation links |
+| **Teacher CTA** | `bg-emerald-600 text-white rounded-[2rem] font-black uppercase` | Login (teacher mode) |
+| **Panic** | `bg-red-600 rounded-full w-16 h-16 shadow-[0_0_30px_rgba(220,38,38,0.5)] animate-pulse` | Layout panic button |
+| **Icon button** | `p-2.5 rounded-xl bg-slate-100` | Notification bell |
+
+**Issue**: At least 7 distinct button styles with no extraction into a reusable component. Styling is duplicated across 20+ files, making brand-wide changes expensive.
+
+#### Cards
+
+Common card patterns identified:
+
+| Pattern | Classes | Used In |
+|---|---|---|
+| **Standard card** | `bg-white rounded-2xl border border-slate-200 p-6` | InviteCard, feature boxes |
+| **Frosted card** | `bg-white/[0.03] backdrop-blur-3xl rounded-[4.5rem] border border-white/10` | Auth screens |
+| **Stat card** | `bg-slate-100 rounded-2xl p-6 border border-slate-200` | Panic modal details |
+| **Gradient card** | `bg-gradient-to-r from-red-50 to-red-100 rounded-xl border border-red-200` | InviteCard compact |
+
+#### Form Inputs
+
+Two distinct input styles exist:
+
+1. **Dark/Auth variant**: `bg-white/5 border-2 border-white/10 rounded-[1.5rem] px-8 py-5 text-white font-bold` — used in Login and SignUp
+2. **Light/Standard variant**: `bg-slate-50 rounded-xl border border-slate-200 px-5 py-4` — used in Landing beta form
+
+No shared input component exists; styles are duplicated in every form.
+
+#### Loading States
+
+| Type | Implementation | Used In |
+|---|---|---|
+| **Spinner** | `border-4 border-brand border-t-transparent rounded-full animate-spin` | App.tsx, various |
+| **Skeleton shimmer** | `.skeleton` CSS class (gradient animation) | InviteCard |
+| **Pulse text** | `animate-pulse` + micro-text | Initial load ("Neural Handshake Active...") |
+| **Icon spin** | `Icons.CloudSync` + `animate-spin` | Auth submit buttons |
+
+#### Notification System
+
+Notifications are implemented inline in `Layout.tsx` with a dropdown panel:
+- Bell icon with unread dot indicator
+- Dropdown: `rounded-[2rem]` card with `shadow-[0_20px_50px_-10px_rgba(0,0,0,0.1)]`
+- Real-time via Supabase `postgres_changes` subscription
+- Empty state with muted icon and "All caught up" text
+
+### 1.5 Dark Mode Assessment
+
+#### Current State: NO Global Dark Mode
+
+| Surface | Background | Assessment |
+|---|---|---|
+| **Body default** | `#f8fafc` (slate-50) | Light |
+| **App shell / nav** | `bg-white/80 backdrop-blur-2xl` | Light + frosted |
+| **Main content area** | `bg-slate-50` | Light |
+| **Landing page** | `bg-white` | Fully light |
+| **Auth screens** | `bg-slate-950` | **Dark** — cinematic |
+| **Auth forms** | `bg-white/5`, `bg-white/[0.03]` | Dark frosted glass |
+| **Landing footer** | `bg-slate-950` | Dark |
+
+**The app has a jarring aesthetic shift**: users experience a dark, cinematic auth screen, then upon login are dropped into a light, SaaS-style interface. The "mission control" feeling established during sign-up is immediately lost.
+
+#### Dark Elements Within Light Views
+
+Several components use dark mini-surfaces within the light shell:
+- Badge backgrounds: `bg-slate-900 text-white`
+- Stat overlays in some dashboards
+- Code/terminal-style elements (LibraryVault ingestion logs)
+- Panic Protocol modal: `bg-red-950/90 backdrop-blur-xl`
+
+These create visual fragmentation — dark islands in a light sea — rather than a cohesive dark theme.
+
+### 1.6 Cinematic / Mission Aesthetic Gap Analysis
+
+#### Elements That SUPPORT the Mission Aesthetic
+
+| Element | Location | Quality |
+|---|---|---|
+| 3D tilt nav buttons | Layout.tsx + main.css | Strong — distinctive, tactile |
+| Micro-text labels (uppercase, tracked, black weight) | Everywhere | Strong — most consistent identity element |
+| Military/mission copy ("Neural Handshake", "Command Center", "Dispatch", "SOS") | App.tsx, Layout.tsx, MentorDashboard | Good — language is on-brand |
+| Panic Protocol modal | Layout.tsx | Excellent — full cinematic treatment |
+| Auth screen design (dark glass, oversized type, brand gradients) | Login.tsx, SignUp.tsx | Excellent — premium, cinematic |
+| Status indicators (pulse dots, signal lights) | Various | Good — dashboard-like |
+
+#### Elements That CONTRADICT the Mission Aesthetic
+
+| Element | Location | Issue |
+|---|---|---|
+| Light body background (#f8fafc) | main.css, Layout.tsx | Feels like generic SaaS, not mission control |
+| Landing page (white, clean, startup-minimal) | Landing.tsx | Completely disconnected from mission aesthetic |
+| Feature boxes (white cards, slate borders) | Landing.tsx FeatureBox | Standard startup style, not mission briefings |
+| `bg-white/80 backdrop-blur` nav | Layout.tsx line 263 | Light frosted glass ≠ dark HUD |
+| Generic chart/stat presentations | MentorDashboard, Profile | No radar/HUD styling |
+| Inconsistent dark/light mixing | Across views | Neither fully dark nor deliberately light |
+
+#### Mission Aesthetic Score: 4/10
+
+The **copy and micro-typography** are mission-grade. The **visual treatment** is not. The auth screens (9/10 mission-score) and panic modal (10/10) prove the team can execute the aesthetic — it just hasn't been applied to the main app shell and views.
+
+### 1.7 Summary of Design System Issues (Priority-Ranked)
+
+| # | Issue | Severity | Impact | Files Affected |
+|---|---|---|---|---|
+| **DS-1** | No global dark mode; light shell contradicts mission aesthetic | High | Brand identity | `main.css`, `Layout.tsx`, all views |
+| **DS-2** | FETS Yellow (#FFD633) completely absent | High | Brand identity | None (needs adding) |
+| **DS-3** | Teacher theme inconsistent: Emerald in Layout, Teal in SignUp | High | First-use experience | `Layout.tsx:37-47`, `SignUp.tsx:38-48` |
+| **DS-4** | No reusable Button component; 7+ ad-hoc variants | Medium | Maintainability | All 20 component files |
+| **DS-5** | No reusable Input component; 2 styles duplicated | Medium | Maintainability | Auth + form views |
+| **DS-6** | Heading hierarchy undefined; sizes chosen ad-hoc | Medium | Visual consistency | All views |
+| **DS-7** | `font-black` overused (695+ times); hierarchy collapses | Medium | Readability | All components |
+| **DS-8** | Border radius scale arbitrary (6+ values) | Low | Visual consistency | All components |
+| **DS-9** | Container width varies per view (no standard) | Low | Layout consistency | All views |
+| **DS-10** | Landing uses hardcoded `red-600` instead of `brand` vars | Low | Maintainability | `Landing.tsx` |
+| **DS-11** | Stale `importmap` in index.html | Low | Developer confusion | `index.html:9-19` |
+| **DS-12** | Micro-text sizes arbitrary (9px/10px/11px) with no rules | Low | Consistency | All components |
+
+### 1.8 Recommendations — Design System Consolidation
+
+#### Immediate (Quick Wins)
+
+1. **Fix teacher theme consistency**: Align `SignUp.tsx` teacher palette to Emerald (matching `Layout.tsx`), or decide on Teal for both. One truth, not two.
+
+2. **Rename env var**: `.env` `VITE_SUPABASE_KEY` → `VITE_SUPABASE_ANON_KEY` to match `supabaseClient.ts`. Remove `SUPABASE_SERVICE_KEY` from frontend repo entirely.
+
+3. **Remove stale importmap**: Delete lines 9-19 from `index.html`.
+
+4. **Pin Supabase version**: Change `"@supabase/supabase-js": "latest"` to a specific version (e.g., `"^2.49.0"`).
+
+#### Short-Term (Design Tokens)
+
+5. **Introduce FETS Yellow as accent**: Add to `tailwind.config.js`:
+   ```js
+   accent: {
+     DEFAULT: '#FFD633',
+     50: '#FFFBEB', 100: '#FFF3C4', 200: '#FFE588',
+     300: '#FFD633', 400: '#F5C518', 500: '#D4A017',
+   }
+   ```
+   Use for: CTAs, achievement badges, highlighted stats, active states, notification dots.
+
+6. **Formalize border radius scale**: Add to Tailwind config `borderRadius`:
+   ```js
+   'card': '1rem',    // ~rounded-2xl
+   'panel': '1.5rem', // auth inputs
+   'modal': '2rem',   // modals, large buttons
+   'shell': '3rem',   // auth containers
+   ```
+
+7. **Standardize micro-text**: Create utility classes or a `<Label>` component:
+   - `label-xs`: `text-[9px] font-black uppercase tracking-[0.3em]`
+   - `label-sm`: `text-[10px] font-black uppercase tracking-[0.2em]`
+   - `label-md`: `text-xs font-black uppercase tracking-widest`
+
+#### Medium-Term (Component Extraction)
+
+8. **Extract `<Button>` component** with variants: `primary`, `secondary`, `ghost`, `danger`, `teacher`. Single source of truth for all button styling.
+
+9. **Extract `<Input>` component** with variants: `dark` (auth) and `light` (standard). Include built-in error/success state styling.
+
+10. **Define heading hierarchy**: Map semantic levels to consistent sizes:
+    - H1: `text-4xl font-black tracking-tighter`
+    - H2: `text-2xl font-black tracking-tight`
+    - H3: `text-xl font-bold`
+    - H4: `text-lg font-bold`
+
+#### Long-Term (Dark Mode & Aesthetic)
+
+11. **Implement dark mode as default** for the main app shell. The auth screens prove the aesthetic works. Apply `bg-slate-950` body, `bg-white/5` panels, `border-white/10` borders across the entire post-login experience.
+
+12. **Redesign Landing page** to match the dark/cinematic direction. The current light/minimal landing is fine for a startup, but disconnected from the product experience. Consider a "mission briefing" landing that previews the actual app aesthetic.
+
+13. **Add a secondary display font** for data/telemetry elements: a monospace or condensed typeface (e.g., JetBrains Mono, IBM Plex Mono) for stats, timers, countdown displays, and code blocks.
 
 ---
 
-## 5. UX Flow Analysis
+---
 
-### 5.1 Onboarding Flow – Landing → Sign Up → Profile → First Study Room
+## Phase 2 — Page-by-Page UI/UX Analysis
 
-- **Current path**
-  - **Landing** (`Landing.tsx`):
-    - Hero CTA “Join the Beta” and “Request Access” both route to showing the SignUp overlay (`onGetStarted()` → `App`’s `handleAuthRequired('SIGNUP')`).
-  - **Sign Up** (`SignUp.tsx`):
-    - Role selection (Student vs Teacher) with theme preview.
-    - Student path requires invite code validation; teacher path requires specialist access code.
-  - **Post-signup**:
-    - Auth listener in `App.tsx` sets `isLoggedIn` and, after identity sync, user lands on `StudyWall` (or faculty wall for teachers).
-    - There is **no explicit first-time “Profile Setup” wizard**; users must discover `Profile` tab.
-  - **First room**:
-    - Students must navigate manually to `StudyRooms` from the global nav.
+### 2.1 Component Quality Summary
 
-- **Friction points / drop-off risks**
-  - Invite-only gating for students may be appropriate for beta but risks confusion if not framed clearly on Landing.
-  - No explicit onboarding checklist (complete profile, join first room, try AIDeck, run a mock).
-  - First experience on StudyWall can feel **information-heavy** without guidance.
+| Component | LOC | Design (1-10) | Error Handling | A11y | Mobile | Top Issue |
+|---|---|---|---|---|---|---|
+| **Login.tsx** | 179 | **9** | Excellent | Fair | Good | No `<label>` elements |
+| **SignUp.tsx** | 317 | **9** | Good | Fair | Good | Hardcoded access code |
+| **TeachersDeck.tsx** | 207 | **8** | Good | Fair | Fair | Sidebar not collapsible on mobile |
+| **DirectMessages.tsx** | 500 | 7 | Poor | Poor | Good | Global subscription, N+1 queries |
+| **Landing.tsx** | 259 | 7 | N/A | Fair | Good | Non-functional beta form |
+| **LibraryVault.tsx** | 353 | 6 | Poor | Poor | Fair | No error handling on ingestion |
+| **ExamSession.tsx** | 816 | 6 | Partial | **Broken** | Fair | Inaccessible MCQ inputs |
+| **ExamIntroPages.tsx** | 673 | 6 | N/A | Fair | Fair | 674-line switch/case |
+| **Layout.tsx** | 394 | 5 | Poor | Poor | Good | Notification data leak |
+| **MockTests.tsx** | 474 | 5 | Poor | Fair | Fair | Unhandled fetch errors |
+| **Profile.tsx** | 809 | 5 | Partial | Poor | Fair | 809-line monolith |
+| **MentorDashboard.tsx** | 619 | 5 | Partial | Poor | Fair | 3s artificial delay |
+| **AIDeck.tsx** | 526 | 5 | Poor | Poor | Fair | No error handling on 3/5 tools |
+| **TeachersLounge.tsx** | 83 | 5 | Poor | Fair | Good | Dead "Hire" button |
+| **StudentStore.tsx** | 68 | 5 | **None** | Fair | Poor | No payment error handling |
+| **StudyWall.tsx** | 970 | 4 | Poor | **None** | Fair | God component, zero a11y |
+| **StudyRooms.tsx** | 793 | 4 | None | Poor | **Broken** | All mock data, broken mobile |
 
-- **Recommendations**
-  - Add a **first-session mission overlay**:
-    - After first login, show a modal or overlay with 3 steps: “1) Complete Profile, 2) Join Study Room, 3) Run First Mock”.
-    - Use FETS Yellow for progress and checkmarks.
-  - Align Landing copy with **invite-only and mission language** (e.g., “Get your alignment code to join the campaign”).
+### 2.2 Page-by-Page Highlights
 
-### 5.2 Study Session Flow – Join Room → Pomodoro/Focus → Break → Resume
+#### Landing (7/10)
+The cleanest, most intentional design — white bg, bold COSTUDY hero, red CTAs, numbered feature boxes. Polished but **completely disconnected** from the dark cinematic product experience. The beta signup form collects email + invite code but **doesn't submit them** — it just calls `onGetStarted`. Social proof stats (847+ students, 23 countries) are hardcoded.
 
-- **Current path**
-  - From nav → **Study Rooms**.
-  - User selects a room, then enters `Mission` tab by default; can switch to `Focus` tab for timers, `Discussion`, `Resources`, etc.
-  - Focus sessions and timer are simulated in UI without deep guidance.
+#### Auth Screens — Login & SignUp (9/10)
+**The gold standard.** `bg-slate-950`, frosted glass containers (`bg-white/[0.03] backdrop-blur-3xl`), oversized `text-7xl` headings, animated glow orbs, mission-style copy ("Authorize Entry", "Neural Handshake"). Best error handling in the codebase — inline banners with slide-in animations. The entire app should aspire to this quality. Only issue: no `<label>` elements on any form input (WCAG failure).
 
-- **Friction points**
-  - Focus sessions are not visually coupled to **global progress** (streaks, exam readiness).
-  - Lack of explicit break/summary overlays after a session; results are not clearly linked to StudyWall, Profile, or MockTests.
+#### TeachersDeck (8/10)
+**Best visual design among views.** Dark `bg-slate-900`/`bg-slate-950` theme with emerald accents. The only view that looks like it belongs with the auth screens. Chat interface, tool sidebar, and content generation panels are clean and functional. Missing error handling on the generate action.
 
-- **Recommendations**
-  - Add **mission brief** at the top of StudyRooms: what the session is for and how it affects exam readiness.
-  - Integrate FETS Yellow countdown and progress arcs to make focus sessions feel like countdown operations.
+#### DirectMessages (7/10)
+The sidebar uses `bg-[#0f172a]` — closest any main view gets to the dark aesthetic. Context-typed thread creation, signal level indicators, and smart action buttons are well-designed. The master-detail split works well on mobile. Critical bugs: global Supabase subscription (gets ALL messages for ALL users), missing loading UI, N+1 query performance bomb in chatService.
 
-### 5.3 Social Interaction Flow – Find Peers → Vouch System → Study Group → Chat
+#### AIDeck (5/10)
+Functional but visually generic. Light bg, white panels — no cinematic presence. Five tools (Chat, Notes, Flashcards, Topic Blueprint, Essay Auditor) all share a near-identical input→output layout that should be extracted into a shared `<ContentGenerator>` component. **No error handling on 3 out of 5 tools** — API failures leave UI in permanent loading state. No token counting or cost awareness for Gemini API.
 
-- **Current path**
-  - **Discovery**:
-    - Peers visible via StudyWall posts and TeachersLounge for mentors.
-  - **Vouch system**:
-    - Types and schema exist (vouches and reputation metrics), and `clusterService` supports vouch actions; UI surfaces are less obvious but likely in StudyWall and Profile.
-  - **Groups & chat**:
-    - StudyRooms and DirectMessages connect users, with context-aware threads in DM.
+#### StudyWall (4/10)
+The most complex component (970 lines, 20+ state variables). Social feed with posts, comments, vouching, alignment requests, and peer audits. Uses `alert()` 6 times for user feedback. Three full-screen modals have **zero accessibility** — no focus traps, no ARIA roles, no keyboard dismiss. Silent error swallowing (`catch (err) {}`) throughout. Needs decomposition into 5+ sub-components.
 
-- **Friction points**
-  - Vouch system is **not visually foregrounded** – users may not realize its importance.
-  - Trust signals (vouches, badges, alignment contracts) are scattered and not unified into a single “trust radar.”
+#### StudyRooms (4/10)
+**Most visually divergent component.** Uses purple/indigo accents instead of brand red — feels like a completely different app. The room detail view has a 288px fixed sidebar that **completely breaks on mobile** (no responsive handling). All 7 tab features use **hardcoded mock data** — no API integration. The Pomodoro timer counts UP from 0, never stops, and ignores its duration parameter. Fundamentally broken feature.
 
-- **Recommendations**
-  - Elevate **vouch and alignment badges** onto StudyWall and TeachersLounge cards.
-  - Use mission-style HUD elements (FETS Yellow) to denote high-trust peers and mentors.
+#### ExamSession (6/10)
+Intentionally mimics Prometric testing center UI — appropriate for exam fidelity. Six distinct phases crammed into 816 lines. MCQ options are `<div onClick>` instead of radio inputs — **completely inaccessible to keyboard users**. Question loading has no error handling. Calculator UI is rendered but non-functional (no onClick handlers). Critical exam feature needs significant remediation.
 
-### 5.4 AI Mastermind Flow – Ask Question → AI Response → Follow-up → Save Notes
+#### Profile (5/10)
+809-line monolith mixing profile display, edit form, CAN contracts, tracking radar, and boundary modal. The CAN network section has mission-style dark elements (`bg-slate-900`) but the rest is light. Several mutation handlers (`handleAcceptRequest`, `handleRejectRequest`, `handleBoundaryAction`) have **no try/catch** — errors silently dropped.
 
-- **Current path**
-  - From nav → `AI Deck` (student) or `Teaching Deck` (teacher).
-  - User engages in chat, then possibly generates notes, flashcards, or essays.
-  - AIDeck provides follow-up modes (Library / Active context); TeachersDeck provides lesson/MCQ/rubric generation.
+#### MentorDashboard (5/10)
+The subdomain redirect splash screen is dark and cinematic — then transitions to a completely light dashboard. Forces a **3-second artificial delay** on every load. Revenue section shows hardcoded values (₹12,400, ₹84,200). Bounty creation is mock — no backend call. 619 lines with 6 tabs that should each be separate components.
 
-- **Friction points**
-  - Lack of **clear, persistent notion of what has been “saved”** – notes, flashcards, and essay evaluations are mostly local to the current session.
-  - No prominent indication of **AI context window** or cost; can feel like a black box.
+### 2.3 UX Flow Analysis
 
-- **Recommendations**
-  - Introduce a **“Mission Log”** panel summarizing all AI outputs tied to current study week/session.
-  - Add simple cost awareness (“This answer used ~X tokens; using Library mode is more expensive”) with FETS Yellow token chips.
+#### Onboarding Flow: Landing → Sign Up → Profile Setup → First Room
+- **Drop-off risk #1**: Landing (light, startup-minimal) → SignUp (dark, cinematic) is a jarring aesthetic shift
+- **Drop-off risk #2**: Beta signup form on Landing doesn't work — email goes nowhere
+- **Drop-off risk #3**: After signup, user lands on StudyWall (light) — the dark cinematic feel is instantly lost
+- **Missing**: No guided first-time experience, no profile completion prompts, no suggested rooms
+
+#### AI Mastermind Flow: Ask → AI Response → Follow-up → Save
+- Works end-to-end for chat; follow-up context threading works
+- **Friction**: No token counting or cost awareness — users have no idea of API costs
+- **Friction**: Notes, flashcards, and topic blueprint tools have no error handling
+- **Friction**: "Save to Vault" and "Export PDF" buttons are non-functional
+- **Friction**: Conversation history is lost on page navigation
+
+#### Study Session Flow: Join Room → Focus → Break → Resume
+- **Broken**: Room detail view is entirely mock data
+- Timer counts up, never stops, ignores duration
+- No real-time presence or collaboration features
+- The flow concept is good but implementation is non-functional
+
+### 2.4 Cross-Cutting UX Issues
+
+1. **`alert()` as primary feedback** — Used 12+ times across views. Should be replaced with inline toasts.
+2. **Permanent loading spinners** — 12+ views can get stuck on loading forever due to missing try/catch on data fetching.
+3. **No empty state consistency** — Some views have good empty states (DirectMessages), others show nothing (StudyRooms detail tabs).
+4. **Zero accessibility on modals** — 8+ modals across the app lack focus traps, ARIA roles, and keyboard navigation.
+5. **Inconsistent button styles** — 7+ button variants with no shared component; users see slightly different CTAs on every screen.
 
 ---
 
-## 6. Accessibility & Mobile Experience
-
-### 6.1 Accessibility (WCAG / ARIA)
-
-- **Strengths**
-  - Most interactive controls are `<button>` elements with clear text.
-  - Color palettes mostly achieve good contrast for primary text on backgrounds.
-  - Loading and empty states often show icons + messages.
-
-- **Issues**
-  - **Missing ARIA roles** for modals and overlays (panic modal, notifications, search overlays in LibraryVault, RAG results).
-  - **Focus management**:
-    - Modals do not trap focus; keyboard users can tab into background content.
-  - **Small text**:
-    - Many labels use `text-[8px]`–`text-[10px]` uppercase; this is likely **too small** for WCAG AA at normal viewing distances.
-  - **Semantic regions**:
-    - Complex layouts (MentorDashboard, StudyRooms, DirectMessages) use generic `div`s instead of `main`, `nav`, `aside`, `section`.
-
-### 6.2 Mobile & Responsive Behavior
-
-- **Strengths**
-  - Landing, auth pages, and many cards collapse gracefully into single-column.
-  - Layout nav includes a mobile menu overlay with reflowed nav items.
-
-- **Gaps**
-  - High-density dashboards (MentorDashboard, MockTests, LibraryVault, DirectMessages) need careful stress testing on narrow screens; some content may overflow or become scroll-heavy.
-  - Some typography sizes do not adjust by breakpoint, leading to overly large headings or tiny labels on small devices.
-
----
-
-## 7. Key UI/UX Recommendations (Summary)
-
-- **Unify the mission aesthetic**
-  - Move entire logged-in shell to a **dark, cinematic base** with FETS Yellow as a cross-cut accent.
-  - Define a small token set in `index.html` / Tailwind config:
-    - `--color-mission-bg`, `--color-panel-bg`, `--color-accent-fets`, `--shadow-mission-*`, standardized typographic scale.
-
-- **Normalize shells and cards**
-  - Extract shared components for:
-    - Page headers (icon + badge + title + subtitle).
-    - Stat bars and overview strips.
-    - Mission panels and cards (StudyRooms, LibraryVault, MockTests, MentorDashboard).
-
-- **Accessibility upgrades**
-  - Introduce **modal primitives with focus trapping**.
-  - Increase minimum body/label font sizes and use `text-xs`/`sm` instead of custom `text-[8px]`.
-  - Add ARIA roles/labels for critical components (dialogs, nav, notification menus).
-
-- **Storytelling & onboarding**
-  - Rebuild Landing as an **interactive mission briefing** that introduces alignments, vouch system, AI decks, and mock exams.
-  - Add first-session mission checklist, using FETS Yellow to represent “mission steps” and completion.
-
-These findings are intended to be paired with the more detailed technical and architectural audit in `costudy-technical-audit.md` and the prioritized roadmap in `costudy-action-plan.md`.
-
+*Full technical analysis available in `costudy-technical-audit.md`.*  
+*Full services and database analysis available in `costudy-services-audit.md`.*  
+*Prioritized action plan available in `costudy-action-plan.md`.*

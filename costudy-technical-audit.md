@@ -1,464 +1,352 @@
-## CoStudy Technical Audit Report
+# CoStudy Technical Audit Report
 
-Last updated: 2026-03-07  
-Scope: `costudy-frontend` (Vite + React 19 + TS + Supabase + Gemini), plus local SQL schema and `costudy-api` migrations.
+> **Audit Date**: March 8, 2026  
+> **Scope**: Full-stack frontend audit — architecture, code quality, database, services, automated metrics  
+> **Repo**: `costudy-frontend` on `main`
 
 ---
 
 ## 1. Architecture Overview
 
-### 1.1 High-Level System Diagram
-
-```mermaid
-flowchart TD
-  user[User] --> browser[Browser]
-  browser --> frontend[CoStudyFrontend]
-  frontend --> supabase[SupabaseProject]
-  frontend --> costudyApi[CostudyAPIBackend]
-  frontend --> gemini[GeminiAPI]
-  supabase --> db[PostgresDB]
-  costudyApi --> db
+```
+User → Browser → CoStudy SPA (Vite + React 19)
+                    ├── Supabase (Auth, Postgres, Realtime)
+                    ├── Gemini API (AI Deck / Teaching Deck)
+                    └── CoStudy API (RAG pipeline, backend services)
 ```
 
-- **Frontend** (`costudy-frontend`):
-  - Entry: `index.html`, `index.tsx`, `App.tsx`.
-  - Views: `components/views/*.tsx`, e.g. `StudyWall`, `StudyRooms`, `AIDeck`, `MentorDashboard`, `MockTests`, `ExamSession`, `LibraryVault`, `DirectMessages`, `Profile`, `TeachersDeck`, `TeachersLounge`, `Landing`, `StudentStore`.
-  - Shell: `components/Layout.tsx`, `components/Icons.tsx`, `components/auth/*.tsx`, invite components.
-  - Services: `services/*.ts` – `supabaseClient`, `fetsService`, `localAuthService`, `costudyService`, `chatService`, `alignmentService`, `examService`, `geminiService`, `matchingService`, `inviteService`, `costudyAPI`, `clusterService`, `prompts`.
-  - Domain types: `types.ts`.
-  - SQL schema & migrations: `database.sql`, `migrations/002_cluster_features.sql`, `migrations/003_mock_exam_safe.sql`.
-- **Backend/API** (`costudy-api`):
-  - Node `server.js` with HTTP endpoints (auth proxy, essay imports, etc.) and `migrations/*.sql`.
-  - Acts as:
-    - CORS-safe auth proxy (`localAuthService` targets `https://api.costudy.in/auth/*`).
-    - RAG and essay ingestion orchestrator (`scripts/import-essays.js` referenced in memory).
+**Frontend structure** (flat, no `src/`):
 
-### 1.2 Frontend Project Structure & Routing
-
-- **Folder layout (no `src/`)**
-  - Components: `components/` (views, layout, auth, invites, icons).
-  - Services: `services/` (data-access layer over Supabase and HTTP).
-  - Shared domain: `types.ts`.
-  - Public styles: `public/index.css`.
-  - SQL: `database.sql`, `migrations/*.sql` (used both as local reference and Supabase migrations).
-- **Routing**
-  - No React Router; navigation is via **view state**:
-    - `ViewState` enum is defined in `types.ts` and imported in `App.tsx`.
-    - `App.tsx` maintains `currentView` state and maps it to view components in `renderView()`.
-    - `Layout` receives `currentView` and `setView` and provides nav buttons that mutate this state.
-  - **Implications**:
-    - Pros: Simple SPA model, no dependency on router libraries.
-    - Cons:
-      - No URL-based deep-linking or browser history for internal views.
-      - Harder to support SEO or direct linking to rooms/posts/tests.
-
-**Recommendation**: Plan a gradual migration to a router (e.g., React Router or file-based routing with Vite plugins), starting by mirroring `ViewState` to URL segments while preserving current behavior.
+| Layer | Files | Total LOC |
+|---|---|---|
+| Entry shell | `index.html`, `index.tsx`, `App.tsx` | ~340 |
+| Layout & shared | `Layout.tsx`, `Icons.tsx`, `InviteCard.tsx`, `InviteCodeInput.tsx` | ~710 |
+| Views (14) | `components/views/*.tsx` | ~7,200 |
+| Auth (2) | `components/auth/*.tsx` | ~500 |
+| Services (13) | `services/*.ts` | ~4,700 |
+| Types | `types.ts` | 729 |
+| **Total application code** | **~33 files** | **~14,200** |
 
 ---
 
-## 2. Code Quality & Tooling
+## 2. Code Quality Metrics (Phase 6)
 
-### 2.1 TypeScript Configuration & Strictness
+### 2.1 TypeScript Strict Check
 
-- **`tsconfig.json`**
-  - `target: "ES2022"`, `module: "ESNext"`, `jsx: "react-jsx"`.
-  - `skipLibCheck: true`, `allowJs: true`, `isolatedModules: true`, `moduleResolution: "bundler"`.
-  - **Notably missing**: a `strict: true` flag or granular strict options.
+```
+npx tsc --noEmit --strict → 4,385 errors (exit code 2)
+```
 
-- **Strict mode check**
-  - Command: `npx tsc --noEmit --strict`.
-  - Result: **fails** with:
-    - Missing type declarations for `react` and `react/jsx-runtime` (no `@types/react` in devDependencies).
-    - Many `JSX element implicitly has type 'any'` errors across `App.tsx` and `components/Icons.tsx`.
-    - Several implicit `any` parameters (e.g., callbacks like `setView={(v) => ...}`).
+**Errors by file (top 15)**:
 
-- **Assessment**
-  - The project currently runs in a **non-strict** TS mode with a fair number of implicit anys.
-  - Services such as `costudyService`, `chatService`, `alignmentService`, and `examService` use typed interfaces for many payloads, but Supabase rows are often `any` when coming from RPCs or JSONB fields.
+| File | Errors | Primary Error Types |
+|---|---|---|
+| `ExamIntroPages.tsx` | 462 | TS7026 (JSX implicit any) |
+| `ExamSession.tsx` | 433 | TS7026, TS7006 (implicit any param) |
+| `Profile.tsx` | 425 | TS7026, TS7006 |
+| `MentorDashboard.tsx` | 410 | TS7026, TS7006 |
+| `StudyRooms.tsx` | 375 | TS7026, TS7006 |
+| `StudyWall.tsx` | 357 | TS7026, TS7006 |
+| `Icons.tsx` | 301 | TS7026 (every SVG element) |
+| `AIDeck.tsx` | 233 | TS7026, TS7006 |
+| `DirectMessages.tsx` | 219 | TS7026, TS7006 |
+| `MockTests.tsx` | 199 | TS7026, TS7006 |
+| `LibraryVault.tsx` | 188 | TS7026, TS7006 |
+| `Layout.tsx` | 153 | TS7026, TS7006 |
+| `Landing.tsx` | 130 | TS7026 |
+| `InviteCard.tsx` | 98 | TS7026 |
+| `TeachersDeck.tsx` | 94 | TS7026 |
 
-**Recommendations**
+**Root causes**:
+- **~3,900 errors** are `TS7026` (JSX implicit any) — caused by missing `@types/react` and `@types/react-dom` in dependencies. Adding these two packages would eliminate ~89% of all strict errors.
+- **~400 errors** are `TS7006` (implicit any parameter) — genuine type safety gaps in callback params, event handlers, and service responses.
+- **~80 errors** are real type mismatches (`TS2322`, `TS2339`, `TS2552`) in services — these represent actual bugs.
 
-1. **Baseline typings**
-   - Add `@types/react` and `@types/react-dom` as devDependencies.
-   - Turn on `strict` in `tsconfig.json`, then **temporarily relax** with:
-     - `noImplicitAny: false` initially.
-   - Fix the most obvious type issues:
-     - Add types to callbacks like `setView={(view: keyof typeof ViewState) => ...}`.
-     - Define `Props` interfaces where missing.
-2. **Incremental tightening**
-   - Gradually enable:
-     - `noImplicitAny: true`, `strictNullChecks: true`, `noUncheckedIndexedAccess: true`.
-   - For Supabase data:
-     - Use typed generics on `supabase.from<Table>()` calls and define table row types in a central `db-types.ts` (can be generated from Supabase).
+**Actionable path to strict mode**:
+1. `npm i -D @types/react @types/react-dom` → eliminates ~3,900 errors
+2. Fix ~400 implicit `any` params → add proper types to callbacks
+3. Fix ~80 real type errors → actual bugs that should be fixed regardless
 
-### 2.2 Bundling & Performance
+### 2.2 Bundle Analysis
 
-- **Vite config** – `vite.config.ts`
-  - Plugins: `@vitejs/plugin-react`.
-  - Aliases: `@` → project root.
-  - `define` includes `process.env.GEMINI_API_KEY`.
-  - Build configuration:
-    - Manual chunks:
-      - `vendor-react`: `['react', 'react-dom']`.
-      - `vendor-supabase`: `['@supabase/supabase-js']`.
-      - `vendor-genai`: `['@google/genai']`.
-    - `chunkSizeWarningLimit: 600`.
-    - Minifier: `esbuild`, sourcemaps disabled.
+```
+npm run build → 44.81s, 22 output files
+Total dist: 1.1 MB (uncompressed)
+```
 
-- **Build output (`npm run build`)**
-  - Key bundles (gzip sizes):
-    - `index-C0KiTXYx.js`: **~73.1 kB**.
-    - `vendor-react-j2mp3VYR.js`: **~4.2 kB**.
-    - `vendor-supabase-Cuj-a9Qj.js`: **~44.6 kB**.
-    - `vendor-genai-CJEKHAGS.js`: **~51.1 kB**.
-    - Feature chunks:
-      - `MockTests`: 13.2 kB gzip.
-      - `Profile`: 9.6 kB gzip.
-      - `StudyWall`, `StudyRooms`, `AIDeck`, `LibraryVault`, `MentorDashboard`, `DirectMessages` each under ~10 kB gzip.
-  - Overall:
-    - Bundle sizes are reasonable for a rich SPA; Supabase and GenAI vendor chunks are the heaviest, as expected.
+| Chunk | Size | Gzip | Category |
+|---|---|---|---|
+| `vendor-genai` | 259 KB | 51 KB | **Largest** — Google GenAI SDK |
+| `index` (app core) | 237 KB | 73 KB | App shell + services + types |
+| `vendor-supabase` | 170 KB | 45 KB | Supabase client |
+| `MockTests` | 51 KB | 13 KB | Heaviest view |
+| `Profile` | 42 KB | 10 KB | Second heaviest |
+| `StudyWall` | 32 KB | 9 KB | Third heaviest |
+| `MentorDashboard` | 25 KB | 6 KB | |
+| `StudyRooms` | 22 KB | 5 KB | |
+| `AIDeck` | 21 KB | 5 KB | |
+| `DirectMessages` | 20 KB | 6 KB | |
+| `vendor-react` | 12 KB | 4 KB | React 19 (small!) |
+| CSS | 79 KB | 13 KB | All Tailwind output |
 
-- **Bundle visualizer**
-  - Command: `npx vite-bundle-visualizer`.
-  - Output: generated a stats HTML (path in temp directory) confirming:
-    - `@supabase/supabase-js` and `@google/genai` dominate third-party weight.
-    - View components are cleanly split via React.lazy in `App.tsx`.
+**Key findings**:
+- **Vendor chunks working well**: React (12KB), Supabase (170KB), GenAI (259KB) are properly separated for independent caching.
+- **GenAI is the biggest cost**: 259KB for an AI chat SDK. Consider lazy-loading only when user opens AIDeck.
+- **App core index (237KB)**: Contains all services and types — could be further split by route.
+- **Lazy loading working**: All 14 views are code-split into separate chunks. Good.
+- **CSS is monolithic**: 79KB single CSS file. Tailwind purging is working (raw Tailwind would be 3MB+), but could be further optimized.
 
-**Recommendations**
+### 2.3 Unused Dependencies (depcheck)
 
-- **Vendor optimization**
-  - Supabase:
-    - Already isolated in its own chunk; acceptable overhead.
-    - Avoid importing Supabase anywhere except `supabaseClient.ts`.
-  - Gemini GenAI:
-    - Keep all Gemini integration inside `geminiService.ts` and avoid importing the client into view files.
-- **Initial route optimization**
-  - Lazy-loading of heavy views is already in place in `App.tsx` (good).
-  - Confirm that **Landing + auth** is the first paint path and that other views are only loaded on demand (current code follows this).
+| Status | Packages |
+|---|---|
+| **Unused devDependencies** | `autoprefixer`, `postcss`, `tailwindcss`, `typescript` |
+| **Missing from deps** | None |
 
-### 2.3 Automated Tooling Results
+depcheck flags `tailwindcss`, `postcss`, `autoprefixer` as unused because they're consumed by the build pipeline (PostCSS config), not imported in code. `typescript` is similarly a build tool. **All 4 are false positives** — these should remain.
 
-- **Lighthouse**
-  - Attempted via `npx lighthouse http://localhost:4173 ...`.
-  - **Blocked**: environment has no Chrome/Chromium; Lighthouse CLI fails with “The CHROME_PATH environment variable must be set to a Chrome/Chromium executable”.
-  - **Action**: run Lighthouse from a local machine or CI environment with Chrome and commit the JSON report; this environment cannot provide real numbers.
+**Verdict**: No truly unused dependencies. The dependency set is lean and correct.
 
-- **Depcheck**
-  - Command: `npx depcheck`.
-  - Result:
-    - Reports `typescript` as **unused devDependency** (likely a false-positive, since TS is used via Vite).
-  - **Action**: Keep `typescript` as devDependency; ignore this specific depcheck warning.
+### 2.4 npm Security Audit
 
-- **complexity-report**
-  - Command: `npx complexity-report components services > complexity-report.txt`.
-  - Output file is empty (CLI version/mode likely not writing plain text under current options).
-  - Manual inspection shows:
-    - High-complexity candidates:
-      - `StudyWall.tsx`
-      - `StudyRooms.tsx`
-      - `MentorDashboard.tsx`
-      - `MockTests.tsx`
-      - `AIDeck.tsx`
-      - `Profile.tsx`
-    - These combine many responsibilities (data fetching, state, view rendering, business logic) and should be targets for refactor into hooks + smaller components.
+```
+2 high severity vulnerabilities, 0 critical
+```
 
-- **npm audit**
-  - Command: `npm audit --json > npm-audit.json`.
-  - Summary (high severity):
-    - `minimatch` – several ReDoS-related advisories (GHSA-3ppc-4f35-3m26, GHSA-7r86-cg39-jmmj, GHSA-23c5-xmqv-rm74), indirect dependency.
-    - `rollup` – Arbitrary File Write via path traversal (GHSA-mw96-cpmx-2vgc), indirect dependency.
-  - **Action**:
-    - Run `npm audit fix` in a controlled environment or upgrade Vite and its transitive dependencies to versions that pull in patched `minimatch`/`rollup`.
+| Package | Severity | Issue | Fix |
+|---|---|---|---|
+| `minimatch` 9.0.0–9.0.6 | High | ReDoS via wildcards, nested extglobs, GLOBSTAR segments | `npm audit fix` |
+| `rollup` 4.0.0–4.58.0 | High | Arbitrary file write via path traversal | `npm audit fix` |
 
-- **axe-cli**
-  - Command: `npx axe-cli http://localhost:4173 ...`.
-  - **Failed** due to missing internal `axe-core` asset in the ephemeral npx cache (ENOENT).
-  - Accessibility issues must be inferred from manual review (see UI/UX report). For a full automated pass, run axe DevTools or axe-core integration locally.
+Both are fixable with `npm audit fix`. The `rollup` vulnerability is in Vite's bundler dependency — updating Vite to latest should resolve it.
+
+### 2.5 Code Complexity (Lines of Code)
+
+**Files by size (descending)**:
+
+| File | LOC | Assessment |
+|---|---|---|
+| `clusterService.ts` | 1,058 | **Critical** — God service, 7 services crammed into one file |
+| `StudyWall.tsx` | 970 | **Critical** — God component, 20+ state variables |
+| `ExamSession.tsx` | 816 | **High** — 6 phases in one component |
+| `Profile.tsx` | 809 | **High** — Profile + CAN network + boundary modal |
+| `StudyRooms.tsx` | 793 | **High** — Room list + 7-tab detail view |
+| `types.ts` | 729 | Acceptable — central type definitions |
+| `examService.ts` | 682 | **High** — Overlaps with fetsService |
+| `ExamIntroPages.tsx` | 673 | **High** — 16-page switch/case, should be data-driven |
+| `MentorDashboard.tsx` | 619 | **High** — 6 tabs in one file |
+| `fetsService.ts` | 554 | **High** — God service (auth + profiles + exams + payments) |
+| `AIDeck.tsx` | 526 | Medium — 5 AI tools |
+| `DirectMessages.tsx` | 500 | Medium — Master-detail chat |
+| `MockTests.tsx` | 474 | Medium |
+| `Layout.tsx` | 394 | Acceptable |
+
+**8 files exceed 600 lines** — all candidates for decomposition.
 
 ---
 
-## 3. Database Design & Supabase RLS
+## 3. Database Design Review
 
-### 3.1 Schema Overview (Local `database.sql` + `002_cluster_features.sql`)
+### 3.1 Schema Summary (~30 tables)
 
-Key tables and concepts:
+**Core**: `user_profiles`, `posts`, `comments`, `vouches`, `notifications`  
+**Study Rooms**: `study_rooms`, `study_room_members`, `study_room_missions`, `study_room_messages`, `study_room_resources`, `study_room_notebooks`  
+**Social**: `chat_conversations`, `chat_participants`, `chat_messages`, `alignments`, `alignment_requests` (missing from DDL), `user_tracking`  
+**Exams**: `mcq_questions`, `essay_questions`, `ai_question_cache`, `exam_sessions`, `exam_session_snapshots`  
+**Monetization**: `group_subscriptions`, `group_invites`, `mentor_sessions`, `session_payments`, `wallet_transactions`  
+**Gamification**: `badges`, `user_badges`, `room_leaderboard`, `mcq_war_sessions`, `mcq_war_participants`  
+**Other**: `invite_codes`, `teacher_broadcasts`, `student_enrollments`, `mentor_availability`, `whiteboard_sessions`
 
-- **Identity & profiles**
-  - `user_profiles` – `[database.sql](database.sql)`:
-    - Columns: `id` (FK to `auth.users`), `name`, `handle`, `avatar`, `bio`, `role`, `level`, `strategic_milestone`, `exam_focus`, `learning_style`, `costudy_status` (JSONB), `performance` (JSONB), `reputation` (JSONB), mentor-specific fields, `signal_level`.
-    - RLS:
-      - `SELECT`: everyone can view profiles.
-      - `INSERT`: user can insert their own profile (`auth.uid() = id`).
-      - `UPDATE`: user can update own profile (`auth.uid() = id`).
-    - **Assessment**: appropriate; public profiles are fine for this product, with updates correctly restricted.
+### 3.2 Critical RLS Issues
 
-- **Social wall**
-  - `posts`, `comments` – `[database.sql](database.sql)`:
-    - `posts` columns: `author_id`, `content`, `type` (QUESTION, RESOURCE, BOUNTY, PEER_AUDIT_REQUEST), tags, `likes`, `audit_status`, `auditor_id`, `bounty_details`.
-    - RLS:
-      - `SELECT`: everyone.
-      - `INSERT`: `auth.uid() = author_id`.
-      - `UPDATE`: `auth.uid() = author_id`.
-    - `comments`:
-      - `INSERT`: `auth.uid() = author_id`.
-      - `SELECT`: everyone.
-    - **Assessment**: Good baseline; edit/delete policies for comments could be extended if needed (e.g., allow author-only edits).
+| Table | Policy | Issue |
+|---|---|---|
+| `study_room_messages` | `USING (true)` for ALL ops | **Any user can delete/modify any room's messages** |
+| `study_room_resources` | `USING (true)` for ALL ops | **Any user can delete/modify any room's resources** |
+| `notifications` | INSERT allows any authenticated user | **Any user can create notifications for any other user** (spam/phishing vector) |
+| `study_rooms` | No RLS on base table | Base table has no policies; only enhanced columns covered |
 
-- **Chat / messaging**
-  - `chat_conversations`, `chat_participants`, `chat_messages`:
-    - Context-aware chat with participants and RLS limiting access to participants only.
-    - RLS:
-      - Conversations: viewable only if user is in `chat_participants`.
-      - Participants: viewable only if user is in the conversation.
-      - Messages: `SELECT` only when user is in participants; `INSERT` requires `auth.uid() = sender_id` and membership.
-    - **Assessment**: RLS correctly prevents unauthorized read/write access to conversations.
+### 3.3 Schema Conflicts
 
-- **Alignments & tracking (CAN network)**
-  - `alignments` – `[database.sql](database.sql)`:
-    - Tracks alignment contracts: `requester_id`, `peer_id`, `purpose`, `duration`, `goal`, `status`, `streak`, `restrictions`, `paused_until`, `start_date`.
-    - RLS:
-      - `SELECT`: requester or peer.
-      - `INSERT`: requester only.
-      - `UPDATE`: requester or peer.
-  - `user_tracking`:
-    - Tracks “radar” relationships: `tracker_id`, `target_id`.
-    - RLS: `FOR ALL USING (auth.uid() = tracker_id)` – each user manages their own tracking.
-  - **Assessment**: Alignment privacy is well handled; only involved parties can see or update.
+**3 conflicting migration files** for the exam system:
+- `003_essay_questions.sql`: TEXT PKs, `scenario`/`tasks` columns, `exam_part` enum
+- `003_mock_exam_system.sql`: UUID PKs, `scenario_text`/`requirements` columns, `section NOT NULL`
+- `003_mock_exam_system_v2.sql`: UUID PKs, no `section`
 
-- **Study rooms & resources**
-  - `study_rooms`, `study_room_messages`, `study_room_resources`, `study_room_notebooks`.
-  - `002_cluster_features.sql` extends `study_rooms` with:
-    - `creator_id`, `room_type` (`PUBLIC`, `PRIVATE`, `GROUP_PREMIUM`), `group_subscription_id`, `settings` JSON, `cluster_streak`, `last_streak_update`, timestamps.
-  - `study_room_members`:
-    - Captures membership and roles; RLS ensures:
-      - Members or public rooms can see room members.
-      - Users can join themselves; admins manage membership.
-  - `study_room_missions`, `mcq_war_sessions`, `mcq_war_participants`, `whiteboard_sessions` support mission goals, war-room, and collaborative whiteboards with member-based RLS.
-  - `study_room_resources` additional columns:
-    - `is_encrypted`, `access_level` (`ROOM`, `ALIGNED_ONLY`), `downloads`, `vouches`.
-  - **Assessment**:
-    - Schema is rich and matches product vision (Cluster Hubs, war sessions, shared vault).
-    - RLS is mostly membership-based; confirm `study_room_messages` and `study_room_resources` policies:
-      - Currently `FOR ALL USING (true)` – meaning **public** RLS, ignoring room membership.
-      - **Recommendation**: tighten to ensure only room members or public rooms can read/write messages/resources.
+Running any two creates conflicts. A single canonical migration must be chosen.
 
-- **Vouch system**
-  - `vouches` – `[migrations/002_cluster_features.sql](migrations/002_cluster_features.sql)`:
-    - Columns: `voucher_id`, `post_id`, `comment_id`, `created_at`.
-    - Constraints: one vouch per voucher per post or comment (two UNIQUE constraints).
-    - RLS:
-      - `SELECT`: all.
-      - `INSERT`: `auth.uid() = voucher_id`.
-      - `DELETE`: `auth.uid() = voucher_id`.
-  - Reputation integration:
-    - `user_profiles.reputation` JSON includes `vouchesReceived`.
-    - There are RPCs `increment_post_vouches` / `decrement_post_vouches` and logic in `clusterService` to update counts.
-  - **Assessment**:
-    - Table setup and RLS for vouches are correct.
-    - Need to ensure client code always uses RPCs or transactionally aligns vouch insert/delete with count updates to avoid drift.
+**Corrupted file**: `003_mock_exam_safe.sql` is a 2,680-line OpenClaw chat log, not SQL.
 
-### 3.2 Exam Schema & Hybrid Strategy (From `003_mock_exam_safe.sql`/backend migrations)
+### 3.4 Missing Schema Elements
 
-- Memory and local migrations indicate:
-  - Tables: `essay_questions`, `mcq_questions`, `exam_sessions`.
-  - RPCs:
-    - `get_hybrid_mcqs(p_count, p_real_ratio, p_part)` – used by `examService.fetchHybridMCQs`.
-    - `increment_alignment_streak`, `accept_alignment_request` etc.
-  - `examService.ts` implements **70/30 Hybrid Question Strategy**:
-    - Attempts RPC first; on failure falls back to direct selects from `mcq_questions` and `ai_question_cache`.
-    - Fills missing slots with generated mock MCQs and randomizes order.
-  - **Assessment**:
-    - Good resilience: RPC-first, fallback queries, and mock fill-in.
-    - Ensure Supabase RLS supports:
-      - `SELECT` for `mcq_questions`, `essay_questions`, and `ai_question_cache` for authenticated users.
-      - RPC functions with `SECURITY DEFINER` are properly restricted to exam use cases only.
+| Element | Used By | Status |
+|---|---|---|
+| `alignment_requests` table | `alignmentService.ts` | **Not in any DDL or migration** |
+| `tracking_records` table | `alignmentService.ts` | Service uses this name; DB defines `user_tracking` |
+| `user_id` column in alignments | `alignmentService.ts` | DB has `requester_id` instead |
+
+### 3.5 Missing Indexes
+
+13+ high-traffic columns lack indexes. Key ones:
+- `posts.author_id`, `posts.created_at`, `posts.type`
+- `comments.post_id`
+- `chat_messages.conversation_id`, `chat_messages.created_at`
+- `notifications.user_id`
+- `exam_sessions.user_id + status` (compound)
+
+### 3.6 Vouch System Assessment
+
+**Schema**: `vouches` table with `UNIQUE(voucher_id, post_id)` — prevents double-voting at DB level. Good.
+
+**RPCs**: `increment_post_vouches` / `decrement_post_vouches` update both `posts.likes` and `user_profiles.reputation.vouchesReceived`.
+
+**Race conditions**:
+- Vouch INSERT and RPC call are separate operations — if INSERT succeeds but RPC fails, count drifts
+- JSONB reputation updates via `jsonb_set` are not atomic across concurrent vouches
+- No transaction wrapping around the two operations
 
 ---
 
-## 4. Supabase Integration & Data Access Patterns
+## 4. API / Services Integration Review
 
 ### 4.1 Supabase Client Configuration
 
-- `services/supabaseClient.ts`:
-  - `SUPABASE_URL` required from `VITE_SUPABASE_URL` (no fallback).
-  - `SUPABASE_KEY` now required from `VITE_SUPABASE_ANON_KEY` (no fallback); `.env.example` added.
-  - Auth config: `autoRefreshToken: false`, `persistSession: true`, `detectSessionInUrl: true`.
+- `autoRefreshToken: false` — manual refresh needed but **not implemented consistently**. Users may experience random logouts.
+- `persistSession: true` — sessions survive page refresh. Good.
+- **Env var mismatch**: `.env` has `VITE_SUPABASE_KEY` but code reads `VITE_SUPABASE_ANON_KEY`
+- Placeholder fallback when config missing — silently broken in dev
 
-**Status**: Hard-coded anon key has been removed (env-only). **Previous risk**: Hard-coded anonymous key in the client was a **secrets smell**, even if it’s an anon key. It should be removed and enforced via env variables only.
+### 4.2 Service Layer Issues
 
-**Recommendation**: Remove the fallback value and fail-fast if env vars are missing:
+| Service | LOC | Critical Issues |
+|---|---|---|
+| `fetsService.ts` | 554 | God service (5 domains), fake payment processor, mock performance data |
+| `costudyService.ts` | 384 | Fake mentor metrics (random passRate), no real-time, mock library |
+| `clusterService.ts` | 1,058 | **Client-side financial operations** (escrow, payments, subscriptions), invite code bypass, 7 sub-services |
+| `chatService.ts` | 167 | **N+1 query bomb** (2N+1 queries per page), no real-time, JSON in name field |
+| `alignmentService.ts` | 361 | **Table/column name mismatches** — features silently broken |
+| `examService.ts` | 682 | **Correct answers sent to client**, client-side scoring, duplicates fetsService |
+| `geminiService.ts` | 283 | API key in client bundle, no token counting, no rate limiting |
+| `matchingService.ts` | 76 | Clean — pure client-side computation |
+| `inviteService.ts` | 139 | Well-structured with typed returns — best service pattern |
+| `localAuthService.ts` | 73 | Clean fallback service |
+| `costudyAPI.ts` | 116 | Hardcoded URL, duplicate RAG search, good error handling |
+| `prompts.ts` | ~60 | System prompts for Gemini — no injection protection |
 
-```ts
-// supabaseClient.ts (conceptual)
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-if (!SUPABASE_URL || !SUPABASE_KEY) {
-  throw new Error("Supabase configuration missing; set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.");
-}
-```
+### 4.3 Real-Time Features Assessment
 
-### 4.2 Auth & Session Management
+**Current state**: Near-zero real-time. Only two subscriptions exist:
+1. `Layout.tsx` → `notifications` table (but **no user filter** — leaks all users' notifications)
+2. `DirectMessages.tsx` → `chat_messages` (but **global subscription** — triggers on all messages for all users)
 
-- **Main auth service** – `services/fetsService.ts` (`authService`)
-  - `signUp(email, pass, name, role)`:
-    - Calls `supabase.auth.signUp` with `user_metadata` carrying `full_name` and `role`.
-    - On success, attempts `createUserProfile` to seed `user_profiles`.
-    - On specific DB or CORS errors, falls back to `localAuthService.signUp` via `https://api.costudy.in/auth/signup`.
-  - `signIn(email, pass)`:
-    - Calls `supabase.auth.signInWithPassword`.
-    - On CORS/network errors, falls back to `localAuthService.signIn`.
-  - `resetPassword(email)`:
-    - Uses Supabase password reset with redirect to `window.location.origin`.
-  - `signOut()`:
-    - Attempts Supabase signout; always clears `localStorage['costudy_session']` as a fallback.
-  - `getSession()`:
-    - Uses `supabase.auth.getSession` and aggressively clears stale/invalid refresh tokens (handles “Invalid Refresh Token” loops).
-
-- **Local auth proxy** – `services/localAuthService.ts`
-  - Proxies to `https://api.costudy.in/auth/*` and stores sessions in `localStorage` under `costudy_session`.
-  - Implements `signUp`, `signIn`, `getSession`, `refreshSession`, `signOut`.
-  - Provides a way to operate behind CORS by moving sensitive logic to `costudy-api`.
-
-- **App-level wiring** – `App.tsx`
-  - On mount:
-    - Calls `authService.getSession()` and, if a session exists, calls `syncUserIdentity(session.user)` to ensure `user_profiles` is seeded and normalized.
-  - Auth listener:
-    - Subscribes to `supabase.auth.onAuthStateChange`.
-    - On sign-in / initial session / update, synchronizes user and hides auth overlay.
-    - On sign-out, resets `isLoggedIn`, `user`, and `currentView`.
-    - If listener fails (e.g., network), falls back to polling `authService.getSession()` every 30s.
-
-**Assessment**
-
-- **Strengths**:
-  - Robust handling of Supabase auth errors and CORS conditions.
-  - JIT profile provisioning via `createUserProfile` ensures DB and app state converge.
-  - Fallback to `localAuthService` means browser clients can still function when direct Supabase calls are blocked.
-- **Risks**:
-  - `localAuthService` must be hardened on the backend (rate limiting, CSRF/XSRF tokens, brute-force protection).
-  - The presence of multiple session sources (Supabase vs local) can introduce drift if not carefully synchronized.
+**Features needing real-time**: Chat, study room presence, MCQ War scoring, whiteboard collaboration, notification delivery, signal lights.
 
 ---
 
-## 5. Feature-by-Feature Technical Status
+## 5. Security Assessment
 
-Each feature table below uses:
-- **Aspect** → description of current state.
-- **Issues** → concrete problems or risks.
-- **Recommendations** → actionable fixes.
+### 5.1 Critical Vulnerabilities
 
-### 5.1 Authentication System
+| # | Issue | Severity | Location |
+|---|---|---|---|
+| S-1 | `study_room_messages`/`resources` RLS allows any user to modify/delete any data | **Critical** | `database.sql` |
+| S-2 | Financial operations (escrow, payments, subscriptions) run client-side | **Critical** | `clusterService.ts` |
+| S-3 | Exam correct answers sent to client in session data | **Critical** | `examService.ts` |
+| S-4 | Notification INSERT allows any user to create notifications for any user | **Critical** | `database.sql` |
+| S-5 | Gemini API key baked into client bundle via `process.env.API_KEY` | **High** | `vite.config.ts`, `geminiService.ts` |
+| S-6 | Hardcoded teacher access code `'CMA2025'` in client source | **High** | `SignUp.tsx:104` |
+| S-7 | `SUPABASE_SERVICE_KEY` in frontend `.env` | **High** | `.env` |
+| S-8 | Invite code acceptance doesn't verify email match | **Medium** | `clusterService.ts` |
+| S-9 | No input sanitization on AI prompts | **Medium** | `prompts.ts` |
+| S-10 | Client-side exam scoring — trivially falsifiable | **Medium** | `examService.ts` |
 
-**Files**: `App.tsx`, `components/auth/Login.tsx`, `components/auth/SignUp.tsx`, `services/fetsService.ts`, `services/localAuthService.ts`, `services/supabaseClient.ts`, `database.sql (user_profiles)`.
+### 5.2 Auth Assessment
 
-| Aspect | Current State | Issues | Recommendations |
-|--------|---------------|--------|-----------------|
-| Login/Signup flows | Email/password auth via Supabase, with role metadata and profile seeding; invite-based gating and mentor access code. | None critical in flow; depends on correct RLS and profile triggers. | Keep, but add more granular error messages and analytics around signup failures. |
-| Social OAuth | Not implemented yet. | Missing convenient login options (Google/MS). | When needed, enable Supabase OAuth providers and extend `authService` accordingly. |
-| Session management | `authService.getSession()` + Supabase listener + polling fallback. | Dual session sources (Supabase + localAuth) may diverge; potential complexity. | Centralize session source of truth; on login via localAuth, also consider bridging session into Supabase where possible. |
-| Password recovery | `authService.resetPassword` uses Supabase email flow. | None functionally; relies on Supabase’s templates. | Customize Supabase email templates to reflect CoStudy branding. |
-| Security | Depends on Supabase and `api.costudy.in` for auth; anon key embedded as fallback. | Hard-coded anon key; local auth endpoints must be hardened server-side. | Remove fallback key from `supabaseClient.ts`; ensure backend enforces IP rate limits and robust validations. |
-
-### 5.2 Study Rooms
-
-**Files**: `components/views/StudyRooms.tsx`, `services/costudyService.ts`, `database.sql`, `migrations/002_cluster_features.sql`.
-
-| Aspect | Current State | Issues | Recommendations |
-|--------|---------------|--------|-----------------|
-| Data fetching | `costudyService.getRooms()` reads `study_rooms` and falls back to mocked room data. | Some metrics (active counts) are random; missions/discussions/resources are currently mocked in `StudyRooms.tsx`. | Gradually replace mocks with real tables: `study_room_members`, `study_room_missions`, `study_room_resources`, `mcq_war_sessions`. |
-| Real-time presence | `active_count` approximated; no true presence tracking yet. | Presence not tied to Supabase Realtime; membership not live. | Introduce Supabase Realtime channels per `study_room` and maintain presence lists via `study_room_members` or dedicated presence table. |
-| Error handling | API calls mostly wrapped; errors fallback to default rooms. | Silent fallbacks hide backend problems. | For critical features (mission boards, war sessions), surface error banners. |
-| Security & RLS | Room membership and missions controlled via RLS; but messages/resources currently `FOR ALL USING (true)`. | Potential data leakage if private room content accessed by non-members. | Tighten RLS for `study_room_messages` and `study_room_resources` to require membership or `room_type='PUBLIC'`. |
-
-### 5.3 Vouch System
-
-**Files**: `types.ts` (`Vouch`, reputation metrics), `services/clusterService.ts` (vouchService), `database.sql`, `migrations/002_cluster_features.sql`.
-
-| Aspect | Current State | Issues | Recommendations |
-|--------|---------------|--------|-----------------|
-| Data model | `vouches` table with FK to `user_profiles`, `posts`, `comments`; unique pair constraints; vouch counts integrated into `posts.likes` and `user_profiles.reputation.vouchesReceived`. | None structurally. | Ensure indexes on `voucher_id`, `post_id`, `comment_id` to support lookups. |
-| RLS | Users can only insert/delete their own vouches; everyone can view. | Acceptable for public trust graph. | Consider optional aggregation endpoints that expose only aggregated counts. |
-| Consistency | `clusterService` uses RPCs `increment_post_vouches`/`decrement_post_vouches` to sync counts. | Possible race conditions if RPC and vouch insert/delete are not transactionally bound. | Implement a single Supabase RPC that **inserts/deletes vouch + updates counts** in one transaction. |
-| UI representation | Vouches currently appear indirectly (review counts, reputations); not front-and-center. | Low discoverability and unclear effect on reputation. | Elevate vouch badges and counts on StudyWall and TeachersLounge cards with explicit microcopy (“Trusted by X peers”). |
-
-### 5.4 AI Mastermind (AIDeck, TeachersDeck, Gemini)
-
-**Files**: `components/views/AIDeck.tsx`, `components/views/TeachersDeck.tsx`, `services/geminiService.ts`, `services/prompts.ts`, `vite.config.ts`.
-
-| Aspect | Current State | Issues | Recommendations |
-|--------|---------------|--------|-----------------|
-| Integration | Uses `@google/genai` via CDN (import map in `index.html`) and Vite alias; `geminiService` centralizes API calls. | Training data and context windows not strictly enforced; heavy reliance on long prompts. | Add truncation and summarization to keep token usage predictable; centralize context packaging logic. |
-| Security | User input flows directly into prompts; responses rendered as text with minimal HTML interpolation. | Risk of prompt injection (less critical for exam Q&A but relevant if connected to internal tools). | Sanitize outputs and keep a clear boundary between user content and system instructions; never execute returned code. |
-| Cost posture | No in-UI indication of token or request volume; all requests go to remote Gemini. | Hard to forecast or manage usage. | Add lightweight cost hints in UI (e.g., “Library mode ~2x tokens vs Global”) and central rate-limiting/backoff in `geminiService`. |
-
-### 5.5 Alignment System (CAN)
-
-**Files**: `components/views/Profile.tsx`, `components/views/StudyWall.tsx`, `services/alignmentService.ts`, `types.ts`, `database.sql`, `migrations/002_cluster_features.sql`.
-
-| Aspect | Current State | Issues | Recommendations |
-|--------|---------------|--------|-----------------|
-| Lifecycle | Requests created in `alignment_requests`; accepted via `accept_alignment_request` RPC, producing `alignments` rows; status, streak, duration stored. | Complexity spread across frontend and RPC; potential for mismatched status if RPC fails silently. | Ensure RPC `accept_alignment_request` wraps request status update and alignment insert in a transaction and returns full alignment; log errors clearly. |
-| RLS | Alignments restricted to requester/peer; requests restricted to sender/receiver. | Solid privacy model. | Add explicit audit logging for alignment changes if regulatory visibility needed. |
-| UI integration | Profile view shows active contracts, pending requests, radar, observers. StudyWall uses CAN for ad-hoc alignment initiation. | Some flows may be complex for new users; audit and boundary controls exist but rely on alerts. | Add server-side validation around boundary updates and renewals; ensure alignment controls map directly to alignmentService actions. |
-
-### 5.6 Profile & Dashboard
-
-**Files**: `components/views/Profile.tsx`, `components/views/MentorDashboard.tsx`, `services/fetsService.ts`, `services/costudyService.ts`, `database.sql`, `migrations/002_cluster_features.sql`.
-
-| Aspect | Current State | Issues | Recommendations |
-|--------|---------------|--------|-----------------|
-| Data source | Profiles loaded from `user_profiles` via `getUserProfile`; dashboards use `student_enrollments`, `teacher_broadcasts`, and performance JSON. | JSONB-heavy model; minimal server-side validation of performance arrays. | Consider normalizing critical performance metrics into dedicated tables with indexes for analytics. |
-| Error handling | Most errors logged; occasional `alert` usage. | Alerts are blocking and not mission-style; user recovery guidance is sparse. | Replace `alert` with in-app toasts or banners and standardized error-handling helpers. |
-
-### 5.7 Real-time Chat, Presence, Notifications
-
-**Files**: `components/views/DirectMessages.tsx`, `components/Layout.tsx`, `services/chatService.ts`, `services/costudyService.ts`, `services/supabaseClient.ts`, `database.sql`.
-
-| Aspect | Current State | Issues | Recommendations |
-|--------|---------------|--------|-----------------|
-| Chat | `DirectMessages` subscribes to `global_chats` and per-conversation channels using Supabase Realtime (`postgres_changes` on `chat_messages`). | Re-fetching conversations on every insert via `global_chats` can be inefficient at scale. | Narrow `global` subscription to only necessary events or rely on per-conversation channels with explicit joins. |
-| Notifications | `Layout.tsx` uses `supabase.auth.getUser()` to fetch user and then `notificationService` to get notifications; subscribes to `notifications` table inserts. | Notification RLS allows per-user notifications; design is solid. | Add explicit indexes on `notifications.user_id` and `created_at` for performance. |
-| Presence | StudyRooms currently approximate presence; real-time presence not fully implemented. | Lack of true online/offline tracking. | Use Supabase Realtime presence features or a dedicated `room_presence` table to track join/leave events. |
+- Sign-up/sign-in via Supabase Auth — solid foundation
+- CORS fallback to `localAuthService` creates a parallel auth path
+- `autoRefreshToken: false` without consistent manual refresh
+- No rate limiting on auth attempts
+- Email verification flow exists but not enforced
 
 ---
 
-## 6. Key Technical Findings & Recommendations
+## 6. Performance Analysis
 
-### 6.1 High-Impact Issues
+### 6.1 Build Performance
 
-1. **Secrets in code** (addressed):
-   - Hard-coded `SUPABASE_KEY` fallback in `supabaseClient.ts` has been removed; env-only configuration enforced.
-   - **Action**: ensure `.env` is populated from `.env.example` in each environment.
-2. **RLS gaps for room resources/messages**:
-   - `study_room_messages` and `study_room_resources` currently have permissive `FOR ALL USING (true)` RLS.
-   - **Action**: tighten to membership-based policies mirroring `study_room_members`.
-3. **No TS strictness & missing React typings**:
-   - `tsc --strict` fails; types not enforced.
-   - **Action**: introduce `@types/react`, enable `strict`, and address top-level implicit anys.
+- Production build: **44.8 seconds** (acceptable for 14K LOC)
+- Total bundle: **1.1 MB** uncompressed, **~260 KB** gzipped (good)
+- Largest chunks: GenAI (259KB), Index (237KB), Supabase (170KB)
 
-### 6.2 High-Priority Improvements
+### 6.2 Code-Splitting Effectiveness
 
-- **Refactor complex views**:
-  - Extract hooks from `StudyWall`, `StudyRooms`, `MentorDashboard`, `MockTests`, `AIDeck`, and `Profile` to isolate data-fetching and business logic from JSX.
-- **Standardize error and loading patterns**:
-  - Replace scattered `alert` calls with a centralized notification/toast system.
-- **Finalize exam session integration**:
-  - Ensure `examService` functions (`fetchHybridMCQs`, `fetchEssayQuestions`, `createExamSession`, `saveExamProgress`, `completeExamSession`) are fully wired to Supabase tables with clear RLS and robust error handling.
+All 14 views are lazy-loaded via `React.lazy()` + `Suspense`. Initial load only requires:
+- `index.js` (237KB) — app shell, services, types
+- `vendor-react.js` (12KB)
+- `vendor-supabase.js` (170KB)
+- `index.css` (79KB)
 
-### 6.3 Quick Wins
+**Total initial load: ~498KB uncompressed, ~135KB gzipped** — good for a feature-rich SPA.
 
-- Install `@types/react` / `@types/react-dom` and run `tsc --noEmit` (without `strict`) to catch basic typing issues.
-- Remove unused TS flags (`allowJs`) once TS coverage is confirmed.
-- Add simple indexes (`CREATE INDEX`) on:
-  - `notifications(user_id, created_at)`.
-  - `vouches(post_id)`, `vouches(voucher_id)`.
-  - `chat_messages(conversation_id, created_at)`.
+`vendor-genai` (259KB) is only loaded when AIDeck/TeachersDeck is opened — correct.
 
-### 6.4 Longer-Term Roadmap (Technical)
+### 6.3 Runtime Performance Concerns
 
-- **Routing migration** – adopt full router and URL-based deep-linking.
-- **Design system extraction** – move from view-specific class soups to shared layout components and tokenized design primitives.
-- **Backend normalization** – where JSONB fields are heavily used (performance, reputation), move high-traffic metrics into relational tables for analytics and dashboards.
+| Concern | Location | Impact |
+|---|---|---|
+| Chat N+1 query bomb (2N+1 queries) | `chatService.getConversations` | Scales linearly with conversations |
+| Cloud status polling every 4s (unused result) | `Layout.tsx` | Wasted network + CPU |
+| `matchResults` recomputed every render | `TeachersLounge.tsx` | CPU waste on re-renders |
+| Global notification subscription (all users' data) | `Layout.tsx` | Network + memory |
+| Full Gemini message history sent per request | `AIDeck.tsx` | Token costs scale with conversation length |
 
-These technical findings should be read alongside `costudy-uiux-audit.md` and the implementation-focused `costudy-action-plan.md`, which will prioritize changes by impact and effort and answer the specific Phase 7 questions explicitly.
+---
 
+## 7. Feature-by-Feature Technical Status
+
+| Feature | Components | Services | Status | Critical Issues |
+|---|---|---|---|---|
+| **Auth** | Login, SignUp | fetsService, localAuth | Functional | No `<label>` elements, CORS fallback complexity |
+| **Social Wall** | StudyWall | costudyService, clusterService | Partially functional | God component (970 LOC), silent errors, zero a11y on modals |
+| **Study Rooms** | StudyRooms | costudyService, clusterService | **Mostly mock** | All 7 tabs use hardcoded data, timer broken, no mobile detail view |
+| **AI Deck** | AIDeck | geminiService, prompts | Functional | No error handling on 3/5 tools, unbounded history, no cost awareness |
+| **Teaching Deck** | TeachersDeck | geminiService, prompts | Functional | Best-designed view (8/10), missing try/catch on generate |
+| **Mock Tests** | MockTests, ExamSession, ExamIntro | examService, fetsService | Functional | Answers in client, client-side scoring, inaccessible MCQ inputs |
+| **Profile / CAN** | Profile | alignmentService, fetsService | **Broken** | Table/column mismatches → features silently fail |
+| **Messages** | DirectMessages | chatService | Functional | N+1 query bomb, global subscription, no loading UI |
+| **Library Vault** | LibraryVault | costudyService, costudyAPI | **Mock** | Ingestion is fake, library items hardcoded |
+| **Mentor Dashboard** | MentorDashboard | costudyService | Partially functional | 3s artificial delay, fake revenue data, mock bounties |
+| **Mentors** | TeachersLounge | costudyService, matchingService | Partially functional | Fake metrics, dead "Hire" button |
+| **Student Store** | StudentStore | fetsService | **Non-functional** | Fake payment processor, hardcoded wallet |
+| **Vouch System** | StudyWall | clusterService | Partially functional | Race conditions, vouch/reputation count drift |
+| **Notifications** | Layout | costudyService | **Broken** | No user filter on subscription — leaks all users' data |
+
+---
+
+## 8. Component Quality Matrix
+
+| Component | LOC | Design (1-10) | Error Handling | A11y | Mobile | Top Issue |
+|---|---|---|---|---|---|---|
+| Login.tsx | 179 | **9** | **Excellent** | Fair | Good | No `<label>` elements |
+| SignUp.tsx | 317 | **9** | Good | Fair | Good | Hardcoded access code in client |
+| TeachersDeck.tsx | 207 | **8** | Good | Fair | Fair | Missing try/catch on generate |
+| DirectMessages.tsx | 500 | 7 | Poor | Poor | Good | Global subscription, N+1 queries |
+| Landing.tsx | 259 | 7 | N/A | Fair | Good | Non-functional beta form |
+| LibraryVault.tsx | 353 | 6 | Poor | Poor | Fair | No error handling on ingestion |
+| ExamSession.tsx | 816 | 6 | Partial | **Broken** | Fair | Inaccessible MCQ inputs |
+| ExamIntroPages.tsx | 673 | 6 | N/A | Fair | Fair | 674-line switch/case |
+| Layout.tsx | 394 | 5 | Poor | Poor | Good | Notification data leak |
+| MockTests.tsx | 474 | 5 | Poor | Fair | Fair | Unhandled fetch errors |
+| Profile.tsx | 809 | 5 | Partial | Poor | Fair | 809-line monolith |
+| MentorDashboard.tsx | 619 | 5 | Partial | Poor | Fair | 3s artificial delay |
+| AIDeck.tsx | 526 | 5 | Poor | Poor | Fair | No error handling on 3/5 tools |
+| TeachersLounge.tsx | 83 | 5 | Poor | Fair | Good | Dead "Hire" button |
+| StudentStore.tsx | 68 | 5 | **None** | Fair | Poor | No payment error handling |
+| StudyWall.tsx | 970 | 4 | Poor | **None** | Fair | God component, zero a11y |
+| StudyRooms.tsx | 793 | 4 | None | Poor | **Broken** | All mock data, broken mobile |
+
+---
+
+*Full services-layer analysis with table-by-table schema review available in `costudy-services-audit.md`.*  
+*UI/UX design system analysis available in `costudy-uiux-audit.md`.*  
+*Prioritized action plan available in `costudy-action-plan.md`.*

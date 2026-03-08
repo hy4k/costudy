@@ -227,7 +227,7 @@ export const createUserProfile = async (userId: string, metadata: any): Promise<
         bio: 'Just started my CMA journey.',
         strategic_milestone: 'Preparing for Part 1 Mock Session.',
         exam_focus: 'CMA Part 1',
-        signal_level: 'ACTIVE_SOLVER',
+        // Note: signal_level exists in database.sql but not in production (supabase.fets.in) - omit to avoid 400
         costudy_status: {
             subscription: 'Basic',
             walletBalance: 0,
@@ -249,8 +249,10 @@ export const createUserProfile = async (userId: string, metadata: any): Promise<
         .upsert(newProfile, { onConflict: 'id' });
 
     if (error) {
-        console.error("Profile Upsert Failed:", error);
-        throw error;
+        console.warn("Profile Upsert Failed (400 may indicate schema mismatch):", error.message);
+        // Don't throw - a DB trigger may have created the profile, or we'll use minimal user
+        const existing = await getUserProfile(userId);
+        return existing;
     }
 
     return getUserProfile(userId);

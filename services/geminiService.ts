@@ -2,7 +2,20 @@
 import { GoogleGenAI } from "@google/genai";
 import { getSystemInstruction, getEssayEvalInstruction, getTeacherSystemInstruction } from "./prompts";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Lazy init to avoid crash when GEMINI_API_KEY is missing (e.g. .env not configured)
+let ai: GoogleGenAI | null = null;
+
+function getGeminiClient(): GoogleGenAI | null {
+  if (ai) return ai;
+  const apiKey = process.env.API_KEY || (process.env as any).GEMINI_API_KEY;
+  if (!apiKey || apiKey === "undefined" || apiKey === "") return null;
+  try {
+    ai = new GoogleGenAI({ apiKey });
+    return ai;
+  } catch {
+    return null;
+  }
+}
 
 // Production API endpoint for vector search (RAG)
 const COSTUDY_API_URL = 'https://api.costudy.in';
@@ -99,8 +112,13 @@ export const getChatResponse = async (history: { role: string, content: string }
         // Step 2: Fetch context from the backend CMA Databank (RAG)
         const retrievedContext = await performBackendVectorSearch(searchQuery);
 
-        // Step 3: Use Gemini with Mastermind persona + Databank context
-        const response = await ai.models.generateContent({
+        // Step 3: Use Gemini with Mastermind persona + Databank context (or backend fallback)
+        const client = getGeminiClient();
+        if (!client) {
+          const fallback = await askCMAExpert(newMessage, history);
+          return fallback || "I'm experiencing a brief strategic blackout. Please add GEMINI_API_KEY to .env for AI features.";
+        }
+        const response = await client.models.generateContent({
             model: 'gemini-3-pro-preview',
             contents: [
                 ...history.map(h => ({
@@ -130,7 +148,9 @@ export const getChatResponse = async (history: { role: string, content: string }
 
 export const generateStudyContent = async (prompt: string, systemInstruction?: string): Promise<string> => {
     try {
-        const response = await ai.models.generateContent({
+        const client = getGeminiClient();
+        if (!client) return "AI features require GEMINI_API_KEY in .env.";
+        const response = await client.models.generateContent({
             model: 'gemini-3-flash-preview',
             contents: prompt,
             config: { systemInstruction }
@@ -190,10 +210,12 @@ export const evaluateEssay = async (essayContent: string, subject: string): Prom
 
         // Fallback to Gemini if backend fails
         console.log('[Essay] Backend unavailable, falling back to Gemini');
+        const client = getGeminiClient();
+        if (!client) return "The Mastermind Auditor requires GEMINI_API_KEY. Please add it to .env.";
         const topicClue = essayContent.substring(0, 150);
         const rubricContext = await performBackendVectorSearch(`IMA official essay rubric for ${topicClue}`);
 
-        const response = await ai.models.generateContent({
+        const response = await client.models.generateContent({
             model: 'gemini-3-pro-preview',
             contents: [{ role: 'user', parts: [{ text: `STUDENT ESSAY SUBMISSION:\n\n${essayContent}` }] }],
             config: {
@@ -240,7 +262,9 @@ export const getTeacherResponse = async (history: { role: string, content: strin
         const retrievedContext = await performBackendVectorSearch(newMessage);
 
         // Step 2: Use Gemini with Teacher Mastermind persona
-        const response = await ai.models.generateContent({
+        const client = getGeminiClient();
+        if (!client) return "The Teacher Mastermind requires GEMINI_API_KEY. Please add it to .env.";
+        const response = await client.models.generateContent({
             model: 'gemini-3-pro-preview',
             contents: [
                 ...history.map(h => ({
@@ -263,10 +287,12 @@ export const getTeacherResponse = async (history: { role: string, content: strin
 
 export const generateTeachingResource = async (subject: string, type: 'LESSON_PLAN' | 'MCQ' | 'CASE_STUDY' | 'RUBRIC', topic: string): Promise<string> => {
     try {
+        const client = getGeminiClient();
+        if (!client) return "Resource generation requires GEMINI_API_KEY. Please add it to .env.";
         const prompt = `Generate a professional ${type} for the CMA US topic: "${topic}".`;
         const retrievedContext = await performBackendVectorSearch(topic);
 
-        const response = await ai.models.generateContent({
+        const response = await client.models.generateContent({
             model: 'gemini-3-pro-preview',
             contents: [{ role: 'user', parts: [{ text: prompt }] }],
             config: {

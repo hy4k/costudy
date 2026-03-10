@@ -128,8 +128,12 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
       </section>
 
       {/* Teachers Section — Stacked Cards (Design System) */}
-      <section className="relative py-16 sm:py-20 md:py-28 px-4 sm:px-6 bg-gradient-to-b from-emerald-50/80 via-[#e6ffed] to-emerald-100/60 dark:from-emerald-950/30 dark:via-emerald-950/40 dark:to-slate-950/50 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(16,185,129,0.08)_0%,_transparent_50%)] dark:bg-[radial-gradient(ellipse_at_top,_rgba(16,185,129,0.12)_0%,_transparent_50%)] pointer-events-none" />
+      <section className="relative py-16 sm:py-20 md:py-28 px-4 sm:px-6 bg-gradient-to-b from-emerald-100 via-[#e6ffed] to-emerald-200/80 dark:from-emerald-950/30 dark:via-emerald-950/40 dark:to-slate-950/50 overflow-hidden">
+        {/* Diagnostic: remove after confirming changes load — use http://localhost:3002 (not 3000) and ensure logged out */}
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-red-600 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-lg">
+          Landing updated — Teachers section
+        </div>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(16,185,129,0.15)_0%,_transparent_60%)] dark:bg-[radial-gradient(ellipse_at_top,_rgba(16,185,129,0.2)_0%,_transparent_60%)] pointer-events-none" />
         <div className="relative max-w-6xl mx-auto">
           <div className="text-center mb-10 sm:mb-14">
             <span className="inline-block px-4 py-1.5 rounded-full bg-emerald-200/80 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 text-xs font-bold uppercase tracking-wider mb-6">
@@ -150,9 +154,9 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
               { title: 'Set Your Rates', desc: 'You decide your worth' },
             ].map((c, i) => (
               <div key={i} className="relative group aspect-[3/2]">
-                <div className="absolute inset-0 -z-10 bg-white dark:bg-slate-800 border-4 border-slate-800 dark:border-slate-700 rounded-xl rotate-[-6deg] translate-y-[-2%] shadow-[0_12px_40px_rgba(0,0,0,0.08)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.3)] transition-all duration-300 group-hover:rotate-[-4deg] group-hover:shadow-[0_16px_48px_rgba(0,0,0,0.12)]" />
-                <div className="absolute inset-0 -z-10 bg-white dark:bg-slate-800 border-4 border-slate-800 dark:border-slate-700 rounded-xl rotate-[6deg] translate-y-[2%] shadow-[0_12px_40px_rgba(0,0,0,0.08)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.3)] transition-all duration-300 group-hover:rotate-[4deg] group-hover:shadow-[0_16px_48px_rgba(0,0,0,0.12)]" />
-                <div className="relative h-full bg-white dark:bg-slate-800 border-4 border-slate-800 dark:border-slate-700 rounded-xl p-6 sm:p-8 flex flex-col justify-center transition-all duration-300 group-hover:rotate-[2deg] shadow-[0_8px_32px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.25)] group-hover:shadow-[0_12px_40px_rgba(0,0,0,0.12)] dark:group-hover:shadow-[0_12px_40px_rgba(0,0,0,0.35)]">
+                <div className="absolute inset-0 -z-10 bg-white dark:bg-slate-800 border-4 border-emerald-800/40 dark:border-slate-700 rounded-xl rotate-[-6deg] translate-y-[-2%] shadow-[0_16px_48px_rgba(0,0,0,0.12)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.3)] transition-all duration-300 group-hover:rotate-[-4deg] group-hover:shadow-[0_20px_56px_rgba(0,0,0,0.16)]" />
+                <div className="absolute inset-0 -z-10 bg-white dark:bg-slate-800 border-4 border-emerald-800/40 dark:border-slate-700 rounded-xl rotate-[6deg] translate-y-[2%] shadow-[0_16px_48px_rgba(0,0,0,0.12)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.3)] transition-all duration-300 group-hover:rotate-[4deg] group-hover:shadow-[0_20px_56px_rgba(0,0,0,0.16)]" />
+                <div className="relative h-full bg-white dark:bg-slate-800 border-4 border-emerald-800/50 dark:border-slate-700 rounded-xl p-6 sm:p-8 flex flex-col justify-center transition-all duration-300 group-hover:rotate-[2deg] shadow-[0_12px_40px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.25)] group-hover:shadow-[0_16px_48px_rgba(0,0,0,0.12)] dark:group-hover:shadow-[0_12px_40px_rgba(0,0,0,0.35)]">
                   <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white mb-2">{c.title}</h3>
                   <p className="text-slate-600 dark:text-slate-400 text-sm font-medium leading-relaxed">{c.desc}</p>
                 </div>

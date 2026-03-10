@@ -10,15 +10,15 @@ export const Icons = {
           <stop offset="100%" stopColor="#890b0b" />
         </linearGradient>
         <filter id="logoShadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="2" stdDeviation="1.5" floodColor="#0a0a0a" floodOpacity="0.15" />
+          <feDropShadow dx="0" dy="2" stdDeviation="1.5" floodColor="#0a0a0a" floodOpacity="0.2" />
         </filter>
       </defs>
       <path 
-        d="M50 12 L88 32 L88 72 L50 92 L12 72 L12 32 Z" 
+        d="M50 8 L92 32 L92 68 L50 92 L8 68 L8 32 Z" 
         fill="url(#brandGrad)" 
         stroke="#0a0a0a" 
-        strokeWidth="1.5" 
-        strokeLinejoin="round"
+        strokeWidth="2" 
+        strokeLinejoin="miter"
         filter="url(#logoShadow)"
       />
       <circle cx="50" cy="55" r="8" fill="white" />

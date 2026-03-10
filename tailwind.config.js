@@ -8,8 +8,15 @@ export default {
         'gradient-conic': 'conic-gradient(var(--tw-gradient-stops))',
       },
       fontFamily: {
-        sans: ['Geist', 'system-ui', 'sans-serif'],
+        sans: ['Geist', 'Geist Sans', 'Plus Jakarta Sans', 'sans-serif'],
         mono: ['Geist Mono', 'monospace'],
+        display: ['Syne', 'Plus Jakarta Sans', 'sans-serif'],
+      },
+      boxShadow: {
+        'neon-red': '0 0 20px rgba(239,68,68,0.5), 0 0 40px rgba(239,68,68,0.3)',
+        'neon-emerald': '0 0 20px rgba(16,185,129,0.5), 0 0 40px rgba(16,185,129,0.3)',
+        'neon-amber': '0 0 20px rgba(251,191,36,0.5), 0 0 40px rgba(251,191,36,0.3)',
+        'neon-cyan': '0 0 20px rgba(6,182,212,0.5), 0 0 40px rgba(6,182,212,0.3)',
       },
       colors: {
         brand: {

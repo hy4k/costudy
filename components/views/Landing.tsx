@@ -127,47 +127,53 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
         </LampContainer>
       </section>
 
-      {/* Teachers Section — Stacked Cards (Design System) */}
-      <section className="relative py-16 sm:py-20 md:py-28 px-4 sm:px-6 bg-gradient-to-b from-emerald-100 via-[#e6ffed] to-emerald-200/80 dark:from-emerald-950/30 dark:via-emerald-950/40 dark:to-slate-950/50 overflow-hidden">
-        {/* Diagnostic: remove after confirming changes load — use http://localhost:3002 (not 3000) and ensure logged out */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-red-600 text-white text-xs font-bold uppercase tracking-wider rounded-lg shadow-lg">
-          Landing updated — Teachers section
-        </div>
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(16,185,129,0.15)_0%,_transparent_60%)] dark:bg-[radial-gradient(ellipse_at_top,_rgba(16,185,129,0.2)_0%,_transparent_60%)] pointer-events-none" />
+      {/* Teachers Section — Redesigned */}
+      <section className="relative py-20 sm:py-24 md:py-32 px-4 sm:px-6 overflow-hidden">
+        {/* Dark background */}
+        <div className="absolute inset-0 bg-slate-900 dark:bg-slate-950" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_0%,_rgba(16,185,129,0.2)_0%,_transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_80%_100%,_rgba(239,68,68,0.08)_0%,_transparent_50%)]" />
+
         <div className="relative max-w-6xl mx-auto">
-          <div className="text-center mb-10 sm:mb-14">
-            <span className="inline-block px-4 py-1.5 rounded-full bg-emerald-200/80 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 text-xs font-bold uppercase tracking-wider mb-6">
+          <div className="text-center mb-14 sm:mb-16">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-6 border border-emerald-500/30">
               For Teachers
             </span>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white mb-4 tracking-[0.15em] uppercase leading-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-4 tracking-[0.12em] uppercase leading-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
               Teach globally. Earn fairly.
             </h2>
-            <p className="text-slate-600 dark:text-slate-400 max-w-xl mx-auto text-sm sm:text-base font-medium">
+            <p className="text-slate-400 max-w-xl mx-auto text-base sm:text-lg font-medium">
               Join as a verified mentor. Set your rates. Get discovered by students worldwide.
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 mb-12 sm:mb-14">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-14 sm:mb-16">
             {[
-              { title: 'Verified Badge', desc: 'Build instant trust with students' },
-              { title: 'Flash Sessions', desc: 'Study rooms hire you, split fees' },
-              { title: 'Set Your Rates', desc: 'You decide your worth' },
-            ].map((c, i) => (
-              <div key={i} className="relative group aspect-[3/2]">
-                <div className="absolute inset-0 -z-10 bg-white dark:bg-slate-800 border-4 border-emerald-800/40 dark:border-slate-700 rounded-xl rotate-[-6deg] translate-y-[-2%] shadow-[0_16px_48px_rgba(0,0,0,0.12)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.3)] transition-all duration-300 group-hover:rotate-[-4deg] group-hover:shadow-[0_20px_56px_rgba(0,0,0,0.16)]" />
-                <div className="absolute inset-0 -z-10 bg-white dark:bg-slate-800 border-4 border-emerald-800/40 dark:border-slate-700 rounded-xl rotate-[6deg] translate-y-[2%] shadow-[0_16px_48px_rgba(0,0,0,0.12)] dark:shadow-[0_12px_40px_rgba(0,0,0,0.3)] transition-all duration-300 group-hover:rotate-[4deg] group-hover:shadow-[0_20px_56px_rgba(0,0,0,0.16)]" />
-                <div className="relative h-full bg-white dark:bg-slate-800 border-4 border-emerald-800/50 dark:border-slate-700 rounded-xl p-6 sm:p-8 flex flex-col justify-center transition-all duration-300 group-hover:rotate-[2deg] shadow-[0_12px_40px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.25)] group-hover:shadow-[0_16px_48px_rgba(0,0,0,0.12)] dark:group-hover:shadow-[0_12px_40px_rgba(0,0,0,0.35)]">
-                  <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white mb-2">{c.title}</h3>
-                  <p className="text-slate-600 dark:text-slate-400 text-sm font-medium leading-relaxed">{c.desc}</p>
+              { title: 'Verified Badge', desc: 'Build instant trust with students', icon: Icons.CheckBadge },
+              { title: 'Flash Sessions', desc: 'Study rooms hire you, split fees', icon: Icons.Zap },
+              { title: 'Set Your Rates', desc: 'You decide your worth', icon: Icons.DollarSign },
+            ].map((c, i) => {
+              const Icon = c.icon;
+              return (
+                <div key={i} className="group">
+                  <div className="relative rounded-2xl p-8 sm:p-10 bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 hover:border-emerald-500/30 transition-all duration-300">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500/30 transition-colors">
+                        <Icon className="w-6 h-6" />
+                      </div>
+                      <h3 className="text-lg sm:text-xl font-bold text-white">{c.title}</h3>
+                    </div>
+                    <p className="text-slate-400 text-sm sm:text-base font-medium leading-relaxed">{c.desc}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="text-center">
             <button
               onClick={onGetStarted}
-              className="px-8 sm:px-10 py-3.5 sm:py-4 backdrop-blur-xl bg-white/70 hover:bg-white/90 dark:bg-white/10 dark:hover:bg-white/20 border border-white/40 dark:border-white/20 rounded-xl font-bold text-slate-800 dark:text-white text-sm uppercase tracking-wider transition-all shadow-[0_8px_32px_rgba(0,0,0,0.08)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.2)]"
+              className="px-10 sm:px-12 py-4 sm:py-5 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl text-sm sm:text-base uppercase tracking-wider transition-all shadow-lg shadow-red-500/25 hover:shadow-red-500/40"
             >
               Apply as Teacher →
             </button>
@@ -175,25 +181,35 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section className="py-16 sm:py-20 md:py-28 px-4 sm:px-6 bg-slate-50 dark:bg-slate-900">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-10 sm:mb-14">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white mb-4 tracking-[0.15em] uppercase" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-              Simple Pricing
-            </h2>
-            <p className="text-slate-600 dark:text-slate-400 font-medium">Start free. Upgrade when ready.</p>
+      {/* Pricing Section — Same dark/glass style as Teachers, distinct accents */}
+      <section className="relative py-20 sm:py-24 md:py-32 px-4 sm:px-6 overflow-hidden">
+        {/* Dark background — red/amber gradients (distinct from Teachers' emerald) */}
+        <div className="absolute inset-0 bg-slate-900 dark:bg-slate-950" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_0%,_rgba(239,68,68,0.15)_0%,_transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_40%_at_20%_100%,_rgba(251,191,36,0.06)_0%,_transparent_50%)]" />
 
-            <div className="mt-6 inline-flex bg-slate-200 dark:bg-slate-700 rounded-lg p-1">
+        <div className="relative max-w-6xl mx-auto">
+          <div className="text-center mb-14 sm:mb-16">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-red-500/20 text-red-400 text-xs font-bold uppercase tracking-wider mb-6 border border-red-500/30">
+              Simple Pricing
+            </span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-4 tracking-[0.12em] uppercase leading-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              Start free. Upgrade when ready.
+            </h2>
+            <p className="text-slate-400 max-w-xl mx-auto text-base sm:text-lg font-medium mb-8">
+              No credit card required. Free tier available forever.
+            </p>
+
+            <div className="inline-flex bg-white/5 backdrop-blur-sm rounded-xl p-1 border border-white/10">
               <button
                 onClick={() => setBillingCycle('MONTHLY')}
-                className={`px-4 sm:px-6 py-2 rounded-md text-sm font-medium transition-all ${billingCycle === 'MONTHLY' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow' : 'text-slate-600 dark:text-slate-400'}`}
+                className={`px-5 sm:px-7 py-2.5 rounded-lg text-sm font-medium transition-all ${billingCycle === 'MONTHLY' ? 'bg-white/20 text-white border border-white/20' : 'text-slate-400 hover:text-slate-300'}`}
               >
                 Monthly
               </button>
               <button
                 onClick={() => setBillingCycle('YEARLY')}
-                className={`px-4 sm:px-6 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2 ${billingCycle === 'YEARLY' ? 'bg-red-600 text-white shadow' : 'text-slate-600 dark:text-slate-400'}`}
+                className={`px-5 sm:px-7 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${billingCycle === 'YEARLY' ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-slate-300'}`}
               >
                 Yearly
                 <span className="text-xs bg-red-500/80 px-1.5 py-0.5 rounded">-33%</span>
@@ -201,73 +217,79 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
             </div>
           </div>
 
-          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-            <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-sm">
-              <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-1">Free</h3>
-              <div className="mb-6">
-                <span className="text-3xl font-black text-slate-900">₹0</span>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            <div className="group">
+              <div className="relative rounded-2xl p-8 sm:p-10 bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 hover:border-slate-400/20 transition-all duration-300 h-full flex flex-col">
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-1">Free</h3>
+                <div className="mb-6">
+                  <span className="text-3xl sm:text-4xl font-black text-white">₹0</span>
+                </div>
+                <ul className="space-y-3 mb-6 text-slate-400 text-sm flex-1">
+                  {['20 AI questions/day', '10 MCQ practice/day', 'Wall access', 'Basic study rooms'].map((f, i) => (
+                    <li key={i} className="flex items-center gap-2">
+                      <Icons.CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <button 
+                  onClick={onGetStarted}
+                  className="w-full py-3.5 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl text-sm transition-all border border-white/10"
+                >
+                  Get Started
+                </button>
               </div>
-              <ul className="space-y-3 mb-6 text-slate-600 dark:text-slate-400 text-sm">
-                {['20 AI questions/day', '10 MCQ practice/day', 'Wall access', 'Basic study rooms'].map((f, i) => (
-                  <li key={i} className="flex items-center gap-2">
-                    <Icons.CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <button 
-                onClick={onGetStarted}
-                className="w-full py-3 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold rounded-lg text-sm transition-all"
-              >
-                Get Started
-              </button>
             </div>
 
-            <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 sm:p-8 border-2 border-red-500 shadow-lg relative sm:-mt-2">
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-red-600 text-white text-xs font-bold rounded-full">
-                Popular
-              </span>
-              <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-1">Pro</h3>
-              <div className="mb-6">
-                <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">₹333</span>
-                <span className="text-slate-500 dark:text-slate-400 text-sm">/mo</span>
+            <div className="group lg:-mt-4 lg:mb-4">
+              <div className="relative rounded-2xl p-8 sm:p-10 bg-white/8 backdrop-blur-xl border-2 border-red-500/50 hover:border-red-500/80 transition-all duration-300 h-full flex flex-col shadow-lg shadow-red-500/10">
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-red-600 text-white text-xs font-bold rounded-full">
+                  Popular
+                </span>
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-1">Pro</h3>
+                <div className="mb-6">
+                  <span className="text-3xl sm:text-4xl font-black text-white">₹333</span>
+                  <span className="text-slate-400 text-sm">/mo</span>
+                </div>
+                <ul className="space-y-3 mb-6 text-slate-400 text-sm flex-1">
+                  {['Unlimited AI questions', 'Unlimited MCQ', 'Mock exams', 'Essay evaluation', 'Priority support'].map((f, i) => (
+                    <li key={i} className="flex items-center gap-2">
+                      <Icons.CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <button 
+                  onClick={onGetStarted}
+                  className="w-full py-3.5 bg-red-600 hover:bg-red-500 text-white font-semibold rounded-xl text-sm transition-all shadow-lg shadow-red-500/25"
+                >
+                  Upgrade to Pro
+                </button>
               </div>
-              <ul className="space-y-3 mb-6 text-slate-600 dark:text-slate-400 text-sm">
-                {['Unlimited AI questions', 'Unlimited MCQ', 'Mock exams', 'Essay evaluation', 'Priority support'].map((f, i) => (
-                  <li key={i} className="flex items-center gap-2">
-                    <Icons.CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <button 
-                onClick={onGetStarted}
-                className="w-full py-3 bg-red-600 hover:bg-red-500 text-white font-semibold rounded-lg text-sm transition-all"
-              >
-                Upgrade to Pro
-              </button>
             </div>
 
-            <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-sm">
-              <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-1">Mentor</h3>
-              <div className="mb-6">
-                <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">₹1,999</span>
-                <span className="text-slate-500 dark:text-slate-400 text-sm">/mo</span>
+            <div className="group">
+              <div className="relative rounded-2xl p-8 sm:p-10 bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 hover:border-emerald-500/30 transition-all duration-300 h-full flex flex-col">
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-1">Mentor</h3>
+                <div className="mb-6">
+                  <span className="text-3xl sm:text-4xl font-black text-white">₹1,999</span>
+                  <span className="text-slate-400 text-sm">/mo</span>
+                </div>
+                <ul className="space-y-3 mb-6 text-slate-400 text-sm flex-1">
+                  {['Everything in Pro', 'Verified badge', 'Student dashboard', 'Revenue share', 'Analytics'].map((f, i) => (
+                    <li key={i} className="flex items-center gap-2">
+                      <Icons.CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <button 
+                  onClick={onGetStarted}
+                  className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl text-sm transition-all"
+                >
+                  Become Mentor
+                </button>
               </div>
-              <ul className="space-y-3 mb-6 text-slate-600 dark:text-slate-400 text-sm">
-                {['Everything in Pro', 'Verified badge', 'Student dashboard', 'Revenue share', 'Analytics'].map((f, i) => (
-                  <li key={i} className="flex items-center gap-2">
-                    <Icons.CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <button 
-                onClick={onGetStarted}
-                className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg text-sm transition-all"
-              >
-                Become Mentor
-              </button>
             </div>
           </div>
         </div>

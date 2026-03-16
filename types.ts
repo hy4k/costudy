@@ -195,6 +195,9 @@ export interface User {
 
   // Visibility
   signalLevel: SignalLevel;
+  
+  // Referral System
+  referralCode?: string;
 }
 
 export interface LibraryItem {
@@ -369,6 +372,10 @@ export interface ViewState {
   // Teacher (Specialist) Silo
   DASHBOARD: 'DASHBOARD';
   REVENUE: 'REVENUE';
+  // Payment & Admin Features
+  SUBSCRIPTION: 'SUBSCRIPTION';
+  REFERRALS: 'REFERRALS';
+  ADMIN_PANEL: 'ADMIN_PANEL';
 }
 
 export const ViewState: ViewState = {
@@ -383,7 +390,10 @@ export const ViewState: ViewState = {
   STORE: 'STORE',
   MESSAGES: 'MESSAGES',
   DASHBOARD: 'DASHBOARD',
-  REVENUE: 'REVENUE'
+  REVENUE: 'REVENUE',
+  SUBSCRIPTION: 'SUBSCRIPTION',
+  REFERRALS: 'REFERRALS',
+  ADMIN_PANEL: 'ADMIN_PANEL'
 };
 
 export interface CoStudyCloudStatus {

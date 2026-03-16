@@ -20,6 +20,11 @@ const Landing = lazy(() => import('./components/views/Landing').then(m => ({ def
 const Login = lazy(() => import('./components/auth/Login').then(m => ({ default: m.Login })));
 const SignUp = lazy(() => import('./components/auth/SignUp').then(m => ({ default: m.SignUp })));
 
+// Payment & Admin Features
+const SubscriptionModal = lazy(() => import('./components/views/SubscriptionModal'));
+const ReferralDashboard = lazy(() => import('./components/views/ReferralDashboard'));
+const AdminPanel = lazy(() => import('./components/views/AdminPanel'));
+
 // Keep services as regular imports (needed immediately)
 import { authService, getUserProfile, createUserProfile } from './services/fetsService';
 import { supabase } from './services/supabaseClient';
@@ -291,6 +296,12 @@ function App() {
         return <DirectMessages userId={user?.id} />;
       case ViewState.DASHBOARD:
         return <MentorDashboard defaultTab="IMPACT" />;
+      case ViewState.SUBSCRIPTION:
+        return <SubscriptionModal user={user} onClose={() => setCurrentView(ViewState.PROFILE)} />;
+      case ViewState.REFERRALS:
+        return <ReferralDashboard userId={user?.id} referralCode={user?.referralCode} />;
+      case ViewState.ADMIN_PANEL:
+        return <AdminPanel user={user} />;
       // MY_CLASS Removed
       default:
         // Default fallback

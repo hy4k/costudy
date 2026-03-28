@@ -339,97 +339,100 @@ export const syncStudyTelemetry = (data: any) => {
   console.log('[CoStudy Telemetry]', data);
 };
 
-// --- EXAM QUESTION FETCHER (REAL DATA) ---
-export const fetchExamQuestions = async (mcqCount: number, essayCount: number = 2) => {
+// --- EXAM QUESTION FETCHER (REAL DATA from question_bank; mirrors examService.fetchHybridMCQs / fetchEssayQuestions) ---
+export const fetchExamQuestions = async (
+    mcqCount: number,
+    essayCount: number = 2,
+    part: string = 'Part 1'
+) => {
     try {
-        // Fetch MCQs from database (or generate sample if table empty)
-        const { data: mcqData, error: mcqError } = await supabase
-            .from('mcq_questions')
-            .select('*')
+        const { data: mcqData } = await supabase
+            .from('question_bank')
+            .select('id, question_text, options, correct_answer, part, section, difficulty, source_kind')
+            .eq('question_kind', 'MCQ')
             .eq('is_active', true)
-            .limit(mcqCount);
+            .eq('part', part)
+            .not('options', 'is', null)
+            .not('correct_answer', 'is', null)
+            .limit(mcqCount * 3);
         
-        let mcqs = mcqData || [];
+        let mcqs = (mcqData || []).sort(() => Math.random() - 0.5).slice(0, mcqCount);
         
-        // If no real MCQs exist, generate sample questions
         if (mcqs.length < mcqCount) {
             const sampleMcqs = Array.from({ length: mcqCount - mcqs.length }).map((_, i) => ({
                 id: `mcq-sample-${i + 1}`,
                 type: 'MCQ',
-                question_text: `Sample CMA Question ${i + 1}: Which of the following best describes the strategic advantage of Activity Based Costing (ABC) over traditional volume-based costing in a diverse manufacturing environment?`,
-                option_a: "It reduces the total overhead costs incurred by the production facility.",
-                option_b: "It assigns costs based on resource consumption rather than just volume, providing more accurate product margins.",
-                option_c: "It simplifies the accounting process by using a single plant-wide overhead rate.",
-                option_d: "It eliminates the need for allocating fixed costs to individual products.",
+                question_text: `Sample CMA Question ${i + 1}: Which of the following best describes the strategic advantage of Activity Based Costing (ABC)?`,
+                option_a: "It reduces total overhead costs.",
+                option_b: "It assigns costs based on resource consumption, providing more accurate margins.",
+                option_c: "It simplifies accounting by using a single overhead rate.",
+                option_d: "It eliminates the need for allocating fixed costs.",
                 correct_answer: "B",
-                part: "Part 1",
-                section: i % 2 === 0 ? "Cost Management" : "Internal Controls"
+                part,
+                section: i % 2 === 0 ? "Cost Management" : "Internal Controls",
+                source: 'real' as const
             }));
             mcqs = [...mcqs, ...sampleMcqs];
         }
         
-        // Format MCQs
-        const formattedMcqs = mcqs.map(q => ({
-            ...q,
-            type: 'MCQ'
-        }));
+        const formattedMcqs = mcqs.map((q: any) => {
+            const opts = q.options || {};
+            return {
+                id: q.id,
+                type: 'MCQ',
+                question_text: q.question_text || '',
+                option_a: opts.A || opts.a || '',
+                option_b: opts.B || opts.b || '',
+                option_c: opts.C || opts.c || '',
+                option_d: opts.D || opts.d || '',
+                correct_answer: q.correct_answer || 'A',
+                part: q.part || part,
+                section: q.section || 'General',
+                source: (q.source_kind === 'ai_generated' ? 'ai_generated' : 'real') as 'real' | 'ai_generated'
+            };
+        });
         
-        // Fetch Essays from database
-        const { data: essayData, error: essayError } = await supabase
-            .from('essay_questions')
-            .select('*')
+        const { data: essayData } = await supabase
+            .from('question_bank')
+            .select('id, question_text, options, topic, section, part, difficulty')
+            .eq('question_kind', 'ESSAY')
             .eq('is_active', true)
-            .limit(essayCount * 3); // Fetch extra for random selection
+            .eq('part', part)
+            .limit(essayCount * 3);
         
-        let essays = essayData || [];
+        let essays = (essayData || []).sort(() => Math.random() - 0.5).slice(0, essayCount);
         
-        // Randomly select essays if we have more than needed
-        if (essays.length > essayCount) {
-            essays = essays.sort(() => Math.random() - 0.5).slice(0, essayCount);
-        }
-        
-        // If no real essays exist, use fallback
         if (essays.length < essayCount) {
             const fallbackEssays = [
                 {
-                    id: 'essay-fallback-1',
-                    type: 'ESSAY',
-                    question_text: 'SCENARIO:\n\nOmega Corp is a US-based manufacturer considering expansion into the European market. The CFO is concerned about foreign currency exchange risk as the Euro has been volatile against the USD.\n\nREQUIRED:\n\n1. Identify and explain the three types of foreign currency risk exposure Omega Corp might face.\n\n2. Recommend a hedging strategy using financial derivatives to mitigate the transaction risk identified in part 1.',
-                    part: 'Part 1',
-                    section: 'Essay Section - Financial Risk',
+                    id: 'essay-fallback-1', type: 'ESSAY',
+                    question_text: 'SCENARIO:\n\nOmega Corp is considering expansion into the European market. The CFO is concerned about foreign currency exchange risk.\n\nREQUIRED:\n\n1. Identify the three types of foreign currency risk exposure.\n2. Recommend a hedging strategy using financial derivatives.',
+                    part, section: 'Essay Section - Financial Risk',
+                    option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: ''
                 },
                 {
-                    id: 'essay-fallback-2',
-                    type: 'ESSAY',
-                    question_text: 'SCENARIO:\n\nYou are the Controller of TechSolutions Inc. The company has traditionally used a volume-based costing system (direct labor hours) to allocate overhead. Recently, competitors have undercut TechSolutions prices on high-volume products while TechSolutions remains cheaper on low-volume specialty products.\n\nREQUIRED:\n\n1. Analyze why the current costing system might be distorting product costs.\n\n2. Explain how Activity-Based Costing (ABC) could provide more accurate cost information and assist in strategic pricing decisions.',
-                    part: 'Part 1',
-                    section: 'Essay Section - Cost Management',
+                    id: 'essay-fallback-2', type: 'ESSAY',
+                    question_text: 'SCENARIO:\n\nTechSolutions Inc. uses volume-based costing. Competitors undercut on high-volume products.\n\nREQUIRED:\n\n1. Analyze why the current system distorts costs.\n2. Explain how ABC could improve pricing decisions.',
+                    part, section: 'Essay Section - Cost Management',
+                    option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: ''
                 }
             ];
             essays = [...essays, ...fallbackEssays.slice(0, essayCount - essays.length)];
         }
         
-        // Format essays for exam display
-        const formattedEssays = essays.map(e => ({
+        const formattedEssays = essays.map((e: any) => ({
             id: e.id,
             type: 'ESSAY',
-            question_text: e.scenario 
-                ? `SCENARIO:\n\n${e.scenario}\n\nREQUIRED:\n\n${e.tasks}`
-                : e.question_text || 'Essay question content not available.',
+            question_text: e.question_text || 'Essay question content not available.',
             part: e.part || 'Part 1',
-            section: `Essay Section - ${e.topic || 'General'}`,
-            answer_guidance: e.answer_guidance,
+            section: `Essay Section - ${e.topic || e.section || 'General'}`,
             option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: ''
         }));
         
-        // Combine: MCQs first, then Essays
-        const shuffledMcqs = formattedMcqs.sort(() => Math.random() - 0.5);
-        
-        return [...shuffledMcqs, ...formattedEssays];
+        return [...formattedMcqs.sort(() => Math.random() - 0.5), ...formattedEssays];
         
     } catch (error) {
         console.error('Error fetching exam questions:', error);
-        // Return minimal fallback on error
         return Array.from({ length: mcqCount }).map((_, i) => ({
             id: `q-fallback-${i + 1}`,
             type: 'MCQ',
@@ -445,31 +448,27 @@ export const fetchExamQuestions = async (mcqCount: number, essayCount: number = 
     }
 };
 
-// Fetch only essay questions (for essay-only tests)
-export const fetchEssayQuestions = async (count: number = 2) => {
+// Fetch only essay questions (for essay-only tests) from question_bank
+export const fetchEssayQuestions = async (count: number = 2, part: string = 'Part 1') => {
     try {
         const { data, error } = await supabase
-            .from('essay_questions')
-            .select('*')
-            .eq('is_active', true);
+            .from('question_bank')
+            .select('id, question_text, topic, section, part, difficulty')
+            .eq('question_kind', 'ESSAY')
+            .eq('is_active', true)
+            .eq('part', part)
+            .limit(count * 3);
         
         if (error) throw error;
         
-        let essays = data || [];
+        let essays = (data || []).sort(() => Math.random() - 0.5).slice(0, count);
         
-        // Shuffle and limit
-        essays = essays.sort(() => Math.random() - 0.5).slice(0, count);
-        
-        return essays.map(e => ({
+        return essays.map((e: any) => ({
             id: e.id,
             type: 'ESSAY',
-            topic: e.topic,
-            scenario: e.scenario,
-            tasks: e.tasks,
-            answer_guidance: e.answer_guidance,
-            citations: e.citations,
-            part: e.part,
-            question_text: `SCENARIO:\n\n${e.scenario}\n\nREQUIRED:\n\n${e.tasks}`
+            topic: e.topic || e.section || 'General',
+            question_text: e.question_text || 'Essay question content not available.',
+            part: e.part || 'Part 1'
         }));
     } catch (error) {
         console.error('Error fetching essays:', error);

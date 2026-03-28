@@ -1,27 +1,19 @@
-
-import { GoogleGenAI } from "@google/genai";
-import { getSystemInstruction, getEssayEvalInstruction, getTeacherSystemInstruction } from "./prompts";
-
-// Lazy init to avoid crash when GEMINI_API_KEY is missing (e.g. .env not configured)
-let ai: GoogleGenAI | null = null;
-
-function getGeminiClient(): GoogleGenAI | null {
-  if (ai) return ai;
-  const apiKey = process.env.API_KEY || (process.env as any).GEMINI_API_KEY;
-  if (!apiKey || apiKey === "undefined" || apiKey === "") return null;
-  try {
-    ai = new GoogleGenAI({ apiKey });
-    return ai;
-  } catch {
-    return null;
-  }
-}
+import { supabase } from "./supabaseClient";
 
 // Production API endpoint for vector search (RAG)
-const COSTUDY_API_URL = 'https://api.costudy.in';
+const COSTUDY_API_URL = (import.meta as any).env?.VITE_COSTUDY_API_URL || 'https://api.costudy.in';
 
 // Chunk types for filtering
 type ChunkType = 'mcq_question' | 'mcq_answer' | 'essay' | 'other' | null;
+
+async function getAuthHeaders() {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    return {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+    };
+}
 
 // Real backend RAG retrieval using api.costudy.in
 const performBackendVectorSearch = async (
@@ -33,9 +25,7 @@ const performBackendVectorSearch = async (
     try {
         const response = await fetch(`${COSTUDY_API_URL}/api/search`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: await getAuthHeaders(),
             body: JSON.stringify({
                 query: query,
                 topK: options?.topK ?? 10,
@@ -73,9 +63,7 @@ export const askCMAExpert = async (message: string, history: { role: string, con
     try {
         const response = await fetch(`${COSTUDY_API_URL}/api/ask-cma`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: await getAuthHeaders(),
             body: JSON.stringify({
                 message: message,
                 history: history.map(h => ({
@@ -93,8 +81,7 @@ export const askCMAExpert = async (message: string, history: { role: string, con
         return data.response || data.answer || "I couldn't process that request.";
     } catch (error) {
         console.error('[CMA Expert] API call failed:', error);
-        // Fall back to Gemini
-        return null as any;
+        return "The CoStudy AI backend is temporarily unavailable. Please try again.";
     }
 };
 
@@ -112,50 +99,25 @@ export const getChatResponse = async (history: { role: string, content: string }
         // Step 2: Fetch context from the backend CMA Databank (RAG)
         const retrievedContext = await performBackendVectorSearch(searchQuery);
 
-        // Step 3: Use Gemini with Mastermind persona + Databank context (or backend fallback)
-        const client = getGeminiClient();
-        if (!client) {
-          const fallback = await askCMAExpert(newMessage, history);
-          return fallback || "I'm experiencing a brief strategic blackout. Please add GEMINI_API_KEY to .env for AI features.";
-        }
-        const response = await client.models.generateContent({
-            model: 'gemini-3-pro-preview',
-            contents: [
-                ...history.map(h => ({
-                    role: h.role === 'user' ? 'user' : 'model',
-                    parts: [{ text: h.content }]
-                })),
-                { role: 'user', parts: [{ text: newMessage }] }
-            ],
-            config: {
-                systemInstruction: getSystemInstruction(subjectContext, additionalContext, retrievedContext)
-            }
-        });
+        const backendPrompt = [
+            `Subject context: ${subjectContext}`,
+            additionalContext ? `Additional context: ${additionalContext}` : "",
+            `Retrieved context:\n${retrievedContext}`,
+            `User message: ${newMessage}`
+        ].filter(Boolean).join("\n\n");
 
-        return response.text;
+        const response = await askCMAExpert(backendPrompt, history);
+        return response;
     } catch (error) {
         console.error("Mastermind Chat Error", error);
-
-        // Final fallback to the basic backend ask-cma if Gemini fails
-        try {
-            const fallback = await askCMAExpert(newMessage, history);
-            if (fallback) return fallback;
-        } catch (e) { }
-
-        return "I'm experiencing a brief strategic blackout. Please re-state your query, future CMA.";
+        return "I'm experiencing a brief strategic blackout. Please re-state your query.";
     }
 }
 
 export const generateStudyContent = async (prompt: string, systemInstruction?: string): Promise<string> => {
     try {
-        const client = getGeminiClient();
-        if (!client) return "AI features require GEMINI_API_KEY in .env.";
-        const response = await client.models.generateContent({
-            model: 'gemini-3-flash-preview',
-            contents: prompt,
-            config: { systemInstruction }
-        });
-        return response.text || "No content generated.";
+        const composed = [systemInstruction, prompt].filter(Boolean).join("\n\n");
+        return await askCMAExpert(composed);
     } catch (error) {
         console.error("API Error:", error);
         return "Error generating content.";
@@ -167,9 +129,7 @@ export const summarizePost = async (postContent: string): Promise<string> => {
     try {
         const response = await fetch(`${COSTUDY_API_URL}/api/summarize`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: await getAuthHeaders(),
             body: JSON.stringify({ text: postContent })
         });
 
@@ -178,14 +138,10 @@ export const summarizePost = async (postContent: string): Promise<string> => {
             return data.summary || data.result;
         }
     } catch (error) {
-        console.warn('[Summarize] API unavailable, falling back to Gemini');
+        console.warn('[Summarize] API unavailable');
     }
 
-    // Fallback to Gemini
-    return generateStudyContent(
-        `Summarize this study post into 3 short bullet points: ${postContent}`,
-        "You are a helpful study assistant."
-    );
+    return "Summary service is temporarily unavailable. Please retry.";
 }
 
 export const evaluateEssay = async (essayContent: string, subject: string): Promise<string> => {
@@ -193,7 +149,7 @@ export const evaluateEssay = async (essayContent: string, subject: string): Prom
         // Try the new backend essay evaluation endpoint first
         const backendResponse = await fetch(`${COSTUDY_API_URL}/api/essay/evaluate`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: await getAuthHeaders(),
             body: JSON.stringify({
                 essay: essayContent,
                 topic: essayContent.substring(0, 150),
@@ -208,22 +164,7 @@ export const evaluateEssay = async (essayContent: string, subject: string): Prom
             }
         }
 
-        // Fallback to Gemini if backend fails
-        console.log('[Essay] Backend unavailable, falling back to Gemini');
-        const client = getGeminiClient();
-        if (!client) return "The Mastermind Auditor requires GEMINI_API_KEY. Please add it to .env.";
-        const topicClue = essayContent.substring(0, 150);
-        const rubricContext = await performBackendVectorSearch(`IMA official essay rubric for ${topicClue}`);
-
-        const response = await client.models.generateContent({
-            model: 'gemini-3-pro-preview',
-            contents: [{ role: 'user', parts: [{ text: `STUDENT ESSAY SUBMISSION:\n\n${essayContent}` }] }],
-            config: {
-                systemInstruction: getEssayEvalInstruction(subject, rubricContext)
-            }
-        });
-
-        return response.text;
+        return "Essay evaluation service is temporarily unavailable. Please retry.";
     } catch (error) {
         console.error("Essay Eval Error", error);
         return "The Mastermind Auditor is temporarily unavailable. Please preserve your essay and try again in a few minutes.";
@@ -238,7 +179,7 @@ export const fetchMCQPractice = async (topic: string, count: number = 5): Promis
     try {
         const response = await fetch(`${COSTUDY_API_URL}/api/mcq/practice`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: await getAuthHeaders(),
             body: JSON.stringify({ topic, count })
         });
 
@@ -258,27 +199,12 @@ export const fetchMCQPractice = async (topic: string, count: number = 5): Promis
 
 export const getTeacherResponse = async (history: { role: string, content: string }[], newMessage: string, subject: string, toolContext?: string) => {
     try {
-        // Step 1: Fetch pedagogical context from the databank (RAG)
-        const retrievedContext = await performBackendVectorSearch(newMessage);
-
-        // Step 2: Use Gemini with Teacher Mastermind persona
-        const client = getGeminiClient();
-        if (!client) return "The Teacher Mastermind requires GEMINI_API_KEY. Please add it to .env.";
-        const response = await client.models.generateContent({
-            model: 'gemini-3-pro-preview',
-            contents: [
-                ...history.map(h => ({
-                    role: h.role === 'user' ? 'user' : 'model',
-                    parts: [{ text: h.content }]
-                })),
-                { role: 'user', parts: [{ text: newMessage }] }
-            ],
-            config: {
-                systemInstruction: getTeacherSystemInstruction(subject, toolContext, retrievedContext)
-            }
-        });
-
-        return response.text;
+        const teacherPrompt = [
+            `You are responding as CoStudy teacher assistant for subject: ${subject}.`,
+            toolContext ? `Tool context: ${toolContext}` : "",
+            `Teacher message: ${newMessage}`
+        ].filter(Boolean).join("\n");
+        return await askCMAExpert(teacherPrompt, history);
     } catch (error) {
         console.error("Teacher Mastermind Error", error);
         return "The Teacher Mastermind is briefly off-line for a faculty meeting. Please retry your query.";
@@ -287,20 +213,8 @@ export const getTeacherResponse = async (history: { role: string, content: strin
 
 export const generateTeachingResource = async (subject: string, type: 'LESSON_PLAN' | 'MCQ' | 'CASE_STUDY' | 'RUBRIC', topic: string): Promise<string> => {
     try {
-        const client = getGeminiClient();
-        if (!client) return "Resource generation requires GEMINI_API_KEY. Please add it to .env.";
-        const prompt = `Generate a professional ${type} for the CMA US topic: "${topic}".`;
-        const retrievedContext = await performBackendVectorSearch(topic);
-
-        const response = await client.models.generateContent({
-            model: 'gemini-3-pro-preview',
-            contents: [{ role: 'user', parts: [{ text: prompt }] }],
-            config: {
-                systemInstruction: getTeacherSystemInstruction(subject, type, retrievedContext)
-            }
-        });
-
-        return response.text;
+        const prompt = `Generate a professional ${type} for CMA US topic "${topic}" under subject "${subject}".`;
+        return await askCMAExpert(prompt);
     } catch (error) {
         console.error("Resource Generation Error", error);
         return "Failed to generate resource.";

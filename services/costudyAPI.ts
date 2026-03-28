@@ -2,8 +2,18 @@
  * CoStudy API Service
  * Connects to the backend RAG API at api.costudy.in
  */
+import { supabase } from './supabaseClient';
 
 const API_BASE = (import.meta as any).env?.VITE_COSTUDY_API_URL || 'https://api.costudy.in';
+
+async function getAuthHeaders() {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
 
 interface SearchHit {
   document_id: string;
@@ -51,7 +61,7 @@ export async function ragSearch(
   try {
     const response = await fetch(`${API_BASE}/api/search`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getAuthHeaders(),
       body: JSON.stringify({
         query,
         topK: options?.topK || 10,
@@ -84,7 +94,7 @@ export async function askCMA(
   try {
     const response = await fetch(`${API_BASE}/api/ask-cma`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getAuthHeaders(),
       body: JSON.stringify({
         message,
         subject: options?.subject,
@@ -110,7 +120,7 @@ export async function summarizeText(text: string): Promise<SummarizeResponse> {
   try {
     const response = await fetch(`${API_BASE}/api/summarize`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getAuthHeaders(),
       body: JSON.stringify({ text }),
     });
 

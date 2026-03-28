@@ -144,141 +144,84 @@ export const EXAM_CONFIGS: Record<string, ExamConfig> = {
 // ============================================
 
 /**
- * Fetch MCQ questions using 70/30 hybrid strategy
- * 70% from mcq_questions table (real)
- * 30% from ai_question_cache table (AI-generated)
+ * Fetch MCQ questions from question_bank (new unified schema).
+ * options column is JSONB {A: "...", B: "...", C: "...", D: "..."}.
  */
 export const fetchHybridMCQs = async (
     count: number,
-    hybridRatio: number = 0.7,
+    _hybridRatio: number = 0.7,
     part: string = 'Part 1'
 ): Promise<MCQQuestion[]> => {
-    const realCount = Math.ceil(count * hybridRatio);
-    const aiCount = count - realCount;
-    
-    console.log(`[ExamService] Fetching ${realCount} real + ${aiCount} AI MCQs`);
+    console.log(`[ExamService] Fetching ${count} MCQs from question_bank`);
     
     try {
-        // Try to use the database function first
-        const { data: hybridData, error: hybridError } = await supabase
-            .rpc('get_hybrid_mcqs', { 
-                p_count: count, 
-                p_real_ratio: hybridRatio,
-                p_part: part 
-            });
-        
-        if (!hybridError && hybridData && hybridData.length > 0) {
-            console.log(`[ExamService] Got ${hybridData.length} questions from hybrid RPC`);
-            return hybridData.map((q: any) => ({
-                id: q.id,
-                question_text: q.question_text,
-                option_a: q.option_a,
-                option_b: q.option_b,
-                option_c: q.option_c,
-                option_d: q.option_d,
-                correct_answer: q.correct_answer,
-                section: q.section,
-                difficulty: q.difficulty,
-                source: q.source as 'real' | 'ai_generated'
-            }));
-        }
-        
-        // Fallback: Direct query
-        console.log('[ExamService] RPC failed or empty, using direct queries');
-        
-        // Fetch real questions
-        const { data: realQuestions, error: realError } = await supabase
-            .from('mcq_questions')
-            .select('*')
+        const { data, error } = await supabase
+            .from('question_bank')
+            .select('id, question_text, options, correct_answer, section, difficulty, source_kind')
+            .eq('question_kind', 'MCQ')
+            .eq('is_active', true)
             .eq('part', part)
-            .limit(realCount);
-        
-        if (realError) {
-            console.error('[ExamService] Error fetching real MCQs:', realError);
+            .not('options', 'is', null)
+            .not('correct_answer', 'is', null)
+            .limit(count * 3);
+
+        if (error) {
+            console.error('[ExamService] Error fetching MCQs:', error);
         }
-        
-        // Fetch AI questions
-        const { data: aiQuestions, error: aiError } = await supabase
-            .from('ai_question_cache')
-            .select('*')
-            .eq('question_type', 'MCQ')
-            .eq('part', part)
-            .eq('is_used', false)
-            .limit(aiCount);
-        
-        if (aiError) {
-            console.log('[ExamService] No AI questions available:', aiError);
-        }
-        
-        const combined: MCQQuestion[] = [];
-        
-        // Add real questions
-        if (realQuestions) {
-            realQuestions.forEach(q => {
-                combined.push({
+
+        if (data && data.length > 0) {
+            const shuffled = data.sort(() => Math.random() - 0.5).slice(0, count);
+            console.log(`[ExamService] Got ${shuffled.length} MCQs from question_bank`);
+
+            const mapped: MCQQuestion[] = shuffled.map((q: any) => {
+                const opts = q.options || {};
+                return {
                     id: q.id,
-                    question_text: q.question_text,
-                    option_a: q.option_a,
-                    option_b: q.option_b,
-                    option_c: q.option_c,
-                    option_d: q.option_d,
-                    correct_answer: q.correct_answer,
-                    section: q.section,
-                    difficulty: q.difficulty,
-                    source: 'real'
-                });
+                    question_text: q.question_text || '',
+                    option_a: opts.A || opts.a || '',
+                    option_b: opts.B || opts.b || '',
+                    option_c: opts.C || opts.c || '',
+                    option_d: opts.D || opts.d || '',
+                    correct_answer: q.correct_answer || 'A',
+                    section: q.section || 'General',
+                    difficulty: q.difficulty || 'Medium',
+                    source: (q.source_kind === 'ai_generated' ? 'ai_generated' : 'real') as 'real' | 'ai_generated',
+                };
             });
+
+            while (mapped.length < count) {
+                mapped.push(generateMockMCQ(mapped.length));
+            }
+
+            return mapped;
         }
         
-        // Add AI questions
-        if (aiQuestions) {
-            aiQuestions.forEach(q => {
-                const data = q.question_data as any;
-                combined.push({
-                    id: q.id,
-                    question_text: data.question_text,
-                    option_a: data.option_a,
-                    option_b: data.option_b,
-                    option_c: data.option_c,
-                    option_d: data.option_d,
-                    correct_answer: data.correct_answer,
-                    section: q.section,
-                    difficulty: q.difficulty,
-                    source: 'ai_generated'
-                });
-            });
-        }
-        
-        // If we don't have enough, generate mock questions
-        while (combined.length < count) {
-            combined.push(generateMockMCQ(combined.length));
-        }
-        
-        // Shuffle
-        return combined.sort(() => Math.random() - 0.5);
+        console.log('[ExamService] No MCQs matched, using mock data');
+        return Array.from({ length: count }, (_, i) => generateMockMCQ(i));
         
     } catch (err) {
         console.error('[ExamService] Critical error in fetchHybridMCQs:', err);
-        // Return mock questions as ultimate fallback
         return Array.from({ length: count }, (_, i) => generateMockMCQ(i));
     }
 };
 
 /**
- * Fetch essay questions from database
+ * Fetch essay questions from question_bank (new unified schema).
  */
 export const fetchEssayQuestions = async (
     count: number = 2,
     part: string = 'Part 1'
 ): Promise<EssayQuestion[]> => {
-    console.log(`[ExamService] Fetching ${count} essay questions`);
+    console.log(`[ExamService] Fetching ${count} essay questions from question_bank`);
     
     try {
-        // Flexible query - works with various column structures
         const { data, error } = await supabase
-            .from('essay_questions')
-            .select('*')
-            .limit(count);
+            .from('question_bank')
+            .select('id, question_text, options, topic, section, difficulty')
+            .eq('question_kind', 'ESSAY')
+            .eq('is_active', true)
+            .eq('part', part)
+            .limit(count * 3);
         
         if (error) {
             console.error('[ExamService] Error fetching essays:', error);
@@ -289,17 +232,16 @@ export const fetchEssayQuestions = async (
             console.log('[ExamService] No essays in DB, using mock data');
             return generateMockEssays(count);
         }
-        
-        return data.map(e => ({
+
+        const shuffled = data.sort(() => Math.random() - 0.5).slice(0, count);
+
+        return shuffled.map((e: any) => ({
             id: e.id,
-            // Handle different possible column names
-            scenario_text: e.scenario_text || e.question_text || e.scenario || '',
-            requirements: e.requirements 
-                ? (typeof e.requirements === 'string' ? JSON.parse(e.requirements) : e.requirements)
-                : ['Analyze the scenario and provide your response.'],
+            scenario_text: e.question_text || '',
+            requirements: ['Analyze the scenario and provide your response.'],
             topic: e.topic || e.section || 'General',
             difficulty: e.difficulty || 'Medium',
-            time_allocation_minutes: e.time_allocation_minutes || 30
+            time_allocation_minutes: 30
         }));
         
     } catch (err) {

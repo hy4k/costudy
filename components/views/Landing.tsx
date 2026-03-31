@@ -36,10 +36,10 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 overflow-x-hidden transition-colors">
+    <div className="min-h-screen overflow-x-hidden bg-gradient-to-b from-white via-slate-50/80 to-slate-100 font-sans text-left transition-colors dark:from-slate-950 dark:via-slate-950 dark:to-slate-950">
       {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800/60">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
+      <nav className="fixed left-0 right-0 top-0 z-50 border-b border-slate-200/70 bg-white/85 shadow-luxury-sm backdrop-blur-xl backdrop-saturate-150 dark:border-slate-800/60 dark:bg-slate-950/90">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:h-16 sm:px-6">
           <CoStudyLogo size="sm" variant={isDark ? 'dark' : 'light'} />
           <div className="flex items-center gap-2">
           <button
@@ -54,28 +54,28 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
       </nav>
 
       {/* Hero */}
-      <section className="min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 pt-14 sm:pt-16 pb-20">
-        <div className="text-center max-w-4xl mx-auto">
-          <h1 className="text-[11vw] sm:text-[9vw] md:text-[7vw] lg:text-[120px] xl:text-[140px] font-extrabold leading-[0.9] tracking-tighter text-[#0a0a0a] dark:text-white" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      <section className="flex min-h-screen flex-col items-center justify-center px-4 pb-20 pt-14 sm:px-6 sm:pt-16">
+        <div className="mx-auto max-w-4xl text-center">
+          <h1 className="font-display text-[clamp(3.5rem,12vw,9rem)] font-semibold leading-[0.92] tracking-[-0.03em] text-[#0a0a0a] dark:text-white">
             COSTUDY
           </h1>
-          <p className="mt-6 sm:mt-8 text-sm sm:text-base md:text-lg lg:text-xl font-medium text-slate-500 dark:text-slate-400 tracking-[0.2em] sm:tracking-[0.25em] uppercase" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <p className="mt-6 font-sans text-sm font-medium uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 sm:mt-8 sm:tracking-[0.25em] md:text-lg lg:text-xl">
             THE CMA-US SOCIAL LEARNING UNIVERSE
           </p>
-          <p className="mt-1 text-sm sm:text-base md:text-lg lg:text-xl font-medium text-slate-500 dark:text-slate-400 tracking-[0.2em] sm:tracking-[0.25em] uppercase" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <p className="mt-1 font-sans text-sm font-medium uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 sm:tracking-[0.25em] md:text-lg lg:text-xl">
             THE EXAM-READY PLATFORM
           </p>
 
-          <div className="mt-10 sm:mt-12 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+          <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:mt-12 sm:flex-row sm:gap-4">
             <button
               onClick={onGetStarted}
-              className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3.5 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl text-sm uppercase tracking-wider transition-all shadow-lg shadow-red-500/30 hover:shadow-neon-red"
+              className="w-full rounded-xl bg-brand px-6 py-3 text-sm font-semibold uppercase tracking-wider text-white shadow-lg shadow-brand/25 transition-all hover:bg-brand-600 hover:shadow-neon-red sm:w-auto sm:px-8 sm:py-3.5"
             >
               Join the Beta →
             </button>
             <button
               onClick={onLogin}
-              className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3.5 bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-slate-200 text-white dark:text-slate-900 font-bold rounded-xl text-sm uppercase tracking-wider transition-all shadow-lg hover:shadow-[0_0_20px_rgba(15,23,42,0.4)] dark:hover:shadow-[0_0_20px_rgba(248,250,252,0.3)]"
+              className="w-full rounded-xl border border-slate-200/80 bg-white px-6 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 shadow-luxury-sm transition-all hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white sm:w-auto sm:px-8 sm:py-3.5"
             >
               Sign In
             </button>
@@ -109,7 +109,7 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
 
         <div className="relative max-w-6xl mx-auto">
           <div className="text-center mb-12 sm:mb-14">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white tracking-[0.15em] uppercase leading-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+            <h2 className="font-display text-2xl font-semibold uppercase leading-tight tracking-[0.12em] text-slate-900 dark:text-white sm:text-3xl md:text-4xl lg:text-5xl">
               Never Study Alone Again
             </h2>
           </div>
@@ -123,9 +123,9 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
                   hover:bg-white dark:hover:bg-white/10 hover:border-cyan-400/80 dark:hover:border-cyan-400/60
                   shadow-lg shadow-cyan-200/30 dark:shadow-cyan-500/10 hover:shadow-neon-cyan"
               >
-                <span className="block text-xl font-bold text-cyan-600 dark:text-cyan-400 mb-3 font-display" style={{ fontFamily: "'Syne', sans-serif" }}>{i + 1}</span>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white mb-2 font-display" style={{ fontFamily: "'Syne', sans-serif" }}>{f.title}</h3>
-                <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed font-display" style={{ fontFamily: "'Syne', sans-serif" }}>{f.description}</p>
+                <span className="block text-xl font-bold text-cyan-600 dark:text-cyan-400 mb-3 font-display">{i + 1}</span>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white mb-2 font-display">{f.title}</h3>
+                <p className="font-sans text-sm leading-[1.65] text-slate-600 dark:text-slate-400">{f.description}</p>
               </div>
             ))}
           </div>
@@ -146,10 +146,10 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
             <span className="inline-block px-4 py-1.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider mb-6 border border-emerald-500/40 dark:border-emerald-500/30">
               For Teachers
             </span>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white mb-4 tracking-[0.12em] uppercase leading-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+            <h2 className="font-display mb-4 text-3xl font-semibold uppercase leading-tight tracking-[0.12em] text-slate-900 dark:text-white sm:text-4xl md:text-5xl">
               Teach globally. Earn fairly.
             </h2>
-            <p className="text-slate-600 dark:text-slate-400 max-w-xl mx-auto text-base font-medium font-display" style={{ fontFamily: "'Syne', sans-serif" }}>
+            <p className="mx-auto max-w-xl text-base font-medium leading-[1.65] text-slate-600 dark:text-slate-400">
               Join as a verified mentor. Set your rates. Get discovered by students worldwide.
             </p>
           </div>
@@ -172,9 +172,9 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
                       <div className="w-10 h-10 rounded-lg bg-emerald-500/20 dark:bg-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
                         <Icon className="w-5 h-5" />
                       </div>
-                      <h3 className="text-base font-bold text-slate-900 dark:text-white font-display" style={{ fontFamily: "'Syne', sans-serif" }}>{c.title}</h3>
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white font-display">{c.title}</h3>
                     </div>
-                    <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed font-display" style={{ fontFamily: "'Syne', sans-serif" }}>{c.desc}</p>
+                    <p className="font-sans text-sm leading-[1.65] text-slate-600 dark:text-slate-400">{c.desc}</p>
                   </div>
                 </div>
               );
@@ -184,7 +184,7 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
           <div className="text-center">
             <button
               onClick={onGetStarted}
-              className="px-10 sm:px-12 py-4 sm:py-5 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl text-sm uppercase tracking-wider transition-all shadow-lg shadow-red-500/30 hover:shadow-neon-red"
+              className="rounded-xl bg-brand px-10 py-4 text-sm font-semibold uppercase tracking-wider text-white shadow-lg shadow-brand/25 transition-all hover:bg-brand-600 hover:shadow-neon-red sm:px-12 sm:py-5"
             >
               Apply as Teacher →
             </button>
@@ -206,10 +206,10 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
             <span className="inline-block px-4 py-1.5 rounded-full bg-red-500/20 text-red-700 dark:text-red-400 text-xs font-bold uppercase tracking-wider mb-6 border border-red-500/40 dark:border-red-500/30">
               Simple Pricing
             </span>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-white mb-4 tracking-[0.12em] uppercase leading-tight" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+            <h2 className="font-display mb-4 text-3xl font-semibold uppercase leading-tight tracking-[0.12em] text-slate-900 dark:text-white sm:text-4xl md:text-5xl">
               Start free. Upgrade when ready.
             </h2>
-            <p className="text-slate-600 dark:text-slate-400 max-w-xl mx-auto text-base font-medium mb-8 font-display" style={{ fontFamily: "'Syne', sans-serif" }}>
+            <p className="mx-auto mb-8 max-w-xl text-base font-medium leading-[1.65] text-slate-600 dark:text-slate-400">
               No credit card required. Free tier available forever.
             </p>
 
@@ -217,15 +217,13 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
               bg-white/80 border-rose-200/70 dark:bg-white/5 dark:border-white/10">
               <button
                 onClick={() => setBillingCycle('MONTHLY')}
-                className={`px-5 sm:px-7 py-2.5 rounded-lg text-sm font-medium transition-all font-display ${billingCycle === 'MONTHLY' ? 'bg-white dark:bg-white/20 text-slate-900 dark:text-white border border-slate-200 dark:border-white/20 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-300'}`}
-                style={{ fontFamily: "'Syne', sans-serif" }}
+                className={`rounded-lg px-5 py-2.5 text-sm font-medium transition-all sm:px-7 ${billingCycle === 'MONTHLY' ? 'border border-slate-200 bg-white text-slate-900 shadow-sm dark:border-white/20 dark:bg-white/20 dark:text-white' : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-300'}`}
               >
                 Monthly
               </button>
               <button
                 onClick={() => setBillingCycle('YEARLY')}
-                className={`px-5 sm:px-7 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 font-display ${billingCycle === 'YEARLY' ? 'bg-red-600 text-white shadow-lg shadow-red-500/30 hover:shadow-neon-red' : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-300'}`}
-                style={{ fontFamily: "'Syne', sans-serif" }}
+                className={`flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium transition-all sm:px-7 ${billingCycle === 'YEARLY' ? 'bg-brand text-white shadow-lg shadow-brand/25 hover:shadow-neon-red' : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-300'}`}
               >
                 Yearly
                 <span className="text-xs bg-red-500/80 px-1.5 py-0.5 rounded">-33%</span>
@@ -240,11 +238,11 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
                 border-red-200/60 dark:border-red-500/20
                 hover:bg-white dark:hover:bg-white/10 hover:border-red-300/80 dark:hover:border-red-500/40
                 hover:shadow-[0_0_25px_rgba(239,68,68,0.15)] dark:hover:shadow-[0_0_25px_rgba(255,255,255,0.05)]">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3 font-display" style={{ fontFamily: "'Syne', sans-serif" }}>Free</h3>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3 font-display">Free</h3>
                 <div className="mb-6">
-                  <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white font-display" style={{ fontFamily: "'Syne', sans-serif" }}>₹0</span>
+                  <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white font-display">₹0</span>
                 </div>
-                <ul className="space-y-3 mb-6 text-slate-600 dark:text-slate-400 text-sm sm:text-base font-display leading-relaxed flex-1" style={{ fontFamily: "'Syne', sans-serif" }}>
+                <ul className="mb-6 flex-1 space-y-3 font-sans text-sm leading-[1.6] text-slate-600 dark:text-slate-400 sm:text-base">
                   {['20 AI questions/day', '10 MCQ practice/day', 'Wall access', 'Basic study rooms'].map((f, i) => (
                     <li key={i} className="flex items-center gap-3">
                       <Icons.CheckCircle className="w-5 h-5 text-emerald-500 shrink-0" />
@@ -267,12 +265,12 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
                 <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-red-600 text-white text-xs font-bold rounded-full">
                   Popular
                 </span>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3 font-display" style={{ fontFamily: "'Syne', sans-serif" }}>Pro</h3>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3 font-display">Pro</h3>
                 <div className="mb-6">
-                  <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white font-display" style={{ fontFamily: "'Syne', sans-serif" }}>₹333</span>
+                  <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white font-display">₹333</span>
                   <span className="text-slate-500 dark:text-slate-400 text-sm ml-1">/mo</span>
                 </div>
-                <ul className="space-y-3 mb-6 text-slate-600 dark:text-slate-400 text-sm sm:text-base font-display leading-relaxed flex-1" style={{ fontFamily: "'Syne', sans-serif" }}>
+                <ul className="mb-6 flex-1 space-y-3 font-sans text-sm leading-[1.6] text-slate-600 dark:text-slate-400 sm:text-base">
                   {['Unlimited AI questions', 'Unlimited MCQ', 'Mock exams', 'Essay evaluation', 'Priority support'].map((f, i) => (
                     <li key={i} className="flex items-center gap-3">
                       <Icons.CheckCircle className="w-5 h-5 text-emerald-500 shrink-0" />
@@ -280,7 +278,7 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
                     </li>
                   ))}
                 </ul>
-                <button onClick={onGetStarted} className="w-full py-3.5 bg-red-600 hover:bg-red-500 text-white font-semibold rounded-xl text-sm transition-all shadow-lg shadow-red-500/30 hover:shadow-neon-red">
+                <button onClick={onGetStarted} className="w-full rounded-xl bg-brand py-3.5 text-sm font-semibold text-white shadow-lg shadow-brand/25 transition-all hover:bg-brand-600 hover:shadow-neon-red">
                   Upgrade to Pro
                 </button>
               </div>
@@ -292,12 +290,12 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
                 border-emerald-200/60 dark:border-emerald-500/30
                 hover:bg-white dark:hover:bg-white/10 hover:border-emerald-400/80 dark:hover:border-emerald-500/50
                 hover:shadow-neon-emerald">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3 font-display" style={{ fontFamily: "'Syne', sans-serif" }}>Mentor</h3>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3 font-display">Mentor</h3>
                 <div className="mb-6">
-                  <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white font-display" style={{ fontFamily: "'Syne', sans-serif" }}>₹1,999</span>
+                  <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white font-display">₹1,999</span>
                   <span className="text-slate-500 dark:text-slate-400 text-sm ml-1">/mo</span>
                 </div>
-                <ul className="space-y-3 mb-6 text-slate-600 dark:text-slate-400 text-sm sm:text-base font-display leading-relaxed flex-1" style={{ fontFamily: "'Syne', sans-serif" }}>
+                <ul className="mb-6 flex-1 space-y-3 font-sans text-sm leading-[1.6] text-slate-600 dark:text-slate-400 sm:text-base">
                   {['Everything in Pro', 'Verified badge', 'Student dashboard', 'Revenue share', 'Analytics'].map((f, i) => (
                     <li key={i} className="flex items-center gap-3">
                       <Icons.CheckCircle className="w-5 h-5 text-emerald-500 shrink-0" />
@@ -317,15 +315,15 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
       {/* CTA Section */}
       <section className="py-16 sm:py-20 md:py-28 px-4 sm:px-6 bg-[#1a1c29]">
         <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white mb-4 tracking-[0.15em] uppercase" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <h2 className="font-display mb-4 text-2xl font-semibold uppercase tracking-[0.12em] text-white sm:text-3xl md:text-4xl">
             Ready to pass the CMA?
           </h2>
-          <p className="text-slate-400 mb-8 font-medium font-display" style={{ fontFamily: "'Syne', sans-serif" }}>
+          <p className="mb-8 font-sans text-base font-medium leading-relaxed text-slate-400">
             Join 847+ candidates studying smarter together.
           </p>
           <button 
             onClick={onGetStarted}
-            className="px-10 py-4 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl text-sm uppercase tracking-wider transition-all shadow-lg shadow-red-500/30 hover:shadow-neon-red"
+            className="rounded-xl bg-brand px-10 py-4 text-sm font-semibold uppercase tracking-wider text-white shadow-lg shadow-brand/25 transition-all hover:bg-brand-600 hover:shadow-neon-red"
           >
             Get Started Free →
           </button>

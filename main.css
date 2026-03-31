@@ -17,9 +17,9 @@
 }
 
 body {
-  background-color: #f8fafc;
+  background: linear-gradient(180deg, #fafbfc 0%, #f1f5f9 55%, #eef2f7 100%);
   color: #0f172a;
-  font-family: 'Plus Jakarta Sans', 'Geist', system-ui, sans-serif;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-feature-settings: 'kern' 1, 'liga' 1;
   text-rendering: optimizeLegibility;
 }

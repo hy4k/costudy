@@ -192,9 +192,9 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
   };
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-gradient-to-b from-brand/[0.07] via-slate-50 to-slate-100 text-slate-900 selection:bg-brand selection:text-white relative">
-      {/* Lowered z-index from 30 to 10 to ensure system icons are clickable */}
-      <nav className="relative z-40 flex h-16 items-center justify-between border-b border-brand/20 bg-gradient-to-r from-white via-brand/[0.06] to-white px-6 font-sans backdrop-blur-xl sm:px-8">
+    <div className="relative flex h-screen flex-col overflow-hidden bg-gradient-to-b from-brand/[0.05] via-slate-50 to-slate-100 text-slate-900 selection:bg-brand selection:text-white">
+      <nav className="relative z-40 flex h-[4.25rem] items-center justify-center border-b border-slate-200/80 bg-white/75 px-4 font-sans shadow-luxury-sm backdrop-blur-xl backdrop-saturate-150 sm:px-6">
+        <div className="flex w-full max-w-[90rem] items-center justify-between gap-4 sm:gap-6">
         <div className="flex items-center gap-4 sm:gap-6">
             {/* Mobile Menu Toggle */}
             <button 
@@ -215,7 +215,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
           </div>
         </div>
 
-        <div className="flex gap-3 items-center">
+        <div className="flex shrink-0 gap-3 items-center">
           <div className="hidden lg:block h-8 w-px bg-slate-200 mx-2"></div>
           {isLoggedIn ? (
             <div className="flex gap-4 items-center">
@@ -233,7 +233,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
 
                   {/* NOTIFICATION DROPDOWN */}
                   {showNotifications && (
-                      <div className="absolute top-full right-0 mt-4 w-72 sm:w-96 bg-white rounded-[2rem] border border-slate-100 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.1)] overflow-hidden animate-in slide-in-from-top-4 z-20">
+                      <div className="absolute top-full right-0 z-20 mt-4 w-72 overflow-hidden rounded-[1.5rem] border border-slate-200/60 bg-white/95 shadow-luxury backdrop-blur-xl animate-in slide-in-from-top-4">
                           <div className="p-6 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
                               <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Notifications</h4>
                               {unreadCount > 0 && (
@@ -282,13 +282,13 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
               </div>
 
               <button onClick={() => setView(ViewState.PROFILE)} className="flex items-center gap-3 group">
-                <div className="text-right hidden sm:block">
-                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{userRole === UserRole.TEACHER ? 'Specialist' : 'Scholar'}</div>
-                    <div className="text-[11px] font-black text-slate-900 uppercase tracking-tighter">{userName || 'My Account'}</div>
+                <div className="hidden text-right sm:block">
+                    <div className="font-display mb-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">{userRole === UserRole.TEACHER ? 'Specialist' : 'Scholar'}</div>
+                    <div className="font-sans text-xs font-semibold tracking-tight text-slate-900">{userName || 'My Account'}</div>
                 </div>
                 <img 
                   src={userAvatar || `https://i.pravatar.cc/100?u=${userName || 'me'}`} 
-                  className="w-10 h-10 rounded-xl object-cover ring-2 ring-slate-100 group-hover:ring-brand transition-all" 
+                  className="h-10 w-10 rounded-full object-cover ring-2 ring-slate-200/80 shadow-sm transition-all group-hover:ring-brand" 
                   alt="Profile" 
                 />
               </button>
@@ -302,11 +302,12 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
             </button>
           )}
         </div>
+        </div>
       </nav>
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-          <div className="fixed inset-0 top-16 z-40 flex flex-col overflow-y-auto bg-gradient-to-b from-brand/[0.12] via-white to-slate-50 p-6 backdrop-blur-xl animate-in slide-in-from-top-10 duration-300 lg:hidden">
+          <div className="fixed inset-0 top-[4.25rem] z-40 flex flex-col overflow-y-auto bg-gradient-to-b from-brand/[0.1] via-white to-slate-50 p-6 shadow-luxury-sm backdrop-blur-xl animate-in slide-in-from-top-10 duration-300 lg:hidden">
               <div className="space-y-2">
                   {renderNavItems(true)}
               </div>
@@ -314,12 +315,12 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
       )}
 
       <main className="relative flex-1 overflow-y-auto no-scrollbar">
-        <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-50">
-          <div className="absolute -left-1/4 top-1/4 h-[60%] w-[60%] rounded-full bg-brand/15 blur-[140px]" />
-          <div className="absolute -right-1/4 bottom-1/4 h-[50%] w-[50%] rounded-full bg-brand/8 blur-[120px]" />
-          <div className="absolute left-1/2 top-0 h-[40%] w-[80%] -translate-x-1/2 rounded-full bg-brand/[0.06] blur-[100px]" />
+        <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-[0.45]">
+          <div className="absolute -left-1/4 top-1/4 h-[55%] w-[55%] rounded-full bg-brand/12 blur-[120px]" />
+          <div className="absolute -right-1/4 bottom-1/4 h-[45%] w-[45%] rounded-full bg-slate-300/30 blur-[100px]" />
+          <div className="absolute left-1/2 top-0 h-[35%] w-[70%] -translate-x-1/2 rounded-full bg-brand/[0.05] blur-[90px]" />
         </div>
-        <div className="relative z-10 h-full font-sans text-left">
+        <div className="relative z-10 mx-auto h-full w-full max-w-[90rem] font-sans text-left">
           {children}
         </div>
       </main>

@@ -534,10 +534,10 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
         className={
           mode === 'FACULTY'
             ? 'w-full shrink-0 border-b border-slate-200/70 bg-gradient-to-b from-white via-slate-50/40 to-transparent'
-            : 'w-full shrink-0 border-b border-brand/20 bg-gradient-to-br from-brand/[0.14] via-white to-brand/[0.05]'
+            : 'w-full shrink-0 border-b border-brand/15 bg-gradient-to-br from-brand/[0.12] via-white to-slate-50/90 shadow-luxury-sm'
         }
       >
-        <div className="mx-auto max-w-3xl px-4 pb-6 pt-8 text-left sm:px-6">
+        <div className="mx-auto max-w-3xl px-4 pb-8 pt-10 text-left sm:px-6">
           <div className="flex items-start gap-4 text-left">
             <div
               className={
@@ -552,16 +552,16 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
               <p
                 className={
                   mode === 'FACULTY'
-                    ? 'text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500'
-                    : 'text-[11px] font-semibold uppercase tracking-[0.18em] text-brand'
+                    ? 'font-display text-xs font-medium uppercase tracking-[0.22em] text-slate-500'
+                    : 'font-display text-xs font-medium uppercase tracking-[0.22em] text-brand'
                 }
               >
                 {mode === 'FACULTY' ? 'Faculty' : 'Community'}
               </p>
-              <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+              <h1 className="font-display mt-2 text-3xl font-semibold tracking-tight text-slate-900 sm:text-[2.15rem]">
                 {mode === 'FACULTY' ? 'Faculty wall' : 'Study Wall'}
               </h1>
-              <p className="mt-2 max-w-[min(100%,40rem)] text-left text-sm leading-[1.65] text-slate-700">
+              <p className="mt-3 max-w-[min(100%,40rem)] text-left text-sm leading-[1.7] text-slate-600">
                 {mode === 'FACULTY'
                   ? 'Professional updates, resources, and discussion with your teaching colleagues.'
                   : 'Questions, resources, and peer discussion—aligned with your CMA US journey.'}

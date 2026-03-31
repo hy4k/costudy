@@ -201,8 +201,8 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
                                 <Icons.Users className="h-7 w-7" />
                             </div>
                             <div className="min-w-0">
-                                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">Collaboration</p>
-                                <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+                                <p className="font-display text-xs font-medium uppercase tracking-[0.22em] text-brand">Collaboration</p>
+                                <h1 className="font-display mt-2 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
                                     Study rooms
                                 </h1>
                             </div>

@@ -8,9 +8,9 @@ export default {
         'gradient-conic': 'conic-gradient(var(--tw-gradient-stops))',
       },
       fontFamily: {
-        sans: ['Plus Jakarta Sans', 'Geist', 'Geist Sans', 'system-ui', 'sans-serif'],
-        mono: ['Geist Mono', 'monospace'],
-        display: ['Syne', 'Plus Jakarta Sans', 'sans-serif'],
+        sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+        mono: ['Geist Mono', 'ui-monospace', 'monospace'],
+        display: ['Fraunces', 'Georgia', 'ui-serif', 'serif'],
       },
       boxShadow: {
         neomorph:
@@ -22,6 +22,9 @@ export default {
         'neomorph-inset-light':
           'inset 2px 2px 6px rgba(15, 23, 42, 0.08), inset -2px -2px 6px rgba(255, 255, 255, 0.95)',
         glass: '0 8px 32px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6)',
+        luxury:
+          '0 32px 64px -16px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(15, 23, 42, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.75)',
+        'luxury-sm': '0 12px 40px -8px rgba(15, 23, 42, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.5)',
         'neon-red': '0 0 20px rgba(239,68,68,0.5), 0 0 40px rgba(239,68,68,0.3)',
         'neon-emerald': '0 0 20px rgba(16,185,129,0.5), 0 0 40px rgba(16,185,129,0.3)',
         'neon-amber': '0 0 20px rgba(251,191,36,0.5), 0 0 40px rgba(251,191,36,0.3)',

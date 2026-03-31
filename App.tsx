@@ -32,10 +32,10 @@ import { localAuthService } from './services/localAuthService';
 
 // Loading fallback component
 const LoadingFallback = () => (
-  <div className="flex items-center justify-center h-full min-h-[400px]">
-    <div className="flex flex-col items-center gap-4">
-      <div className="w-12 h-12 border-4 border-brand border-t-transparent rounded-full animate-spin"></div>
-      <span className="text-slate-500 font-medium">Loading...</span>
+  <div className="flex min-h-[400px] h-full items-center justify-center bg-slate-50/80">
+    <div className="flex flex-col items-center gap-5">
+      <div className="h-12 w-12 animate-spin rounded-full border-2 border-slate-200 border-t-brand shadow-luxury-sm" />
+      <span className="font-display text-sm font-medium tracking-wide text-slate-500">Loading…</span>
     </div>
   </div>
 );
@@ -243,9 +243,9 @@ function App() {
 
   if (isInitialLoading) {
     return (
-      <div className="h-screen w-full bg-slate-50 flex flex-col items-center justify-center gap-6">
-        <Icons.CloudSync className="w-16 h-16 text-brand animate-spin" />
-        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 animate-pulse">Neural Handshake Active...</span>
+      <div className="flex h-screen w-full flex-col items-center justify-center gap-6 bg-gradient-to-b from-slate-50 to-slate-100">
+        <Icons.CloudSync className="h-14 w-14 animate-spin text-brand drop-shadow-sm" />
+        <span className="font-display text-xs font-medium tracking-[0.25em] text-slate-500">Preparing your workspace…</span>
       </div>
     );
   }
@@ -281,9 +281,9 @@ function App() {
   const renderView = () => {
     if (isLoggedIn && !user && currentView !== ViewState.WALL) {
       return (
-        <div className="h-full flex flex-col items-center justify-center gap-6 opacity-50">
-          <Icons.CloudSync className="w-12 h-12 text-brand animate-spin" />
-          <span className="text-[10px] font-black uppercase tracking-[0.3em]">Synchronizing Identity...</span>
+        <div className="flex h-full flex-col items-center justify-center gap-5 opacity-50">
+          <Icons.CloudSync className="h-12 w-12 animate-spin text-brand" />
+          <span className="font-display text-xs tracking-wide text-slate-500">Loading profile…</span>
         </div>
       );
     }

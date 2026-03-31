@@ -292,22 +292,22 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId }) => {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50">
+        <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 font-sans text-left">
             {/* Header */}
-            <div className="bg-white border-b border-slate-200">
-                <div className="max-w-7xl mx-auto px-6 py-12">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="p-2 bg-slate-900 rounded-xl">
-                            <Icons.FileText className="w-6 h-6 text-white" />
+            <div className="border-b border-slate-200/80 bg-white/90 shadow-luxury-sm backdrop-blur-sm">
+                <div className="mx-auto max-w-7xl px-6 py-12">
+                    <div className="mb-5 flex items-center gap-3">
+                        <div className="rounded-2xl bg-slate-900 p-2.5 shadow-md">
+                            <Icons.FileText className="h-6 w-6 text-white" />
                         </div>
-                        <span className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">
+                        <span className="font-display text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
                             CoStudy Assessment Engine
                         </span>
                     </div>
-                    <h1 className="text-5xl font-black text-slate-900 tracking-tight mb-4">
+                    <h1 className="font-display mb-4 text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
                         Mock Exam Portal
                     </h1>
-                    <p className="text-xl text-slate-500 max-w-2xl">
+                    <p className="max-w-2xl text-lg leading-[1.65] text-slate-600">
                         Prometric-authentic exam simulations. Your performance data refines your Study Cluster recommendations.
                     </p>
                 </div>

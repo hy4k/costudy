@@ -157,73 +157,86 @@ export const AIDeck: React.FC = () => {
         if (chatMode === 'FOLLOW_UP') setChatMode('STANDARD');
     };
 
+    const toolBtn = (tool: Tool, icon: React.ReactNode, title: string, hint: string) => (
+        <button
+            type="button"
+            onClick={() => setActiveTool(tool)}
+            className={`group flex w-full items-start gap-3 rounded-2xl border p-4 text-left transition-all ${
+                activeTool === tool
+                    ? 'border-brand/30 bg-white shadow-md ring-1 ring-slate-200/80'
+                    : 'border-transparent bg-transparent hover:border-slate-200 hover:bg-white/80'
+            }`}
+        >
+            <span
+                className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors ${
+                    activeTool === tool ? 'bg-brand/12 text-brand' : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200/80'
+                }`}
+            >
+                {icon}
+            </span>
+            <span className="min-w-0">
+                <span className={`block text-sm font-semibold ${activeTool === tool ? 'text-slate-900' : 'text-slate-600'}`}>{title}</span>
+                <span className="mt-0.5 block text-xs font-medium leading-snug text-slate-500">{hint}</span>
+            </span>
+        </button>
+    );
+
     return (
-        <div className="flex h-full flex-col md:flex-row bg-slate-50">
+        <div className="flex h-full min-h-0 flex-col bg-gradient-to-br from-slate-50 via-white to-brand/[0.04] md:flex-row">
             {/* Sidebar for Tools */}
-            <div className="w-full md:w-80 border-r border-slate-200 p-8 flex flex-col gap-4 bg-white/50">
-                <div className="mb-8 flex items-center gap-3">
-                    <div className="p-2 bg-brand/10 rounded-xl">
-                        <Icons.Sparkles className="text-brand w-6 h-6" />
+            <div className="flex w-full flex-col gap-2 border-b border-slate-200/80 bg-white/70 p-6 backdrop-blur-md md:w-80 md:border-b-0 md:border-r md:p-8">
+                <div className="mb-6 flex items-start gap-3 border-b border-slate-100 pb-6">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand/10 text-brand ring-1 ring-brand/15">
+                        <Icons.Sparkles className="h-6 w-6" />
                     </div>
-                    <div>
-                        <h2 className="font-black text-xl text-slate-900 tracking-tight">CMA Mastermind</h2>
-                        <div className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Super-Tutor Intel Layer</div>
+                    <div className="min-w-0 pt-0.5">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">AI workspace</p>
+                        <h2 className="mt-0.5 text-lg font-bold tracking-tight text-slate-900">CMA Mastermind</h2>
+                        <p className="mt-1 text-xs font-medium leading-relaxed text-slate-500">IMA-aligned tools for chat, notes, and drills.</p>
                     </div>
                 </div>
 
-                <button
-                    onClick={() => setActiveTool('CHAT')}
-                    className={`flex items-center gap-3 p-4 rounded-2xl text-left font-bold text-sm transition-all ${activeTool === 'CHAT' ? 'bg-white shadow-lg text-brand ring-1 ring-slate-100' : 'text-slate-500 hover:bg-slate-100'}`}
-                >
-                    <Icons.MessageCircle className="w-5 h-5" /> Mastermind Chat
-                </button>
-                <button
-                    onClick={() => setActiveTool('TOPIC')}
-                    className={`flex items-center gap-3 p-4 rounded-2xl text-left font-bold text-sm transition-all ${activeTool === 'TOPIC' ? 'bg-white shadow-lg text-brand ring-1 ring-slate-100' : 'text-slate-500 hover:bg-slate-100'}`}
-                >
-                    <Icons.Grid className="w-5 h-5" /> Topic Blueprint
-                </button>
-                <button
-                    onClick={() => setActiveTool('NOTES')}
-                    className={`flex items-center gap-3 p-4 rounded-2xl text-left font-bold text-sm transition-all ${activeTool === 'NOTES' ? 'bg-white shadow-lg text-brand ring-1 ring-slate-100' : 'text-slate-500 hover:bg-slate-100'}`}
-                >
-                    <Icons.BookOpen className="w-5 h-5" /> Notes Refiner
-                </button>
-                <button
-                    onClick={() => setActiveTool('FLASHCARDS')}
-                    className={`flex items-center gap-3 p-4 rounded-2xl text-left font-bold text-sm transition-all ${activeTool === 'FLASHCARDS' ? 'bg-white shadow-lg text-brand ring-1 ring-slate-100' : 'text-slate-500 hover:bg-slate-100'}`}
-                >
-                    <Icons.ClipboardList className="w-5 h-5" /> Formula Cards
-                </button>
-                <button
-                    onClick={() => setActiveTool('ESSAY')}
-                    className={`flex items-center gap-3 p-4 rounded-2xl text-left font-bold text-sm transition-all ${activeTool === 'ESSAY' ? 'bg-white shadow-lg text-brand ring-1 ring-slate-100' : 'text-slate-500 hover:bg-slate-100'}`}
-                >
-                    <Icons.Pencil className="w-5 h-5" /> Essay Auditor
-                </button>
+                {toolBtn('CHAT', <Icons.MessageCircle className="h-[18px] w-[18px]" />, 'Chat', 'Ask anything across Part 1 & 2')}
+                {toolBtn('TOPIC', <Icons.Grid className="h-[18px] w-[18px]" />, 'Topic blueprint', 'Structured deep-dives by topic')}
+                {toolBtn('NOTES', <Icons.BookOpen className="h-[18px] w-[18px]" />, 'Notes refiner', 'Turn rough material into clean notes')}
+                {toolBtn('FLASHCARDS', <Icons.ClipboardList className="h-[18px] w-[18px]" />, 'Formula cards', 'Quick recall for exam-heavy ideas')}
+                {toolBtn('ESSAY', <Icons.Pencil className="h-[18px] w-[18px]" />, 'Essay auditor', 'Practice responses with feedback')}
 
-                <div className="mt-auto space-y-4">
+                <div className="mt-auto space-y-3 pt-6">
                     <div
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                setChatMode('VAULT_REF');
+                            }
+                        }}
                         onClick={() => setChatMode('VAULT_REF')}
-                        className={`p-5 rounded-2xl cursor-pointer transition-all border ${chatMode === 'VAULT_REF' ? 'bg-brand/10 border-brand shadow-lg scale-105' : 'bg-slate-100 border-slate-200'}`}
+                        className={`cursor-pointer rounded-2xl border p-4 transition-all ${
+                            chatMode === 'VAULT_REF' ? 'border-brand/35 bg-brand/[0.07] shadow-sm' : 'border-slate-200 bg-slate-50/80 hover:border-brand/25'
+                        }`}
                     >
-                        <p className="text-[10px] font-black text-brand uppercase tracking-[0.2em] mb-2">Resource Library</p>
-                        <div className="flex items-center gap-2">
-                            <Icons.BookOpen className={`w-4 h-4 text-brand`} />
-                            <span className="text-[10px] font-black text-slate-900 uppercase">IMA Official Content Linked</span>
+                        <p className="text-xs font-semibold text-brand">Resource library</p>
+                        <div className="mt-2 flex items-center gap-2 text-slate-700">
+                            <Icons.BookOpen className="h-4 w-4 shrink-0 text-brand" />
+                            <span className="text-xs font-medium leading-snug">IMA-linked reference mode for chat</span>
                         </div>
                     </div>
                     {activeContext && (
-                        <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xl group animate-in slide-in-from-bottom-4 duration-500">
-                            <div className="flex items-center justify-between mb-3">
-                                <p className="text-[10px] font-black text-brand uppercase tracking-[0.2em]">Study Context</p>
-                                <div className="w-2 h-2 rounded-full bg-brand animate-pulse"></div>
+                        <div className="animate-in slide-in-from-bottom-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-lg duration-500 group">
+                            <div className="mb-2 flex items-center justify-between">
+                                <p className="text-xs font-semibold text-brand">Active context</p>
+                                <div className="h-2 w-2 animate-pulse rounded-full bg-brand" />
                             </div>
-                            <div className="text-[11px] text-slate-500 line-clamp-3 mb-4 font-medium italic leading-relaxed">"{activeContext}"</div>
+                            <div className="mb-3 line-clamp-3 text-xs font-medium italic leading-relaxed text-slate-600">"{activeContext}"</div>
                             <button
+                                type="button"
                                 onClick={clearContext}
-                                className="w-full py-2 bg-slate-50 hover:bg-brand/5 text-[9px] text-slate-400 font-black hover:text-brand transition-all uppercase tracking-widest rounded-xl border border-slate-100"
-                            >Reset Context</button>
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 text-xs font-medium text-slate-600 transition-colors hover:border-brand/30 hover:bg-brand/[0.06] hover:text-slate-900"
+                            >
+                                Reset context
+                            </button>
                         </div>
                     )}
                 </div>
@@ -234,28 +247,31 @@ export const AIDeck: React.FC = () => {
                 {activeTool === 'CHAT' && (
                     <div className="flex-1 flex flex-col bg-white rounded-[2rem] border border-slate-200 overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.03)] relative">
                         {/* Chat Header */}
-                        <div className="px-8 py-5 border-b border-slate-100 flex justify-between items-center bg-white/80 backdrop-blur-md z-20">
-                            <div className="flex items-center gap-6">
-                                <span className="font-black text-slate-900 text-sm tracking-tight uppercase">CMA-US Super-Tutor</span>
-                                <div className="flex bg-slate-50 rounded-xl p-1 gap-1 border border-slate-200">
+                        <div className="z-20 flex flex-col gap-4 border-b border-slate-100 bg-white/90 px-6 py-4 backdrop-blur-md sm:flex-row sm:items-center sm:justify-between sm:px-8 sm:py-5">
+                            <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
+                                <span className="shrink-0 text-sm font-semibold text-slate-900">CMA US tutor</span>
+                                <div className="flex gap-1 rounded-full border border-slate-200/90 bg-slate-50/90 p-1">
                                     <button
+                                        type="button"
                                         onClick={() => setChatMode('STANDARD')}
-                                        className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${chatMode === 'STANDARD' ? 'bg-white shadow-sm text-brand' : 'text-slate-400 hover:text-slate-900'}`}
+                                        className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${chatMode === 'STANDARD' ? 'bg-white text-brand shadow-sm ring-1 ring-slate-200/80' : 'text-slate-500 hover:text-slate-900'}`}
                                     >
                                         Global
                                     </button>
                                     <button
+                                        type="button"
                                         onClick={() => setChatMode('VAULT_REF')}
-                                        className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${chatMode === 'VAULT_REF' ? 'bg-white shadow-sm text-brand' : 'text-slate-400 hover:text-slate-900'}`}
+                                        className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${chatMode === 'VAULT_REF' ? 'bg-white text-brand shadow-sm ring-1 ring-slate-200/80' : 'text-slate-500 hover:text-slate-900'}`}
                                     >
                                         Library
                                     </button>
                                     <button
+                                        type="button"
                                         onClick={() => setChatMode('FOLLOW_UP')}
                                         disabled={!activeContext}
-                                        className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${chatMode === 'FOLLOW_UP' ? 'bg-white shadow-sm text-brand' : activeContext ? 'text-slate-400 hover:text-slate-900' : 'text-slate-200 cursor-not-allowed'}`}
+                                        className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${chatMode === 'FOLLOW_UP' ? 'bg-white text-brand shadow-sm ring-1 ring-slate-200/80' : activeContext ? 'text-slate-500 hover:text-slate-900' : 'cursor-not-allowed text-slate-300'}`}
                                     >
-                                        Active
+                                        Follow-up
                                     </button>
                                 </div>
                             </div>

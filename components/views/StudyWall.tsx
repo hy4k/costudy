@@ -471,7 +471,30 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto px-3 sm:px-6 py-6 sm:py-10 flex flex-col items-center overflow-visible pb-24 sm:pb-12">
+    <div className="flex min-h-full w-full flex-col">
+      <header className="w-full shrink-0 border-b border-slate-200/70 bg-gradient-to-b from-white via-slate-50/40 to-transparent">
+        <div className="mx-auto max-w-3xl px-4 pb-6 pt-8 sm:px-6">
+          <div className="flex items-start gap-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand/10 text-brand ring-1 ring-brand/20">
+              <Icons.MessageSquare className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                {mode === 'FACULTY' ? 'Faculty' : 'Community'}
+              </p>
+              <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                {mode === 'FACULTY' ? 'Faculty wall' : 'Study Wall'}
+              </h1>
+              <p className="mt-2 max-w-[min(100%,28rem)] text-sm leading-relaxed text-slate-600">
+                {mode === 'FACULTY'
+                  ? 'Professional updates, resources, and discussion with your teaching colleagues.'
+                  : 'Questions, resources, and peer discussion—aligned with your CMA US journey.'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </header>
+      <div className="mx-auto flex w-full max-w-3xl flex-col items-center overflow-visible px-3 pb-24 pt-6 sm:px-6 sm:pb-12 sm:pt-10">
 
       {/* TOAST FEEDBACK */}
       {alignFeedback && (
@@ -830,8 +853,8 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
               onClick={() => setActiveCategory(cat)}
               className={`px-4 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-all ${
                 activeCategory === cat
-                  ? 'bg-slate-900 text-white shadow-sm'
-                  : 'bg-white text-slate-500 hover:text-slate-800 border border-slate-200 hover:border-slate-300'
+                  ? 'bg-slate-900 text-white shadow-sm ring-1 ring-slate-900/10'
+                  : 'bg-white/90 text-slate-600 hover:text-slate-900 border border-slate-200/90 hover:border-brand/25 hover:bg-brand/[0.04]'
               }`}
             >
               {cat}
@@ -867,7 +890,7 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
               </button>
             </div>
           ) : (
-            <div className="space-y-px bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+            <div className="space-y-px overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_1px_0_rgba(15,23,42,0.04),0_12px_40px_-12px_rgba(15,23,42,0.08)]">
               {posts.map((post, idx) => {
                 const isAuditRequest = post.type === PostType.PEER_AUDIT_REQUEST;
                 const isBounty = post.type === PostType.BOUNTY;
@@ -1054,6 +1077,7 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
               })}
             </div>
           )}
+      </div>
       </div>
     </div>
   );

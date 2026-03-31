@@ -191,66 +191,67 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
     
     if (!selectedRoom) {
         return (
-            <div className="min-h-screen bg-slate-50">
-                <div className="max-w-6xl mx-auto px-6 py-12">
+            <div className="min-h-full bg-gradient-to-b from-white via-slate-50/80 to-slate-50">
+                <div className="relative mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-brand/[0.06] to-transparent" aria-hidden />
                     {/* Header */}
-                    <div className="mb-12">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="p-2 bg-purple-500 rounded-xl">
-                                <Icons.Users className="w-6 h-6 text-white" />
+                    <div className="relative mb-10 sm:mb-14">
+                        <div className="mb-6 flex flex-wrap items-start gap-4">
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand/10 text-brand ring-1 ring-brand/20">
+                                <Icons.Users className="h-6 w-6" />
                             </div>
-                            <span className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">
-                                CoStudy Cluster Hub
-                            </span>
+                            <div className="min-w-0">
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Collaboration</p>
+                                <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+                                    Study rooms
+                                </h1>
+                            </div>
                         </div>
-                        <h1 className="text-5xl font-black text-slate-900 tracking-tight mb-4">
-                            Study Rooms
-                        </h1>
-                        <p className="text-xl text-slate-500 max-w-2xl">
-                            Join a study cluster. Set missions, sync focus sessions, share resources, and ace the CMA together.
+                        <p className="max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
+                            Join a cluster, align on missions, run focus sessions, and share resources—built for CMA US study groups.
                         </p>
                     </div>
 
                     {/* Room Grid */}
                     {loading ? (
                         <div className="flex items-center justify-center py-20">
-                            <Icons.CloudSync className="w-12 h-12 text-slate-300 animate-spin" />
+                            <Icons.CloudSync className="h-12 w-12 animate-spin text-slate-300" />
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
                             {rooms.map(room => (
                                 <div 
                                     key={room.id}
                                     onClick={() => setSelectedRoom(room)}
-                                    className="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-xl hover:border-purple-300 transition-all cursor-pointer group"
+                                    className="group cursor-pointer rounded-2xl border border-slate-200/90 bg-white/90 p-6 shadow-[0_1px_0_rgba(15,23,42,0.04)] transition-all hover:border-brand/30 hover:shadow-[0_12px_40px_-16px_rgba(15,23,42,0.12)]"
                                 >
-                                    <div className="flex items-start justify-between mb-4">
-                                        <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-black text-lg">
+                                    <div className="mb-4 flex items-start justify-between gap-3">
+                                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-brand/90 to-brand-600 text-lg font-bold text-white shadow-sm">
                                             {room.name.charAt(0)}
                                         </div>
-                                        <span className="px-2 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full">
+                                        <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-200/60">
                                             {room.memberCount || 0} online
                                         </span>
                                     </div>
-                                    <h3 className="text-xl font-black text-slate-900 mb-2 group-hover:text-purple-600 transition-colors">
+                                    <h3 className="mb-2 text-lg font-semibold text-slate-900 transition-colors group-hover:text-brand">
                                         {room.name}
                                     </h3>
-                                    <p className="text-slate-500 text-sm mb-4 line-clamp-2">
+                                    <p className="mb-4 line-clamp-2 text-sm leading-relaxed text-slate-600">
                                         {room.description || 'A focused study group for CMA aspirants'}
                                     </p>
-                                    <div className="flex items-center gap-2 text-xs text-slate-400">
-                                        <Icons.Target className="w-4 h-4" />
-                                        <span>{room.activeSession || 'No active session'}</span>
+                                    <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+                                        <Icons.Target className="h-4 w-4 shrink-0 text-slate-400" />
+                                        <span className="truncate">{room.activeSession || 'No active session'}</span>
                                     </div>
                                 </div>
                             ))}
                             
                             {/* Create Room Card */}
-                            <div className="bg-slate-100 border-2 border-dashed border-slate-300 rounded-2xl p-6 flex flex-col items-center justify-center text-center hover:border-purple-400 hover:bg-purple-50 transition-all cursor-pointer min-h-[200px]">
-                                <div className="w-12 h-12 bg-slate-200 rounded-xl flex items-center justify-center mb-4">
-                                    <Icons.Plus className="w-6 h-6 text-slate-500" />
+                            <div className="flex min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300/90 bg-slate-50/50 p-6 text-center transition-all hover:border-brand/40 hover:bg-brand/[0.04]">
+                                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200">
+                                    <Icons.Plus className="h-6 w-6 text-slate-500" />
                                 </div>
-                                <h3 className="text-lg font-bold text-slate-700 mb-1">Create Room</h3>
+                                <h3 className="mb-1 text-lg font-semibold text-slate-800">Create room</h3>
                                 <p className="text-sm text-slate-500">Start a new study cluster</p>
                             </div>
                         </div>
@@ -275,34 +276,36 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
     ];
 
     return (
-        <div className="min-h-screen bg-slate-100 flex">
+        <div className="flex min-h-full bg-gradient-to-br from-slate-50 via-white to-brand/[0.03]">
             {/* Sidebar */}
-            <div className="w-72 bg-white border-r border-slate-200 flex flex-col">
+            <div className="flex w-72 flex-col border-r border-slate-200/90 bg-white/95 backdrop-blur-sm">
                 {/* Room Header */}
-                <div className="p-6 border-b border-slate-200">
+                <div className="border-b border-slate-200/90 p-6">
                     <button 
+                        type="button"
                         onClick={() => setSelectedRoom(null)}
-                        className="text-sm text-slate-500 hover:text-slate-700 mb-4 flex items-center gap-1"
+                        className="mb-4 flex items-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
                     >
-                        <Icons.ChevronLeft className="w-4 h-4" /> Back to Rooms
+                        <Icons.ChevronLeft className="h-4 w-4 shrink-0" /> Back to rooms
                     </button>
-                    <h2 className="text-xl font-black text-slate-900">{selectedRoom.name}</h2>
-                    <p className="text-sm text-slate-500 mt-1">{onlineMembers.length} members online</p>
+                    <h2 className="text-xl font-bold tracking-tight text-slate-900">{selectedRoom.name}</h2>
+                    <p className="mt-1 text-sm text-slate-600">{onlineMembers.length} members online</p>
                 </div>
 
                 {/* Tab Navigation */}
-                <nav className="flex-1 p-4 space-y-1">
+                <nav className="flex-1 space-y-1 p-4">
                     {tabs.map(tab => (
                         <button
+                            type="button"
                             key={tab.key}
                             onClick={() => setActiveTab(tab.key)}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${
+                            className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium transition-all ${
                                 activeTab === tab.key 
-                                    ? 'bg-purple-100 text-purple-700 font-bold' 
-                                    : 'text-slate-600 hover:bg-slate-100'
+                                    ? 'bg-brand/10 text-slate-900 ring-1 ring-brand/20' 
+                                    : 'text-slate-600 hover:bg-slate-50'
                             }`}
                         >
-                            {tab.icon}
+                            <span className={activeTab === tab.key ? 'text-brand' : 'text-slate-400'}>{tab.icon}</span>
                             <span>{tab.label}</span>
                         </button>
                     ))}

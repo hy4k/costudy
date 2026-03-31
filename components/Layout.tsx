@@ -133,18 +133,19 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
       setIsMobileMenuOpen(false);
   };
 
+  const navIconClass = 'w-[18px] h-[18px] shrink-0';
   const navIconMap: Record<string, React.ReactNode> = {
-    'Study Wall': <Icons.MessageSquare className="w-4 h-4" />,
-    'AI Deck': <Icons.Sparkles className="w-4 h-4" />,
-    'Mocks': <Icons.ClipboardList className="w-4 h-4" />,
-    'Study Rooms': <Icons.Users className="w-4 h-4" />,
-    'Mentors': <Icons.GraduationCap className="w-4 h-4" />,
-    'Messages': <Icons.MessageCircle className="w-4 h-4" />,
-    'My Study': <Icons.Target className="w-4 h-4" />,
-    'Faculty Room': <Icons.BookOpen className="w-4 h-4" />,
-    'Command Center': <Icons.BarChart className="w-4 h-4" />,
-    'Teaching Deck': <Icons.Sparkles className="w-4 h-4" />,
-    'Faculty Profile': <Icons.User className="w-4 h-4" />,
+    'Study Wall': <Icons.MessageSquare className={navIconClass} />,
+    'AI Deck': <Icons.Sparkles className={navIconClass} />,
+    'Mocks': <Icons.ClipboardList className={navIconClass} />,
+    'Study Rooms': <Icons.Users className={navIconClass} />,
+    'Mentors': <Icons.GraduationCap className={navIconClass} />,
+    'Messages': <Icons.MessageCircle className={navIconClass} />,
+    'My Study': <Icons.Target className={navIconClass} />,
+    'Faculty Room': <Icons.BookOpen className={navIconClass} />,
+    'Command Center': <Icons.BarChart className={navIconClass} />,
+    'Teaching Deck': <Icons.Sparkles className={navIconClass} />,
+    'Faculty Profile': <Icons.User className={navIconClass} />,
   };
 
   const NavButton = ({ view, label, isMobile = false }: { view: keyof ViewState; label: string; isMobile?: boolean }) => {
@@ -154,26 +155,31 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
     if (isMobile) {
         return (
             <button
+                type="button"
                 onClick={() => handleNavClick(view)}
-                className={`w-full py-4 px-6 text-left text-sm font-bold tracking-wide rounded-2xl transition-all flex items-center gap-3 ${isActive ? 'bg-brand text-white shadow-lg shadow-brand/20' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}
+                className={`w-full py-3.5 px-4 text-left text-sm font-medium rounded-xl transition-all flex items-center gap-3 border ${
+                  isActive
+                    ? 'bg-white text-slate-900 border-slate-200 shadow-sm ring-1 ring-brand/15'
+                    : 'border-transparent text-slate-600 hover:bg-slate-50 hover:border-slate-200'
+                }`}
             >
-                {icon}
+                <span className={isActive ? 'text-brand' : 'text-slate-400'}>{icon}</span>
                 {label}
             </button>
         );
     }
     return (
         <button
+          type="button"
           onClick={() => setView(view)}
-          className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] font-semibold tracking-wide whitespace-nowrap transition-all duration-200 ${
+          className={`flex items-center gap-2 px-3 sm:px-3.5 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-all duration-200 ${
             isActive
-              ? 'bg-slate-900 text-white shadow-md shadow-slate-900/10'
-              : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/80'
+              ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/90'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-white/70'
           }`}
         >
-          {icon}
+          <span className={isActive ? 'text-brand' : 'text-slate-400'}>{icon}</span>
           <span>{label}</span>
-          {isActive && <div className="absolute -bottom-[13px] left-1/2 -translate-x-1/2 w-5 h-0.5 bg-brand rounded-full" />}
         </button>
     );
   };
@@ -221,8 +227,10 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
             </div>
         </div>
 
-        <div className="hidden lg:flex flex-1 justify-center gap-2 px-4">
-          {renderNavItems()}
+        <div className="hidden lg:flex flex-1 justify-center min-w-0 px-2">
+          <div className="flex max-w-full items-center gap-0.5 overflow-x-auto no-scrollbar rounded-full border border-slate-200/80 bg-slate-100/90 p-1 shadow-[inset_0_1px_2px_rgba(15,23,42,0.06)] backdrop-blur-sm">
+            {renderNavItems()}
+          </div>
         </div>
 
         <div className="flex gap-3 items-center">

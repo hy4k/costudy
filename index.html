@@ -7,20 +7,11 @@
     <title>CoStudy | Learn Together</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <script type="importmap">
-{
-  "imports": {
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
-    "@supabase/supabase-js": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm"
-  }
-}
-</script>
-</head>
+  </head>
   <script>
     (function(){var d=localStorage.getItem('costudy-dark-mode');if(d==='true')document.documentElement.classList.add('dark');})();
+    // Force unregister stale service workers in dev
+    if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(r){r.forEach(function(sw){sw.unregister();console.log('Unregistered stale SW');})});}
   </script>
   <body class="selection:bg-brand selection:text-white antialiased">
     <div id="root"></div>

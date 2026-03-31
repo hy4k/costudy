@@ -68,6 +68,14 @@ export const costudyService = {
     }
   },
 
+  likePost: async (postId: string): Promise<void> => {
+    try {
+      await supabase.rpc('increment_post_likes', { post_id: postId });
+    } catch (e) {
+      // Silently fail — optimistic update already applied in UI
+    }
+  },
+
   createPost: async (authorId: string, content: string, type: PostType = PostType.QUESTION, tags: string[] = []) => {
     const { data, error } = await supabase
       .from('posts')
@@ -84,6 +92,17 @@ export const costudyService = {
       .select('*, author:user_profiles(*)');
     if (error) throw error;
     return data[0];
+  },
+
+  updateAuditStatus: async (postId: string, status: 'COMPLIANT' | 'NON_COMPLIANT', notes: string, auditorId?: string): Promise<void> => {
+    try {
+      await supabase
+        .from('posts')
+        .update({ audit_status: status, audit_notes: notes, auditor_id: auditorId })
+        .eq('id', postId);
+    } catch (e) {
+      // silent
+    }
   },
 
   getPostDiscussion: async (postId: string): Promise<Comment[]> => {
@@ -139,7 +158,7 @@ export const costudyService = {
         name: room.name,
         category: room.category || 'General',
         members: room.members_count || 0,
-        activeOnline: room.active_count || Math.floor(Math.random() * 20) + 5,
+        activeOnline: room.active_count || 0,
         color: room.color_theme || 'bg-brand',
         description: room.description || '',
         sections: ['Chat', 'Resources', 'Live Audio'],
@@ -178,16 +197,16 @@ export const costudyService = {
         img: profile.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.id}`,
         reputation: {
           studentImprovement: profile.reputation?.studyScore?.total || 0,
-          avgScoreJump: Math.floor(Math.random() * 15) + 5, // Would come from analytics
+          avgScoreJump: profile.reputation?.avgScoreJump || 0,
           consistency: profile.reputation?.consistencyScore?.streak || 0,
           helpfulness: profile.reputation?.helpfulnessScore?.total || 0,
-          responseTime: '< 2 hours'
+          responseTime: profile.response_time || '—'
         },
         trackRecord: {
           studentsTaught: profile.reputation?.helpfulnessScore?.groupsLed || 0,
           reviewCount: profile.reputation?.vouchesReceived || 0,
-          passRate: 85 + Math.floor(Math.random() * 15), // Would come from analytics
-          avgImprovement: 12 + Math.floor(Math.random() * 8)
+          passRate: profile.reputation?.passRate || 0,
+          avgImprovement: profile.reputation?.avgImprovement || 0
         },
         offerings: [
           { type: 'session', label: '1-on-1 Session', price: profile.hourly_rate || 500, currency: 'INR', unit: 'hour' },
@@ -204,18 +223,16 @@ export const costudyService = {
   },
 
   getLibraryItems: async (): Promise<LibraryItem[]> => {
-    return [
-      {
-        id: 'lib-1',
-        title: 'CMA Part 1: Strategic Financial Management Official Guide',
-        type: 'PDF',
-        size: '15.4 MB',
-        category: 'Financial Accounting',
-        tags: ['Part 1', 'IMA', 'Official'],
-        isIndexed: true,
-        pageCount: 450
-      }
-    ];
+    try {
+      const { data, error } = await supabase
+        .from('library_items')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error || !data) return [];
+      return data as LibraryItem[];
+    } catch (e) {
+      return [];
+    }
   },
 
   ingestToVault: async (itemId: string): Promise<boolean> => {
@@ -272,12 +289,7 @@ export const costudyService = {
         });
       }
 
-      // Fallback mock data if DB is empty for demo purposes
-      return [
-        { id: 's1', name: 'Rahul V.', handle: 'rahul_cma', avatar: 'https://i.pravatar.cc/150?u=s1', focus: 'Part 1', lastActivity: '10m ago', performanceScore: 82, status: 'Active' },
-        { id: 's2', name: 'Sneha P.', handle: 'sneha_study', avatar: 'https://i.pravatar.cc/150?u=s2', focus: 'Part 2', lastActivity: '1d ago', performanceScore: 65, status: 'Struggling' },
-        { id: 's3', name: 'Amit Kumar', handle: 'amit_k', avatar: 'https://i.pravatar.cc/150?u=s3', focus: 'Ethics', lastActivity: '4h ago', performanceScore: 90, status: 'Active' }
-      ];
+      return [];
     } catch (e) {
       return [];
     }

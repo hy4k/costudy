@@ -6,6 +6,7 @@ import { Post, UserRole, UserLevel, Comment, ViewState, PostType, User, Alignmen
 import { summarizePost } from '../../services/geminiService';
 import { costudyService } from '../../services/costudyService';
 import { getUserProfile } from '../../services/fetsService';
+import { alignmentService } from '../../services/alignmentService';
 
 interface StudyWallProps {
   setView: (view: keyof ViewState) => void;
@@ -15,90 +16,13 @@ interface StudyWallProps {
   mode?: 'PUBLIC' | 'FACULTY';
 }
 
-// ... (Existing Constants: FALLBACK_POSTS, FACULTY_POSTS, MIN_CHARS, MAX_CHARS, TAGS...)
-const FALLBACK_POSTS: any[] = [
-  {
-    id: 'p-fb-1',
-    type: PostType.QUESTION,
-    author: { name: 'Rohan Sharma', avatar: 'https://i.pravatar.cc/150?u=rohan', role: UserRole.STUDENT, level: UserLevel.LEARNER, signalLevel: 'ACTIVE_SOLVER' },
-    author_id: 'rohan-id',
-    content: "Can someone explain the Joint Cost concept in CMA Part 2? Specifically, how do we allocate costs when the sales value at split-off is unknown?",
-    created_at: new Date().toISOString(),
-    likes: 42,
-    tags: ['CMA Part 2', 'Costing', 'Joint Costs'],
-    subject: 'Cost Management'
-  },
-  {
-    id: 'p-fb-2',
-    type: PostType.RESOURCE,
-    author: { name: 'Dr. Anita Desai', avatar: 'https://i.pravatar.cc/150?u=anita', role: UserRole.TEACHER, level: UserLevel.EXPERT, signalLevel: 'ACTIVE_SOLVER' },
-    author_id: 'anita-id',
-    content: "Just uploaded the summarized IMA Ethics notes for Part 1. Focus on the four overarching principles for this Sunday's mock.",
-    created_at: new Date().toISOString(),
-    likes: 128,
-    tags: ['Part 1', 'Ethics', 'Study Guide'],
-    subject: 'IMA Standards'
-  },
-  {
-    id: 'p-audit-1',
-    type: PostType.PEER_AUDIT_REQUEST,
-    author: { name: 'Candidate #8842', avatar: '', role: UserRole.STUDENT, level: UserLevel.SCHOLAR, signalLevel: 'ACTIVE_SOLVER' },
-    author_id: 'u-audit-req',
-    content: "CASE FILE: Essay on Responsibility Accounting and Controllability Principle. \n\nScenario: Division Manager A is held responsible for allocated corporate overheads. Is this compliant with responsibility accounting?\n\nMy Argument: No, because allocated costs are non-controllable at the division level. Managers should only be evaluated on costs they can significantly influence.",
-    created_at: new Date(Date.now() - 100000).toISOString(),
-    likes: 0,
-    tags: ['Audit Request', 'Essay Review', 'Part 1'],
-    auditStatus: 'OPEN'
-  },
-  // Mock Bounty
-  {
-      id: 'p-bounty-1',
-      type: PostType.BOUNTY,
-      author: { name: 'Prof. Vikram Sethi', avatar: 'https://i.pravatar.cc/150?u=vikram', role: UserRole.TEACHER, level: UserLevel.EXPERT },
-      author_id: 't-1',
-      content: "TASK: Create a 1-page summary PDF of the 'COSO Framework' changes for 2025. Must include visual diagrams.",
-      created_at: new Date().toISOString(),
-      likes: 5,
-      tags: ['Bounty', 'Research', 'Credits'],
-      bountyDetails: {
-          rewardAmount: 500,
-          rewardType: 'CREDITS',
-          status: 'OPEN'
-      }
-  }
-];
-
-const FACULTY_POSTS: any[] = [
-    {
-        id: 'f-1',
-        type: PostType.FACULTY_DISCUSS,
-        author: { name: 'Prof. Vikram Sethi', avatar: 'https://i.pravatar.cc/150?u=vikram', role: UserRole.TEACHER, level: UserLevel.EXPERT },
-        author_id: 't-1',
-        content: "Observing a trend in the latest Part 1 window: Students are struggling significantly with the new Tech & Analytics domain questions. Recommending deep-dive sessions on Data Governance.",
-        created_at: new Date().toISOString(),
-        likes: 15,
-        tags: ['Exam Trends', 'Part 1', 'Curriculum'],
-        subject: 'CMA Updates'
-    },
-    {
-        id: 'f-2',
-        type: PostType.RESOURCE,
-        author: { name: 'Sarah Jenkins', avatar: 'https://i.pravatar.cc/150?u=sarah', role: UserRole.TEACHER, level: UserLevel.EXPERT },
-        author_id: 't-2',
-        content: "Shared my 'Internal Controls' case study template in the shared drive. It's working well to engage students in practical application rather than rote memorization.",
-        created_at: new Date(Date.now() - 3600000).toISOString(),
-        likes: 24,
-        tags: ['Resources', 'Pedagogy', 'Case Study'],
-        subject: 'Teaching Strategy'
-    }
-];
 
 const MIN_CHARS = 30;
 const MAX_CHARS = 600;
 
 const STUDENT_TAGS = [
-  'CMA Part 1', 'CMA Part 2', 'Financial Reporting', 'Cost Management', 
-  'Internal Controls', 'Ethics', 'Decision Analysis', 'Investment Decisions', 
+  'CMA Part 1', 'CMA Part 2', 'Financial Reporting', 'Cost Management',
+  'Internal Controls', 'Ethics', 'Decision Analysis', 'Investment Decisions',
   'Mock Exam', 'Exam Strategy', 'Study Group'
 ];
 
@@ -106,6 +30,24 @@ const FACULTY_TAGS = [
     'Exam Updates', 'Pedagogy', 'Student Behavior', 'Curriculum Design',
     'IMA Standards', 'Resources', 'Career Guidance', 'Classroom Mgmt'
 ];
+
+// ICMA exam windows (Jan, May/Jun, Sep)
+const getNextExamDate = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const windows = [
+    new Date(year, 0, 15),  // Jan 15
+    new Date(year, 4, 1),   // May 1
+    new Date(year, 8, 1),   // Sep 1
+    new Date(year + 1, 0, 15),
+  ];
+  return windows.find(d => d > now) || windows[windows.length - 1];
+};
+
+const getDaysUntilExam = () => {
+  const next = getNextExamDate();
+  return Math.ceil((next.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+};
 
 export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = false, userId, onAuthRequired, mode = 'PUBLIC' }) => {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -116,7 +58,7 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
   const [activeSummaryId, setActiveSummaryId] = useState<string | null>(null);
   const [openDiscussionId, setOpenDiscussionId] = useState<string | null>(null);
   const [discussions, setDiscussions] = useState<Record<string, Comment[]>>({});
-  
+
   // Post modal state
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [newPostContent, setNewPostContent] = useState('');
@@ -129,7 +71,7 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
   const [isAlignModalOpen, setIsAlignModalOpen] = useState(false);
   const [targetPeer, setTargetPeer] = useState<Partial<User> | null>(null);
   const [selectedPurpose, setSelectedPurpose] = useState<AlignmentPurpose | null>(null);
-  const [selectedDuration, setSelectedDuration] = useState<AlignmentDuration | null>(null); // New Duration State
+  const [selectedDuration, setSelectedDuration] = useState<AlignmentDuration | null>(null);
   const [alignmentNote, setAlignmentNote] = useState('');
   const [isSendingAlign, setIsSendingAlign] = useState(false);
 
@@ -140,10 +82,30 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
 
   const [currentUserProfile, setCurrentUserProfile] = useState<User | null>(null);
 
+  // --- BOOKMARKS STATE ---
+  const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem('costudy_bookmarks');
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch { return new Set(); }
+  });
+
+  // --- POLL STATE ---
+  const [pollVotes, setPollVotes] = useState<Record<string, string>>(() => {
+    try {
+      const saved = localStorage.getItem('costudy_poll_votes');
+      return saved ? JSON.parse(saved) : {};
+    } catch { return {}; }
+  });
+
+  const [alignFeedback, setAlignFeedback] = useState<string | null>(null);
+
   const tagsList = mode === 'FACULTY' ? FACULTY_TAGS : STUDENT_TAGS;
-  const categories = mode === 'FACULTY' 
+  const categories = mode === 'FACULTY'
     ? ['Faculty Lounge', 'Exam Intelligence', 'Resource Exchange', 'Policy Updates']
     : ['All Feed', 'Audit Desk', 'Bounty Board', 'Strategic Notes', 'Expert Q&A', 'Discussions'];
+
+  const daysUntilExam = getDaysUntilExam();
 
   useEffect(() => {
       const loadProfile = async () => {
@@ -160,30 +122,20 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
       try {
         setLoading(true);
         setError(null);
-        if (mode === 'FACULTY') {
-             setTimeout(() => {
-                 setPosts(FACULTY_POSTS as any);
-                 setLoading(false);
-             }, 600);
-        } else {
-            const data = await costudyService.getPosts(activeCategory);
-            // MERGE FALLBACK POSTS IF DATA EMPTY OR FOR DEMO SAKE TO SHOW AUDIT
-            const combined = [...(data || []), ...FALLBACK_POSTS];
-            
-            // Filter Logic
-            let filtered = combined;
-            if (activeCategory === 'Audit Desk') filtered = combined.filter(p => p.type === PostType.PEER_AUDIT_REQUEST);
-            else if (activeCategory === 'Bounty Board') filtered = combined.filter(p => p.type === PostType.BOUNTY);
-            else if (activeCategory !== 'All Feed') filtered = combined.filter(p => p.type !== PostType.PEER_AUDIT_REQUEST && p.type !== PostType.BOUNTY);
+        const data = await costudyService.getPosts(activeCategory);
+        const posts = data || [];
 
-            // Remove duplicates
-            const unique = Array.from(new Map(filtered.map(item => [item.id, item])).values());
-            
-            setPosts(unique as any);
-            setLoading(false);
+        let filtered = posts;
+        if (mode !== 'FACULTY') {
+          if (activeCategory === 'Audit Desk') filtered = posts.filter((p: any) => p.type === PostType.PEER_AUDIT_REQUEST);
+          else if (activeCategory === 'Bounty Board') filtered = posts.filter((p: any) => p.type === PostType.BOUNTY);
+          else if (activeCategory !== 'All Feed') filtered = posts.filter((p: any) => p.type !== PostType.PEER_AUDIT_REQUEST && p.type !== PostType.BOUNTY);
         }
+
+        setPosts(filtered as any);
+        setLoading(false);
       } catch (err: any) {
-        setPosts(FALLBACK_POSTS as any);
+        setPosts([]);
         setLoading(false);
       }
     };
@@ -207,7 +159,8 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
       setTagInput('');
       setIsPostModalOpen(false);
     } catch (err) {
-      alert("Failed to create post. Please try again.");
+      setAlignFeedback("Failed to create post. Please try again.");
+      setTimeout(() => setAlignFeedback(null), 3000);
     } finally {
       setIsSubmitting(false);
     }
@@ -291,41 +244,49 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
           onAuthRequired?.('LOGIN');
           return;
       }
-      if (peer.id === userId) return; 
+      if (peer.id === userId) return;
 
-      // Signal Guard
       if (peer.signalLevel === 'SILENT_LEARNER' || peer.signalLevel === 'EXAM_WEEK') {
-          alert(`Signal Intercepted: ${peer.name} is in ${peer.signalLevel?.replace('_', ' ')} mode and is not accepting protocols.`);
+          setAlignFeedback(`${peer.name} is in ${peer.signalLevel?.replace('_', ' ')} mode.`);
+          setTimeout(() => setAlignFeedback(null), 3000);
           return;
       }
 
       setTargetPeer(peer);
       setIsAlignModalOpen(true);
       setSelectedPurpose(null);
-      setSelectedDuration(null); // Reset duration
+      setSelectedDuration(null);
       setAlignmentNote('');
   };
 
   const confirmAlignment = async () => {
-      if (!selectedPurpose || !selectedDuration || !alignmentNote.trim()) return;
+      if (!selectedPurpose || !selectedDuration || !alignmentNote.trim() || !userId || !targetPeer?.id) return;
       setIsSendingAlign(true);
-      
-      // Simulate API call
-      setTimeout(() => {
-          setIsSendingAlign(false);
+      try {
+          await alignmentService.sendRequest(userId, targetPeer.id as string, selectedPurpose, selectedDuration, alignmentNote);
           setIsAlignModalOpen(false);
-          alert(`Alignment Request Dispatched to ${targetPeer?.name}.\nPurpose: ${selectedPurpose}\nDuration: ${selectedDuration}\n\nThis contract is now pending acceptance.`);
-      }, 1500);
+          setAlignFeedback(`Study contract sent to ${targetPeer?.name}. Awaiting acceptance.`);
+          setTimeout(() => setAlignFeedback(null), 4000);
+      } catch (e) {
+          setAlignFeedback('Failed to send contract. Please try again.');
+          setTimeout(() => setAlignFeedback(null), 3000);
+      } finally {
+          setIsSendingAlign(false);
+      }
   };
 
   // --- TRACKING HANDLER ---
-  const handleTrackUser = (peer: Partial<User>) => {
+  const handleTrackUser = async (peer: Partial<User>) => {
       if (!isLoggedIn) {
           onAuthRequired?.('LOGIN');
           return;
       }
-      if (peer.id === userId) return;
-      alert(`Radar Lock Established: ${peer.name}\n\nYou are now silently tracking their metrics.`);
+      if (!peer.id || peer.id === userId) return;
+      try {
+          await alignmentService.startTracking(userId!, peer.id as string);
+          setAlignFeedback(`Now tracking ${peer.name}.`);
+          setTimeout(() => setAlignFeedback(null), 3000);
+      } catch (e) {}
   };
 
   // --- VOUCH HANDLER ---
@@ -334,17 +295,29 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
           onAuthRequired?.('LOGIN');
           return;
       }
-      // Optimistic Update
-      setPosts(prev => prev.map(p => p.id === postId ? { ...p, likes: p.likes + 1 } : p));
-      // In real app, call API
+      setPosts(prev => prev.map(p => p.id === postId ? { ...p, likes: (p.likes || 0) + 1 } : p));
+      costudyService.likePost(postId);
   };
 
-  const handleClaimBounty = (post: Post) => {
+  // --- BOOKMARK HANDLER ---
+  const toggleBookmark = (postId: string) => {
       if (!isLoggedIn) {
           onAuthRequired?.('LOGIN');
           return;
       }
-      alert(`Bounty Claimed! Contact ${post.author?.name} via Messages to submit your work.`);
+      setBookmarkedIds(prev => {
+          const next = new Set(prev);
+          if (next.has(postId)) {
+              next.delete(postId);
+              setAlignFeedback('Removed from saved');
+          } else {
+              next.add(postId);
+              setAlignFeedback('Saved for exam review');
+          }
+          setTimeout(() => setAlignFeedback(null), 2000);
+          localStorage.setItem('costudy_bookmarks', JSON.stringify([...next]));
+          return next;
+      });
   };
 
   // --- AUDIT HANDLERS ---
@@ -353,9 +326,9 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
           onAuthRequired?.('LOGIN');
           return;
       }
-      // Visibility Guard: Only Active Solvers or Experts can audit
       if (currentUserProfile && (currentUserProfile.signalLevel === 'SILENT_LEARNER' || currentUserProfile.signalLevel === 'REVISION_FOCUSED')) {
-          alert("Access Denied: You must be in 'Active Solver' or 'Essay Specialist' mode to perform Peer Audits.");
+          setAlignFeedback("You must be in 'Active Solver' mode to perform Peer Audits.");
+          setTimeout(() => setAlignFeedback(null), 3000);
           return;
       }
       setAuditTargetPost(post);
@@ -363,29 +336,50 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
       setAuditNotes('');
   };
 
-  const submitAudit = () => {
-      if (!auditVerdict || !auditNotes) return;
-      // In real app: API call to update post status, reward points to both.
-      alert(`Audit Submitted.\nVerdict: ${auditVerdict}\n\nProfessional Skepticism Points Awarded to you.`);
-      
-      // Optimistic update
-      setPosts(prev => prev.map(p => p.id === auditTargetPost?.id ? { ...p, auditStatus: auditVerdict } : p));
-      setAuditTargetPost(null);
+  const submitAudit = async () => {
+      if (!auditVerdict || !auditNotes || !auditTargetPost) return;
+      try {
+          await costudyService.updateAuditStatus(auditTargetPost.id, auditVerdict, auditNotes, userId);
+          setPosts(prev => prev.map(p => p.id === auditTargetPost.id ? { ...p, auditStatus: auditVerdict } : p));
+          setAuditTargetPost(null);
+          setAlignFeedback('Audit submitted. Points awarded.');
+          setTimeout(() => setAlignFeedback(null), 3000);
+      } catch (e) {
+          setPosts(prev => prev.map(p => p.id === auditTargetPost.id ? { ...p, auditStatus: auditVerdict } : p));
+          setAuditTargetPost(null);
+      }
   };
 
-  const CategoryButton = ({ label, active, onClick, isSpecial }: any) => (
-    <div className="container-button" style={{ width: '160px' }} onClick={onClick}>
-      <div className="hover-area bt-1"></div>
-      <div className="hover-area bt-2"></div>
-      <div className="hover-area bt-3"></div>
-      <div className="hover-area bt-4"></div>
-      <div className="hover-area bt-5"></div>
-      <div className="hover-area bt-6"></div>
-      <button className={`tilt-btn ${active ? 'active shadow-lg shadow-brand/20' : ''} ${isSpecial ? 'font-black border-brand/20 bg-white/40 text-slate-900' : ''}`} style={{ fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-        {label}
-      </button>
-    </div>
-  );
+  const handleClaimBounty = (post: Post) => {
+      if (!isLoggedIn) {
+          onAuthRequired?.('LOGIN');
+          return;
+      }
+      setAlignFeedback(`Bounty claimed! Message ${post.author?.name} to submit your work.`);
+      setTimeout(() => setAlignFeedback(null), 4000);
+  };
+
+  // --- POLL HANDLER ---
+  const handlePollVote = (postId: string, option: string) => {
+      if (!isLoggedIn) {
+          onAuthRequired?.('LOGIN');
+          return;
+      }
+      if (pollVotes[postId]) return; // already voted
+      const next = { ...pollVotes, [postId]: option };
+      setPollVotes(next);
+      localStorage.setItem('costudy_poll_votes', JSON.stringify(next));
+      // Optimistic: update local post poll data
+      setPosts(prev => prev.map(p => {
+          if (p.id !== postId || !p.pollOptions) return p;
+          return {
+              ...p,
+              pollOptions: p.pollOptions.map((opt: any) =>
+                  opt.label === option ? { ...opt, votes: (opt.votes || 0) + 1 } : opt
+              )
+          };
+      }));
+  };
 
   const CommentItem = ({ comment, depth = 0, postId }: any) => {
     const [showReplyInput, setShowReplyInput] = useState(false);
@@ -397,45 +391,50 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
         await costudyService.createComment(postId, userId, replyText, comment.id);
         setReplyText('');
         setShowReplyInput(false);
-        loadDiscussion(postId); 
+        loadDiscussion(postId);
       } catch (err: any) {
-        alert("Action restricted. Please sign in.");
+        setAlignFeedback("Action restricted. Please sign in.");
+        setTimeout(() => setAlignFeedback(null), 3000);
       }
     };
 
     return (
-      <div className={`mt-6 ${depth > 0 ? 'ml-10 border-l-2 border-slate-100 pl-8' : ''}`}>
-        <div className="flex gap-4">
-          <img src={comment.author?.avatar || 'https://i.pravatar.cc/100'} className="w-10 h-10 rounded-xl object-cover ring-2 ring-white shadow-sm" alt="" />
-          <div className="flex-1">
-            <div className="bg-slate-50/70 p-6 rounded-[2rem] border border-slate-100 shadow-sm relative">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-black text-slate-900 uppercase tracking-widest">{comment.author?.name || 'Anonymous'}</span>
-                <span className="text-[10px] text-slate-400 font-bold">{comment.created_at ? new Date(comment.created_at).toLocaleTimeString() : 'now'}</span>
+      <div className={`mt-4 ${depth > 0 ? 'ml-8 border-l-2 border-slate-100 pl-6' : ''}`}>
+        <div className="flex gap-3">
+          {comment.author?.avatar ? (
+            <img src={comment.author.avatar} className="w-8 h-8 rounded-lg object-cover ring-1 ring-slate-100 shrink-0" alt="" />
+          ) : (
+            <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs shrink-0">
+              {(comment.author?.name || 'A').charAt(0)}
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-bold text-slate-900">{comment.author?.name || 'Anonymous'}</span>
+                <span className="text-[10px] text-slate-400">{comment.created_at ? new Date(comment.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'now'}</span>
               </div>
-              <p className="text-sm text-slate-600 font-medium leading-relaxed">{comment.content}</p>
+              <p className="text-sm text-slate-600 leading-relaxed">{comment.content}</p>
             </div>
-            <div className="flex gap-6 mt-3 ml-4">
-               <button onClick={() => setShowReplyInput(!showReplyInput)} className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-brand transition-colors">Reply</button>
-               {/* Vouch for Comments too? Maybe just stick to main posts for now to avoid complexity */}
-            </div>
+            <button onClick={() => setShowReplyInput(!showReplyInput)} className="text-[10px] font-bold text-slate-400 hover:text-brand mt-1.5 ml-2 transition-colors">Reply</button>
             {showReplyInput && (
-              <div className="mt-4 flex gap-3 animate-in slide-in-from-top-2 duration-300">
-                <input 
-                  type="text" 
+              <div className="mt-3 flex gap-2 animate-in slide-in-from-top-2 duration-200">
+                <input
+                  type="text"
                   autoFocus
-                  value={replyText} 
+                  value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
-                  placeholder="Share a thought..."
-                  className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs font-medium outline-none focus:ring-4 focus:ring-brand/5"
+                  onKeyDown={(e) => e.key === 'Enter' && submitReply()}
+                  placeholder="Write a reply..."
+                  className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs outline-none focus:ring-2 focus:ring-brand/10 focus:border-brand/30"
                 />
-                <button onClick={submitReply} className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest">Send</button>
+                <button onClick={submitReply} className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-bold hover:bg-brand transition-colors">Send</button>
               </div>
             )}
           </div>
         </div>
         {comment.replies && comment.replies.length > 0 && (
-            <div className="mt-2">
+            <div>
                 {comment.replies.map((reply: any) => (
                     <CommentItem key={reply.id} comment={reply} depth={depth + 1} postId={postId} />
                 ))}
@@ -449,100 +448,118 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
   const isOverLimit = charCount > MAX_CHARS;
   const isUnderLimit = charCount > 0 && charCount < MIN_CHARS;
 
+  const timeAgo = (dateStr: string) => {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 1) return 'just now';
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    const d = Math.floor(h / 24);
+    if (d < 7) return `${d}d ago`;
+    return new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  };
+
+  const postTypeConfig: Record<string, { label: string; color: string; bg: string; border: string }> = {
+    QUESTION: { label: 'Question', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
+    RESOURCE: { label: 'Resource', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200' },
+    MCQ: { label: 'MCQ', color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-200' },
+    PEER_AUDIT_REQUEST: { label: 'Peer Audit', color: 'text-slate-100', bg: 'bg-slate-800', border: 'border-slate-700' },
+    BOUNTY: { label: 'Bounty', color: 'text-white', bg: 'bg-brand', border: 'border-brand' },
+    FACULTY_DISCUSS: { label: 'Faculty', color: 'text-emerald-700', bg: 'bg-emerald-100', border: 'border-emerald-300' },
+    EVENT: { label: 'Event', color: 'text-amber-700', bg: 'bg-amber-100', border: 'border-amber-300' },
+  };
+
   return (
-    <div className="w-full max-w-4xl mx-auto px-3 sm:px-6 py-6 sm:py-12 flex flex-col items-center overflow-visible pb-24 sm:pb-12">
-      
+    <div className="w-full max-w-3xl mx-auto px-3 sm:px-6 py-6 sm:py-10 flex flex-col items-center overflow-visible pb-24 sm:pb-12">
+
+      {/* TOAST FEEDBACK */}
+      {alignFeedback && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[70] animate-in slide-in-from-top-4 duration-300">
+          <div className="bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl shadow-slate-900/20 text-sm font-medium flex items-center gap-2.5 backdrop-blur-xl">
+            <Icons.CheckBadge className="w-4 h-4 text-emerald-400 shrink-0" />
+            {alignFeedback}
+          </div>
+        </div>
+      )}
+
       {/* FLOATING ACTION BUTTON */}
-      <div className="fixed bottom-10 right-8 sm:bottom-12 sm:right-12 z-10">
+      <div className="fixed bottom-8 right-6 sm:bottom-10 sm:right-10 z-10">
         <button
           onClick={() => {
               if (isLoggedIn) setIsPostModalOpen(true);
               else onAuthRequired?.('LOGIN');
           }}
-          className="group relative flex items-center justify-center w-16 h-16 sm:w-24 sm:h-24 bg-brand rounded-[2rem] text-white shadow-2xl shadow-brand/30 hover:shadow-brand/50 transition-all duration-300 hover:scale-105 active:scale-95 border-2 border-white/20"
+          className="group relative flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-slate-900 rounded-2xl text-white shadow-xl shadow-slate-900/20 hover:bg-brand hover:shadow-brand/30 transition-all duration-300 hover:scale-105 active:scale-95"
         >
-            <div className="absolute inset-0 bg-white/20 rounded-[2rem] blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            <div className="relative z-10">
-                <Icons.Plus className="w-6 h-6 sm:w-10 sm:h-10 group-hover:rotate-90 transition-transform duration-300" />
-            </div>
-            
-            <div className="absolute right-full mr-6 top-1/2 -translate-y-1/2 bg-white px-4 py-2 rounded-xl shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-4 group-hover:translate-x-0 pointer-events-none whitespace-nowrap hidden sm:block">
-                <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">New {mode === 'FACULTY' ? 'Announcement' : 'Broadcast'}</span>
-            </div>
+            <Icons.Plus className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
         </button>
       </div>
 
       {/* --- AUDIT PANEL MODAL --- */}
       {auditTargetPost && (
           <div className="fixed inset-0 z-50 bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-6 animate-in fade-in duration-300">
-              <div className="bg-[#fffdf5] rounded-[2rem] w-full max-w-4xl h-[90vh] flex flex-col shadow-2xl relative border-[8px] border-slate-800 overflow-hidden">
-                  {/* Audit Header */}
+              <div className="bg-[#fffdf5] rounded-3xl w-full max-w-4xl h-[90vh] flex flex-col shadow-2xl relative overflow-hidden">
                   <div className="bg-slate-800 p-6 flex justify-between items-center shrink-0">
                       <div className="flex items-center gap-4">
                           <div className="p-3 bg-white/10 rounded-xl"><Icons.Scale className="w-6 h-6 text-white" /></div>
                           <div>
-                              <h3 className="text-xl font-black text-white uppercase tracking-tight">Peer Audit Desk</h3>
-                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Case ID: {auditTargetPost.id}</p>
+                              <h3 className="text-lg font-bold text-white">Peer Audit Desk</h3>
+                              <p className="text-[10px] text-slate-400">Case ID: {auditTargetPost.id}</p>
                           </div>
                       </div>
-                      <button onClick={() => setAuditTargetPost(null)} className="text-white/50 hover:text-white"><Icons.Plus className="w-8 h-8 rotate-45" /></button>
+                      <button onClick={() => setAuditTargetPost(null)} className="text-white/50 hover:text-white transition-colors"><Icons.Plus className="w-6 h-6 rotate-45" /></button>
                   </div>
 
                   <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-                      {/* Left: The Evidence (Post Content) */}
-                      <div className="flex-1 p-10 overflow-y-auto border-r border-slate-200">
-                          <div className="mb-8">
-                              <span className="px-3 py-1 bg-slate-200 text-slate-600 rounded-lg text-[10px] font-black uppercase tracking-widest">Candidate Submission</span>
-                              <h2 className="text-2xl font-serif font-bold text-slate-900 mt-4 leading-tight">"{auditTargetPost.content}"</h2>
+                      <div className="flex-1 p-8 overflow-y-auto border-r border-slate-200">
+                          <div className="mb-6">
+                              <span className="px-2.5 py-1 bg-slate-200 text-slate-600 rounded-lg text-[10px] font-bold uppercase">Candidate Submission</span>
+                              <h2 className="text-xl font-serif font-bold text-slate-900 mt-4 leading-relaxed">"{auditTargetPost.content}"</h2>
                           </div>
-                          
+
                           {auditTargetPost.tags && (
-                              <div className="flex flex-wrap gap-2 mb-8">
-                                  {auditTargetPost.tags.map(t => <span key={t} className="px-2 py-1 border border-slate-300 text-slate-500 text-[10px] font-bold uppercase">{t}</span>)}
+                              <div className="flex flex-wrap gap-2 mb-6">
+                                  {auditTargetPost.tags.map(t => <span key={t} className="px-2 py-1 border border-slate-200 text-slate-500 text-[10px] rounded-md">{t}</span>)}
                               </div>
                           )}
-
-                          <div className="p-6 bg-slate-100 rounded-xl border border-slate-200 text-sm text-slate-600 italic">
-                              "Please verify adherence to IMA standard 2C regarding Responsibility Accounting controllability logic."
-                          </div>
                       </div>
 
-                      {/* Right: The Evaluation Form */}
-                      <div className="w-full md:w-96 bg-slate-50 p-10 overflow-y-auto flex flex-col gap-8">
+                      <div className="w-full md:w-96 bg-slate-50 p-8 overflow-y-auto flex flex-col gap-6">
                           <div>
-                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">1. Verdict</label>
-                              <div className="space-y-3">
-                                  <button 
+                              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-3">Verdict</label>
+                              <div className="space-y-2">
+                                  <button
                                     onClick={() => setAuditVerdict('COMPLIANT')}
                                     className={`w-full p-4 rounded-xl border-2 text-left transition-all ${auditVerdict === 'COMPLIANT' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-500 hover:border-emerald-200'}`}
                                   >
-                                      <div className="font-black uppercase text-xs flex items-center gap-2"><Icons.CheckCircle className="w-4 h-4" /> Compliant (Pass)</div>
+                                      <div className="font-bold text-xs flex items-center gap-2"><Icons.CheckCircle className="w-4 h-4" /> Compliant</div>
                                   </button>
-                                  <button 
+                                  <button
                                     onClick={() => setAuditVerdict('NON_COMPLIANT')}
                                     className={`w-full p-4 rounded-xl border-2 text-left transition-all ${auditVerdict === 'NON_COMPLIANT' ? 'border-rose-500 bg-rose-50 text-rose-700' : 'border-slate-200 bg-white text-slate-500 hover:border-rose-200'}`}
                                   >
-                                      <div className="font-black uppercase text-xs flex items-center gap-2"><Icons.AlertCircle className="w-4 h-4" /> Non-Compliant (Revision)</div>
+                                      <div className="font-bold text-xs flex items-center gap-2"><Icons.AlertCircle className="w-4 h-4" /> Non-Compliant</div>
                                   </button>
                               </div>
                           </div>
 
                           <div className="flex-1">
-                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">2. Auditor Notes</label>
-                              <textarea 
+                              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-3">Notes</label>
+                              <textarea
                                 value={auditNotes}
                                 onChange={(e) => setAuditNotes(e.target.value)}
-                                placeholder="Cite specific concepts (e.g. 'Correct application of dual-rate method...')"
-                                className="w-full h-40 bg-white border border-slate-200 rounded-xl p-4 text-sm font-medium outline-none focus:border-slate-400 resize-none"
+                                placeholder="Cite specific concepts..."
+                                className="w-full h-40 bg-white border border-slate-200 rounded-xl p-4 text-sm outline-none focus:border-slate-400 resize-none"
                               />
                           </div>
 
-                          <button 
+                          <button
                             onClick={submitAudit}
                             disabled={!auditVerdict || !auditNotes}
-                            className="w-full py-4 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl hover:bg-black transition-all disabled:opacity-50"
+                            className="w-full py-4 bg-slate-900 text-white rounded-xl text-xs font-bold shadow-lg hover:bg-black transition-all disabled:opacity-40"
                           >
-                              Seal Audit
+                              Submit Audit
                           </button>
                       </div>
                   </div>
@@ -553,55 +570,55 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
       {/* --- ALIGNMENT (CAN) MODAL --- */}
       {isAlignModalOpen && targetPeer && (
           <div className="fixed inset-0 z-50 bg-violet-950/80 backdrop-blur-xl flex items-center justify-center p-6 animate-in fade-in duration-300">
-              <div className="bg-white rounded-[3rem] w-full max-w-3xl p-8 md:p-12 shadow-2xl relative animate-in zoom-in-95 duration-500 overflow-hidden border-2 border-violet-500/20 max-h-[90vh] overflow-y-auto no-scrollbar">
-                  <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-violet-500 via-indigo-500 to-violet-500"></div>
-                  
-                  <button onClick={() => setIsAlignModalOpen(false)} className="absolute top-6 right-6 p-3 hover:bg-slate-100 rounded-full transition-all text-slate-400 hover:text-slate-900">
-                      <Icons.Plus className="w-6 h-6 rotate-45" />
+              <div className="bg-white rounded-3xl w-full max-w-3xl p-8 md:p-10 shadow-2xl relative animate-in zoom-in-95 duration-500 overflow-hidden max-h-[90vh] overflow-y-auto no-scrollbar">
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 via-indigo-500 to-violet-500"></div>
+
+                  <button onClick={() => setIsAlignModalOpen(false)} className="absolute top-5 right-5 p-2 hover:bg-slate-100 rounded-xl transition-all text-slate-400 hover:text-slate-900">
+                      <Icons.Plus className="w-5 h-5 rotate-45" />
                   </button>
 
-                  <div className="flex flex-col md:flex-row gap-8 mb-10">
+                  <div className="flex flex-col md:flex-row gap-6 mb-8">
                       <div className="shrink-0 flex flex-col items-center">
-                          <img src={targetPeer.avatar || 'https://i.pravatar.cc/150'} className="w-24 h-24 rounded-3xl object-cover ring-4 ring-violet-50 shadow-xl mb-4" />
-                          <div className="text-center">
-                              <h3 className="text-lg font-black text-slate-900 uppercase tracking-tighter leading-none">{targetPeer.name}</h3>
-                              <span className="text-[10px] font-bold text-violet-500 uppercase tracking-widest">Target Peer</span>
-                          </div>
+                          {targetPeer.avatar ? (
+                            <img src={targetPeer.avatar} className="w-16 h-16 rounded-2xl object-cover ring-2 ring-violet-100 shadow-lg mb-3" />
+                          ) : (
+                            <div className="w-16 h-16 rounded-2xl bg-violet-100 flex items-center justify-center text-violet-600 font-bold text-xl mb-3">
+                              {(targetPeer.name || 'P').charAt(0)}
+                            </div>
+                          )}
+                          <h3 className="text-base font-bold text-slate-900">{targetPeer.name}</h3>
+                          <span className="text-[10px] text-violet-500 font-medium">Study Partner</span>
                       </div>
-                      
+
                       <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                              <div className="p-2 bg-violet-100 text-violet-600 rounded-lg"><Icons.Link className="w-5 h-5" /></div>
-                              <h2 className="text-2xl md:text-3xl font-black text-slate-900 uppercase tracking-tighter">Alignment Protocol</h2>
+                          <div className="flex items-center gap-2 mb-2">
+                              <Icons.Link className="w-4 h-4 text-violet-500" />
+                              <h2 className="text-xl font-bold text-slate-900">Alignment Protocol</h2>
                           </div>
-                          <p className="text-slate-500 text-sm font-medium leading-relaxed">
-                              You are initiating a formal academic connection. This is not a friend request; it is a commitment to mutual growth. Define the purpose and duration.
+                          <p className="text-slate-500 text-sm leading-relaxed">
+                              Initiate a formal study connection. Define the purpose and duration.
                           </p>
                       </div>
                   </div>
 
-                  {/* Step 1: Purpose */}
-                  <div className="mb-8">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block ml-2">1. Select Contract Type</label>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="mb-6">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3 block">Contract Type</label>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                           {Object.values(AlignmentPurpose).map((purpose) => (
                               <button
                                   key={purpose}
                                   onClick={() => setSelectedPurpose(purpose)}
-                                  className={`p-4 rounded-2xl border-2 text-left transition-all relative overflow-hidden group ${selectedPurpose === purpose ? 'border-violet-500 bg-violet-50 text-violet-900 shadow-lg scale-[1.02]' : 'border-slate-100 bg-slate-50 text-slate-500 hover:border-violet-200'}`}
+                                  className={`p-3 rounded-xl border-2 text-left transition-all ${selectedPurpose === purpose ? 'border-violet-500 bg-violet-50 text-violet-900' : 'border-slate-100 bg-slate-50 text-slate-500 hover:border-violet-200'}`}
                               >
-                                  {selectedPurpose === purpose && <div className="absolute top-2 right-2 text-violet-500"><Icons.CheckCircle className="w-4 h-4" /></div>}
-                                  <div className="text-[9px] font-black uppercase tracking-widest mb-1 opacity-70 group-hover:opacity-100">Type</div>
-                                  <div className="text-xs md:text-sm font-bold leading-tight">{purpose}</div>
+                                  <div className="text-xs font-bold leading-tight">{purpose}</div>
                               </button>
                           ))}
                       </div>
                   </div>
 
-                  {/* Step 2: Duration */}
-                  <div className="mb-8">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block ml-2">2. Define Protocol Duration</label>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="mb-6">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3 block">Duration</label>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                           {[
                               { label: 'Sprint', val: '7 Days' },
                               { label: 'Module', val: '14 Days' },
@@ -611,35 +628,34 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
                               <button
                                   key={d.val}
                                   onClick={() => setSelectedDuration(d.val as AlignmentDuration)}
-                                  className={`p-3 rounded-2xl border-2 text-center transition-all ${selectedDuration === d.val ? 'border-violet-500 bg-violet-900 text-white shadow-lg' : 'border-slate-100 bg-white text-slate-500 hover:border-violet-200'}`}
+                                  className={`p-3 rounded-xl border-2 text-center transition-all ${selectedDuration === d.val ? 'border-violet-500 bg-violet-900 text-white' : 'border-slate-100 bg-white text-slate-500 hover:border-violet-200'}`}
                               >
-                                  <div className="text-[9px] font-black uppercase tracking-widest mb-1 opacity-70">{d.label}</div>
+                                  <div className="text-[10px] text-opacity-70 mb-0.5">{d.label}</div>
                                   <div className="text-sm font-bold">{d.val}</div>
                               </button>
                           ))}
                       </div>
                   </div>
 
-                  {/* Step 3: Goal */}
-                  <div className="mb-10">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block ml-2">3. Mission Goal (Mandatory)</label>
-                      <textarea 
+                  <div className="mb-8">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3 block">Mission Goal</label>
+                      <textarea
                           value={alignmentNote}
                           onChange={(e) => setAlignmentNote(e.target.value)}
                           placeholder="E.g., Complete Section A MCQs with 80% accuracy..."
-                          className="w-full h-24 bg-slate-50 border border-slate-200 rounded-[1.5rem] p-6 text-sm font-medium outline-none focus:ring-4 focus:ring-violet-500/10 focus:border-violet-500/50 transition-all resize-none"
+                          className="w-full h-20 bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm outline-none focus:ring-2 focus:ring-violet-500/10 focus:border-violet-500/50 transition-all resize-none"
                       />
                   </div>
 
-                  <button 
+                  <button
                       onClick={confirmAlignment}
                       disabled={!selectedPurpose || !selectedDuration || !alignmentNote.trim() || isSendingAlign}
-                      className="w-full py-5 bg-violet-900 text-white rounded-[2rem] text-xs font-black uppercase tracking-[0.3em] shadow-xl shadow-violet-900/20 hover:bg-violet-800 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                      className="w-full py-4 bg-violet-900 text-white rounded-xl text-sm font-bold shadow-lg shadow-violet-900/20 hover:bg-violet-800 transition-all active:scale-[0.98] disabled:opacity-40 flex items-center justify-center gap-2"
                   >
                       {isSendingAlign ? (
-                          <><Icons.CloudSync className="w-4 h-4 animate-spin" /> ESTABLISHING LINK...</>
+                          <><Icons.CloudSync className="w-4 h-4 animate-spin" /> Connecting...</>
                       ) : (
-                          <>SEND CONTRACT <Icons.Send className="w-4 h-4" /></>
+                          <>Send Contract <Icons.Send className="w-4 h-4" /></>
                       )}
                   </button>
               </div>
@@ -648,33 +664,33 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
 
       {/* New Post Modal */}
       {isPostModalOpen && (
-        <div className="fixed inset-0 z-30 bg-slate-900/80 backdrop-blur-xl flex items-center justify-center p-6 animate-in fade-in duration-300">
-          <div className="bg-white rounded-[3rem] sm:rounded-[4rem] w-full max-w-2xl p-8 md:p-12 shadow-2xl relative animate-in zoom-in-95 duration-500 overflow-visible border border-white/50 max-h-[90vh] overflow-y-auto no-scrollbar">
-            <button 
+        <div className="fixed inset-0 z-30 bg-slate-900/80 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-3xl w-full max-w-2xl p-6 md:p-8 shadow-2xl relative animate-in zoom-in-95 duration-500 max-h-[90vh] overflow-y-auto no-scrollbar">
+            <button
               onClick={() => setIsPostModalOpen(false)}
-              className="absolute top-6 right-6 sm:top-8 sm:right-8 p-4 hover:bg-slate-100 rounded-2xl transition-all text-slate-400 hover:text-slate-900 z-10"
+              className="absolute top-5 right-5 p-2 hover:bg-slate-100 rounded-xl transition-all text-slate-400 hover:text-slate-900 z-10"
             >
-              <Icons.Plus className="w-8 h-8 rotate-45" />
+              <Icons.Plus className="w-5 h-5 rotate-45" />
             </button>
-            
-            <div className="mb-8 mt-4 sm:mt-0">
-                <h3 className="text-3xl md:text-4xl font-black text-slate-900 mb-2 tracking-tighter uppercase">{mode === 'FACULTY' ? 'Faculty Insight' : 'Broadcasting...'}</h3>
-                <p className="text-slate-500 font-medium text-sm md:text-base">
-                    {mode === 'FACULTY' ? 'Share professional updates, teaching strategies, or industry news with colleagues.' : 'Share strategic knowledge. Keep it concise, professional, and exam-focused.'}
+
+            <div className="mb-6">
+                <h3 className="text-xl font-bold text-slate-900 mb-1">{mode === 'FACULTY' ? 'Faculty Insight' : 'New Post'}</h3>
+                <p className="text-slate-500 text-sm">
+                    {mode === 'FACULTY' ? 'Share updates or strategies with colleagues.' : 'Share knowledge with the CMA community.'}
                 </p>
             </div>
-            
-            <div className="flex flex-wrap gap-3 mb-8">
+
+            <div className="flex flex-wrap gap-2 mb-6">
               {mode === 'FACULTY' ? (
                   [
-                    { type: PostType.FACULTY_DISCUSS, label: 'Discussion', icon: <Icons.MessageCircle className="w-4 h-4" /> },
-                    { type: PostType.RESOURCE, label: 'Resource Share', icon: <Icons.BookOpen className="w-4 h-4" /> },
-                    { type: PostType.EVENT, label: 'Event', icon: <Icons.Calendar className="w-4 h-4" /> }
+                    { type: PostType.FACULTY_DISCUSS, label: 'Discussion', icon: <Icons.MessageCircle className="w-3.5 h-3.5" /> },
+                    { type: PostType.RESOURCE, label: 'Resource', icon: <Icons.BookOpen className="w-3.5 h-3.5" /> },
+                    { type: PostType.EVENT, label: 'Event', icon: <Icons.Calendar className="w-3.5 h-3.5" /> }
                   ].map(item => (
-                    <button 
+                    <button
                       key={item.type}
                       onClick={() => setNewPostType(item.type)}
-                      className={`flex items-center gap-2 px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${newPostType === item.type ? 'bg-slate-900 text-white shadow-xl scale-105' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}
+                      className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-medium transition-all ${newPostType === item.type ? 'bg-slate-900 text-white shadow-md' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
                     >
                       {item.icon}
                       {item.label}
@@ -682,15 +698,15 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
                   ))
               ) : (
                   [
-                    { type: PostType.QUESTION, label: 'Question', icon: <Icons.HelpCircle className="w-4 h-4" /> },
-                    { type: PostType.RESOURCE, label: 'Resource', icon: <Icons.BookOpen className="w-4 h-4" /> },
-                    { type: PostType.MCQ, label: 'MCQ Share', icon: <Icons.ClipboardList className="w-4 h-4" /> },
-                    { type: PostType.PEER_AUDIT_REQUEST, label: 'Request Peer Audit', icon: <Icons.Scale className="w-4 h-4" /> }
+                    { type: PostType.QUESTION, label: 'Question', icon: <Icons.HelpCircle className="w-3.5 h-3.5" /> },
+                    { type: PostType.RESOURCE, label: 'Resource', icon: <Icons.BookOpen className="w-3.5 h-3.5" /> },
+                    { type: PostType.MCQ, label: 'MCQ', icon: <Icons.ClipboardList className="w-3.5 h-3.5" /> },
+                    { type: PostType.PEER_AUDIT_REQUEST, label: 'Peer Audit', icon: <Icons.Scale className="w-3.5 h-3.5" /> }
                   ].map(item => (
-                    <button 
+                    <button
                       key={item.type}
                       onClick={() => setNewPostType(item.type)}
-                      className={`flex items-center gap-2 px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${newPostType === item.type ? 'bg-slate-900 text-white shadow-xl scale-105' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}
+                      className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-medium transition-all ${newPostType === item.type ? 'bg-slate-900 text-white shadow-md' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
                     >
                       {item.icon}
                       {item.label}
@@ -699,58 +715,45 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
               )}
             </div>
 
-            <div className="relative mb-6">
-                <textarea 
+            <div className="relative mb-5">
+                <textarea
                   autoFocus
                   value={newPostContent}
                   onChange={(e) => setNewPostContent(e.target.value)}
                   placeholder={
-                      mode === 'FACULTY' ? "Colleagues, regarding the recent changes to Part 2..." : 
-                      newPostType === PostType.PEER_AUDIT_REQUEST ? "Paste your essay scenario and your argument here. Be precise." :
-                      "What strategic insight have you learned today?"
+                      mode === 'FACULTY' ? "Share a professional update..." :
+                      newPostType === PostType.PEER_AUDIT_REQUEST ? "Paste your essay scenario and argument." :
+                      "What did you learn today?"
                   }
-                  className={`w-full h-40 p-8 bg-slate-50 rounded-[2.5rem] border-2 text-lg font-medium outline-none transition-all resize-none shadow-inner leading-relaxed ${isOverLimit ? 'border-rose-200 text-rose-500 bg-rose-50' : 'border-transparent focus:border-brand/30 focus:bg-white text-slate-800'}`}
+                  className={`w-full h-36 p-5 bg-slate-50 rounded-2xl border-2 text-sm font-medium outline-none transition-all resize-none leading-relaxed ${isOverLimit ? 'border-rose-200 text-rose-500 bg-rose-50' : 'border-transparent focus:border-brand/20 focus:bg-white text-slate-800'}`}
                 />
-                
-                {/* Character Counter */}
-                <div className={`absolute bottom-6 right-8 text-[10px] font-black uppercase tracking-widest transition-colors ${isOverLimit ? 'text-rose-500' : isUnderLimit ? 'text-amber-500' : 'text-slate-400'}`}>
-                    {charCount} / {MAX_CHARS}
+                <div className={`absolute bottom-4 right-5 text-[10px] font-medium transition-colors ${isOverLimit ? 'text-rose-500' : isUnderLimit ? 'text-amber-500' : 'text-slate-400'}`}>
+                    {charCount}/{MAX_CHARS}
                 </div>
             </div>
 
             {/* TAGS SECTION */}
-            <div className="mb-8">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mb-3 block ml-2">Strategic Tags</label>
-                
-                {/* Tag Input */}
-                <div className="relative mb-4">
+            <div className="mb-6">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 block">Tags</label>
+
+                <div className="relative mb-3">
                   <input
                     type="text"
                     value={tagInput}
                     onChange={(e) => setTagInput(e.target.value)}
                     onKeyDown={handleTagKeyDown}
                     onBlur={handleAddTag}
-                    placeholder="Add tags (press Enter)..."
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 text-sm font-bold text-slate-800 outline-none focus:ring-4 focus:ring-brand/5 focus:border-brand/30 transition-all placeholder:text-slate-400 uppercase"
+                    placeholder="Add tags (press Enter)"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-brand/10 focus:border-brand/20 transition-all"
                   />
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                    <button 
-                       onClick={handleAddTag} 
-                       disabled={!tagInput.trim()}
-                       className="p-2 bg-slate-200 text-slate-500 rounded-xl hover:bg-brand hover:text-white transition-all disabled:opacity-50"
-                    >
-                      <Icons.Plus className="w-4 h-4" />
-                    </button>
-                  </div>
                 </div>
 
-                {/* Selected Tags */}
                 {newPostTags.length > 0 && (
-                   <div className="flex flex-wrap gap-2 mb-6">
+                   <div className="flex flex-wrap gap-1.5 mb-3">
                       {newPostTags.map(tag => (
-                        <div key={tag} className="flex items-center gap-2 px-4 py-2 bg-brand text-white rounded-xl text-[10px] font-black uppercase tracking-widest animate-in zoom-in-95">
+                        <div key={tag} className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 text-white rounded-lg text-[10px] font-medium">
                            <span>{tag}</span>
-                           <button onClick={() => handleRemoveTag(tag)} className="hover:text-brand-200">
+                           <button onClick={() => handleRemoveTag(tag)} className="hover:text-rose-300">
                              <Icons.Plus className="w-3 h-3 rotate-45" />
                            </button>
                         </div>
@@ -758,13 +761,12 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
                    </div>
                 )}
 
-                {/* Suggested Tags */}
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5">
                    {tagsList.map(tag => (
-                      <button 
+                      <button
                         key={tag}
                         onClick={() => toggleTag(tag)}
-                        className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-all ${newPostTags.includes(tag) ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-400 border-slate-100 hover:border-brand/30 hover:text-brand'}`}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-medium border transition-all ${newPostTags.includes(tag) ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-400 border-slate-100 hover:border-slate-300 hover:text-slate-600'}`}
                       >
                          {tag}
                       </button>
@@ -773,193 +775,274 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
             </div>
 
             {isUnderLimit && (
-                <div className="mb-6 flex items-center gap-2 text-amber-500 px-4">
-                    <Icons.HelpCircle className="w-4 h-4" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Expansion Required: Minimum {MIN_CHARS} characters.</span>
-                </div>
-            )}
-            
-            {isOverLimit && (
-                <div className="mb-6 flex items-center gap-2 text-rose-500 px-4">
-                    <Icons.HelpCircle className="w-4 h-4" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Overflow Alert: Reduce payload by {charCount - MAX_CHARS} chars.</span>
+                <div className="mb-4 flex items-center gap-2 text-amber-500 text-xs">
+                    <Icons.HelpCircle className="w-3.5 h-3.5" />
+                    <span>Minimum {MIN_CHARS} characters required.</span>
                 </div>
             )}
 
-            <button 
+            {isOverLimit && (
+                <div className="mb-4 flex items-center gap-2 text-rose-500 text-xs">
+                    <Icons.AlertCircle className="w-3.5 h-3.5" />
+                    <span>Reduce by {charCount - MAX_CHARS} characters.</span>
+                </div>
+            )}
+
+            <button
               onClick={handleCreatePost}
               disabled={isSubmitting || isOverLimit || isUnderLimit}
-              className={`w-full py-6 text-white rounded-[2rem] text-sm font-black uppercase tracking-[0.3em] shadow-2xl transition-all flex items-center justify-center gap-3 ${isSubmitting || isOverLimit || isUnderLimit ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-brand shadow-brand/30 hover:shadow-brand/50 hover:-translate-y-1 active:scale-95'}`}
+              className={`w-full py-4 text-white rounded-xl text-sm font-bold shadow-lg transition-all flex items-center justify-center gap-2 ${isSubmitting || isOverLimit || isUnderLimit ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-900 hover:bg-brand active:scale-[0.98]'}`}
             >
               {isSubmitting ? (
-                  <><Icons.CloudSync className="w-5 h-5 animate-spin" /> Synchronizing...</>
+                  <><Icons.CloudSync className="w-4 h-4 animate-spin" /> Publishing...</>
               ) : (
-                  newPostType === PostType.PEER_AUDIT_REQUEST ? 'Submit for Audit' : 'Confirm Broadcast'
+                  newPostType === PostType.PEER_AUDIT_REQUEST ? 'Submit for Audit' : 'Publish'
               )}
             </button>
           </div>
         </div>
       )}
 
-      {/* Hero Header - Compact on mobile */}
-      <header className="w-full text-center mb-6 sm:mb-12 relative py-6 sm:py-16 px-4 sm:px-10 overflow-hidden rounded-2xl sm:rounded-[4rem] bg-white/60 backdrop-blur-2xl border border-white/80 shadow-lg sm:shadow-[0_50px_100px_-20px_rgba(0,0,0,0.08)]">
-        <div className="absolute top-0 right-0 w-[400px] h-[400px] sm:w-[600px] sm:h-[600px] bg-brand/5 blur-[100px] -mr-20 -mt-20 rounded-full animate-pulse pointer-events-none"></div>
-        
-        <div className="relative z-10 flex flex-col items-center">
-          {mode === 'FACULTY' ? (
-            <h1 className="text-3xl sm:text-6xl md:text-7xl font-black tracking-tight text-slate-900 leading-none mb-2 sm:mb-4 select-none antialiased uppercase">
-              FACULTY
-            </h1>
-          ) : (
-            <div className="mb-2 sm:mb-4">
-              <CoStudyLogo size="xl" variant="light" showIcon={false} className="justify-center" />
-            </div>
-          )}
-          <h2 className="text-[10px] sm:text-sm md:text-lg font-bold tracking-[0.15em] sm:tracking-[0.3em] text-slate-400 uppercase select-none opacity-80 antialiased">
-            {mode === 'FACULTY' ? 'ROOM & NETWORK' : 'CMA Success Network'}
-          </h2>
-
-          {/* Category Pills - Horizontal scroll on mobile */}
-          <div className="mt-6 sm:mt-10 w-full overflow-x-auto no-scrollbar -mx-4 px-4">
-            <div className="flex gap-2 sm:gap-3 sm:flex-wrap sm:justify-center min-w-max sm:min-w-0">
-              {categories.map(cat => (
-                <button 
-                  key={cat} 
-                  onClick={() => setActiveCategory(cat)}
-                  className={`px-4 py-2 sm:px-5 sm:py-2.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all ${activeCategory === cat ? 'bg-brand text-white shadow-lg' : 'bg-white/80 text-slate-500 hover:bg-slate-100 border border-slate-200'}`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
+      {/* EXAM COUNTDOWN — compact inline bar */}
+      {mode !== 'FACULTY' && daysUntilExam <= 60 && (
+        <div className="w-full mb-4 flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-slate-900 text-white">
+          <div className="flex items-center gap-3 min-w-0">
+            <Icons.Clock className="w-4 h-4 text-brand shrink-0" />
+            <span className="text-sm font-semibold truncate">
+              ICMA exam window in <span className="text-brand">{daysUntilExam} days</span>
+            </span>
           </div>
+          <button
+            onClick={() => setView(ViewState.TESTS)}
+            className="px-4 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap"
+          >
+            Practice
+          </button>
         </div>
-      </header>
+      )}
 
-      {/* Content Wall - Social Media Feed Width */}
+      {/* CATEGORY TABS — sticky pill row */}
+      <div className="w-full mb-5 overflow-x-auto no-scrollbar">
+        <div className="flex gap-2 min-w-max">
+          {categories.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={`px-4 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-all ${
+                activeCategory === cat
+                  ? 'bg-slate-900 text-white shadow-sm'
+                  : 'bg-white text-slate-500 hover:text-slate-800 border border-slate-200 hover:border-slate-300'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* FEED */}
       <div className="w-full">
           {loading ? (
-            <div className="flex flex-col items-center py-20 sm:py-40 gap-6 opacity-40">
-               <Icons.Sparkles className="w-10 h-10 sm:w-16 sm:h-16 animate-spin text-brand" />
-               <span className="font-bold uppercase tracking-widest text-xs sm:text-sm animate-pulse">Loading feed...</span>
+            <div className="flex items-center justify-center py-24">
+               <div className="w-8 h-8 border-[3px] border-slate-200 border-t-brand rounded-full animate-spin" />
+            </div>
+          ) : posts.length === 0 ? (
+            <div className="flex flex-col items-center py-20 gap-4 text-center">
+              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center">
+                <Icons.PenLine className="w-5 h-5 text-slate-400" />
+              </div>
+              <div>
+                <p className="text-base font-semibold text-slate-800 mb-1">
+                  {activeCategory === 'All Feed' ? 'No posts yet' : `Nothing in ${activeCategory}`}
+                </p>
+                <p className="text-sm text-slate-400 max-w-xs mx-auto">
+                  Start a conversation. Ask a question, share a resource, or help a peer.
+                </p>
+              </div>
+              <button
+                onClick={() => isLoggedIn ? setIsPostModalOpen(true) : onAuthRequired?.('SIGNUP')}
+                className="mt-1 px-5 py-2.5 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-brand transition-colors"
+              >
+                {isLoggedIn ? 'Write a post' : 'Sign up to post'}
+              </button>
             </div>
           ) : (
-            <div className="space-y-4 sm:space-y-6">
-              {posts.map(post => {
+            <div className="space-y-px bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+              {posts.map((post, idx) => {
                 const isAuditRequest = post.type === PostType.PEER_AUDIT_REQUEST;
                 const isBounty = post.type === PostType.BOUNTY;
-                
+                const typeConf = postTypeConfig[post.type] || { label: post.type, color: 'text-slate-500', bg: 'bg-slate-100', border: 'border-slate-200' };
+                const isBookmarked = bookmarkedIds.has(post.id);
+                const isPoll = !!(post as any).pollOptions?.length;
+                const myVote = pollVotes[post.id];
+                const isLast = idx === posts.length - 1;
+
                 return (
-                <article key={post.id} className={`relative bg-white dark:bg-slate-900/80 border p-4 sm:p-8 rounded-2xl sm:rounded-3xl shadow-sm hover:shadow-md transition-all duration-300 ${isAuditRequest ? 'border-l-4 border-l-slate-800 border-slate-200 dark:border-slate-700' : isBounty ? 'border-l-4 border-l-brand border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50' : 'border-slate-200 dark:border-slate-700'}`}>
-                  {isAuditRequest && (
-                      <div className="absolute top-0 left-0 right-0 h-6 sm:h-7 bg-slate-800 flex items-center justify-center rounded-t-xl sm:rounded-t-2xl">
-                          <span className="text-[8px] sm:text-[9px] font-bold text-white uppercase tracking-wider">Peer Audit</span>
-                      </div>
-                  )}
-                  {isBounty && (
-                      <div className="absolute top-0 left-0 right-0 h-6 sm:h-7 bg-brand flex items-center justify-center rounded-t-xl sm:rounded-t-2xl">
-                          <span className="text-[8px] sm:text-[9px] font-bold text-white uppercase tracking-wider">Bounty</span>
-                      </div>
-                  )}
-                  
-                  <div className={`flex items-start gap-3 mb-3 sm:mb-4 ${isAuditRequest || isBounty ? 'mt-4 sm:mt-5' : ''}`}>
-                     <div className="relative shrink-0 cursor-pointer group/avatar" onClick={() => initiateAlignment(post.author || {})}>
-                        {isAuditRequest ? (
-                            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center">
-                                <Icons.Lock className="w-5 h-5" />
-                            </div>
-                        ) : isBounty ? (
-                            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-brand text-white flex items-center justify-center">
-                                <Icons.Award className="w-5 h-5" />
-                            </div>
+                <article key={post.id} className={`relative hover:bg-slate-50/50 transition-colors ${!isLast ? 'border-b border-slate-100' : ''}`}>
+                  <div className="px-5 sm:px-6 py-4 sm:py-5">
+                    {/* Author row */}
+                    <div className="flex gap-3">
+                      <div className="shrink-0 cursor-pointer mt-0.5" onClick={() => initiateAlignment(post.author || {})}>
+                        {post.author?.avatar ? (
+                          <img src={post.author.avatar} className="w-10 h-10 rounded-full object-cover" alt="" />
                         ) : (
-                            <>
-                                <img src={post.author?.avatar || 'https://i.pravatar.cc/100'} className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl object-cover" />
-                                <div className="absolute -bottom-0.5 -right-0.5 bg-brand text-white p-0.5 rounded-md">
-                                    <Icons.CheckBadge className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                                </div>
-                            </>
-                        )}
-                     </div>
-                     <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base truncate">{post.author?.name || 'Anonymous'}</h3>
-                            <span className="text-[10px] text-slate-400 font-medium">{post.created_at ? new Date(post.created_at).toLocaleDateString() : 'Just now'}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                           {post.type && <span className="bg-slate-100 px-1.5 py-0.5 rounded text-[9px] font-semibold text-slate-500">{post.type.replace('_', ' ')}</span>}
-                           {isAuditRequest && <span className={`px-1.5 py-0.5 rounded text-[9px] font-semibold text-white ${post.auditStatus === 'OPEN' ? 'bg-blue-500' : post.auditStatus === 'COMPLIANT' ? 'bg-emerald-500' : 'bg-rose-500'}`}>{post.auditStatus || 'OPEN'}</span>}
-                        </div>
-                     </div>
-                  </div>
-                  
-                  <div className="text-slate-700 dark:text-slate-300 text-base sm:text-lg leading-relaxed mb-4 sm:mb-6">
-                    {post.content}
-                  </div>
-
-                  {/* Bounty Reward Box */}
-                  {isBounty && post.bountyDetails && (
-                      <div className="mb-4 p-4 bg-slate-900 rounded-xl text-white flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                              <div className="p-2 bg-white/10 rounded-lg">
-                                  <Icons.Award className="w-5 h-5 text-brand" />
-                              </div>
-                              <div>
-                                  <div className="text-[9px] font-semibold uppercase text-slate-400">Reward</div>
-                                  <div className="text-lg font-bold">{post.bountyDetails.rewardAmount} Credits</div>
-                              </div>
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand/20 to-blue-400/20 flex items-center justify-center text-slate-700 font-semibold text-sm">
+                            {(post.author?.name || 'A').charAt(0)}
                           </div>
-                          <button 
-                            onClick={() => handleClaimBounty(post)}
-                            className="px-4 py-2 bg-brand text-white rounded-xl text-[10px] font-bold uppercase active:scale-95"
-                          >
+                        )}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        {/* Name line */}
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className="font-semibold text-slate-900 text-[14px] truncate">{post.author?.name || 'Anonymous'}</span>
+                          {post.author?.role === UserRole.TEACHER && (
+                            <Icons.CheckBadge className="w-4 h-4 text-emerald-500 shrink-0" />
+                          )}
+                          <span className={`px-1.5 py-px rounded text-[10px] font-medium ${typeConf.bg} ${typeConf.color}`}>
+                            {typeConf.label}
+                          </span>
+                          <span className="text-xs text-slate-400 ml-auto shrink-0">{post.created_at ? timeAgo(post.created_at) : 'now'}</span>
+                        </div>
+
+                        {/* Content */}
+                        <div className={`text-[15px] text-slate-700 leading-relaxed mt-1 ${isAuditRequest ? 'font-mono text-xs bg-slate-100 p-3 rounded-lg border border-slate-200 mt-2' : ''}`}>
+                          {post.content}
+                        </div>
+
+                        {/* Poll Options */}
+                        {isPoll && (
+                          <div className="mt-3 space-y-1.5">
+                            {(post as any).pollOptions.map((opt: any) => {
+                              const totalVotes = (post as any).pollOptions.reduce((s: number, o: any) => s + (o.votes || 0), 0);
+                              const pct = totalVotes > 0 ? Math.round(((opt.votes || 0) / totalVotes) * 100) : 0;
+                              const voted = myVote === opt.label;
+                              return (
+                                <button
+                                  key={opt.label}
+                                  onClick={() => handlePollVote(post.id, opt.label)}
+                                  disabled={!!myVote}
+                                  className={`w-full text-left px-3 py-2.5 rounded-lg border transition-all relative overflow-hidden ${
+                                    voted ? 'border-brand bg-brand/5 font-semibold' :
+                                    myVote ? 'border-slate-100 bg-slate-50' :
+                                    'border-slate-200 hover:border-brand/40 bg-white'
+                                  }`}
+                                >
+                                  {myVote && <div className="absolute inset-y-0 left-0 bg-brand/8 transition-all duration-500" style={{ width: `${pct}%` }} />}
+                                  <div className="relative flex items-center justify-between">
+                                    <span className="text-sm text-slate-700">{opt.label}</span>
+                                    {myVote && <span className="text-xs font-semibold text-slate-500">{pct}%</span>}
+                                  </div>
+                                </button>
+                              );
+                            })}
+                            {myVote && (
+                              <p className="text-[11px] text-slate-400 pl-1">
+                                {(post as any).pollOptions.reduce((s: number, o: any) => s + (o.votes || 0), 0)} votes
+                              </p>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Bounty Reward */}
+                        {isBounty && post.bountyDetails && (
+                          <div className="mt-3 flex items-center gap-3 p-3 bg-slate-900 rounded-lg text-white">
+                            <Icons.Award className="w-4 h-4 text-brand shrink-0" />
+                            <span className="text-sm font-semibold flex-1">{post.bountyDetails.rewardAmount} Credits</span>
+                            <button
+                              onClick={() => handleClaimBounty(post)}
+                              className="px-3 py-1.5 bg-brand rounded-md text-xs font-semibold hover:bg-brand/90 active:scale-95 transition-all"
+                            >
                               Claim
-                          </button>
-                      </div>
-                  )}
+                            </button>
+                          </div>
+                        )}
 
-                  {/* Display Tags */}
-                  {post.tags && post.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mb-4">
-                          {post.tags.map(tag => (
-                              <span key={tag} className="px-2 py-1 bg-brand/5 text-brand rounded-md text-[9px] font-semibold">{tag}</span>
-                          ))}
-                      </div>
-                  )}
+                        {/* AI Summary */}
+                        {activeSummaryId === post.id && (
+                          <div className="mt-3">
+                            {summary ? (
+                              <div className="p-3 bg-violet-50 border border-violet-100 rounded-lg">
+                                <div className="flex items-center gap-1.5 mb-1.5">
+                                  <Icons.Sparkles className="w-3 h-3 text-violet-500" />
+                                  <span className="text-[10px] font-semibold text-violet-500 uppercase tracking-wide">AI Summary</span>
+                                </div>
+                                <p className="text-sm text-slate-600 leading-relaxed">{summary}</p>
+                              </div>
+                            ) : (
+                              <div className="p-3 bg-slate-50 rounded-lg flex items-center gap-2">
+                                <div className="w-4 h-4 border-2 border-slate-200 border-t-violet-500 rounded-full animate-spin" />
+                                <span className="text-xs text-slate-400">Summarizing...</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
 
-                  {/* Action Bar - Compact on mobile */}
-                  <div className="flex items-center justify-between pt-3 sm:pt-4 border-t border-slate-100">
-                    <div className="flex gap-1">
-                      {isAuditRequest ? (
-                          <button 
-                            onClick={() => openAuditPanel(post)}
-                            disabled={post.auditStatus !== 'OPEN'}
-                            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 text-white text-xs font-semibold ${post.auditStatus !== 'OPEN' ? 'opacity-50' : 'active:scale-95'}`}
+                        {/* Tags */}
+                        {post.tags && post.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-3">
+                            {post.tags.map(tag => (
+                              <span key={tag} className="text-xs text-blue-500 hover:underline cursor-pointer">#{tag.replace(/\s+/g, '')}</span>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Action Bar — Twitter-style row */}
+                        <div className="flex items-center mt-3 -ml-2">
+                          {isAuditRequest ? (
+                            <button
+                              onClick={() => openAuditPanel(post)}
+                              disabled={post.auditStatus !== 'OPEN'}
+                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-colors ${post.auditStatus !== 'OPEN' ? 'text-slate-300 cursor-not-allowed' : 'text-slate-500 hover:text-blue-500 hover:bg-blue-50'}`}
+                            >
+                              <Icons.Scale className="w-4 h-4" />
+                              <span>Audit</span>
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleVouch(post.id)}
+                              className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs text-slate-500 hover:text-rose-500 hover:bg-rose-50 transition-colors group"
+                            >
+                              <Icons.Heart className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                              {(post.likes || 0) > 0 && <span>{post.likes}</span>}
+                            </button>
+                          )}
+
+                          <button
+                            onClick={() => loadDiscussion(post.id)}
+                            className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs transition-colors ${openDiscussionId === post.id ? 'text-blue-500 bg-blue-50' : 'text-slate-500 hover:text-blue-500 hover:bg-blue-50'}`}
                           >
-                            <Icons.Scale className="w-4 h-4" />
-                            <span className="hidden sm:inline">Audit</span>
+                            <Icons.MessageCircle className="w-4 h-4" />
+                            <span className="hidden sm:inline">Reply</span>
                           </button>
-                      ) : (
-                          <button onClick={() => handleVouch(post.id)} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-50 text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition-colors active:scale-95">
-                            <Icons.Stamp className="w-4 h-4" />
-                            <span className="text-xs font-semibold">{post.likes || 0}</span>
+
+                          <button
+                            onClick={() => handleSummarize(post.id, post.content)}
+                            className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs transition-colors ${activeSummaryId === post.id && summary ? 'text-violet-500 bg-violet-50' : 'text-slate-500 hover:text-violet-500 hover:bg-violet-50'}`}
+                          >
+                            <Icons.Sparkles className="w-4 h-4" />
+                            <span className="hidden sm:inline">AI</span>
                           </button>
-                      )}
-                      
-                      <button onClick={() => loadDiscussion(post.id)} className={`flex items-center gap-1.5 px-3 py-2 rounded-xl transition-colors active:scale-95 ${openDiscussionId === post.id ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>
-                        <Icons.MessageCircle className="w-4 h-4" />
-                        <span className="text-xs font-semibold hidden sm:inline">Chat</span>
-                      </button>
+
+                          <button
+                            onClick={() => toggleBookmark(post.id)}
+                            className={`flex items-center px-3 py-1.5 rounded-full text-xs transition-colors ml-auto ${isBookmarked ? 'text-amber-500' : 'text-slate-400 hover:text-amber-500 hover:bg-amber-50'}`}
+                          >
+                            <Icons.Flag className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                    <button onClick={() => handleSummarize(post.id, post.content)} className="px-3 py-2 bg-brand/10 text-brand rounded-xl text-xs font-semibold hover:bg-brand hover:text-white transition-colors active:scale-95">
-                        AI Summary
-                    </button>
                   </div>
 
+                  {/* Discussion thread */}
                   {openDiscussionId === post.id && (
-                    <div className="mt-14 pt-14 border-t border-slate-100 animate-in slide-in-from-bottom-6 duration-700">
-                      <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.5em] mb-12">Knowledge Exchange Thread</h4>
-                      <div className="space-y-6">
+                    <div className="px-5 sm:px-6 pb-4 border-t border-slate-100 bg-slate-50/30">
+                      <h4 className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mt-3 mb-2">Replies</h4>
+                      {discussions[post.id]?.length === 0 && (
+                        <p className="text-xs text-slate-400 py-2">No replies yet.</p>
+                      )}
+                      <div>
                         {discussions[post.id]?.map((comment: any) => (
                           <CommentItem key={comment.id} comment={comment} postId={post.id} />
                         ))}

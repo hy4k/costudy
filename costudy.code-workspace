@@ -1,0 +1,13 @@
+{
+  "folders": [
+    {
+      "name": "costudy-frontend",
+      "path": "."
+    },
+    {
+      "name": "costudy-api",
+      "path": "../costudy-api"
+    }
+  ],
+  "settings": {}
+}

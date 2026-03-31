@@ -149,6 +149,11 @@ function App() {
   useEffect(() => {
     // Check initial session
     const checkUser = async () => {
+      // Safety timeout: never stay on loading screen more than 5s
+      const timeout = setTimeout(() => {
+        setIsInitialLoading(false);
+      }, 5000);
+
       try {
         const session = await authService.getSession();
         if (session?.user) {
@@ -157,6 +162,7 @@ function App() {
       } catch (e) {
         console.error("Initial Session Check Failed", e);
       } finally {
+        clearTimeout(timeout);
         setIsInitialLoading(false);
       }
     };
@@ -223,9 +229,9 @@ function App() {
 
   if (isInitialLoading) {
     return (
-      <div className="h-screen w-full bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center gap-6">
+      <div className="h-screen w-full bg-slate-50 flex flex-col items-center justify-center gap-6">
         <Icons.CloudSync className="w-16 h-16 text-brand animate-spin" />
-        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 dark:text-slate-500 animate-pulse">Neural Handshake Active...</span>
+        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 animate-pulse">Neural Handshake Active...</span>
       </div>
     );
   }

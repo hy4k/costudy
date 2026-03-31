@@ -4,6 +4,9 @@ import { syncStudyTelemetry, fetchGlobalPerformance } from '../../services/fetsS
 import { examService, EXAM_CONFIGS, ExamConfig } from '../../services/examService';
 import { ExamSession } from './ExamSession';
 
+/** Session-only unlock for demo; clear with sessionStorage.removeItem(...) or new browser session. */
+const MOCK_PORTAL_STORAGE_KEY = 'costudy_mock_portal_unlocked';
+
 interface MockTestsProps {
   userId?: string;
 }
@@ -24,6 +27,22 @@ interface ExamCard {
 }
 
 export const MockTests: React.FC<MockTestsProps> = ({ userId }) => {
+    const mockPortalLocked =
+        import.meta.env.VITE_MOCK_TESTS_LOCKED !== 'false';
+    const mockPortalPassword =
+        import.meta.env.VITE_MOCK_TESTS_PASSWORD || '123456';
+
+    const [portalUnlocked, setPortalUnlocked] = useState(() => {
+        if (!mockPortalLocked) return true;
+        try {
+            return sessionStorage.getItem(MOCK_PORTAL_STORAGE_KEY) === '1';
+        } catch {
+            return false;
+        }
+    });
+    const [portalPw, setPortalPw] = useState('');
+    const [portalPwError, setPortalPwError] = useState('');
+
     const [perf, setPerf] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [recentSessions, setRecentSessions] = useState<any[]>([]);
@@ -130,6 +149,7 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId }) => {
     ];
 
     useEffect(() => {
+        if (mockPortalLocked && !portalUnlocked) return;
         const load = async () => {
             const targetId = userId || 'u-me';
             const [perfData, sessions] = await Promise.all([
@@ -142,7 +162,23 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId }) => {
             syncStudyTelemetry({ userId: targetId, event: 'view_mock_tests' });
         };
         load();
-    }, [userId]);
+    }, [userId, mockPortalLocked, portalUnlocked]);
+
+    const unlockMockPortal = (e: React.FormEvent) => {
+        e.preventDefault();
+        setPortalPwError('');
+        if (portalPw === mockPortalPassword) {
+            try {
+                sessionStorage.setItem(MOCK_PORTAL_STORAGE_KEY, '1');
+            } catch {
+                /* ignore */
+            }
+            setPortalUnlocked(true);
+            setPortalPw('');
+        } else {
+            setPortalPwError('Incorrect password.');
+        }
+    };
 
     const startExam = async (configKey: string) => {
         if (isStarting) return;
@@ -188,6 +224,59 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId }) => {
         setExamQuestions({ mcqs: [], essays: [] });
     };
 
+    if (mockPortalLocked && !portalUnlocked) {
+        return (
+            <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center px-6 py-16">
+                <div className="w-full max-w-md">
+                    <div className="flex items-center gap-3 mb-6 justify-center">
+                        <div className="p-2 bg-slate-900 rounded-xl">
+                            <Icons.Lock className="w-6 h-6 text-white" />
+                        </div>
+                        <span className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">
+                            Mock Exam Portal
+                        </span>
+                    </div>
+                    <div className="bg-white rounded-3xl border border-slate-200 shadow-xl p-8">
+                        <h1 className="text-2xl font-black text-slate-900 tracking-tight mb-2 text-center">
+                            Demo access
+                        </h1>
+                        <p className="text-slate-500 text-sm text-center mb-6">
+                            Enter the demo password to open mock exams.
+                        </p>
+                        <form onSubmit={unlockMockPortal} className="space-y-4">
+                            <div>
+                                <label
+                                    htmlFor="mock-portal-pw"
+                                    className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2"
+                                >
+                                    Password
+                                </label>
+                                <input
+                                    id="mock-portal-pw"
+                                    type="password"
+                                    autoComplete="off"
+                                    value={portalPw}
+                                    onChange={(e) => setPortalPw(e.target.value)}
+                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                                    placeholder="••••••"
+                                />
+                                {portalPwError && (
+                                    <p className="mt-2 text-sm text-red-600 font-medium">{portalPwError}</p>
+                                )}
+                            </div>
+                            <button
+                                type="submit"
+                                className="w-full py-3.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-colors"
+                            >
+                                Unlock mock exams
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     // If exam is active, render ExamSession
     if (activeSession && examConfig) {
         return (
@@ -203,9 +292,9 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId }) => {
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+        <div className="min-h-screen bg-slate-50">
             {/* Header */}
-            <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+            <div className="bg-white border-b border-slate-200">
                 <div className="max-w-7xl mx-auto px-6 py-12">
                     <div className="flex items-center gap-3 mb-4">
                         <div className="p-2 bg-slate-900 rounded-xl">
@@ -226,7 +315,7 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId }) => {
 
             {/* Stats Bar */}
             {!loading && perf && (
-                <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+                <div className="bg-white border-b border-slate-200">
                     <div className="max-w-7xl mx-auto px-6 py-6">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                             {[

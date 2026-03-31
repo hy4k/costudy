@@ -120,7 +120,13 @@ depcheck flags `tailwindcss`, `postcss`, `autoprefixer` as unused because they'r
 
 Both are fixable with `npm audit fix`. The `rollup` vulnerability is in Vite's bundler dependency — updating Vite to latest should resolve it.
 
-### 2.5 Code Complexity (Lines of Code)
+### 2.5 Lighthouse Audit
+
+**Status**: Not run — `npx lighthouse` requires Chrome/Chromium (`CHROME_PATH`). In headless CI environments without Chrome, use `@lhci/cli` with a remote URL or run Lighthouse manually in a browser DevTools.
+
+**Build output** (current): 22 chunks, 1.1 MB total, ~260 KB gzipped. Preview server runs on port 4173/4174.
+
+### 2.6 Code Complexity (Lines of Code)
 
 **Files by size (descending)**:
 
@@ -194,16 +200,59 @@ Running any two creates conflicts. A single canonical migration must be chosen.
 - `notifications.user_id`
 - `exam_sessions.user_id + status` (compound)
 
-### 3.6 Vouch System Assessment
+### 3.6 Vouch System Assessment (Phase 4 Deep Dive)
 
-**Schema**: `vouches` table with `UNIQUE(voucher_id, post_id)` — prevents double-voting at DB level. Good.
+**Schema** (`migrations/002_cluster_features.sql`):
+- `vouches` table: `UNIQUE(voucher_id, post_id)`, `UNIQUE(voucher_id, comment_id)` — prevents double-voting at DB level. Good.
+- RLS: SELECT public, INSERT/DELETE restricted to `auth.uid() = voucher_id`. Correct.
 
-**RPCs**: `increment_post_vouches` / `decrement_post_vouches` update both `posts.likes` and `user_profiles.reputation.vouchesReceived`.
+**Frontend flow** (`clusterService.ts` lines 862–932):
+1. `vouchPost`: INSERT into `vouches` → then `supabase.rpc('increment_post_vouches', { post_id })`
+2. `removeVouch`: DELETE from `vouches` → then `supabase.rpc('decrement_post_vouches', { post_id })`
 
-**Race conditions**:
-- Vouch INSERT and RPC call are separate operations — if INSERT succeeds but RPC fails, count drifts
-- JSONB reputation updates via `jsonb_set` are not atomic across concurrent vouches
-- No transaction wrapping around the two operations
+**RPCs** (`002_cluster_features.sql` lines 347–377):
+- `increment_post_vouches`: updates `posts.likes` and `user_profiles.reputation.vouchesReceived`
+- `decrement_post_vouches`: same, with `GREATEST(..., 0)` guards
+
+**Race conditions & consistency risks**:
+| Scenario | Result |
+|----------|--------|
+| INSERT succeeds, RPC fails | Vouch row exists but `posts.likes` not incremented → count drift |
+| DELETE succeeds, RPC fails | Vouch removed but count not decremented → count drift |
+| Concurrent vouches | JSONB `reputation` update via `jsonb_set` is not atomic across sessions |
+| No transaction | INSERT + RPC are two round-trips; no rollback on partial failure |
+
+**Recommended fix** — atomic RPC that does both:
+
+```sql
+CREATE OR REPLACE FUNCTION add_vouch(p_voucher_id UUID, p_post_id UUID)
+RETURNS void AS $$
+BEGIN
+  INSERT INTO vouches (voucher_id, post_id) VALUES (p_voucher_id, p_post_id);
+  UPDATE posts SET likes = likes + 1 WHERE id = p_post_id;
+  UPDATE user_profiles SET reputation = jsonb_set(reputation, '{vouchesReceived}', 
+    to_jsonb(COALESCE((reputation->>'vouchesReceived')::integer, 0) + 1))
+  WHERE id = (SELECT author_id FROM posts WHERE id = p_post_id);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+```
+
+Frontend would call `supabase.rpc('add_vouch', { p_voucher_id, p_post_id }) instead of INSERT + RPC. Similar `remove_vouch` RPC for delete + decrement.
+
+**Comment vouches**: Schema supports `comment_id` but frontend `vouchService` only implements post vouches. No `increment_comment_vouches` RPC exists.
+
+### 3.7 study_rooms Structure (Phase 4 Deep Dive)
+
+**Base table** (`database.sql` lines 199–208): `study_rooms` has no RLS. Columns: `id`, `name`, `category`, `description`, `members_count`, `active_count`, `color_theme`.
+
+**Enhanced columns** (`002_cluster_features.sql` lines 44–50): `creator_id`, `room_type`, `group_subscription_id`, `settings`, `cluster_streak`, `last_streak_update`, `created_at`.
+
+**Related tables**:
+- `study_room_members` — RLS: members see members; public rooms visible to all; INSERT/UPDATE by self; admins can manage.
+- `study_room_missions`, `mcq_war_sessions`, `whiteboard_sessions` — RLS scoped to room membership.
+- `study_room_messages`, `study_room_resources` — **`USING (true)` for ALL** — critical security gap (see 3.2).
+
+**costudy-api alignment**: `004_core_tables.sql` defines `study_rooms` with `creator_id`, `room_type`, `group_subscription_id`, `settings`, `cluster_streak`, `created_at` — matches frontend schema. `auth.users` used for FKs; frontend `database.sql` uses `user_profiles`. Ensure FK consistency.
 
 ---
 
@@ -344,6 +393,43 @@ All 14 views are lazy-loaded via `React.lazy()` + `Suspense`. Initial load only 
 | StudentStore.tsx | 68 | 5 | **None** | Fair | Poor | No payment error handling |
 | StudyWall.tsx | 970 | 4 | Poor | **None** | Fair | God component, zero a11y |
 | StudyRooms.tsx | 793 | 4 | None | Poor | **Broken** | All mock data, broken mobile |
+
+---
+
+---
+
+## 9. Focus Areas: Design System, Vouch, AI/Gemini
+
+### 9.1 Design System
+
+| Element | Current State | Gap |
+|---------|---------------|-----|
+| **Brand colors** | Student: red (`#ff1a1a`). Teacher: Emerald (Layout) vs Teal (SignUp) — inconsistent | Pick one teacher theme |
+| **FETS Yellow** | `#FFD633` — **0 occurrences** in codebase | Add to Tailwind as `accent` |
+| **Dark mode** | Auth screens dark; post-login shell light (`#f8fafc`) | No global dark mode |
+| **Typography** | Plus Jakarta Sans, mission-style labels (`tracking-[0.3em]`) | Good; secondary display font missing |
+| **Shared primitives** | None — no `<Button>`, `<Input>`, `<Modal>`, `<Card>` | 7+ button variants duplicated |
+
+**Teacher theme mismatch**: `Layout.tsx:37–48` uses Emerald (`#10b981`); `SignUp.tsx:38–47` uses Teal (`#0d9488`). User sees color shift during signup → login. Fix: use same palette in both.
+
+### 9.2 Vouch System
+
+- **Correctness**: DB unique constraint prevents double-votes. Count drift possible on INSERT/RPC or DELETE/RPC failure (see 3.6).
+- **Fix**: Atomic `add_vouch` / `remove_vouch` RPCs.
+- **Comment vouches**: Schema ready; frontend and RPCs not implemented.
+
+### 9.3 AI / Gemini Integration
+
+| Aspect | Current | Risk |
+|--------|---------|------|
+| **API key** | `process.env.GEMINI_API_KEY` baked into client bundle | Visible in DevTools; abuse risk |
+| **Token counting** | None | Unbounded costs |
+| **History** | Full conversation sent per request | Token cost scales with length |
+| **Rate limiting** | None | DoS / cost spike |
+| **RAG fallback** | `api.costudy.in` for vector search; Gemini for generation | Good separation |
+| **Prompt injection** | No sanitization in `prompts.ts` | Medium risk |
+
+**Recommendation**: Move Gemini calls to Supabase Edge Function or costudy-api; keep API key server-side. Add history truncation and optional token display in AIDeck.
 
 ---
 

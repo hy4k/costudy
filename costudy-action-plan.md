@@ -50,6 +50,7 @@ Issues that break features, cause poor UX, or have security implications.
 | **P1-1** | Fix notification subscription — add `.filter('user_id=eq.${userId}')` | Currently leaks ALL users' notifications to every client | Trivial | Layout.tsx |
 | **P1-2** | Fix `chatService.getConversations` N+1 query — use single query with joins | 2N+1 queries per page load; will not scale | Medium | chatService |
 | **P1-3** | Fix alignment service table/column mismatches (`tracking_records` → `user_tracking`, `user_id` → `requester_id`) | Alignment and tracking features silently broken | Low | alignmentService |
+| **P1-3b** | Replace vouch INSERT+RPC with atomic `add_vouch`/`remove_vouch` RPCs | Prevents count drift on partial failures | Low | clusterService, 002_cluster_features.sql |
 | **P1-4** | Consolidate 3 conflicting exam migrations into one canonical migration | Cannot reliably reproduce DB schema | Medium | Migrations |
 | **P1-5** | Install `@types/react` and `@types/react-dom` | Eliminates ~3,900 of 4,385 TS strict errors | Trivial | Phase 6 |
 | **P1-6** | Add try/catch to all `useEffect` data-loading functions (every view) | API failures cause permanent loading spinners in 12+ views | Low | All views |

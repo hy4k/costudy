@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 
+// Connected to Supabase Cloud (via VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY in .env)
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 

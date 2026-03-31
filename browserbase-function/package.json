@@ -1,0 +1,17 @@
+{
+  "name": "browserbase-function",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "bb dev index.ts",
+    "publish": "bb publish index.ts",
+    "invoke": "bb invoke"
+  },
+  "dependencies": {
+    "@browserbasehq/sdk-functions": "^1.0.1",
+    "playwright-core": "^1.49.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  }
+}

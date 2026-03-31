@@ -152,99 +152,12 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
     }, [focusSession?.status]);
 
     const loadRoomData = async (roomId: string) => {
-        // Load mock data for now - would be Supabase queries
-        setMissions([
-            {
-                id: '1',
-                title: 'Complete Part 1 Chapter 3',
-                description: 'Finish all readings and practice MCQs for Cost Management chapter',
-                deadline: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-                progress: 65,
-                assignees: ['all'],
-                status: 'active'
-            },
-            {
-                id: '2',
-                title: 'Weekly Mock Test',
-                description: '50 MCQ timed practice test',
-                deadline: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
-                progress: 0,
-                assignees: ['all'],
-                status: 'active'
-            }
-        ]);
-
-        setDiscussions([
-            {
-                id: '1',
-                topic: 'Variance Analysis confusion',
-                author: 'user1',
-                author_name: 'Alex',
-                content: 'Can someone explain the difference between price and efficiency variance? I keep mixing them up.',
-                replies: [
-                    { id: 'r1', author: 'user2', author_name: 'Sarah', content: 'Price variance = (Actual Price - Standard Price) × Actual Qty. Efficiency = (Actual Qty - Standard Qty) × Standard Price', created_at: new Date().toISOString() }
-                ],
-                created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-                pinned: true
-            }
-        ]);
-
-        setResources([
-            { id: '1', title: 'Cost Management Cheat Sheet', type: 'note', content: 'Key formulas...', uploaded_by: 'user1', created_at: new Date().toISOString(), tags: ['formulas', 'cost'] },
-            { id: '2', title: 'Variance Analysis Video', type: 'link', content: '', url: 'https://youtube.com/...', uploaded_by: 'user2', created_at: new Date().toISOString(), tags: ['video', 'variance'] }
-        ]);
-
-        setCalendarEvents([
-            {
-                id: '1',
-                title: 'Group Study Session',
-                description: 'Review Chapter 3 together',
-                start_time: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-                end_time: new Date(Date.now() + 26 * 60 * 60 * 1000).toISOString(),
-                event_type: 'study',
-                created_by: 'user1',
-                attendees: ['all'],
-                color: '#8dc63f'
-            },
-            {
-                id: '2',
-                title: 'Mock Test #4',
-                description: '50 MCQs - Timed',
-                start_time: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-                end_time: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000 + 90 * 60 * 1000).toISOString(),
-                event_type: 'mock_test',
-                created_by: 'user1',
-                attendees: ['all'],
-                color: '#e74c3c'
-            }
-        ]);
-
-        setMentors([
-            {
-                id: 'm1',
-                name: 'Dr. Sarah Mitchell',
-                avatar: 'https://i.pravatar.cc/150?u=mentor1',
-                specialties: ['Cost Management', 'Variance Analysis'],
-                hourly_rate: 45,
-                rating: 4.9,
-                sessions_completed: 127,
-                available_slots: ['Mon 6PM', 'Wed 7PM', 'Sat 10AM'],
-                bio: 'CMA certified with 10+ years teaching experience. Specialized in cost accounting and management.'
-            },
-            {
-                id: 'm2',
-                name: 'Prof. James Chen',
-                avatar: 'https://i.pravatar.cc/150?u=mentor2',
-                specialties: ['Financial Reporting', 'IFRS', 'US GAAP'],
-                hourly_rate: 55,
-                rating: 4.8,
-                sessions_completed: 89,
-                available_slots: ['Tue 5PM', 'Thu 6PM', 'Sun 11AM'],
-                bio: 'Former Big 4 auditor, now full-time CMA instructor.'
-            }
-        ]);
-
-        setOnlineMembers(['user1', 'user2', 'user3']);
+        setMissions([]);
+        setDiscussions([]);
+        setResources([]);
+        setCalendarEvents([]);
+        setMentors([]);
+        setOnlineMembers([]);
     };
 
     const formatTime = (seconds: number) => {
@@ -278,7 +191,7 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
     
     if (!selectedRoom) {
         return (
-            <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+            <div className="min-h-screen bg-slate-50">
                 <div className="max-w-6xl mx-auto px-6 py-12">
                     {/* Header */}
                     <div className="mb-12">
@@ -362,9 +275,9 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
     ];
 
     return (
-        <div className="min-h-screen bg-slate-100 dark:bg-slate-950 flex">
+        <div className="min-h-screen bg-slate-100 flex">
             {/* Sidebar */}
-            <div className="w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col">
+            <div className="w-72 bg-white border-r border-slate-200 flex flex-col">
                 {/* Room Header */}
                 <div className="p-6 border-b border-slate-200">
                     <button 
@@ -432,7 +345,13 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
                         </div>
                         
                         <div className="grid gap-6">
-                            {missions.map(mission => (
+                            {missions.length === 0 ? (
+                                <div className="flex flex-col items-center py-16 gap-2 text-slate-400">
+                                    <Icons.Target className="w-8 h-8 text-slate-300" />
+                                    <span className="text-sm font-bold">No missions yet</span>
+                                    <span className="text-xs">Create a mission to track group goals</span>
+                                </div>
+                            ) : missions.map(mission => (
                                 <div key={mission.id} className="bg-white rounded-2xl p-6 border border-slate-200">
                                     <div className="flex justify-between items-start mb-4">
                                         <div>
@@ -453,7 +372,7 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
                                             <span className="font-bold text-slate-700">{mission.progress}%</span>
                                         </div>
                                         <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
-                                            <div 
+                                            <div
                                                 className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all"
                                                 style={{ width: `${mission.progress}%` }}
                                             />
@@ -540,7 +459,13 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
                         </div>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {resources.map(resource => (
+                            {resources.length === 0 ? (
+                                <div className="col-span-2 flex flex-col items-center py-16 gap-2 text-slate-400">
+                                    <Icons.BookOpen className="w-8 h-8 text-slate-300" />
+                                    <span className="text-sm font-bold">No resources yet</span>
+                                    <span className="text-xs">Add the first resource to share with your room</span>
+                                </div>
+                            ) : resources.map(resource => (
                                 <div key={resource.id} className="bg-white rounded-xl p-5 border border-slate-200 hover:shadow-md transition-all">
                                     <div className="flex items-start gap-4">
                                         <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
@@ -583,7 +508,13 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
                         </div>
                         
                         <div className="space-y-4">
-                            {discussions.map(discussion => (
+                            {discussions.length === 0 ? (
+                                <div className="flex flex-col items-center py-16 gap-2 text-slate-400">
+                                    <Icons.MessageCircle className="w-8 h-8 text-slate-300" />
+                                    <span className="text-sm font-bold">No discussions yet</span>
+                                    <span className="text-xs">Start a topic to kick off the conversation</span>
+                                </div>
+                            ) : discussions.map(discussion => (
                                 <div key={discussion.id} className="bg-white rounded-xl p-6 border border-slate-200">
                                     {discussion.pinned && (
                                         <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded mb-2 inline-block">
@@ -597,7 +528,7 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
                                         <span>•</span>
                                         <span>{new Date(discussion.created_at).toLocaleString()}</span>
                                     </div>
-                                    
+
                                     {discussion.replies.length > 0 && (
                                         <div className="border-t border-slate-100 pt-4 mt-4 space-y-3">
                                             {discussion.replies.map(reply => (
@@ -608,10 +539,10 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
                                             ))}
                                         </div>
                                     )}
-                                    
+
                                     <div className="mt-4 flex gap-2">
-                                        <input 
-                                            type="text" 
+                                        <input
+                                            type="text"
                                             placeholder="Write a reply..."
                                             className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-purple-400"
                                         />
@@ -653,17 +584,9 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
 
                         <div className="bg-white rounded-2xl p-6 border border-slate-200">
                             <h3 className="font-bold text-slate-900 mb-4">🏅 Room Leaderboard</h3>
-                            <div className="space-y-3">
-                                {['Alex', 'Sarah', 'Mike'].map((name, i) => (
-                                    <div key={name} className="flex items-center gap-4 p-3 bg-slate-50 rounded-xl">
-                                        <span className="text-2xl font-black text-slate-300">#{i + 1}</span>
-                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center text-white font-bold">
-                                            {name.charAt(0)}
-                                        </div>
-                                        <span className="flex-1 text-left font-bold text-slate-700">{name}</span>
-                                        <span className="font-mono font-bold text-slate-900">{1250 - i * 50} pts</span>
-                                    </div>
-                                ))}
+                            <div className="flex flex-col items-center py-8 gap-2 text-slate-400">
+                                <span className="text-sm font-bold">No scores yet</span>
+                                <span className="text-xs">Start a quiz to see rankings</span>
                             </div>
                         </div>
                     </div>
@@ -688,7 +611,7 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
                                 <button className="p-2 hover:bg-slate-200 rounded-lg">
                                     <Icons.ChevronLeft className="w-5 h-5" />
                                 </button>
-                                <h3 className="font-bold text-slate-900">February 2026</h3>
+                                <h3 className="font-bold text-slate-900">{new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</h3>
                                 <button className="p-2 hover:bg-slate-200 rounded-lg">
                                     <Icons.ChevronRight className="w-5 h-5" />
                                 </button>
@@ -698,9 +621,15 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
                             <div className="p-6">
                                 <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Upcoming Events</h4>
                                 <div className="space-y-4">
-                                    {calendarEvents.map(event => (
+                                    {calendarEvents.length === 0 ? (
+                                        <div className="flex flex-col items-center py-12 gap-2 text-slate-400">
+                                            <Icons.Calendar className="w-8 h-8 text-slate-300" />
+                                            <span className="text-sm font-bold">No events scheduled</span>
+                                            <span className="text-xs">Add an event to coordinate with your room</span>
+                                        </div>
+                                    ) : calendarEvents.map(event => (
                                         <div key={event.id} className="flex gap-4 p-4 bg-slate-50 rounded-xl">
-                                            <div 
+                                            <div
                                                 className="w-1 rounded-full"
                                                 style={{ backgroundColor: event.color }}
                                             />
@@ -743,10 +672,16 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
                         </div>
                         
                         <div className="grid gap-6">
-                            {mentors.map(mentor => (
+                            {mentors.length === 0 ? (
+                                <div className="flex flex-col items-center py-16 gap-2 text-slate-400">
+                                    <Icons.GraduationCap className="w-8 h-8 text-slate-300" />
+                                    <span className="text-sm font-bold">No mentors available</span>
+                                    <span className="text-xs">Mentors will appear here once assigned to this room</span>
+                                </div>
+                            ) : mentors.map(mentor => (
                                 <div key={mentor.id} className="bg-white rounded-2xl p-6 border border-slate-200 flex gap-6">
-                                    <img 
-                                        src={mentor.avatar} 
+                                    <img
+                                        src={mentor.avatar}
                                         alt={mentor.name}
                                         className="w-24 h-24 rounded-2xl object-cover"
                                     />

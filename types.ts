@@ -233,6 +233,8 @@ export interface Post {
   auditorId?: string;
   // Bounty Specifics
   bountyDetails?: BountyDetails;
+  // Poll Specifics
+  pollOptions?: { label: string; votes: number }[];
 }
 
 export interface RoomMessage {

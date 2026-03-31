@@ -158,16 +158,16 @@ export const AIDeck: React.FC = () => {
     };
 
     return (
-        <div className="flex h-full flex-col md:flex-row bg-slate-50 dark:bg-slate-950">
+        <div className="flex h-full flex-col md:flex-row bg-slate-50">
             {/* Sidebar for Tools */}
-            <div className="w-full md:w-80 border-r border-slate-200 dark:border-slate-800 p-8 flex flex-col gap-4 bg-white/50 dark:bg-slate-900/50">
+            <div className="w-full md:w-80 border-r border-slate-200 p-8 flex flex-col gap-4 bg-white/50">
                 <div className="mb-8 flex items-center gap-3">
                     <div className="p-2 bg-brand/10 rounded-xl">
                         <Icons.Sparkles className="text-brand w-6 h-6" />
                     </div>
                     <div>
                         <h2 className="font-black text-xl text-slate-900 tracking-tight">CMA Mastermind</h2>
-                        <div className="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Super-Tutor Intel Layer</div>
+                        <div className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Super-Tutor Intel Layer</div>
                     </div>
                 </div>
 
@@ -214,12 +214,12 @@ export const AIDeck: React.FC = () => {
                         </div>
                     </div>
                     {activeContext && (
-                        <div className="p-5 rounded-3xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 shadow-xl group animate-in slide-in-from-bottom-4 duration-500">
+                        <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xl group animate-in slide-in-from-bottom-4 duration-500">
                             <div className="flex items-center justify-between mb-3">
                                 <p className="text-[10px] font-black text-brand uppercase tracking-[0.2em]">Study Context</p>
                                 <div className="w-2 h-2 rounded-full bg-brand animate-pulse"></div>
                             </div>
-                            <div className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-3 mb-4 font-medium italic leading-relaxed">"{activeContext}"</div>
+                            <div className="text-[11px] text-slate-500 line-clamp-3 mb-4 font-medium italic leading-relaxed">"{activeContext}"</div>
                             <button
                                 onClick={clearContext}
                                 className="w-full py-2 bg-slate-50 hover:bg-brand/5 text-[9px] text-slate-400 font-black hover:text-brand transition-all uppercase tracking-widest rounded-xl border border-slate-100"
@@ -232,12 +232,12 @@ export const AIDeck: React.FC = () => {
             {/* Tool View */}
             <div className="flex-1 p-8 overflow-hidden flex flex-col">
                 {activeTool === 'CHAT' && (
-                    <div className="flex-1 flex flex-col bg-white dark:bg-slate-900/80 rounded-[2rem] border border-slate-200 dark:border-slate-700 overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.03)] relative">
+                    <div className="flex-1 flex flex-col bg-white rounded-[2rem] border border-slate-200 overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.03)] relative">
                         {/* Chat Header */}
-                        <div className="px-8 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-white/80 dark:bg-slate-900/80 backdrop-blur-md z-20">
+                        <div className="px-8 py-5 border-b border-slate-100 flex justify-between items-center bg-white/80 backdrop-blur-md z-20">
                             <div className="flex items-center gap-6">
-                                <span className="font-black text-slate-900 dark:text-white text-sm tracking-tight uppercase">CMA-US Super-Tutor</span>
-                                <div className="flex bg-slate-50 dark:bg-slate-800 rounded-xl p-1 gap-1 border border-slate-200 dark:border-slate-600">
+                                <span className="font-black text-slate-900 text-sm tracking-tight uppercase">CMA-US Super-Tutor</span>
+                                <div className="flex bg-slate-50 rounded-xl p-1 gap-1 border border-slate-200">
                                     <button
                                         onClick={() => setChatMode('STANDARD')}
                                         className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${chatMode === 'STANDARD' ? 'bg-white shadow-sm text-brand' : 'text-slate-400 hover:text-slate-900'}`}
@@ -299,7 +299,7 @@ export const AIDeck: React.FC = () => {
                         </div>
 
                         {/* Input Area */}
-                        <div className="p-8 bg-slate-50/50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-700">
+                        <div className="p-8 bg-slate-50/50 border-t border-slate-100">
                             {/* Integrated Active Context Banner */}
                             {activeContext && chatMode === 'FOLLOW_UP' && (
                                 <div className="max-w-4xl mx-auto mb-6 flex items-center justify-between bg-brand/[0.04] border border-brand/10 rounded-[1.5rem] px-6 py-4 animate-in slide-in-from-bottom-4 duration-500 shadow-sm ring-1 ring-brand/5">
@@ -347,8 +347,8 @@ export const AIDeck: React.FC = () => {
 
                 {activeTool === 'TOPIC' && (
                     <div className="flex-1 flex flex-col gap-8 overflow-hidden">
-                        <div className="bg-white dark:bg-slate-900/80 rounded-[3rem] border border-slate-200 dark:border-slate-700 p-10 shadow-sm animate-in fade-in duration-500">
-                            <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight mb-4">Topic Blueprint Generator</h3>
+                        <div className="bg-white rounded-[3rem] border border-slate-200 p-10 shadow-sm animate-in fade-in duration-500">
+                            <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-4">Topic Blueprint Generator</h3>
                             <p className="text-slate-500 text-sm mb-8 font-medium italic">Enter any CMA topic (e.g. "Variance Analysis" or "Internal Controls") to generate a complete study guide.</p>
 
                             <input
@@ -369,8 +369,8 @@ export const AIDeck: React.FC = () => {
                         </div>
 
                         {generatedTopic && (
-                            <div className="flex-1 bg-white dark:bg-slate-950/50 rounded-[3rem] border border-slate-200 dark:border-slate-700 p-10 shadow-sm overflow-y-auto no-scrollbar animate-in slide-in-from-bottom-8 duration-700">
-                                <div className="flex justify-between items-center mb-8 border-b border-slate-100 dark:border-slate-700 pb-6">
+                            <div className="flex-1 bg-white rounded-[3rem] border border-slate-200 p-10 shadow-sm overflow-y-auto no-scrollbar animate-in slide-in-from-bottom-8 duration-700">
+                                <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-6">
                                     <span className="text-[10px] font-black text-brand uppercase tracking-[0.4em]">Strategic Blueprint</span>
                                     <div className="flex gap-4">
                                         <button
@@ -382,8 +382,8 @@ export const AIDeck: React.FC = () => {
                                         <button className="px-6 py-2 bg-slate-100 text-slate-400 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">Save to Vault</button>
                                     </div>
                                 </div>
-                                <div className="prose prose-slate dark:prose-invert max-w-none">
-                                    <div className="whitespace-pre-wrap font-sans text-slate-700 dark:text-slate-300 leading-relaxed text-sm">{generatedTopic}</div>
+                                <div className="prose prose-slate max-w-none">
+                                    <div className="whitespace-pre-wrap font-sans text-slate-700 leading-relaxed text-sm">{generatedTopic}</div>
                                 </div>
                             </div>
                         )}
@@ -392,8 +392,8 @@ export const AIDeck: React.FC = () => {
 
                 {activeTool === 'NOTES' && (
                     <div className="flex-1 flex flex-col gap-8 overflow-hidden">
-                        <div className="bg-white dark:bg-slate-900/80 rounded-[3rem] border border-slate-200 dark:border-slate-700 p-10 shadow-sm animate-in fade-in duration-500">
-                            <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight mb-4">Strategic Notes Refiner</h3>
+                        <div className="bg-white rounded-[3rem] border border-slate-200 p-10 shadow-sm animate-in fade-in duration-500">
+                            <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-4">Strategic Notes Refiner</h3>
                             <p className="text-slate-500 text-sm mb-8 font-medium italic">Paste raw material, rough notes, or transcripts. We'll restructure them into professional study guides.</p>
 
                             <textarea
@@ -436,8 +436,8 @@ export const AIDeck: React.FC = () => {
 
                 {activeTool === 'FLASHCARDS' && (
                     <div className="flex-1 flex flex-col gap-8 overflow-hidden">
-                        <div className="bg-white dark:bg-slate-900/80 rounded-[3rem] border border-slate-200 dark:border-slate-700 p-10 shadow-sm animate-in fade-in duration-500">
-                            <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight mb-4">Formula Card Creator</h3>
+                        <div className="bg-white rounded-[3rem] border border-slate-200 p-10 shadow-sm animate-in fade-in duration-500">
+                            <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-4">Formula Card Creator</h3>
                             <p className="text-slate-500 text-sm mb-8 font-medium italic">Generate high-impact flashcards for CMA definitions, formulas, and standards.</p>
 
                             <textarea
@@ -479,8 +479,8 @@ export const AIDeck: React.FC = () => {
                 )}
                 {activeTool === 'ESSAY' && (
                     <div className="flex-1 flex flex-col gap-8 overflow-hidden">
-                        <div className="bg-white dark:bg-slate-900/80 rounded-[3rem] border border-slate-200 dark:border-slate-700 p-10 shadow-sm animate-in fade-in duration-500">
-                            <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight mb-4">Essay Sandbox & Auditor</h3>
+                        <div className="bg-white rounded-[3rem] border border-slate-200 p-10 shadow-sm animate-in fade-in duration-500">
+                            <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-4">Essay Sandbox & Auditor</h3>
                             <p className="text-slate-500 text-sm mb-8 font-medium italic">Paste your essay here. The Mastermind will audit it against official IMA rubrics from the Knowledge Vault.</p>
 
                             <textarea

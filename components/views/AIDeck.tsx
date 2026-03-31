@@ -163,36 +163,36 @@ export const AIDeck: React.FC = () => {
             onClick={() => setActiveTool(tool)}
             className={`group flex w-full items-start gap-3 rounded-2xl border p-4 text-left transition-all ${
                 activeTool === tool
-                    ? 'border-brand/30 bg-white shadow-md ring-1 ring-slate-200/80'
-                    : 'border-transparent bg-transparent hover:border-slate-200 hover:bg-white/80'
+                    ? 'border-brand/40 bg-brand/[0.1] shadow-md shadow-brand/10 ring-1 ring-brand/25'
+                    : 'border-transparent bg-transparent hover:border-brand/25 hover:bg-brand/[0.06]'
             }`}
         >
             <span
                 className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors ${
-                    activeTool === tool ? 'bg-brand/12 text-brand' : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200/80'
+                    activeTool === tool ? 'bg-brand text-white shadow-md shadow-brand/25' : 'bg-brand/10 text-brand group-hover:bg-brand/15'
                 }`}
             >
                 {icon}
             </span>
             <span className="min-w-0">
-                <span className={`block text-sm font-semibold ${activeTool === tool ? 'text-slate-900' : 'text-slate-600'}`}>{title}</span>
-                <span className="mt-0.5 block text-xs font-medium leading-snug text-slate-500">{hint}</span>
+                <span className={`block text-sm font-semibold ${activeTool === tool ? 'text-slate-900' : 'text-slate-700'}`}>{title}</span>
+                <span className="mt-0.5 block text-xs font-medium leading-snug text-slate-600">{hint}</span>
             </span>
         </button>
     );
 
     return (
-        <div className="flex h-full min-h-0 flex-col bg-gradient-to-br from-slate-50 via-white to-brand/[0.04] md:flex-row">
+        <div className="flex h-full min-h-0 flex-col bg-gradient-to-br from-brand/[0.08] via-white to-slate-50 md:flex-row">
             {/* Sidebar for Tools */}
-            <div className="flex w-full flex-col gap-2 border-b border-slate-200/80 bg-white/70 p-6 backdrop-blur-md md:w-80 md:border-b-0 md:border-r md:p-8">
-                <div className="mb-6 flex items-start gap-3 border-b border-slate-100 pb-6">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand/10 text-brand ring-1 ring-brand/15">
+            <div className="flex w-full flex-col gap-2 border-b border-brand/15 bg-gradient-to-b from-white to-brand/[0.04] p-6 backdrop-blur-md md:w-80 md:border-b-0 md:border-r md:border-brand/15 md:p-8">
+                <div className="mb-6 flex items-start gap-3 border-b border-brand/10 pb-6">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand text-white shadow-lg shadow-brand/30 ring-2 ring-brand/20">
                         <Icons.Sparkles className="h-6 w-6" />
                     </div>
                     <div className="min-w-0 pt-0.5">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">AI workspace</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand">AI workspace</p>
                         <h2 className="mt-0.5 text-lg font-bold tracking-tight text-slate-900">CMA Mastermind</h2>
-                        <p className="mt-1 text-xs font-medium leading-relaxed text-slate-500">IMA-aligned tools for chat, notes, and drills.</p>
+                        <p className="mt-1 text-xs font-medium leading-relaxed text-slate-600">IMA-aligned tools for chat, notes, and drills.</p>
                     </div>
                 </div>
 
@@ -214,7 +214,7 @@ export const AIDeck: React.FC = () => {
                         }}
                         onClick={() => setChatMode('VAULT_REF')}
                         className={`cursor-pointer rounded-2xl border p-4 transition-all ${
-                            chatMode === 'VAULT_REF' ? 'border-brand/35 bg-brand/[0.07] shadow-sm' : 'border-slate-200 bg-slate-50/80 hover:border-brand/25'
+                            chatMode === 'VAULT_REF' ? 'border-brand bg-brand/15 shadow-md shadow-brand/15' : 'border-brand/25 bg-brand/[0.04] hover:border-brand/50 hover:bg-brand/10'
                         }`}
                     >
                         <p className="text-xs font-semibold text-brand">Resource library</p>
@@ -250,18 +250,18 @@ export const AIDeck: React.FC = () => {
                         <div className="z-20 flex flex-col gap-4 border-b border-slate-100 bg-white/90 px-6 py-4 backdrop-blur-md sm:flex-row sm:items-center sm:justify-between sm:px-8 sm:py-5">
                             <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
                                 <span className="shrink-0 text-sm font-semibold text-slate-900">CMA US tutor</span>
-                                <div className="flex gap-1 rounded-full border border-slate-200/90 bg-slate-50/90 p-1">
+                                <div className="flex gap-1 rounded-full border border-brand/20 bg-brand/[0.08] p-1">
                                     <button
                                         type="button"
                                         onClick={() => setChatMode('STANDARD')}
-                                        className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${chatMode === 'STANDARD' ? 'bg-white text-brand shadow-sm ring-1 ring-slate-200/80' : 'text-slate-500 hover:text-slate-900'}`}
+                                        className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${chatMode === 'STANDARD' ? 'bg-brand text-white shadow-md shadow-brand/25' : 'text-slate-700 hover:bg-white/80 hover:text-brand'}`}
                                     >
                                         Global
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setChatMode('VAULT_REF')}
-                                        className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${chatMode === 'VAULT_REF' ? 'bg-white text-brand shadow-sm ring-1 ring-slate-200/80' : 'text-slate-500 hover:text-slate-900'}`}
+                                        className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${chatMode === 'VAULT_REF' ? 'bg-brand text-white shadow-md shadow-brand/25' : 'text-slate-700 hover:bg-white/80 hover:text-brand'}`}
                                     >
                                         Library
                                     </button>
@@ -269,7 +269,7 @@ export const AIDeck: React.FC = () => {
                                         type="button"
                                         onClick={() => setChatMode('FOLLOW_UP')}
                                         disabled={!activeContext}
-                                        className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${chatMode === 'FOLLOW_UP' ? 'bg-white text-brand shadow-sm ring-1 ring-slate-200/80' : activeContext ? 'text-slate-500 hover:text-slate-900' : 'cursor-not-allowed text-slate-300'}`}
+                                        className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${chatMode === 'FOLLOW_UP' ? 'bg-brand text-white shadow-md shadow-brand/25' : activeContext ? 'text-slate-700 hover:bg-white/80 hover:text-brand' : 'cursor-not-allowed text-slate-300'}`}
                                     >
                                         Follow-up
                                     </button>

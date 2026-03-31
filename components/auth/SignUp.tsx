@@ -5,7 +5,7 @@ import { authService } from '../../services/fetsService';
 import { validateInviteCode, useInviteCode } from '../../services/inviteService';
 
 interface SignUpProps {
-  onSignUp: () => void;
+  onSignUp: () => void | Promise<void>;
   onSwitch: () => void;
   onBack?: () => void;
   initialInviteCode?: string; // From URL param ?invite=XXXXXX
@@ -136,8 +136,9 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack, init
         }
       }
 
-      // Wait for session propagation
-      setTimeout(() => onSignUp(), 800);
+      // Brief wait for Supabase session to persist, then sync in App
+      await new Promise((r) => setTimeout(r, 400));
+      await Promise.resolve(onSignUp());
     } catch (err: any) {
       console.error("Signup Flow Error:", err);
       if (err.message.includes('Database error')) {

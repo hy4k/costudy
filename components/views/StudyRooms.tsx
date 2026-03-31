@@ -191,23 +191,23 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
     
     if (!selectedRoom) {
         return (
-            <div className="min-h-full bg-gradient-to-b from-white via-slate-50/80 to-slate-50">
+            <div className="min-h-full bg-gradient-to-b from-brand/[0.1] via-white to-slate-50">
                 <div className="relative mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
-                    <div className="pointer-events-none absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-brand/[0.06] to-transparent" aria-hidden />
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-brand/20 to-transparent" aria-hidden />
                     {/* Header */}
                     <div className="relative mb-10 sm:mb-14">
                         <div className="mb-6 flex flex-wrap items-start gap-4">
-                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand/10 text-brand ring-1 ring-brand/20">
-                                <Icons.Users className="h-6 w-6" />
+                            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-brand text-white shadow-xl shadow-brand/35 ring-4 ring-brand/15">
+                                <Icons.Users className="h-7 w-7" />
                             </div>
                             <div className="min-w-0">
-                                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Collaboration</p>
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand">Collaboration</p>
                                 <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
                                     Study rooms
                                 </h1>
                             </div>
                         </div>
-                        <p className="max-w-2xl text-base leading-relaxed text-slate-600 sm:text-lg">
+                        <p className="max-w-2xl text-base leading-relaxed text-slate-700 sm:text-lg">
                             Join a cluster, align on missions, run focus sessions, and share resources—built for CMA US study groups.
                         </p>
                     </div>
@@ -223,7 +223,7 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
                                 <div 
                                     key={room.id}
                                     onClick={() => setSelectedRoom(room)}
-                                    className="group cursor-pointer rounded-2xl border border-slate-200/90 bg-white/90 p-6 shadow-[0_1px_0_rgba(15,23,42,0.04)] transition-all hover:border-brand/30 hover:shadow-[0_12px_40px_-16px_rgba(15,23,42,0.12)]"
+                                    className="group cursor-pointer rounded-2xl border border-slate-200/80 bg-white p-6 shadow-[0_1px_0_rgba(15,23,42,0.04),0_12px_40px_-18px_rgba(15,23,42,0.08)] transition-all hover:border-brand/45 hover:shadow-[0_16px_48px_-12px] hover:shadow-brand/20"
                                 >
                                     <div className="mb-4 flex items-start justify-between gap-3">
                                         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-brand/90 to-brand-600 text-lg font-bold text-white shadow-sm">
@@ -247,12 +247,12 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
                             ))}
                             
                             {/* Create Room Card */}
-                            <div className="flex min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300/90 bg-slate-50/50 p-6 text-center transition-all hover:border-brand/40 hover:bg-brand/[0.04]">
-                                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-white ring-1 ring-slate-200">
-                                    <Icons.Plus className="h-6 w-6 text-slate-500" />
+                            <div className="flex min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-brand/35 bg-brand/[0.06] p-6 text-center transition-all hover:border-brand hover:bg-brand/10">
+                                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-brand text-white shadow-md shadow-brand/25">
+                                    <Icons.Plus className="h-6 w-6" />
                                 </div>
-                                <h3 className="mb-1 text-lg font-semibold text-slate-800">Create room</h3>
-                                <p className="text-sm text-slate-500">Start a new study cluster</p>
+                                <h3 className="mb-1 text-lg font-semibold text-slate-900">Create room</h3>
+                                <p className="text-sm text-slate-600">Start a new study cluster</p>
                             </div>
                         </div>
                     )}

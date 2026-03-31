@@ -4,7 +4,7 @@ import { CoStudyLogo } from '../CoStudyLogo';
 import { authService } from '../../services/fetsService';
 
 interface LoginProps {
-  onLogin: () => void;
+  onLogin: () => void | Promise<void>;
   onSwitch: () => void;
   onBack?: () => void;
 }
@@ -27,7 +27,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSwitch, onBack }) => {
       if (view === 'LOGIN') {
         // Auth is unified, but we use the type to customize the loading/error experience if needed
         await authService.signIn(email, password);
-        onLogin();
+        await Promise.resolve(onLogin());
       } else {
         await authService.resetPassword(email);
         setSuccess("Recovery link dispatched. Please check your inbox (and spam folder).");

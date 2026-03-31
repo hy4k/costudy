@@ -227,6 +227,20 @@ function App() {
     setShowAuth(true);
   };
 
+  /** Run after sign-in / sign-up so we do not rely only on onAuthStateChange (fixes missed sync / race with modal close). */
+  const handlePostAuthSuccess = async () => {
+    try {
+      const session = await authService.getSession();
+      if (session?.user) {
+        await syncUserIdentity(session.user);
+      }
+    } catch (e) {
+      console.error('[CoStudy] Post-auth sync failed', e);
+    } finally {
+      setShowAuth(false);
+    }
+  };
+
   if (isInitialLoading) {
     return (
       <div className="h-screen w-full bg-slate-50 flex flex-col items-center justify-center gap-6">
@@ -240,8 +254,8 @@ function App() {
     return (
       <Suspense fallback={<LoadingFallback />}>
         {authView === 'LOGIN'
-          ? <Login onLogin={() => setShowAuth(false)} onSwitch={() => setAuthView('SIGNUP')} onBack={() => { setShowAuth(false); setShowLanding(true); }} />
-          : <SignUp onSignUp={() => setShowAuth(false)} onSwitch={() => setAuthView('LOGIN')} onBack={() => { setShowAuth(false); setShowLanding(true); }} initialInviteCode={inviteCode} />}
+          ? <Login onLogin={handlePostAuthSuccess} onSwitch={() => setAuthView('SIGNUP')} onBack={() => { setShowAuth(false); setShowLanding(true); }} />
+          : <SignUp onSignUp={handlePostAuthSuccess} onSwitch={() => setAuthView('LOGIN')} onBack={() => { setShowAuth(false); setShowLanding(true); }} initialInviteCode={inviteCode} />}
       </Suspense>
     );
   }

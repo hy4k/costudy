@@ -157,13 +157,13 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
             <button
                 type="button"
                 onClick={() => handleNavClick(view)}
-                className={`w-full py-3.5 px-4 text-left text-sm font-medium rounded-xl transition-all flex items-center gap-3 border ${
+                className={`w-full py-3.5 px-4 text-left text-sm font-semibold rounded-xl transition-all flex items-center gap-3 border ${
                   isActive
-                    ? 'bg-white text-slate-900 border-slate-200 shadow-sm ring-1 ring-brand/15'
-                    : 'border-transparent text-slate-600 hover:bg-slate-50 hover:border-slate-200'
+                    ? 'bg-brand text-white border-brand shadow-lg shadow-brand/25'
+                    : 'border-transparent text-slate-700 hover:bg-brand/10 hover:border-brand/20 hover:text-brand'
                 }`}
             >
-                <span className={isActive ? 'text-brand' : 'text-slate-400'}>{icon}</span>
+                <span className={isActive ? 'text-white' : 'text-brand'}>{icon}</span>
                 {label}
             </button>
         );
@@ -172,13 +172,13 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
         <button
           type="button"
           onClick={() => setView(view)}
-          className={`flex items-center gap-2 px-3 sm:px-3.5 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-all duration-200 ${
+          className={`flex items-center gap-2 px-3 sm:px-3.5 py-2 rounded-full text-[13px] font-semibold whitespace-nowrap transition-all duration-200 ${
             isActive
-              ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/90'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-white/70'
+              ? 'bg-brand text-white shadow-md shadow-brand/30 ring-1 ring-brand/30'
+              : 'text-slate-700 hover:bg-white/90 hover:text-brand'
           }`}
         >
-          <span className={isActive ? 'text-brand' : 'text-slate-400'}>{icon}</span>
+          <span className={isActive ? 'text-white' : 'text-brand'}>{icon}</span>
           <span>{label}</span>
         </button>
     );
@@ -210,9 +210,9 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
   };
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-slate-50 text-slate-900 selection:bg-brand selection:text-white relative">
+    <div className="flex flex-col h-screen overflow-hidden bg-gradient-to-b from-brand/[0.07] via-slate-50 to-slate-100 text-slate-900 selection:bg-brand selection:text-white relative">
       {/* Lowered z-index from 30 to 10 to ensure system icons are clickable */}
-      <nav className="h-16 flex items-center justify-between px-6 sm:px-8 bg-white/90 backdrop-blur-2xl border-b border-slate-200/60 z-40 relative">
+      <nav className="relative z-40 flex h-16 items-center justify-between border-b border-brand/20 bg-gradient-to-r from-white via-brand/[0.06] to-white px-6 backdrop-blur-xl sm:px-8">
         <div className="flex items-center gap-4 sm:gap-6">
             {/* Mobile Menu Toggle */}
             <button 
@@ -227,8 +227,8 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
             </div>
         </div>
 
-        <div className="hidden lg:flex flex-1 justify-center min-w-0 px-2">
-          <div className="flex max-w-full items-center gap-0.5 overflow-x-auto no-scrollbar rounded-full border border-slate-200/80 bg-slate-100/90 p-1 shadow-[inset_0_1px_2px_rgba(15,23,42,0.06)] backdrop-blur-sm">
+        <div className="hidden min-w-0 flex-1 justify-center px-2 lg:flex">
+          <div className="flex max-w-full items-center gap-0.5 overflow-x-auto rounded-full border border-brand/25 bg-gradient-to-b from-brand/15 to-brand/[0.06] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.55),0_10px_36px_-12px_rgba(15,23,42,0.12)] backdrop-blur-sm no-scrollbar">
             {renderNavItems()}
           </div>
         </div>
@@ -324,17 +324,18 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-          <div className="fixed inset-0 top-16 z-40 bg-white/95 backdrop-blur-xl lg:hidden animate-in slide-in-from-top-10 duration-300 flex flex-col p-6 overflow-y-auto">
+          <div className="fixed inset-0 top-16 z-40 flex flex-col overflow-y-auto bg-gradient-to-b from-brand/[0.12] via-white to-slate-50 p-6 backdrop-blur-xl animate-in slide-in-from-top-10 duration-300 lg:hidden">
               <div className="space-y-2">
                   {renderNavItems(true)}
               </div>
           </div>
       )}
 
-      <main className="flex-1 overflow-y-auto relative no-scrollbar">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
-          <div className="absolute top-1/4 -left-1/4 w-[60%] h-[60%] rounded-full bg-brand/5 blur-[140px]"></div>
-          <div className="absolute bottom-1/4 -right-1/4 w-[50%] h-[50%] rounded-full bg-blue-500/5 blur-[140px]"></div>
+      <main className="relative flex-1 overflow-y-auto no-scrollbar">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-50">
+          <div className="absolute -left-1/4 top-1/4 h-[60%] w-[60%] rounded-full bg-brand/15 blur-[140px]" />
+          <div className="absolute -right-1/4 bottom-1/4 h-[50%] w-[50%] rounded-full bg-brand/8 blur-[120px]" />
+          <div className="absolute left-1/2 top-0 h-[40%] w-[80%] -translate-x-1/2 rounded-full bg-brand/[0.06] blur-[100px]" />
         </div>
         <div className="relative z-10 h-full">
           {children}

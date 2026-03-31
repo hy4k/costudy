@@ -472,20 +472,38 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
 
   return (
     <div className="flex min-h-full w-full flex-col">
-      <header className="w-full shrink-0 border-b border-slate-200/70 bg-gradient-to-b from-white via-slate-50/40 to-transparent">
+      <header
+        className={
+          mode === 'FACULTY'
+            ? 'w-full shrink-0 border-b border-slate-200/70 bg-gradient-to-b from-white via-slate-50/40 to-transparent'
+            : 'w-full shrink-0 border-b border-brand/20 bg-gradient-to-br from-brand/[0.14] via-white to-brand/[0.05]'
+        }
+      >
         <div className="mx-auto max-w-3xl px-4 pb-6 pt-8 sm:px-6">
           <div className="flex items-start gap-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand/10 text-brand ring-1 ring-brand/20">
+            <div
+              className={
+                mode === 'FACULTY'
+                  ? 'flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand/10 text-brand ring-1 ring-brand/20'
+                  : 'flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand text-white shadow-lg shadow-brand/30 ring-2 ring-white/80'
+              }
+            >
               <Icons.MessageSquare className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              <p
+                className={
+                  mode === 'FACULTY'
+                    ? 'text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500'
+                    : 'text-[11px] font-semibold uppercase tracking-[0.18em] text-brand'
+                }
+              >
                 {mode === 'FACULTY' ? 'Faculty' : 'Community'}
               </p>
               <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
                 {mode === 'FACULTY' ? 'Faculty wall' : 'Study Wall'}
               </h1>
-              <p className="mt-2 max-w-[min(100%,28rem)] text-sm leading-relaxed text-slate-600">
+              <p className="mt-2 max-w-[min(100%,28rem)] text-sm leading-relaxed text-slate-700">
                 {mode === 'FACULTY'
                   ? 'Professional updates, resources, and discussion with your teaching colleagues.'
                   : 'Questions, resources, and peer discussion—aligned with your CMA US journey.'}
@@ -853,8 +871,8 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
               onClick={() => setActiveCategory(cat)}
               className={`px-4 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-all ${
                 activeCategory === cat
-                  ? 'bg-slate-900 text-white shadow-sm ring-1 ring-slate-900/10'
-                  : 'bg-white/90 text-slate-600 hover:text-slate-900 border border-slate-200/90 hover:border-brand/25 hover:bg-brand/[0.04]'
+                  ? 'bg-brand text-white shadow-md shadow-brand/25 ring-1 ring-brand/30'
+                  : 'border border-slate-200/90 bg-white/95 text-slate-700 hover:border-brand/35 hover:bg-brand/[0.07] hover:text-brand'
               }`}
             >
               {cat}

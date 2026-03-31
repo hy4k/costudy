@@ -8,11 +8,20 @@ export default {
         'gradient-conic': 'conic-gradient(var(--tw-gradient-stops))',
       },
       fontFamily: {
-        sans: ['Geist', 'Geist Sans', 'Plus Jakarta Sans', 'sans-serif'],
+        sans: ['Plus Jakarta Sans', 'Geist', 'Geist Sans', 'system-ui', 'sans-serif'],
         mono: ['Geist Mono', 'monospace'],
         display: ['Syne', 'Plus Jakarta Sans', 'sans-serif'],
       },
       boxShadow: {
+        neomorph:
+          '6px 6px 14px rgba(15, 23, 42, 0.07), -5px -5px 14px rgba(255, 255, 255, 0.85)',
+        'neomorph-sm':
+          '4px 4px 10px rgba(15, 23, 42, 0.06), -3px -3px 10px rgba(255, 255, 255, 0.9)',
+        'neomorph-inset':
+          'inset 3px 3px 8px rgba(15, 23, 42, 0.12), inset -2px -2px 8px rgba(255, 255, 255, 0.65)',
+        'neomorph-inset-light':
+          'inset 2px 2px 6px rgba(15, 23, 42, 0.08), inset -2px -2px 6px rgba(255, 255, 255, 0.95)',
+        glass: '0 8px 32px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6)',
         'neon-red': '0 0 20px rgba(239,68,68,0.5), 0 0 40px rgba(239,68,68,0.3)',
         'neon-emerald': '0 0 20px rgba(16,185,129,0.5), 0 0 40px rgba(16,185,129,0.3)',
         'neon-amber': '0 0 20px rgba(251,191,36,0.5), 0 0 40px rgba(251,191,36,0.3)',

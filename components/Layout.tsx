@@ -133,37 +133,20 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
       setIsMobileMenuOpen(false);
   };
 
-  const navIconClass = 'w-[18px] h-[18px] shrink-0';
-  const navIconMap: Record<string, React.ReactNode> = {
-    'Study Wall': <Icons.MessageSquare className={navIconClass} />,
-    'AI Deck': <Icons.Sparkles className={navIconClass} />,
-    'Mocks': <Icons.ClipboardList className={navIconClass} />,
-    'Study Rooms': <Icons.Users className={navIconClass} />,
-    'Mentors': <Icons.GraduationCap className={navIconClass} />,
-    'Messages': <Icons.MessageCircle className={navIconClass} />,
-    'My Study': <Icons.Target className={navIconClass} />,
-    'Faculty Room': <Icons.BookOpen className={navIconClass} />,
-    'Command Center': <Icons.BarChart className={navIconClass} />,
-    'Teaching Deck': <Icons.Sparkles className={navIconClass} />,
-    'Faculty Profile': <Icons.User className={navIconClass} />,
-  };
-
   const NavButton = ({ view, label, isMobile = false }: { view: keyof ViewState; label: string; isMobile?: boolean }) => {
     const isActive = currentView === view;
-    const icon = navIconMap[label];
 
     if (isMobile) {
         return (
             <button
                 type="button"
                 onClick={() => handleNavClick(view)}
-                className={`w-full py-3.5 px-4 text-left text-sm font-semibold rounded-xl transition-all flex items-center gap-3 border ${
+                className={`w-full rounded-2xl px-4 py-3.5 text-left font-sans text-sm font-semibold tracking-tight transition-all ${
                   isActive
-                    ? 'bg-brand text-white border-brand shadow-lg shadow-brand/25'
-                    : 'border-transparent text-slate-700 hover:bg-brand/10 hover:border-brand/20 hover:text-brand'
+                    ? 'bg-brand text-white shadow-neomorph-inset'
+                    : 'bg-slate-100/80 text-slate-700 shadow-neomorph-sm hover:text-brand active:shadow-neomorph-inset'
                 }`}
             >
-                <span className={isActive ? 'text-white' : 'text-brand'}>{icon}</span>
                 {label}
             </button>
         );
@@ -172,14 +155,13 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
         <button
           type="button"
           onClick={() => setView(view)}
-          className={`flex items-center gap-2 px-3 sm:px-3.5 py-2 rounded-full text-[13px] font-semibold whitespace-nowrap transition-all duration-200 ${
+          className={`rounded-xl px-3.5 py-2.5 font-sans text-[13px] font-semibold tracking-tight whitespace-nowrap transition-all duration-200 ${
             isActive
-              ? 'bg-brand text-white shadow-md shadow-brand/30 ring-1 ring-brand/30'
-              : 'text-slate-700 hover:bg-white/90 hover:text-brand'
+              ? 'bg-brand text-white shadow-neomorph-inset'
+              : 'text-slate-600 shadow-neomorph-sm hover:text-brand active:bg-slate-100/90'
           }`}
         >
-          <span className={isActive ? 'text-white' : 'text-brand'}>{icon}</span>
-          <span>{label}</span>
+          {label}
         </button>
     );
   };
@@ -212,7 +194,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-gradient-to-b from-brand/[0.07] via-slate-50 to-slate-100 text-slate-900 selection:bg-brand selection:text-white relative">
       {/* Lowered z-index from 30 to 10 to ensure system icons are clickable */}
-      <nav className="relative z-40 flex h-16 items-center justify-between border-b border-brand/20 bg-gradient-to-r from-white via-brand/[0.06] to-white px-6 backdrop-blur-xl sm:px-8">
+      <nav className="relative z-40 flex h-16 items-center justify-between border-b border-brand/20 bg-gradient-to-r from-white via-brand/[0.06] to-white px-6 font-sans backdrop-blur-xl sm:px-8">
         <div className="flex items-center gap-4 sm:gap-6">
             {/* Mobile Menu Toggle */}
             <button 
@@ -228,7 +210,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
         </div>
 
         <div className="hidden min-w-0 flex-1 justify-center px-2 lg:flex">
-          <div className="flex max-w-full items-center gap-0.5 overflow-x-auto rounded-full border border-brand/25 bg-gradient-to-b from-brand/15 to-brand/[0.06] p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.55),0_10px_36px_-12px_rgba(15,23,42,0.12)] backdrop-blur-sm no-scrollbar">
+          <div className="flex max-w-full items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/80 bg-slate-200/50 p-1.5 shadow-neomorph-inset-light backdrop-blur-sm no-scrollbar">
             {renderNavItems()}
           </div>
         </div>
@@ -337,7 +319,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
           <div className="absolute -right-1/4 bottom-1/4 h-[50%] w-[50%] rounded-full bg-brand/8 blur-[120px]" />
           <div className="absolute left-1/2 top-0 h-[40%] w-[80%] -translate-x-1/2 rounded-full bg-brand/[0.06] blur-[100px]" />
         </div>
-        <div className="relative z-10 h-full">
+        <div className="relative z-10 h-full font-sans text-left">
           {children}
         </div>
       </main>

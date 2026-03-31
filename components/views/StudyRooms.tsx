@@ -191,7 +191,7 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
     
     if (!selectedRoom) {
         return (
-            <div className="min-h-full bg-gradient-to-b from-brand/[0.1] via-white to-slate-50">
+            <div className="min-h-full bg-gradient-to-b from-brand/[0.1] via-white to-slate-50 font-sans text-left">
                 <div className="relative mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
                     <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-brand/20 to-transparent" aria-hidden />
                     {/* Header */}
@@ -207,7 +207,7 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
                                 </h1>
                             </div>
                         </div>
-                        <p className="max-w-2xl text-base leading-relaxed text-slate-700 sm:text-lg">
+                        <p className="max-w-2xl text-left text-base leading-[1.65] text-slate-700 sm:text-lg">
                             Join a cluster, align on missions, run focus sessions, and share resources—built for CMA US study groups.
                         </p>
                     </div>
@@ -223,23 +223,23 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
                                 <div 
                                     key={room.id}
                                     onClick={() => setSelectedRoom(room)}
-                                    className="group cursor-pointer rounded-2xl border border-slate-200/80 bg-white p-6 shadow-[0_1px_0_rgba(15,23,42,0.04),0_12px_40px_-18px_rgba(15,23,42,0.08)] transition-all hover:border-brand/45 hover:shadow-[0_16px_48px_-12px] hover:shadow-brand/20"
+                                    className="group cursor-pointer rounded-2xl border border-white/50 bg-white/35 p-6 shadow-glass backdrop-blur-xl transition-all hover:border-white/70 hover:bg-white/50 hover:shadow-[0_12px_48px_-8px_rgba(15,23,42,0.12)]"
                                 >
                                     <div className="mb-4 flex items-start justify-between gap-3">
-                                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-brand/90 to-brand-600 text-lg font-bold text-white shadow-sm">
+                                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-brand/90 to-brand-600 text-lg font-bold text-white shadow-md shadow-brand/20">
                                             {room.name.charAt(0)}
                                         </div>
-                                        <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-200/60">
+                                        <span className="shrink-0 rounded-full bg-emerald-400/15 px-2.5 py-1 text-xs font-semibold text-emerald-900 ring-1 ring-emerald-500/25 backdrop-blur-sm">
                                             {room.memberCount || 0} online
                                         </span>
                                     </div>
                                     <h3 className="mb-2 text-lg font-semibold text-slate-900 transition-colors group-hover:text-brand">
                                         {room.name}
                                     </h3>
-                                    <p className="mb-4 line-clamp-2 text-sm leading-relaxed text-slate-600">
+                                    <p className="mb-4 line-clamp-2 text-left text-sm leading-[1.6] text-slate-700">
                                         {room.description || 'A focused study group for CMA aspirants'}
                                     </p>
-                                    <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+                                    <div className="flex items-center gap-2 text-left text-xs font-medium text-slate-600">
                                         <Icons.Target className="h-4 w-4 shrink-0 text-slate-400" />
                                         <span className="truncate">{room.activeSession || 'No active session'}</span>
                                     </div>
@@ -247,12 +247,12 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
                             ))}
                             
                             {/* Create Room Card */}
-                            <div className="flex min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-brand/35 bg-brand/[0.06] p-6 text-center transition-all hover:border-brand hover:bg-brand/10">
-                                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-brand text-white shadow-md shadow-brand/25">
+                            <div className="flex min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-white/60 bg-white/25 p-6 text-center shadow-glass backdrop-blur-xl transition-all hover:border-brand/40 hover:bg-white/40">
+                                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-brand/90 text-white shadow-neomorph-sm">
                                     <Icons.Plus className="h-6 w-6" />
                                 </div>
                                 <h3 className="mb-1 text-lg font-semibold text-slate-900">Create room</h3>
-                                <p className="text-sm text-slate-600">Start a new study cluster</p>
+                                <p className="max-w-[14rem] text-sm leading-snug text-slate-600">Start a new study cluster</p>
                             </div>
                         </div>
                     )}

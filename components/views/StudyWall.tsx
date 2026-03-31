@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Icons } from '../Icons';
 import { CoStudyLogo } from '../CoStudyLogo';
 import { Post, UserRole, UserLevel, Comment, ViewState, PostType, User, AlignmentPurpose, AlignmentDuration } from '../../types';
@@ -29,6 +29,55 @@ const STUDENT_TAGS = [
 const FACULTY_TAGS = [
     'Exam Updates', 'Pedagogy', 'Student Behavior', 'Curriculum Design',
     'IMA Standards', 'Resources', 'Career Guidance', 'Classroom Mgmt'
+];
+
+/** Shown when the feed is empty (All Feed + public) so the wall never looks broken in demos. */
+const DEMO_STUDY_WALL_POSTS: Post[] = [
+  {
+    id: 'demo-wall-1',
+    type: PostType.QUESTION,
+    author_id: 'demo-1',
+    author: {
+      name: 'Arjun M.',
+      role: UserRole.STUDENT,
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=arjunwall',
+    },
+    content:
+      'When normalizing throughput for a plant with multiple products, do you allocate fixed costs at the bottleneck step or only at the final sellable unit? I am seeing conflicting answers in review materials.',
+    created_at: new Date(Date.now() - 2 * 3600000).toISOString(),
+    likes: 8,
+    tags: ['CMA Part 1', 'Cost Management'],
+  },
+  {
+    id: 'demo-wall-2',
+    type: PostType.RESOURCE_DROP,
+    author_id: 'demo-2',
+    author: {
+      name: 'Sneha R.',
+      role: UserRole.STUDENT,
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=snehawall',
+    },
+    content:
+      'Compiled a one-page flowchart of COSO vs. IIA internal control expectations for the essay section. Happy to share if anyone wants a quick peer review before the exam window.',
+    created_at: new Date(Date.now() - 26 * 3600000).toISOString(),
+    likes: 14,
+    tags: ['Internal Controls', 'CMA Part 2'],
+  },
+  {
+    id: 'demo-wall-3',
+    type: PostType.MCQ_SHARE,
+    author_id: 'demo-3',
+    author: {
+      name: 'Marcus T.',
+      role: UserRole.STUDENT,
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=marcuswall',
+    },
+    content:
+      "Drill question from today's set: when residual income uses a charge rate higher than WACC, does the project always look worse than under EVA? How does the exam usually frame this trade-off?",
+    created_at: new Date(Date.now() - 50 * 3600000).toISOString(),
+    likes: 21,
+    tags: ['Decision Analysis', 'Investment Decisions'],
+  },
 ];
 
 // ICMA exam windows (Jan, May/Jun, Sep)
@@ -106,6 +155,13 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
     : ['All Feed', 'Audit Desk', 'Bounty Board', 'Strategic Notes', 'Expert Q&A', 'Discussions'];
 
   const daysUntilExam = getDaysUntilExam();
+
+  const displayPosts = useMemo(() => {
+    if (mode !== 'PUBLIC') return posts;
+    if (posts.length > 0) return posts;
+    if (activeCategory !== 'All Feed') return posts;
+    return DEMO_STUDY_WALL_POSTS;
+  }, [posts, mode, activeCategory]);
 
   useEffect(() => {
       const loadProfile = async () => {
@@ -463,7 +519,9 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
   const postTypeConfig: Record<string, { label: string; color: string; bg: string; border: string }> = {
     QUESTION: { label: 'Question', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
     RESOURCE: { label: 'Resource', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200' },
+    RESOURCE_DROP: { label: 'Resource', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200' },
     MCQ: { label: 'MCQ', color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-200' },
+    MCQ_SHARE: { label: 'MCQ', color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-200' },
     PEER_AUDIT_REQUEST: { label: 'Peer Audit', color: 'text-slate-100', bg: 'bg-slate-800', border: 'border-slate-700' },
     BOUNTY: { label: 'Bounty', color: 'text-white', bg: 'bg-brand', border: 'border-brand' },
     FACULTY_DISCUSS: { label: 'Faculty', color: 'text-emerald-700', bg: 'bg-emerald-100', border: 'border-emerald-300' },
@@ -471,7 +529,7 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
   };
 
   return (
-    <div className="flex min-h-full w-full flex-col">
+    <div className="flex min-h-full w-full flex-col font-sans text-left">
       <header
         className={
           mode === 'FACULTY'
@@ -479,8 +537,8 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
             : 'w-full shrink-0 border-b border-brand/20 bg-gradient-to-br from-brand/[0.14] via-white to-brand/[0.05]'
         }
       >
-        <div className="mx-auto max-w-3xl px-4 pb-6 pt-8 sm:px-6">
-          <div className="flex items-start gap-4">
+        <div className="mx-auto max-w-3xl px-4 pb-6 pt-8 text-left sm:px-6">
+          <div className="flex items-start gap-4 text-left">
             <div
               className={
                 mode === 'FACULTY'
@@ -503,7 +561,7 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
               <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
                 {mode === 'FACULTY' ? 'Faculty wall' : 'Study Wall'}
               </h1>
-              <p className="mt-2 max-w-[min(100%,28rem)] text-sm leading-relaxed text-slate-700">
+              <p className="mt-2 max-w-[min(100%,40rem)] text-left text-sm leading-[1.65] text-slate-700">
                 {mode === 'FACULTY'
                   ? 'Professional updates, resources, and discussion with your teaching colleagues.'
                   : 'Questions, resources, and peer discussion—aligned with your CMA US journey.'}
@@ -512,7 +570,7 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
           </div>
         </div>
       </header>
-      <div className="mx-auto flex w-full max-w-3xl flex-col items-center overflow-visible px-3 pb-24 pt-6 sm:px-6 sm:pb-12 sm:pt-10">
+      <div className="mx-auto flex w-full max-w-3xl flex-col items-stretch overflow-visible px-3 pb-24 pt-6 text-left sm:px-6 sm:pb-12 sm:pt-10">
 
       {/* TOAST FEEDBACK */}
       {alignFeedback && (
@@ -863,8 +921,8 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
       )}
 
       {/* CATEGORY TABS — sticky pill row */}
-      <div className="w-full mb-5 overflow-x-auto no-scrollbar">
-        <div className="flex gap-2 min-w-max">
+      <div className="mb-5 w-full overflow-x-auto text-left no-scrollbar">
+        <div className="flex min-w-max justify-start gap-2">
           {categories.map(cat => (
             <button
               key={cat}
@@ -887,7 +945,7 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
             <div className="flex items-center justify-center py-24">
                <div className="w-8 h-8 border-[3px] border-slate-200 border-t-brand rounded-full animate-spin" />
             </div>
-          ) : posts.length === 0 ? (
+          ) : displayPosts.length === 0 ? (
             <div className="flex flex-col items-center py-20 gap-4 text-center">
               <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center">
                 <Icons.PenLine className="w-5 h-5 text-slate-400" />
@@ -908,15 +966,15 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
               </button>
             </div>
           ) : (
-            <div className="space-y-px overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_1px_0_rgba(15,23,42,0.04),0_12px_40px_-12px_rgba(15,23,42,0.08)]">
-              {posts.map((post, idx) => {
+            <div className="space-y-px overflow-hidden rounded-2xl border border-slate-200/90 bg-white text-left shadow-[0_1px_0_rgba(15,23,42,0.04),0_12px_40px_-12px_rgba(15,23,42,0.08)]">
+              {displayPosts.map((post, idx) => {
                 const isAuditRequest = post.type === PostType.PEER_AUDIT_REQUEST;
                 const isBounty = post.type === PostType.BOUNTY;
                 const typeConf = postTypeConfig[post.type] || { label: post.type, color: 'text-slate-500', bg: 'bg-slate-100', border: 'border-slate-200' };
                 const isBookmarked = bookmarkedIds.has(post.id);
                 const isPoll = !!(post as any).pollOptions?.length;
                 const myVote = pollVotes[post.id];
-                const isLast = idx === posts.length - 1;
+                const isLast = idx === displayPosts.length - 1;
 
                 return (
                 <article key={post.id} className={`relative hover:bg-slate-50/50 transition-colors ${!isLast ? 'border-b border-slate-100' : ''}`}>
@@ -947,7 +1005,7 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
                         </div>
 
                         {/* Content */}
-                        <div className={`text-[15px] text-slate-700 leading-relaxed mt-1 ${isAuditRequest ? 'font-mono text-xs bg-slate-100 p-3 rounded-lg border border-slate-200 mt-2' : ''}`}>
+                        <div className={`mt-1 text-left text-[15px] leading-[1.65] text-slate-800 ${isAuditRequest ? 'mt-2 rounded-lg border border-slate-200 bg-slate-100 p-3 font-mono text-xs' : ''}`}>
                           {post.content}
                         </div>
 

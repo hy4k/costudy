@@ -174,25 +174,25 @@ export const AIDeck: React.FC = () => {
             >
                 {icon}
             </span>
-            <span className="min-w-0">
+            <span className="min-w-0 text-left">
                 <span className={`block text-sm font-semibold ${activeTool === tool ? 'text-slate-900' : 'text-slate-700'}`}>{title}</span>
-                <span className="mt-0.5 block text-xs font-medium leading-snug text-slate-600">{hint}</span>
+                <span className="mt-0.5 block text-xs font-medium leading-[1.5] text-slate-600">{hint}</span>
             </span>
         </button>
     );
 
     return (
-        <div className="flex h-full min-h-0 flex-col bg-gradient-to-br from-brand/[0.08] via-white to-slate-50 md:flex-row">
+        <div className="flex h-full min-h-0 flex-col bg-gradient-to-br from-brand/[0.08] via-white to-slate-50 font-sans text-left md:flex-row">
             {/* Sidebar for Tools */}
-            <div className="flex w-full flex-col gap-2 border-b border-brand/15 bg-gradient-to-b from-white to-brand/[0.04] p-6 backdrop-blur-md md:w-80 md:border-b-0 md:border-r md:border-brand/15 md:p-8">
-                <div className="mb-6 flex items-start gap-3 border-b border-brand/10 pb-6">
+            <div className="flex w-full flex-col gap-2 border-b border-brand/15 bg-gradient-to-b from-white/90 to-brand/[0.05] p-6 backdrop-blur-xl md:w-80 md:border-b-0 md:border-r md:border-brand/15 md:p-8">
+                <div className="mb-6 flex items-start gap-3 border-b border-brand/10 pb-6 text-left">
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand text-white shadow-lg shadow-brand/30 ring-2 ring-brand/20">
                         <Icons.Sparkles className="h-6 w-6" />
                     </div>
                     <div className="min-w-0 pt-0.5">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-brand">AI workspace</p>
-                        <h2 className="mt-0.5 text-lg font-bold tracking-tight text-slate-900">CMA Mastermind</h2>
-                        <p className="mt-1 text-xs font-medium leading-relaxed text-slate-600">IMA-aligned tools for chat, notes, and drills.</p>
+                        <p className="font-display text-[11px] font-semibold uppercase tracking-[0.14em] text-brand">AI workspace</p>
+                        <h2 className="font-display mt-0.5 text-lg font-bold tracking-tight text-slate-900">CMA Mastermind</h2>
+                        <p className="mt-1 text-xs font-medium leading-[1.6] text-slate-600">IMA-aligned tools for chat, notes, and drills.</p>
                     </div>
                 </div>
 
@@ -243,13 +243,13 @@ export const AIDeck: React.FC = () => {
             </div>
 
             {/* Tool View */}
-            <div className="flex-1 p-8 overflow-hidden flex flex-col">
+            <div className="flex flex-1 flex-col overflow-hidden p-6 text-left sm:p-8">
                 {activeTool === 'CHAT' && (
-                    <div className="flex-1 flex flex-col bg-white rounded-[2rem] border border-slate-200 overflow-hidden shadow-[0_10px_40px_rgba(0,0,0,0.03)] relative">
+                    <div className="relative flex flex-1 flex-col overflow-hidden rounded-[2rem] border border-slate-200/90 bg-white/95 shadow-glass backdrop-blur-sm">
                         {/* Chat Header */}
-                        <div className="z-20 flex flex-col gap-4 border-b border-slate-100 bg-white/90 px-6 py-4 backdrop-blur-md sm:flex-row sm:items-center sm:justify-between sm:px-8 sm:py-5">
+                        <div className="z-20 flex flex-col gap-4 border-b border-slate-100/90 bg-white/95 px-6 py-4 text-left backdrop-blur-md sm:flex-row sm:items-center sm:justify-between sm:px-8 sm:py-5">
                             <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
-                                <span className="shrink-0 text-sm font-semibold text-slate-900">CMA US tutor</span>
+                                <span className="font-display shrink-0 text-sm font-bold tracking-tight text-slate-900">CMA US tutor</span>
                                 <div className="flex gap-1 rounded-full border border-brand/20 bg-brand/[0.08] p-1">
                                     <button
                                         type="button"
@@ -288,20 +288,20 @@ export const AIDeck: React.FC = () => {
                         </div>
 
                         {/* Messages Area */}
-                        <div className="flex-1 overflow-y-auto p-10 space-y-8 scroll-smooth no-scrollbar">
+                        <div className="flex-1 space-y-8 overflow-y-auto scroll-smooth p-6 sm:p-10 no-scrollbar">
                             {messages.map((m, i) => (
                                 <div key={i} className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'}`}>
-                                    <div className={`max-w-[85%] p-6 rounded-3xl text-sm leading-relaxed ${m.role === 'user'
-                                        ? 'bg-brand text-white shadow-lg shadow-brand/10'
-                                        : 'bg-slate-50 text-slate-800 border border-slate-100 font-medium'
+                                    <div className={`max-w-[min(100%,36rem)] rounded-3xl p-5 text-sm leading-[1.65] sm:p-6 ${m.role === 'user'
+                                        ? 'bg-brand text-right text-white shadow-lg shadow-brand/20'
+                                        : 'border border-slate-100/90 bg-slate-50/95 text-left font-medium text-slate-800 backdrop-blur-sm'
                                         }`}>
                                         {m.isContextual && m.role === 'model' && (
-                                            <div className="text-[10px] font-black text-brand uppercase tracking-widest mb-3 border-b border-brand/10 pb-2 flex items-center gap-2">
-                                                <Icons.Award className="w-3 h-3" />
+                                            <div className="mb-3 flex items-center gap-2 border-b border-brand/15 pb-2 text-left text-[10px] font-semibold uppercase tracking-wider text-brand">
+                                                <Icons.Award className="h-3 w-3 shrink-0" />
                                                 {m.source || 'Strategic Reference Active'}
                                             </div>
                                         )}
-                                        <div className="prose prose-sm prose-slate max-w-none whitespace-pre-wrap">{m.content}</div>
+                                        <div className={`max-w-none whitespace-pre-wrap ${m.role === 'user' ? 'text-right text-[15px] text-white' : 'text-left text-[15px] text-slate-800'}`}>{m.content}</div>
                                     </div>
                                 </div>
                             ))}
@@ -315,7 +315,7 @@ export const AIDeck: React.FC = () => {
                         </div>
 
                         {/* Input Area */}
-                        <div className="p-8 bg-slate-50/50 border-t border-slate-100">
+                        <div className="border-t border-slate-100/90 bg-slate-50/80 p-6 backdrop-blur-sm sm:p-8">
                             {/* Integrated Active Context Banner */}
                             {activeContext && chatMode === 'FOLLOW_UP' && (
                                 <div className="max-w-4xl mx-auto mb-6 flex items-center justify-between bg-brand/[0.04] border border-brand/10 rounded-[1.5rem] px-6 py-4 animate-in slide-in-from-bottom-4 duration-500 shadow-sm ring-1 ring-brand/5">
@@ -339,10 +339,10 @@ export const AIDeck: React.FC = () => {
                                 </div>
                             )}
 
-                            <div className="relative max-w-4xl mx-auto">
+                            <div className="relative mx-auto max-w-4xl">
                                 <input
                                     ref={inputRef}
-                                    className="w-full bg-white border border-slate-200 rounded-2xl px-8 py-5 pr-20 text-sm text-slate-900 font-medium outline-none shadow-sm focus:ring-4 focus:ring-brand/5 focus:border-brand transition-all"
+                                    className="w-full rounded-2xl border border-slate-200/90 bg-white px-6 py-4 pr-20 text-left text-sm font-medium text-slate-900 outline-none shadow-sm transition-all focus:border-brand focus:ring-4 focus:ring-brand/10 sm:px-8 sm:py-5"
                                     placeholder={chatMode === 'VAULT_REF' ? "Ask about Part 1 or Part 2 specific content..." : "Ask your CMA US Mentor anything..."}
                                     value={chatInput}
                                     onChange={(e) => setChatInput(e.target.value)}
@@ -363,9 +363,9 @@ export const AIDeck: React.FC = () => {
 
                 {activeTool === 'TOPIC' && (
                     <div className="flex-1 flex flex-col gap-8 overflow-hidden">
-                        <div className="bg-white rounded-[3rem] border border-slate-200 p-10 shadow-sm animate-in fade-in duration-500">
-                            <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-4">Topic Blueprint Generator</h3>
-                            <p className="text-slate-500 text-sm mb-8 font-medium italic">Enter any CMA topic (e.g. "Variance Analysis" or "Internal Controls") to generate a complete study guide.</p>
+                        <div className="animate-in rounded-[2rem] border border-slate-200/90 bg-white/90 p-8 shadow-glass backdrop-blur-md fade-in duration-500 sm:rounded-[3rem] sm:p-10">
+                            <h3 className="font-display mb-3 text-2xl font-bold tracking-tight text-slate-900">Topic blueprint</h3>
+                            <p className="mb-8 text-left text-sm leading-[1.65] text-slate-600">Enter any CMA topic (for example variance analysis or internal controls) to generate a structured study guide.</p>
 
                             <input
                                 value={topicInput}
@@ -407,10 +407,10 @@ export const AIDeck: React.FC = () => {
                 )}
 
                 {activeTool === 'NOTES' && (
-                    <div className="flex-1 flex flex-col gap-8 overflow-hidden">
-                        <div className="bg-white rounded-[3rem] border border-slate-200 p-10 shadow-sm animate-in fade-in duration-500">
-                            <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-4">Strategic Notes Refiner</h3>
-                            <p className="text-slate-500 text-sm mb-8 font-medium italic">Paste raw material, rough notes, or transcripts. We'll restructure them into professional study guides.</p>
+                    <div className="flex flex-1 flex-col gap-8 overflow-hidden text-left">
+                        <div className="animate-in rounded-[2rem] border border-slate-200/90 bg-white/90 p-8 shadow-glass backdrop-blur-md fade-in duration-500 sm:rounded-[3rem] sm:p-10">
+                            <h3 className="font-display mb-3 text-2xl font-bold tracking-tight text-slate-900">Notes refiner</h3>
+                            <p className="mb-8 text-sm leading-[1.65] text-slate-600">Paste rough notes or transcripts. We restructure them into clear, exam-style study guides.</p>
 
                             <textarea
                                 value={noteInput}

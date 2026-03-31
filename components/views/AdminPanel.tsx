@@ -4,8 +4,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { adminService, AdminStats, ContentReport } from '../services/adminService';
-import { Icons } from './Icons';
+import { adminService, AdminStats, ContentReport } from '../../services/adminService';
+import { Icons } from '../Icons';
 
 interface AdminPanelProps {
   adminId: string;

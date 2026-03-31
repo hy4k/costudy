@@ -4,8 +4,8 @@
  */
 
 import React, { useState } from 'react';
-import { paymentService, PRICING_PLANS } from '../services/paymentService';
-import { Icons } from './Icons';
+import { paymentService, PRICING_PLANS } from '../../services/paymentService';
+import { Icons } from '../Icons';
 
 interface SubscriptionModalProps {
   isOpen: boolean;

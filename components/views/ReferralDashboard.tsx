@@ -4,8 +4,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { referralService, ReferralStats } from '../services/referralService';
-import { Icons } from './Icons';
+import { referralService, ReferralStats } from '../../services/referralService';
+import { Icons } from '../Icons';
 
 interface ReferralDashboardProps {
   userId: string;

@@ -339,7 +339,7 @@ export const syncStudyTelemetry = (data: any) => {
   console.log('[CoStudy Telemetry]', data);
 };
 
-// --- EXAM QUESTION FETCHER (REAL DATA from question_bank; mirrors examService.fetchHybridMCQs / fetchEssayQuestions) ---
+// --- EXAM QUESTION FETCHER (REAL DATA from question_bank only — no mock/fallback questions) ---
 export const fetchExamQuestions = async (
     mcqCount: number,
     essayCount: number = 2,
@@ -355,26 +355,9 @@ export const fetchExamQuestions = async (
             .not('options', 'is', null)
             .not('correct_answer', 'is', null)
             .limit(mcqCount * 3);
-        
-        let mcqs = (mcqData || []).sort(() => Math.random() - 0.5).slice(0, mcqCount);
-        
-        if (mcqs.length < mcqCount) {
-            const sampleMcqs = Array.from({ length: mcqCount - mcqs.length }).map((_, i) => ({
-                id: `mcq-sample-${i + 1}`,
-                type: 'MCQ',
-                question_text: `Sample CMA Question ${i + 1}: Which of the following best describes the strategic advantage of Activity Based Costing (ABC)?`,
-                option_a: "It reduces total overhead costs.",
-                option_b: "It assigns costs based on resource consumption, providing more accurate margins.",
-                option_c: "It simplifies accounting by using a single overhead rate.",
-                option_d: "It eliminates the need for allocating fixed costs.",
-                correct_answer: "B",
-                part,
-                section: i % 2 === 0 ? "Cost Management" : "Internal Controls",
-                source: 'real' as const
-            }));
-            mcqs = [...mcqs, ...sampleMcqs];
-        }
-        
+
+        const mcqs = (mcqData || []).sort(() => Math.random() - 0.5).slice(0, mcqCount);
+
         const formattedMcqs = mcqs.map((q: any) => {
             const opts = q.options || {};
             return {
@@ -391,7 +374,7 @@ export const fetchExamQuestions = async (
                 source: (q.source_kind === 'ai_generated' ? 'ai_generated' : 'real') as 'real' | 'ai_generated'
             };
         });
-        
+
         const { data: essayData } = await supabase
             .from('question_bank')
             .select('id, question_text, options, topic, section, part, difficulty')
@@ -399,52 +382,23 @@ export const fetchExamQuestions = async (
             .eq('is_active', true)
             .eq('part', part)
             .limit(essayCount * 3);
-        
-        let essays = (essayData || []).sort(() => Math.random() - 0.5).slice(0, essayCount);
-        
-        if (essays.length < essayCount) {
-            const fallbackEssays = [
-                {
-                    id: 'essay-fallback-1', type: 'ESSAY',
-                    question_text: 'SCENARIO:\n\nOmega Corp is considering expansion into the European market. The CFO is concerned about foreign currency exchange risk.\n\nREQUIRED:\n\n1. Identify the three types of foreign currency risk exposure.\n2. Recommend a hedging strategy using financial derivatives.',
-                    part, section: 'Essay Section - Financial Risk',
-                    option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: ''
-                },
-                {
-                    id: 'essay-fallback-2', type: 'ESSAY',
-                    question_text: 'SCENARIO:\n\nTechSolutions Inc. uses volume-based costing. Competitors undercut on high-volume products.\n\nREQUIRED:\n\n1. Analyze why the current system distorts costs.\n2. Explain how ABC could improve pricing decisions.',
-                    part, section: 'Essay Section - Cost Management',
-                    option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: ''
-                }
-            ];
-            essays = [...essays, ...fallbackEssays.slice(0, essayCount - essays.length)];
-        }
-        
+
+        const essays = (essayData || []).sort(() => Math.random() - 0.5).slice(0, essayCount);
+
         const formattedEssays = essays.map((e: any) => ({
             id: e.id,
             type: 'ESSAY',
-            question_text: e.question_text || 'Essay question content not available.',
+            question_text: e.question_text || '',
             part: e.part || 'Part 1',
             section: `Essay Section - ${e.topic || e.section || 'General'}`,
             option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: ''
         }));
-        
+
         return [...formattedMcqs.sort(() => Math.random() - 0.5), ...formattedEssays];
-        
+
     } catch (error) {
         console.error('Error fetching exam questions:', error);
-        return Array.from({ length: mcqCount }).map((_, i) => ({
-            id: `q-fallback-${i + 1}`,
-            type: 'MCQ',
-            question_text: `Fallback Question ${i + 1}: Error loading questions. Please check your connection.`,
-            option_a: "Option A",
-            option_b: "Option B", 
-            option_c: "Option C",
-            option_d: "Option D",
-            correct_answer: "A",
-            part: "Part 1",
-            section: "General"
-        }));
+        return [];
     }
 };
 

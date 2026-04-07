@@ -51,7 +51,7 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId }) => {
     const [activeSession, setActiveSession] = useState<any>(null);
     const [examConfig, setExamConfig] = useState<ExamConfig | null>(null);
     const [examQuestions, setExamQuestions] = useState<{ mcqs: any[]; essays: any[] }>({ mcqs: [], essays: [] });
-    const [isStarting, setIsStarting] = useState(false);
+    const [startingKey, setStartingKey] = useState<string | null>(null);
 
     // Exam cards configuration
     const examCards: ExamCard[] = [
@@ -181,40 +181,40 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId }) => {
     };
 
     const startExam = async (configKey: string) => {
-        if (isStarting) return;
-        setIsStarting(true);
-        
+        if (startingKey) return;
+        setStartingKey(configKey);
+
         const config = EXAM_CONFIGS[configKey];
         if (!config) {
             console.error('Invalid exam config:', configKey);
-            setIsStarting(false);
+            setStartingKey(null);
             return;
         }
 
         syncStudyTelemetry({ userId, event: 'start_exam', configKey });
-        
+
         try {
             // Fetch questions
-            const mcqs = config.mcqCount > 0 
+            const mcqs = config.mcqCount > 0
                 ? await examService.fetchHybridMCQs(config.mcqCount, config.hybridRatio, config.part)
                 : [];
-            
+
             const essays = config.essayCount > 0
                 ? await examService.fetchEssayQuestions(config.essayCount, config.part)
                 : [];
-            
-            // Create session (or use local if offline)
-            const session = await examService.createExamSession(userId || 'anonymous', configKey);
-            
+
+            // Create session with pre-fetched questions (avoids double-fetch)
+            const session = await examService.createExamSession(userId || 'anonymous', configKey, mcqs, essays);
+
             setExamQuestions({ mcqs, essays });
             setExamConfig(config);
             setActiveSession(session);
-            
+
         } catch (err) {
             console.error('Error starting exam:', err);
             alert('Failed to start exam. Please try again.');
         } finally {
-            setIsStarting(false);
+            setStartingKey(null);
         }
     };
 
@@ -356,11 +356,12 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId }) => {
                             
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 {examCards.filter(c => c.id.startsWith('full-')).map(card => (
-                                    <ExamCardComponent 
-                                        key={card.id} 
-                                        card={card} 
+                                    <ExamCardComponent
+                                        key={card.id}
+                                        card={card}
                                         onStart={() => startExam(card.configKey)}
-                                        isStarting={isStarting}
+                                        isStarting={startingKey === card.configKey}
+                                        disabled={!!startingKey && startingKey !== card.configKey}
                                     />
                                 ))}
                             </div>
@@ -376,11 +377,12 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId }) => {
                             
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 {examCards.filter(c => !c.id.startsWith('full-')).map(card => (
-                                    <ExamCardComponent 
-                                        key={card.id} 
-                                        card={card} 
+                                    <ExamCardComponent
+                                        key={card.id}
+                                        card={card}
                                         onStart={() => startExam(card.configKey)}
-                                        isStarting={isStarting}
+                                        isStarting={startingKey === card.configKey}
+                                        disabled={!!startingKey && startingKey !== card.configKey}
                                         compact
                                     />
                                 ))}
@@ -469,8 +471,9 @@ const ExamCardComponent: React.FC<{
     card: ExamCard;
     onStart: () => void;
     isStarting: boolean;
+    disabled?: boolean;
     compact?: boolean;
-}> = ({ card, onStart, isStarting, compact }) => {
+}> = ({ card, onStart, isStarting, disabled, compact }) => {
     if (compact) {
         return (
             <div className="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-lg transition-shadow">
@@ -492,9 +495,9 @@ const ExamCardComponent: React.FC<{
                         <span className="text-slate-600"><strong>{card.essayCount}</strong> Essays</span>
                     )}
                 </div>
-                <button 
+                <button
                     onClick={onStart}
-                    disabled={isStarting}
+                    disabled={isStarting || disabled}
                     className="w-full py-3 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-colors disabled:opacity-50"
                 >
                     {isStarting ? 'Starting...' : 'Start'}
@@ -543,9 +546,9 @@ const ExamCardComponent: React.FC<{
                     ))}
                 </ul>
 
-                <button 
+                <button
                     onClick={onStart}
-                    disabled={isStarting}
+                    disabled={isStarting || disabled}
                     className={`w-full py-5 ${card.highlight ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-slate-900 hover:bg-slate-800'} text-white rounded-2xl font-black text-sm uppercase tracking-widest transition-colors disabled:opacity-50 shadow-lg`}
                 >
                     {isStarting ? (

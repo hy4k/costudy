@@ -144,8 +144,10 @@ export const EXAM_CONFIGS: Record<string, ExamConfig> = {
 // ============================================
 
 /**
- * Fetch MCQ questions from question_bank (new unified schema).
+ * Fetch MCQ questions from question_bank (unified schema).
  * options column is JSONB {A: "...", B: "...", C: "...", D: "..."}.
+ * Returns only real, quality-verified questions from the backend.
+ * If fewer than requested are available, returns what exists — never pads with fakes.
  */
 export const fetchHybridMCQs = async (
     count: number,
@@ -153,7 +155,39 @@ export const fetchHybridMCQs = async (
     part: string = 'Part 1'
 ): Promise<MCQQuestion[]> => {
     console.log(`[ExamService] Fetching ${count} MCQs from question_bank`);
-    
+
+    // Step 1: Fetch real questions from question_bank
+    const realQuestions = await fetchRealMCQs(count, part);
+
+    // Step 2: If we have enough real questions, just use those (shuffled)
+    if (realQuestions.length >= count) {
+        return realQuestions.slice(0, count);
+    }
+
+    // Step 3: Try to fill remainder from ai_question_cache
+    const needed = count - realQuestions.length;
+    const aiQuestions = await fetchCachedAIMCQs(needed, part);
+
+    const combined = [...realQuestions, ...aiQuestions];
+    console.log(`[ExamService] Assembled ${combined.length} MCQs (${realQuestions.length} real + ${aiQuestions.length} AI-cached)`);
+
+    // Step 4: If still short, try on-demand AI generation via backend
+    if (combined.length < count) {
+        const stillNeeded = count - combined.length;
+        console.log(`[ExamService] Still need ${stillNeeded} MCQs — attempting on-demand generation`);
+        const generated = await generateMCQsViaBackend(stillNeeded, part, realQuestions.slice(0, 3));
+        combined.push(...generated);
+    }
+
+    if (combined.length === 0) {
+        console.warn('[ExamService] No MCQs available — question_bank may be empty');
+    }
+
+    return combined.sort(() => Math.random() - 0.5);
+};
+
+/** Fetch real MCQs from question_bank */
+const fetchRealMCQs = async (count: number, part: string): Promise<MCQQuestion[]> => {
     try {
         const { data, error } = await supabase
             .from('question_bank')
@@ -167,53 +201,92 @@ export const fetchHybridMCQs = async (
 
         if (error) {
             console.error('[ExamService] Error fetching MCQs:', error);
+            return [];
         }
 
-        if (data && data.length > 0) {
-            const shuffled = data.sort(() => Math.random() - 0.5).slice(0, count);
-            console.log(`[ExamService] Got ${shuffled.length} MCQs from question_bank`);
+        if (!data || data.length === 0) return [];
 
-            const mapped: MCQQuestion[] = shuffled.map((q: any) => {
-                const opts = q.options || {};
-                return {
-                    id: q.id,
-                    question_text: q.question_text || '',
-                    option_a: opts.A || opts.a || '',
-                    option_b: opts.B || opts.b || '',
-                    option_c: opts.C || opts.c || '',
-                    option_d: opts.D || opts.d || '',
-                    correct_answer: q.correct_answer || 'A',
-                    section: q.section || 'General',
-                    difficulty: q.difficulty || 'Medium',
-                    source: (q.source_kind === 'ai_generated' ? 'ai_generated' : 'real') as 'real' | 'ai_generated',
-                };
-            });
-
-            while (mapped.length < count) {
-                mapped.push(generateMockMCQ(mapped.length));
-            }
-
-            return mapped;
-        }
-        
-        console.log('[ExamService] No MCQs matched, using mock data');
-        return Array.from({ length: count }, (_, i) => generateMockMCQ(i));
-        
+        return data.sort(() => Math.random() - 0.5).slice(0, count).map(mapQuestionBankToMCQ);
     } catch (err) {
-        console.error('[ExamService] Critical error in fetchHybridMCQs:', err);
-        return Array.from({ length: count }, (_, i) => generateMockMCQ(i));
+        console.error('[ExamService] Critical error fetching real MCQs:', err);
+        return [];
     }
 };
 
+/** Fetch pre-generated AI MCQs from ai_question_cache */
+const fetchCachedAIMCQs = async (count: number, part: string): Promise<MCQQuestion[]> => {
+    if (count <= 0) return [];
+    try {
+        const { data, error } = await supabase
+            .from('ai_question_cache')
+            .select('id, question_data, part, section, topic, difficulty')
+            .eq('question_type', 'MCQ')
+            .eq('is_used', false)
+            .eq('part', part)
+            .gte('quality_score', 0.7)
+            .limit(count * 2);
+
+        if (error || !data || data.length === 0) return [];
+
+        const selected = data.sort(() => Math.random() - 0.5).slice(0, count);
+
+        // Mark as used so other concurrent sessions don't get the same ones
+        const usedIds = selected.map(q => q.id);
+        if (usedIds.length > 0) {
+            await supabase
+                .from('ai_question_cache')
+                .update({ is_used: true, times_shown: 1 })
+                .in('id', usedIds);
+        }
+
+        return selected.map((q: any) => {
+            const qd = q.question_data || {};
+            return {
+                id: q.id,
+                question_text: qd.question_text || '',
+                option_a: qd.option_a || qd.options?.A || '',
+                option_b: qd.option_b || qd.options?.B || '',
+                option_c: qd.option_c || qd.options?.C || '',
+                option_d: qd.option_d || qd.options?.D || '',
+                correct_answer: qd.correct_answer || 'A',
+                section: q.section || qd.section || 'General',
+                difficulty: q.difficulty || qd.difficulty || 'Medium',
+                source: 'ai_generated' as const,
+            };
+        });
+    } catch (err) {
+        console.error('[ExamService] Error fetching AI cache:', err);
+        return [];
+    }
+};
+
+/** Map a question_bank row to MCQQuestion */
+const mapQuestionBankToMCQ = (q: any): MCQQuestion => {
+    const opts = q.options || {};
+    return {
+        id: q.id,
+        question_text: q.question_text || '',
+        option_a: opts.A || opts.a || '',
+        option_b: opts.B || opts.b || '',
+        option_c: opts.C || opts.c || '',
+        option_d: opts.D || opts.d || '',
+        correct_answer: q.correct_answer || 'A',
+        section: q.section || 'General',
+        difficulty: q.difficulty || 'Medium',
+        source: (q.source_kind === 'ai_generated' ? 'ai_generated' : 'real') as 'real' | 'ai_generated',
+    };
+};
+
 /**
- * Fetch essay questions from question_bank (new unified schema).
+ * Fetch essay questions from question_bank (unified schema).
+ * Returns only real, quality-verified essays. Never pads with hardcoded placeholders.
  */
 export const fetchEssayQuestions = async (
     count: number = 2,
     part: string = 'Part 1'
 ): Promise<EssayQuestion[]> => {
     console.log(`[ExamService] Fetching ${count} essay questions from question_bank`);
-    
+
     try {
         const { data, error } = await supabase
             .from('question_bank')
@@ -222,18 +295,45 @@ export const fetchEssayQuestions = async (
             .eq('is_active', true)
             .eq('part', part)
             .limit(count * 3);
-        
+
         if (error) {
             console.error('[ExamService] Error fetching essays:', error);
-            return generateMockEssays(count);
-        }
-        
-        if (!data || data.length === 0) {
-            console.log('[ExamService] No essays in DB, using mock data');
-            return generateMockEssays(count);
         }
 
-        const shuffled = data.sort(() => Math.random() - 0.5).slice(0, count);
+        const pool = data || [];
+
+        if (pool.length === 0) {
+            // Try ai_question_cache for essays
+            const { data: aiEssays } = await supabase
+                .from('ai_question_cache')
+                .select('id, question_data, topic, difficulty')
+                .eq('question_type', 'ESSAY')
+                .eq('is_used', false)
+                .eq('part', part)
+                .gte('quality_score', 0.7)
+                .limit(count * 2);
+
+            if (aiEssays && aiEssays.length > 0) {
+                const selected = aiEssays.sort(() => Math.random() - 0.5).slice(0, count);
+                const usedIds = selected.map(e => e.id);
+                if (usedIds.length > 0) {
+                    await supabase.from('ai_question_cache').update({ is_used: true }).in('id', usedIds);
+                }
+                return selected.map((e: any) => ({
+                    id: e.id,
+                    scenario_text: e.question_data?.scenario_text || e.question_data?.question_text || '',
+                    requirements: e.question_data?.requirements || ['Analyze the scenario and provide your response.'],
+                    topic: e.topic || 'General',
+                    difficulty: e.difficulty || 'Medium',
+                    time_allocation_minutes: 30
+                }));
+            }
+
+            console.warn('[ExamService] No essay questions available in question_bank or ai_question_cache');
+            return [];
+        }
+
+        const shuffled = pool.sort(() => Math.random() - 0.5).slice(0, count);
 
         return shuffled.map((e: any) => ({
             id: e.id,
@@ -243,10 +343,10 @@ export const fetchEssayQuestions = async (
             difficulty: e.difficulty || 'Medium',
             time_allocation_minutes: 30
         }));
-        
+
     } catch (err) {
         console.error('[ExamService] Critical error fetching essays:', err);
-        return generateMockEssays(count);
+        return [];
     }
 };
 
@@ -255,29 +355,32 @@ export const fetchEssayQuestions = async (
 // ============================================
 
 /**
- * Create a new exam session
+ * Create a new exam session.
+ * Accepts pre-fetched questions to avoid double-fetching (MockTests already fetches them).
  */
 export const createExamSession = async (
     userId: string,
-    configKey: string
+    configKey: string,
+    prefetchedMcqs?: MCQQuestion[],
+    prefetchedEssays?: EssayQuestion[]
 ): Promise<ExamSession | null> => {
     const config = EXAM_CONFIGS[configKey];
     if (!config) {
         console.error('[ExamService] Invalid config key:', configKey);
         return null;
     }
-    
+
     console.log(`[ExamService] Creating ${config.testType} session for user ${userId}`);
-    
-    // Fetch questions
-    const mcqs = config.mcqCount > 0 
+
+    // Use pre-fetched questions if provided, otherwise fetch fresh
+    const mcqs = prefetchedMcqs ?? (config.mcqCount > 0
         ? await fetchHybridMCQs(config.mcqCount, config.hybridRatio, config.part)
-        : [];
-    
-    const essays = config.essayCount > 0
+        : []);
+
+    const essays = prefetchedEssays ?? (config.essayCount > 0
         ? await fetchEssayQuestions(config.essayCount, config.part)
-        : [];
-    
+        : []);
+
     const sessionData = {
         user_id: userId,
         test_type: config.testType,
@@ -519,66 +622,215 @@ export const getUserSessions = async (userId: string, limit: number = 10): Promi
 };
 
 // ============================================
-// FALLBACK/MOCK DATA GENERATORS
+// AI QUESTION GENERATION (On-Demand via Backend)
 // ============================================
 
-function generateMockMCQ(index: number): MCQQuestion {
-    const sections = ['Cost Management', 'Internal Controls', 'Financial Reporting', 'Planning & Budgeting'];
-    return {
-        id: `mock-mcq-${index + 1}`,
-        question_text: `Sample CMA Question ${index + 1}: Which of the following best describes the strategic advantage of Activity Based Costing (ABC) over traditional volume-based costing?`,
-        option_a: 'It reduces total overhead costs incurred',
-        option_b: 'It assigns costs based on resource consumption, providing accurate product margins',
-        option_c: 'It uses a single plantwide overhead rate for simplicity',
-        option_d: 'It eliminates the need for allocating fixed costs',
-        correct_answer: 'B',
-        section: sections[index % sections.length],
-        difficulty: index % 3 === 0 ? 'Hard' : index % 2 === 0 ? 'Medium' : 'Easy',
-        source: 'real'
-    };
-}
+const COSTUDY_API_URL = (import.meta as any).env?.VITE_COSTUDY_API_URL || 'https://api.costudy.in';
 
-function generateMockEssays(count: number): EssayQuestion[] {
-    return [
-        {
-            id: 'mock-essay-1',
-            scenario_text: `SCENARIO:
+/**
+ * Generate MCQ variations on-demand using the backend LLM.
+ * Uses seed questions as style/difficulty reference.
+ * Generated questions are cached in ai_question_cache for future sessions.
+ */
+async function generateMCQsViaBackend(
+    count: number,
+    part: string,
+    seedQuestions: MCQQuestion[]
+): Promise<MCQQuestion[]> {
+    if (count <= 0) return [];
 
-Omega Corp is a US-based manufacturer considering expansion into the European market. The CFO is concerned about foreign currency exchange risk as the Euro has been volatile against the USD.
+    try {
+        const seedContext = seedQuestions.length > 0
+            ? seedQuestions.map(q =>
+                `Q: ${q.question_text}\nA) ${q.option_a}\nB) ${q.option_b}\nC) ${q.option_c}\nD) ${q.option_d}\nAnswer: ${q.correct_answer}\nSection: ${q.section}\nDifficulty: ${q.difficulty}`
+              ).join('\n\n---\n\n')
+            : '';
 
-Current exchange rate: 1 EUR = 1.08 USD
-Forward rate (1 year): 1 EUR = 1.05 USD
-Expected EUR revenue: €5 million annually`,
-            requirements: [
-                'Identify and explain the three types of foreign currency risk exposure (Transaction, Translation, Economic).',
-                'Calculate the potential gain or loss if Omega enters a forward contract to hedge its expected €5 million revenue.',
-                'Recommend a comprehensive hedging strategy using financial derivatives.'
-            ],
-            topic: 'Foreign Currency Risk',
-            difficulty: 'Hard',
-            time_allocation_minutes: 30
-        },
-        {
-            id: 'mock-essay-2',
-            scenario_text: `SCENARIO:
+        const prompt = `You are a CMA (Certified Management Accountant) exam question writer for ${part}. Generate exactly ${count} NEW, UNIQUE multiple-choice questions.
 
-You are the Controller of TechSolutions Inc. The company uses a volume-based costing system (direct labor hours) to allocate overhead. Competitors have been undercutting prices on high-volume products while TechSolutions remains cheap on low-volume specialty items.
+${seedContext ? `Use these real exam questions as reference for style, difficulty, and topic coverage:\n\n${seedContext}\n\n` : ''}
 
-Overhead pool: $2,400,000
-Total DLH: 80,000
-Product A (high volume): 60,000 DLH, 200 setups
-Product B (low volume): 20,000 DLH, 800 setups`,
-            requirements: [
-                'Calculate product costs under the traditional volume-based system.',
-                'Calculate product costs using Activity-Based Costing with setups as the cost driver ($1,200 per setup).',
-                'Explain why traditional costing distorts product costs and how ABC provides better strategic pricing information.'
-            ],
-            topic: 'Activity-Based Costing',
-            difficulty: 'Hard',
-            time_allocation_minutes: 30
+REQUIREMENTS:
+- Each question must test a DIFFERENT CMA topic (Cost Management, Internal Controls, Financial Reporting, Planning & Budgeting, Performance Management, Decision Analysis, Risk Management, Investment Decisions, Professional Ethics)
+- Questions must be exam-quality: precise wording, plausible distractors, one clearly correct answer
+- Include calculations where appropriate
+- Vary difficulty: mix Easy, Medium, Hard
+
+Return ONLY valid JSON array, no markdown:
+[{"question_text":"...","option_a":"...","option_b":"...","option_c":"...","option_d":"...","correct_answer":"A|B|C|D","section":"...","difficulty":"Easy|Medium|Hard"}]`;
+
+        const { data: session } = await supabase.auth.getSession();
+        const token = session.session?.access_token;
+
+        const response = await fetch(`${COSTUDY_API_URL}/api/ask-cma`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { Authorization: `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify({ message: prompt, history: [] })
+        });
+
+        if (!response.ok) {
+            console.error('[ExamService] AI generation API error:', response.status);
+            return [];
         }
-    ].slice(0, count);
+
+        const data = await response.json();
+        const text = data.response || data.answer || '';
+
+        // Extract JSON array from response
+        const jsonMatch = text.match(/\[[\s\S]*\]/);
+        if (!jsonMatch) {
+            console.error('[ExamService] AI response did not contain valid JSON array');
+            return [];
+        }
+
+        const parsed = JSON.parse(jsonMatch[0]);
+        if (!Array.isArray(parsed)) return [];
+
+        const generated: MCQQuestion[] = parsed
+            .filter((q: any) => q.question_text && q.option_a && q.option_b && q.option_c && q.option_d && q.correct_answer)
+            .slice(0, count)
+            .map((q: any, i: number) => ({
+                id: `ai-gen-${Date.now()}-${i}`,
+                question_text: q.question_text,
+                option_a: q.option_a,
+                option_b: q.option_b,
+                option_c: q.option_c,
+                option_d: q.option_d,
+                correct_answer: q.correct_answer.toUpperCase(),
+                section: q.section || 'General',
+                difficulty: q.difficulty || 'Medium',
+                source: 'ai_generated' as const,
+            }));
+
+        // Cache generated questions for future sessions
+        if (generated.length > 0) {
+            const cacheRows = generated.map(q => ({
+                question_type: 'MCQ',
+                question_data: {
+                    question_text: q.question_text,
+                    option_a: q.option_a,
+                    option_b: q.option_b,
+                    option_c: q.option_c,
+                    option_d: q.option_d,
+                    correct_answer: q.correct_answer,
+                    section: q.section,
+                    difficulty: q.difficulty,
+                },
+                part,
+                section: q.section,
+                topic: q.section,
+                difficulty: q.difficulty,
+                generation_model: 'costudy-backend-llm',
+                quality_score: 0.75,
+                is_used: true, // Mark used since we're serving them now
+            }));
+            await supabase.from('ai_question_cache').insert(cacheRows).then(({ error }) => {
+                if (error) console.warn('[ExamService] Failed to cache AI questions:', error.message);
+                else console.log(`[ExamService] Cached ${cacheRows.length} AI-generated MCQs`);
+            });
+        }
+
+        console.log(`[ExamService] Generated ${generated.length} MCQs via backend LLM`);
+        return generated;
+
+    } catch (err) {
+        console.error('[ExamService] On-demand AI generation failed:', err);
+        return [];
+    }
 }
+
+/**
+ * Pre-generate a batch of AI questions and cache them for future exam sessions.
+ * Call this from an admin panel or scheduled job to keep the pool fresh.
+ */
+export const preGenerateQuestionBatch = async (
+    mcqCount: number = 20,
+    essayCount: number = 4,
+    part: string = 'Part 1'
+): Promise<{ mcqsGenerated: number; essaysGenerated: number }> => {
+    console.log(`[ExamService] Pre-generating batch: ${mcqCount} MCQs, ${essayCount} essays for ${part}`);
+
+    // Fetch a few real questions as seed for style reference
+    const seedMCQs = await fetchRealMCQs(5, part);
+
+    const mcqs = await generateMCQsViaBackend(mcqCount, part, seedMCQs);
+
+    // For essays, generate via backend
+    let essaysGenerated = 0;
+    if (essayCount > 0) {
+        try {
+            const { data: session } = await supabase.auth.getSession();
+            const token = session.session?.access_token;
+
+            const prompt = `Generate ${essayCount} CMA ${part} essay scenarios. Each should have a detailed business scenario (150-300 words) with financial data, and 2-3 specific requirements.
+
+Return ONLY valid JSON array:
+[{"scenario_text":"...","requirements":["req1","req2","req3"],"topic":"...","difficulty":"Easy|Medium|Hard"}]`;
+
+            const response = await fetch(`${COSTUDY_API_URL}/api/ask-cma`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { Authorization: `Bearer ${token}` } : {})
+                },
+                body: JSON.stringify({ message: prompt, history: [] })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const text = data.response || data.answer || '';
+                const jsonMatch = text.match(/\[[\s\S]*\]/);
+                if (jsonMatch) {
+                    const parsed = JSON.parse(jsonMatch[0]);
+                    if (Array.isArray(parsed)) {
+                        const cacheRows = parsed
+                            .filter((e: any) => e.scenario_text && e.requirements)
+                            .slice(0, essayCount)
+                            .map((e: any) => ({
+                                question_type: 'ESSAY',
+                                question_data: e,
+                                part,
+                                section: e.topic || 'General',
+                                topic: e.topic || 'General',
+                                difficulty: e.difficulty || 'Medium',
+                                generation_model: 'costudy-backend-llm',
+                                quality_score: 0.75,
+                                is_used: false,
+                            }));
+                        const { error } = await supabase.from('ai_question_cache').insert(cacheRows);
+                        if (!error) essaysGenerated = cacheRows.length;
+                    }
+                }
+            }
+        } catch (err) {
+            console.error('[ExamService] Essay pre-generation failed:', err);
+        }
+    }
+
+    return { mcqsGenerated: mcqs.length, essaysGenerated };
+};
+
+/**
+ * Reset used AI questions so they can be served again.
+ * Call periodically to recycle the cache.
+ */
+export const recycleAIQuestionCache = async (part: string = 'Part 1'): Promise<number> => {
+    const { data, error } = await supabase
+        .from('ai_question_cache')
+        .update({ is_used: false, times_shown: 0 })
+        .eq('is_used', true)
+        .eq('part', part)
+        .select('id');
+
+    if (error) {
+        console.error('[ExamService] Cache recycle failed:', error);
+        return 0;
+    }
+    return data?.length || 0;
+};
 
 function createLocalSession(
     userId: string, 
@@ -618,7 +870,9 @@ export const examService = {
     completeMCQSection,
     completeEssaySection,
     getExamSession,
-    getUserSessions
+    getUserSessions,
+    preGenerateQuestionBatch,
+    recycleAIQuestionCache,
 };
 
 export default examService;

@@ -65,15 +65,20 @@ export const authService = {
 
   signIn: async (email: string, pass: string) => {
     try {
+      // Clear any stale session before attempting fresh login
+      // This prevents "already authenticated" or stale token conflicts
+      try {
+        await supabase.auth.signOut({ scope: 'local' });
+      } catch (_) { /* ignore */ }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password: pass
       });
-      
+
       if (error) {
         console.error("Supabase signin error:", error);
         if (error.message.includes("Failed to fetch") || error.message.includes("CORS")) {
-          // Fallback to local auth service if CORS is blocking
           console.warn("Using local auth service due to CORS/network issues");
           return await localAuthService.signIn(email, pass);
         }
@@ -100,19 +105,27 @@ export const authService = {
   },
 
   signOut: async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.warn("Supabase signout failed, clearing local session");
-        // Even if supabase signout fails, clear local session
-        localStorage.removeItem('costudy_session');
-        return;
+    // Always clear ALL auth storage regardless of API success
+    const clearAllAuthStorage = () => {
+      localStorage.removeItem('costudy_session');
+      // Clear Supabase SDK's own storage keys (sb-<ref>-auth-token, etc.)
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith('sb-') || key.startsWith('supabase'))) {
+          keysToRemove.push(key);
+        }
       }
-      // Success, also clear local session
-      localStorage.removeItem('costudy_session');
-    } catch (networkError) {
-      console.warn("Network error during signout, clearing local session");
-      localStorage.removeItem('costudy_session');
+      keysToRemove.forEach(k => localStorage.removeItem(k));
+    };
+
+    try {
+      // Use scope: 'local' to guarantee local cleanup even if server call fails
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch (e) {
+      console.warn("Supabase signOut threw:", e);
+    } finally {
+      clearAllAuthStorage();
     }
   },
 

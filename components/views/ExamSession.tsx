@@ -14,6 +14,65 @@ interface Question {
   correct_answer?: string;
   part: string;
   section: string;
+  // Essay-specific parsed fields
+  scenario?: string;
+  requirements?: string[];
+}
+
+/**
+ * Parse essay text into scenario (business case) and requirements (tasks/questions).
+ * CMA essay CSVs have separate scenario and tasks columns, but after ingestion
+ * they may be merged into a single question_text string.
+ */
+function parseEssayText(text: string, rawRequirements?: string[]): { scenario: string; requirements: string[] } {
+  // If we already have real requirements from the data source, use them
+  const hasRealRequirements = rawRequirements &&
+    rawRequirements.length > 0 &&
+    rawRequirements[0] !== 'Analyze the scenario and provide your response.';
+
+  if (hasRealRequirements) {
+    return { scenario: text, requirements: rawRequirements! };
+  }
+
+  // Action verbs that typically start CMA essay task sentences
+  const taskVerbs = /^(Prepare|Calculate|Compute|Explain|Identify|Discuss|Describe|Determine|Evaluate|Recommend|Outline|Justify|Compare|Assess|List|Define|Analyze|Propose|Decompose|Discuss|Using|Assume)/;
+
+  // Try splitting on sentence boundaries where a task verb appears
+  const sentences = text.split(/(?<=\.)\s+/);
+
+  if (sentences.length <= 1) {
+    return { scenario: text, requirements: [] };
+  }
+
+  // Find the first sentence that starts with a task verb
+  let splitIdx = -1;
+  for (let i = 1; i < sentences.length; i++) {
+    if (taskVerbs.test(sentences[i].trim())) {
+      splitIdx = i;
+      break;
+    }
+  }
+
+  if (splitIdx === -1) {
+    // Fallback: if text is long enough, use last ~40% as requirements
+    if (sentences.length >= 3) {
+      splitIdx = Math.ceil(sentences.length * 0.6);
+    } else {
+      return { scenario: text, requirements: [] };
+    }
+  }
+
+  const scenario = sentences.slice(0, splitIdx).join(' ').trim();
+  const reqText = sentences.slice(splitIdx).join(' ').trim();
+
+  // Split requirements into individual task items
+  // Look for sentence breaks within the requirements block
+  const reqSentences = reqText.split(/(?<=\.)\s+/).filter(s => s.trim().length > 10);
+
+  return {
+    scenario: scenario || text,
+    requirements: reqSentences.length > 0 ? reqSentences : [reqText],
+  };
 }
 
 interface Answer {
@@ -54,13 +113,19 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ session, config, mcqQu
       part: config.part,
       section: q.section || 'General',
     }));
-    const essays: Question[] = essayQuestions.map((q: any) => ({
-      id: q.id,
-      type: 'ESSAY' as const,
-      question_text: q.scenario_text || q.question_text,
-      part: config.part,
-      section: `Essay - ${q.topic || 'General'}`,
-    }));
+    const essays: Question[] = essayQuestions.map((q: any) => {
+      const fullText = q.scenario_text || q.question_text || '';
+      const parsed = parseEssayText(fullText, q.requirements);
+      return {
+        id: q.id,
+        type: 'ESSAY' as const,
+        question_text: fullText,
+        part: config.part,
+        section: `Essay - ${q.topic || 'General'}`,
+        scenario: parsed.scenario,
+        requirements: parsed.requirements,
+      };
+    });
     return [...mcqs, ...essays];
   };
 
@@ -85,6 +150,7 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ session, config, mcqQu
   const [results, setResults] = useState({ correct: 0, total: 0, percentage: 0 });
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showCalculator, setShowCalculator] = useState(false);
+  const [essayTab, setEssayTab] = useState<'scenario' | 'requirements'>('scenario');
 
   const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -220,6 +286,7 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ session, config, mcqQu
     if (newIndex < 0 || newIndex >= questions.length) return;
     performSave(stateRef.current);
     setCurrentIndex(newIndex);
+    setEssayTab('scenario'); // Reset to scenario tab when navigating
   };
 
   const handleFinishTest = () => {
@@ -871,30 +938,102 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ session, config, mcqQu
                     </button>
                   </div>
 
-                  {/* SPLIT VIEW FOR ESSAYS */}
+                  {/* PROMETRIC-STYLE ESSAY VIEW */}
                   {isEssay ? (
-                    <div className="flex-1 flex flex-col md:flex-row gap-6 min-h-[500px]">
-                      <div className="flex-1 bg-slate-50 border-2 border-slate-300 p-6 overflow-y-auto max-h-[600px] shadow-inner">
-                        <div className="flex justify-between items-center mb-4 border-b border-slate-200 pb-2">
-                          <span className="font-bold text-sm text-slate-700 uppercase">Scenario View</span>
-                          <Icons.FileText className="w-4 h-4 text-slate-400" />
+                    <div className="flex-1 flex flex-col md:flex-row gap-0 min-h-[500px] border border-slate-300">
+                      {/* LEFT PANEL: Scenario / Requirements tabs */}
+                      <div className="flex-1 flex flex-col border-r border-slate-300 min-w-0">
+                        {/* Tab Bar */}
+                        <div className="flex bg-[#e6e6e6] border-b border-slate-300 shrink-0">
+                          <button
+                            onClick={() => setEssayTab('scenario')}
+                            className={`px-5 py-2.5 text-xs font-bold uppercase tracking-wide transition-colors relative ${
+                              essayTab === 'scenario'
+                                ? 'bg-white text-[#333] border-t-2 border-t-[#8dc63f] border-x border-slate-300 -mb-px z-10'
+                                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                            }`}
+                          >
+                            <span className="flex items-center gap-1.5">
+                              <Icons.FileText className="w-3.5 h-3.5" />
+                              Scenario
+                            </span>
+                          </button>
+                          <button
+                            onClick={() => setEssayTab('requirements')}
+                            className={`px-5 py-2.5 text-xs font-bold uppercase tracking-wide transition-colors relative ${
+                              essayTab === 'requirements'
+                                ? 'bg-white text-[#333] border-t-2 border-t-[#8dc63f] border-x border-slate-300 -mb-px z-10'
+                                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                            }`}
+                          >
+                            <span className="flex items-center gap-1.5">
+                              <Icons.ClipboardList className="w-3.5 h-3.5" />
+                              Requirements
+                              {currentQ.requirements && currentQ.requirements.length > 0 && (
+                                <span className="bg-[#8dc63f] text-white text-[9px] rounded-full w-4 h-4 flex items-center justify-center">
+                                  {currentQ.requirements.length}
+                                </span>
+                              )}
+                            </span>
+                          </button>
                         </div>
-                        <p className="text-sm font-medium text-slate-900 leading-relaxed whitespace-pre-wrap font-serif">
-                          {currentQ.question_text}
-                        </p>
+
+                        {/* Tab Content */}
+                        <div className="flex-1 overflow-y-auto bg-white p-6">
+                          {essayTab === 'scenario' ? (
+                            <div>
+                              <div className="mb-4 pb-3 border-b border-slate-200">
+                                <h3 className="text-sm font-bold text-[#333] uppercase tracking-wide">Business Scenario</h3>
+                                <p className="text-[10px] text-slate-500 mt-1">Read the scenario carefully before responding</p>
+                              </div>
+                              <div className="text-sm text-slate-900 leading-[1.8] font-serif whitespace-pre-wrap">
+                                {currentQ.scenario || currentQ.question_text}
+                              </div>
+                            </div>
+                          ) : (
+                            <div>
+                              <div className="mb-4 pb-3 border-b border-slate-200">
+                                <h3 className="text-sm font-bold text-[#333] uppercase tracking-wide">Required Tasks</h3>
+                                <p className="text-[10px] text-slate-500 mt-1">Address each requirement in your response</p>
+                              </div>
+                              {currentQ.requirements && currentQ.requirements.length > 0 ? (
+                                <div className="space-y-4">
+                                  {currentQ.requirements.map((req, idx) => (
+                                    <div key={idx} className="flex gap-3 items-start">
+                                      <div className="shrink-0 w-7 h-7 bg-[#8dc63f] text-white rounded flex items-center justify-center text-xs font-bold mt-0.5">
+                                        {idx + 1}
+                                      </div>
+                                      <p className="text-sm text-slate-800 leading-relaxed pt-1">{req}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="bg-slate-50 border border-slate-200 rounded p-4 text-sm text-slate-600 italic">
+                                  Analyze the scenario and provide a comprehensive response addressing all relevant aspects.
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex-1 flex flex-col">
-                        <div className="bg-[#4d4d4d] text-white px-4 py-2 text-xs font-bold flex justify-between items-center">
-                          <span>Response Editor</span>
-                          <span>Word Count: {(currentAns?.essayText || '').split(/\s+/).filter(Boolean).length}</span>
+
+                      {/* RIGHT PANEL: Response Editor */}
+                      <div className="flex-1 flex flex-col min-w-0">
+                        <div className="bg-[#4d4d4d] text-white px-4 py-2.5 text-xs font-bold flex justify-between items-center shrink-0 border-b border-[#666]">
+                          <span className="uppercase tracking-wide">Response Editor</span>
+                          <span className="text-slate-300 font-mono">Words: {(currentAns?.essayText || '').split(/\s+/).filter(Boolean).length}</span>
                         </div>
                         <textarea
                           ref={essayInputRef}
-                          className="flex-1 border-2 border-slate-300 p-4 font-mono text-sm leading-relaxed outline-none focus:border-blue-400 resize-none shadow-inner"
-                          placeholder="Type your response here..."
+                          className="flex-1 border-0 p-5 font-mono text-sm leading-relaxed outline-none resize-none bg-[#fafafa] focus:bg-white transition-colors"
+                          placeholder="Type your response here. Address each requirement from the Requirements tab..."
                           value={currentAns?.essayText || ''}
                           onChange={(e) => handleEssayChange(e.target.value)}
                         />
+                        <div className="bg-[#e6e6e6] px-4 py-1.5 text-[10px] text-slate-500 flex justify-between items-center border-t border-slate-300 shrink-0">
+                          <span>Use the Scenario and Requirements tabs on the left to review the question</span>
+                          <span className="font-mono">{(currentAns?.essayText || '').length} chars</span>
+                        </div>
                       </div>
                     </div>
                   ) : (

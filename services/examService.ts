@@ -186,7 +186,7 @@ export const fetchHybridMCQs = async (
     return combined.sort(() => Math.random() - 0.5);
 };
 
-/** Fetch real MCQs from question_bank */
+/** Fetch real MCQs from question_bank with quality filters */
 const fetchRealMCQs = async (count: number, part: string): Promise<MCQQuestion[]> => {
     try {
         const { data, error } = await supabase
@@ -197,6 +197,7 @@ const fetchRealMCQs = async (count: number, part: string): Promise<MCQQuestion[]
             .eq('part', part)
             .not('options', 'is', null)
             .not('correct_answer', 'is', null)
+            .in('correct_answer', ['A', 'B', 'C', 'D'])
             .limit(count * 3);
 
         if (error) {
@@ -206,7 +207,18 @@ const fetchRealMCQs = async (count: number, part: string): Promise<MCQQuestion[]
 
         if (!data || data.length === 0) return [];
 
-        return data.sort(() => Math.random() - 0.5).slice(0, count).map(mapQuestionBankToMCQ);
+        // Client-side quality filter: question text must be real (>20 chars),
+        // all 4 options must be non-empty, exclude junk (rationale/explanation fragments)
+        const clean = data.filter((q: any) => {
+            const text = q.question_text || '';
+            const opts = q.options || {};
+            if (text.length < 20) return false;
+            if (!opts.A?.trim() || !opts.B?.trim() || !opts.C?.trim() || !opts.D?.trim()) return false;
+            if (/^(Rationale|Correct Answer|Explanation for|Question was not|Your Answer|Hock )/i.test(text)) return false;
+            return true;
+        });
+
+        return clean.sort(() => Math.random() - 0.5).slice(0, count).map(mapQuestionBankToMCQ);
     } catch (err) {
         console.error('[ExamService] Critical error fetching real MCQs:', err);
         return [];
@@ -280,6 +292,7 @@ const mapQuestionBankToMCQ = (q: any): MCQQuestion => {
 /**
  * Fetch essay questions from question_bank (unified schema).
  * Returns only real, quality-verified essays. Never pads with hardcoded placeholders.
+ * Essays must be at least 80 characters and contain question-like intent.
  */
 export const fetchEssayQuestions = async (
     count: number = 2,
@@ -288,19 +301,30 @@ export const fetchEssayQuestions = async (
     console.log(`[ExamService] Fetching ${count} essay questions from question_bank`);
 
     try {
+        // Fetch a larger pool so we can filter client-side for quality
         const { data, error } = await supabase
             .from('question_bank')
             .select('id, question_text, options, topic, section, difficulty')
             .eq('question_kind', 'ESSAY')
             .eq('is_active', true)
             .eq('part', part)
-            .limit(count * 3);
+            .limit(count * 10);
 
         if (error) {
             console.error('[ExamService] Error fetching essays:', error);
         }
 
-        const pool = data || [];
+        // Client-side quality filter: essay must be a real scenario, not a junk fragment
+        const pool = (data || []).filter((e: any) => {
+            const text = e.question_text || '';
+            // Must be at least 80 chars to be a real scenario
+            if (text.length < 80) return false;
+            // Exclude rationale/explanation fragments that got misclassified
+            if (/^(Rationale|Correct Answer|Explanation for|Question was not|Your Answer|Hock )/i.test(text)) return false;
+            // Exclude raw dollar amounts / math fragments
+            if (/^\s*"?\$\d/.test(text)) return false;
+            return true;
+        });
 
         if (pool.length === 0) {
             // Try ai_question_cache for essays

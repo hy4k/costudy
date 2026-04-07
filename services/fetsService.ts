@@ -339,12 +339,16 @@ export const syncStudyTelemetry = (data: any) => {
   console.log('[CoStudy Telemetry]', data);
 };
 
-// --- EXAM QUESTION FETCHER (REAL DATA from question_bank only — no mock/fallback questions) ---
+// --- EXAM QUESTION FETCHER (REAL DATA from question_bank only — quality-filtered) ---
 export const fetchExamQuestions = async (
     mcqCount: number,
     essayCount: number = 2,
     part: string = 'Part 1'
 ) => {
+    const isJunk = (text: string) =>
+        /^(Rationale|Correct Answer|Explanation for|Question was not|Your Answer|Hock )/i.test(text) ||
+        /^\s*"?\$\d/.test(text);
+
     try {
         const { data: mcqData } = await supabase
             .from('question_bank')
@@ -354,9 +358,20 @@ export const fetchExamQuestions = async (
             .eq('part', part)
             .not('options', 'is', null)
             .not('correct_answer', 'is', null)
+            .in('correct_answer', ['A', 'B', 'C', 'D'])
             .limit(mcqCount * 3);
 
-        const mcqs = (mcqData || []).sort(() => Math.random() - 0.5).slice(0, mcqCount);
+        // Quality filter: real question text, all 4 options filled, not junk
+        const cleanMcqs = (mcqData || []).filter((q: any) => {
+            const text = q.question_text || '';
+            const opts = q.options || {};
+            if (text.length < 20) return false;
+            if (!opts.A?.trim() || !opts.B?.trim() || !opts.C?.trim() || !opts.D?.trim()) return false;
+            if (isJunk(text)) return false;
+            return true;
+        });
+
+        const mcqs = cleanMcqs.sort(() => Math.random() - 0.5).slice(0, mcqCount);
 
         const formattedMcqs = mcqs.map((q: any) => {
             const opts = q.options || {};
@@ -381,9 +396,17 @@ export const fetchExamQuestions = async (
             .eq('question_kind', 'ESSAY')
             .eq('is_active', true)
             .eq('part', part)
-            .limit(essayCount * 3);
+            .limit(essayCount * 10);
 
-        const essays = (essayData || []).sort(() => Math.random() - 0.5).slice(0, essayCount);
+        // Quality filter: essays must be real scenarios (80+ chars, not junk fragments)
+        const cleanEssays = (essayData || []).filter((e: any) => {
+            const text = e.question_text || '';
+            if (text.length < 80) return false;
+            if (isJunk(text)) return false;
+            return true;
+        });
+
+        const essays = cleanEssays.sort(() => Math.random() - 0.5).slice(0, essayCount);
 
         const formattedEssays = essays.map((e: any) => ({
             id: e.id,

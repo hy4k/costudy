@@ -491,45 +491,54 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ session, config, mcqQu
   // 1. CONFIRM DETAILS
   if (phase === 'CONFIRM') {
     return (
-      <div className="fixed inset-0 bg-slate-200 flex items-center justify-center p-4 z-50">
-        <div className="bg-white shadow-2xl w-full max-w-lg rounded-none border border-slate-300">
-          <div className="bg-[#4d4d4d] text-white px-6 py-3 flex justify-between items-center">
-            <span className="font-bold text-lg">Confirm Details</span>
-            <span className="font-mono text-sm">{formatTime(introTimeRemaining)}</span>
+      <div className="fixed inset-0 bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center p-4 z-50">
+        <div className="bg-white shadow-2xl w-full max-w-lg border border-slate-300">
+          <div className="bg-[#4d4d4d] text-white px-6 py-3.5 flex justify-between items-center">
+            <span className="font-bold text-lg tracking-wide">Confirm Details</span>
+            <div className="flex items-center gap-2">
+              <Icons.Clock className="w-4 h-4 text-slate-300" />
+              <span className="font-mono text-sm">{formatTime(introTimeRemaining)}</span>
+            </div>
           </div>
-          <div className="p-8 flex flex-col items-center">
-            <div className="mb-8 w-40">
-              <div className="border border-slate-200 p-2">
-                <div className="flex items-center gap-2 text-slate-700">
-                  <span className="font-serif font-bold text-2xl">CMA</span>
-                  <div className="h-8 w-px bg-slate-300"></div>
-                  <span className="text-[6px] uppercase leading-tight font-bold text-slate-500"><br/>Accountants and<br/>Financial Professionals<br/>in Business</span>
+          <div className="p-8 sm:p-10 flex flex-col items-center">
+            <div className="mb-8">
+              <div className="border border-slate-200 p-3 pr-5 inline-flex items-center gap-3 select-none">
+                <div className="font-serif font-bold text-3xl text-slate-600 italic border-r border-slate-300 pr-3 tracking-tighter">CMA</div>
+                <div className="flex flex-col text-[8px] font-bold text-slate-500 uppercase leading-tight text-left">
+                  <span>IMA's Certification for</span>
+                  <span>Accountants and</span>
+                  <span>Financial Professionals</span>
+                  <span>in Business</span>
                 </div>
               </div>
             </div>
-            <div className="border border-slate-300 p-6 w-full mb-8 bg-slate-50">
-              <div className="grid grid-cols-3 gap-y-2 text-sm">
+            <div className="border border-slate-300 p-6 w-full mb-8 bg-slate-50/80">
+              <div className="grid grid-cols-3 gap-y-3 text-sm">
                 <span className="text-slate-500 font-bold">Last Name:</span>
                 <span className="col-span-2 font-bold text-slate-800 uppercase">{candidateName.last || '—'}</span>
                 <span className="text-slate-500 font-bold">First Name:</span>
                 <span className="col-span-2 font-bold text-slate-800">{candidateName.first || '—'}</span>
                 <span className="text-slate-500 font-bold">Test Name:</span>
                 <span className="col-span-2 font-bold text-slate-800">{title}</span>
+                <span className="text-slate-500 font-bold">Duration:</span>
+                <span className="col-span-2 font-bold text-slate-800">{Math.floor(durationMinutes / 60)}h {durationMinutes % 60 > 0 ? `${durationMinutes % 60}m` : ''}</span>
+                <span className="text-slate-500 font-bold">Questions:</span>
+                <span className="col-span-2 font-bold text-slate-800">{config.mcqCount > 0 ? `${config.mcqCount} MCQ` : ''}{config.mcqCount > 0 && config.essayCount > 0 ? ' + ' : ''}{config.essayCount > 0 ? `${config.essayCount} Essay` : ''}</span>
                 <span className="text-slate-500 font-bold">Language:</span>
                 <span className="col-span-2 font-bold text-slate-800">English (US)</span>
               </div>
             </div>
-            <p className="mb-8 text-slate-700 font-medium">Are the details above correct?</p>
-            <div className="flex gap-4">
-              <button onClick={() => setPhase('TERMS')} className="bg-[#8dc63f] hover:bg-[#7db536] text-white px-8 py-2 rounded-sm font-bold shadow-sm flex items-center gap-2">
+            <p className="mb-8 text-slate-600 font-medium text-center">Please verify that the above details are correct before proceeding.</p>
+            <div className="flex gap-4 w-full sm:w-auto">
+              <button onClick={() => setPhase('TERMS')} className="flex-1 sm:flex-none bg-[#8dc63f] hover:bg-[#7db536] text-white px-10 py-2.5 rounded-sm font-bold shadow-sm flex items-center justify-center gap-2 transition-colors">
                 <Icons.CheckBadge className="w-4 h-4" /> Confirm
               </button>
-              <button onClick={onExit} className="bg-[#8dc63f] hover:bg-[#7db536] text-white px-8 py-2 rounded-sm font-bold shadow-sm flex items-center gap-2">
+              <button onClick={onExit} className="flex-1 sm:flex-none bg-slate-400 hover:bg-slate-500 text-white px-10 py-2.5 rounded-sm font-bold shadow-sm flex items-center justify-center gap-2 transition-colors">
                 <Icons.Plus className="w-4 h-4 rotate-45" /> Cancel
               </button>
             </div>
           </div>
-          <div className="px-4 py-2 bg-slate-50 text-right text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+          <div className="px-4 py-2 bg-slate-50 text-right text-[10px] text-slate-400 font-bold uppercase tracking-widest border-t border-slate-200">
             Prometric
           </div>
         </div>
@@ -710,24 +719,24 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ session, config, mcqQu
     return (
       <div className="flex flex-col h-screen bg-white font-sans relative">
         {/* Top Header - Dark Gray */}
-        <div className="bg-[#333333] text-white px-4 py-2 flex justify-between items-center h-16 shrink-0 z-20 relative">
-          <div className="text-sm font-bold leading-tight">
-            Page: {currentIndex + 1} of {questions.length}<br/>
-            <span className="font-medium text-slate-300">Section: {currentQ.section}</span>
+        <div className="bg-[#333333] text-white px-3 sm:px-4 py-2 flex justify-between items-center h-16 shrink-0 z-20 relative">
+          <div className="text-sm font-bold leading-tight min-w-0">
+            <span className="text-white">Q {currentIndex + 1}</span><span className="text-slate-400">/{questions.length}</span><br/>
+            <span className="font-medium text-slate-400 text-xs truncate block max-w-[120px] sm:max-w-none">{currentQ.section}</span>
           </div>
 
           {/* Timer — always visible at center */}
-          <div className="flex items-center gap-3 absolute left-1/2 -translate-x-1/2">
-            <Icons.Clock className="w-6 h-6 text-white" />
+          <div className="flex items-center gap-2 sm:gap-3 absolute left-1/2 -translate-x-1/2">
+            <Icons.Clock className="w-5 h-5 sm:w-6 sm:h-6 text-slate-300" />
             <div className="text-left">
-              <div className="text-[10px] text-slate-300 font-bold uppercase tracking-wide leading-none mb-0.5">Section Time Remaining</div>
-              <div className={`font-mono text-xl leading-none font-bold ${testTimeRemaining < 300 ? 'text-red-400 animate-pulse' : 'text-white'}`}>
+              <div className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wide leading-none mb-0.5">Time Remaining</div>
+              <div className={`font-mono text-lg sm:text-xl leading-none font-bold ${testTimeRemaining < 300 ? 'text-red-400 animate-pulse' : testTimeRemaining < 600 ? 'text-amber-400' : 'text-white'}`}>
                 {formatTime(testTimeRemaining)}
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             {/* SAVE STATUS */}
             <div className="text-right hidden sm:block">
               <div className={`text-[9px] font-bold uppercase tracking-widest ${saveStatus === 'SAVING' ? 'text-yellow-400' : saveStatus === 'ERROR' ? 'text-red-400' : 'text-emerald-400'}`}>
@@ -735,13 +744,13 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ session, config, mcqQu
               </div>
             </div>
 
-            <div className="text-xs text-right hidden sm:block">
-              <div className="bg-slate-600 h-3 w-32 rounded-full overflow-hidden mb-1 border border-slate-500">
-                <div className="bg-white h-full transition-all duration-500" style={{ width: `${progressPercent}%` }}></div>
+            <div className="text-xs text-right hidden md:block">
+              <div className="bg-slate-600 h-2.5 w-28 rounded-full overflow-hidden mb-1 border border-slate-500">
+                <div className="bg-[#8dc63f] h-full transition-all duration-500 rounded-full" style={{ width: `${progressPercent}%` }}></div>
               </div>
-              Progress {progressPercent}%
+              <span className="text-slate-400">{answeredCount}/{questions.length} answered</span>
             </div>
-            <button onClick={handleFinishTest} className="bg-[#e6e6e6] hover:bg-white text-[#333] px-4 py-2 rounded-sm font-bold text-sm shadow-sm transition-colors border border-slate-400">
+            <button onClick={handleFinishTest} className="bg-[#e6e6e6] hover:bg-white text-[#333] px-3 sm:px-4 py-2 rounded-sm font-bold text-xs sm:text-sm shadow-sm transition-colors border border-slate-400">
               Finish Test
             </button>
           </div>

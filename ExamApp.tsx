@@ -11,6 +11,9 @@ import { Icons } from './components/Icons';
 const MockTests = lazy(() =>
   import('./components/views/MockTests').then(m => ({ default: m.MockTests }))
 );
+const TestCenterAdmin = lazy(() =>
+  import('./components/views/TestCenterAdmin').then(m => ({ default: m.TestCenterAdmin }))
+);
 
 const ExamApp: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -73,6 +76,8 @@ const ExamApp: React.FC = () => {
     await authService.signOut();
     setUser(null);
   };
+
+  const [showAdmin, setShowAdmin] = useState(false);
 
   // Parse test center params from URL
   const urlParams = new URLSearchParams(window.location.search);
@@ -183,6 +188,19 @@ const ExamApp: React.FC = () => {
     );
   }
 
+  // Admin view — full-screen dashboard, no top bar needed (TestCenterAdmin has its own)
+  if (showAdmin) {
+    return (
+      <Suspense fallback={
+        <div className="flex h-screen items-center justify-center bg-slate-950">
+          <Icons.CloudSync className="h-10 w-10 animate-spin text-[#8dc63f]" />
+        </div>
+      }>
+        <TestCenterAdmin userId={user.id} onBack={() => setShowAdmin(false)} />
+      </Suspense>
+    );
+  }
+
   // Logged in — render MockTests directly (no Layout shell)
   return (
     <div className="min-h-screen bg-slate-100 font-sans">
@@ -198,6 +216,14 @@ const ExamApp: React.FC = () => {
           )}
         </div>
         <div className="flex items-center gap-4">
+          {!centerId && (
+            <button
+              onClick={() => setShowAdmin(true)}
+              className="text-slate-400 hover:text-[#8dc63f] text-xs font-bold transition-colors flex items-center gap-1"
+            >
+              <Icons.Shield className="w-3.5 h-3.5" /> Test Center
+            </button>
+          )}
           <span className="text-slate-400 text-xs">{user.email}</span>
           <button
             onClick={handleLogout}
@@ -213,7 +239,10 @@ const ExamApp: React.FC = () => {
           <Icons.CloudSync className="h-10 w-10 animate-spin text-[#8dc63f]" />
         </div>
       }>
-        <MockTests userId={user.id} />
+        <MockTests
+          userId={user.id}
+          testCenter={centerId && stationNum ? { centerId, stationNumber: parseInt(stationNum, 10) } : undefined}
+        />
       </Suspense>
     </div>
   );

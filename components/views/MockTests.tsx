@@ -9,6 +9,7 @@ const MOCK_PORTAL_STORAGE_KEY = 'costudy_mock_portal_unlocked';
 
 interface MockTestsProps {
   userId?: string;
+  testCenter?: { centerId: string; stationNumber: number };
 }
 
 interface ExamCard {
@@ -26,7 +27,7 @@ interface ExamCard {
     highlight?: boolean;
 }
 
-export const MockTests: React.FC<MockTestsProps> = ({ userId }) => {
+export const MockTests: React.FC<MockTestsProps> = ({ userId, testCenter }) => {
     const mockPortalLocked =
         import.meta.env.VITE_MOCK_TESTS_LOCKED !== 'false';
     const mockPortalPassword =
@@ -287,6 +288,7 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId }) => {
                 essayQuestions={examQuestions.essays}
                 userId={userId || 'anonymous'}
                 onExit={handleExamExit}
+                testCenter={testCenter}
             />
         );
     }

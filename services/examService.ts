@@ -1007,6 +1007,262 @@ export const subscribeToEssayResults = (
 };
 
 // ============================================
+// TEST CENTER MANAGEMENT
+// ============================================
+
+export interface TestCenterSession {
+    id: string;
+    admin_user_id: string;
+    name: string;
+    exam_config_key: string;
+    status: 'SETUP' | 'READY' | 'LIVE' | 'COMPLETED' | 'CANCELLED';
+    station_count: number;
+    settings: Record<string, any>;
+    scheduled_start?: string;
+    actual_start?: string;
+    completed_at?: string;
+    created_at: string;
+}
+
+export interface TestCenterStation {
+    id: string;
+    center_session_id: string;
+    station_number: number;
+    candidate_name?: string;
+    student_user_id?: string;
+    exam_session_id?: string;
+    status: 'EMPTY' | 'ASSIGNED' | 'READY' | 'ACTIVE' | 'SUBMITTED' | 'DISCONNECTED';
+    last_heartbeat?: string;
+    ip_address?: string;
+    proctoring_events?: any[];
+    created_at: string;
+}
+
+/**
+ * Create a test center session with N stations.
+ */
+export const createTestCenterSession = async (
+    adminUserId: string,
+    name: string,
+    examConfigKey: string,
+    stationCount: number = 30,
+    settings: Record<string, any> = {}
+): Promise<TestCenterSession | null> => {
+    try {
+        // Create the center session
+        const { data: session, error: sessionError } = await supabase
+            .from('test_center_sessions')
+            .insert({
+                admin_user_id: adminUserId,
+                name,
+                exam_config_key: examConfigKey,
+                station_count: stationCount,
+                settings,
+                status: 'SETUP',
+            })
+            .select()
+            .single();
+
+        if (sessionError || !session) {
+            console.error('[TestCenter] Failed to create session:', sessionError);
+            return null;
+        }
+
+        // Create station records
+        const stations = Array.from({ length: stationCount }, (_, i) => ({
+            center_session_id: session.id,
+            station_number: i + 1,
+            status: 'EMPTY',
+        }));
+
+        const { error: stationsError } = await supabase
+            .from('test_center_stations')
+            .insert(stations);
+
+        if (stationsError) {
+            console.error('[TestCenter] Failed to create stations:', stationsError);
+        }
+
+        return session;
+    } catch (err) {
+        console.error('[TestCenter] Critical error:', err);
+        return null;
+    }
+};
+
+/**
+ * Get all test center sessions for an admin.
+ */
+export const getTestCenterSessions = async (adminUserId: string): Promise<TestCenterSession[]> => {
+    try {
+        const { data, error } = await supabase
+            .from('test_center_sessions')
+            .select('*')
+            .eq('admin_user_id', adminUserId)
+            .order('created_at', { ascending: false })
+            .limit(20);
+        if (error) return [];
+        return data || [];
+    } catch { return []; }
+};
+
+/**
+ * Get all stations for a test center session.
+ */
+export const getTestCenterStations = async (centerSessionId: string): Promise<TestCenterStation[]> => {
+    try {
+        const { data, error } = await supabase
+            .from('test_center_stations')
+            .select('*')
+            .eq('center_session_id', centerSessionId)
+            .order('station_number', { ascending: true });
+        if (error) return [];
+        return data || [];
+    } catch { return []; }
+};
+
+/**
+ * Update test center session status.
+ */
+export const updateTestCenterStatus = async (
+    centerSessionId: string,
+    status: TestCenterSession['status'],
+    extra: Record<string, any> = {}
+): Promise<boolean> => {
+    try {
+        const { error } = await supabase
+            .from('test_center_sessions')
+            .update({ status, ...extra })
+            .eq('id', centerSessionId);
+        return !error;
+    } catch { return false; }
+};
+
+/**
+ * Register a station (called by workstation on load).
+ */
+export const registerStation = async (
+    centerSessionId: string,
+    stationNumber: number,
+    userId: string,
+    candidateName: string
+): Promise<TestCenterStation | null> => {
+    try {
+        const { data, error } = await supabase
+            .from('test_center_stations')
+            .update({
+                student_user_id: userId,
+                candidate_name: candidateName,
+                status: 'READY',
+                last_heartbeat: new Date().toISOString(),
+            })
+            .eq('center_session_id', centerSessionId)
+            .eq('station_number', stationNumber)
+            .select()
+            .single();
+        if (error) return null;
+        return data;
+    } catch { return null; }
+};
+
+/**
+ * Update station heartbeat + current progress.
+ */
+export const updateStationHeartbeat = async (
+    stationId: string,
+    status: TestCenterStation['status'],
+    proctoringEvent?: { type: string; timestamp: string; detail?: string }
+): Promise<void> => {
+    try {
+        const update: any = {
+            last_heartbeat: new Date().toISOString(),
+            status,
+        };
+        if (proctoringEvent) {
+            // Append to proctoring_events array using raw SQL via RPC would be ideal,
+            // but for simplicity we'll fetch-then-update
+            const { data } = await supabase
+                .from('test_center_stations')
+                .select('proctoring_events')
+                .eq('id', stationId)
+                .single();
+            const events = data?.proctoring_events || [];
+            events.push(proctoringEvent);
+            update.proctoring_events = events;
+        }
+        await supabase
+            .from('test_center_stations')
+            .update(update)
+            .eq('id', stationId);
+    } catch (err) {
+        console.warn('[TestCenter] Heartbeat failed:', err);
+    }
+};
+
+/**
+ * Subscribe to all station changes for a test center (admin dashboard).
+ */
+export const subscribeToStations = (
+    centerSessionId: string,
+    onUpdate: (stations: TestCenterStation[]) => void
+): (() => void) => {
+    const channel = supabase
+        .channel(`test-center-${centerSessionId}`)
+        .on(
+            'postgres_changes',
+            {
+                event: '*',
+                schema: 'public',
+                table: 'test_center_stations',
+                filter: `center_session_id=eq.${centerSessionId}`,
+            },
+            async () => {
+                // On any change, refetch all stations
+                const stations = await getTestCenterStations(centerSessionId);
+                onUpdate(stations);
+            }
+        )
+        .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+};
+
+/**
+ * Broadcast a command to all stations via Supabase Realtime.
+ */
+export const broadcastToStations = async (
+    centerSessionId: string,
+    command: 'START' | 'PAUSE' | 'RESUME' | 'ADD_TIME' | 'FORCE_SUBMIT',
+    payload: Record<string, any> = {}
+): Promise<void> => {
+    const channel = supabase.channel(`tc-cmd-${centerSessionId}`);
+    await channel.subscribe();
+    await channel.send({
+        type: 'broadcast',
+        event: 'admin-command',
+        payload: { command, ...payload, timestamp: new Date().toISOString() },
+    });
+    supabase.removeChannel(channel);
+};
+
+/**
+ * Listen for admin commands on a station.
+ */
+export const subscribeToAdminCommands = (
+    centerSessionId: string,
+    onCommand: (command: string, payload: any) => void
+): (() => void) => {
+    const channel = supabase
+        .channel(`tc-cmd-${centerSessionId}`)
+        .on('broadcast', { event: 'admin-command' }, ({ payload }) => {
+            onCommand(payload.command, payload);
+        })
+        .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+};
+
+// ============================================
 // EXPORT DEFAULT EXAM SERVICE
 // ============================================
 
@@ -1025,6 +1281,15 @@ export const examService = {
     queueEssayGrading,
     pollEssayResults,
     subscribeToEssayResults,
+    createTestCenterSession,
+    getTestCenterSessions,
+    getTestCenterStations,
+    updateTestCenterStatus,
+    registerStation,
+    updateStationHeartbeat,
+    subscribeToStations,
+    broadcastToStations,
+    subscribeToAdminCommands,
 };
 
 export default examService;

@@ -3,6 +3,7 @@ import { Icons } from '../Icons';
 import { getUserProfile } from '../../services/fetsService';
 import { ExamConfig, saveExamProgress, queueEssayGrading, subscribeToEssayResults } from '../../services/examService';
 import { gradeMCQs, MCQGradingResult, EssayScores, calculateCombinedResult, CombinedResult } from '../../services/gradingService';
+import { useTestCenterSync } from '../../hooks/useTestCenterSync';
 
 interface Question {
   id: string;
@@ -91,11 +92,12 @@ interface ExamSessionProps {
   essayQuestions: any[];
   userId: string;
   onExit: () => void;
+  testCenter?: { centerId: string; stationNumber: number };
 }
 
 type ExamPhase = 'CONFIRM' | 'TERMS' | 'INTRODUCTION' | 'TEST' | 'RESULTS';
 
-export const ExamSession: React.FC<ExamSessionProps> = ({ session, config, mcqQuestions, essayQuestions, userId, onExit }) => {
+export const ExamSession: React.FC<ExamSessionProps> = ({ session, config, mcqQuestions, essayQuestions, userId, onExit, testCenter }) => {
   const title = config.title;
   const sessionId = session?.id || 'local';
   const durationMinutes = config.mcqDurationMinutes + config.essayDurationMinutes;
@@ -190,6 +192,54 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ session, config, mcqQu
     ? `${candidateName.last.toUpperCase()}, ${candidateName.first}`
     : candidateName.first || userId?.split('-')[0]?.toUpperCase() || 'Candidate';
 
+  // --- TEST CENTER SYNC ---
+  const [isPaused, setIsPaused] = useState(false);
+  const tcSync = useTestCenterSync({
+    centerId: testCenter?.centerId || '',
+    stationNumber: testCenter?.stationNumber || 0,
+    userId,
+    candidateName: candidateDisplay,
+    enabled: !!testCenter,
+  });
+
+  // Handle admin commands from broadcast channel
+  useEffect(() => {
+    if (!tcSync.adminCommand) return;
+    const { command, payload } = tcSync.adminCommand;
+
+    switch (command) {
+      case 'START':
+        // If we're in a pre-test phase, jump to TEST
+        if (phase !== 'TEST' && phase !== 'RESULTS') {
+          setPhase('TEST');
+          tcSync.updateStatus('ACTIVE');
+        }
+        break;
+      case 'PAUSE':
+        setIsPaused(true);
+        break;
+      case 'RESUME':
+        setIsPaused(false);
+        break;
+      case 'ADD_TIME':
+        setTestTimeRemaining(prev => prev + (payload?.addMinutes || 15) * 60);
+        break;
+      case 'FORCE_SUBMIT':
+        handleFinishTest();
+        tcSync.updateStatus('SUBMITTED');
+        break;
+    }
+
+    tcSync.clearCommand();
+  }, [tcSync.adminCommand]);
+
+  // Update station status when phase changes
+  useEffect(() => {
+    if (!testCenter) return;
+    if (phase === 'TEST') tcSync.updateStatus('ACTIVE');
+    else if (phase === 'RESULTS') tcSync.updateStatus('SUBMITTED');
+  }, [phase, testCenter]);
+
   // Subscribe to essay grading results via Supabase Realtime
   useEffect(() => {
     if (phase !== 'RESULTS' || !sessionId || sessionId === 'local') return;
@@ -210,7 +260,7 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ session, config, mcqQu
       timer = setInterval(() => {
         setIntroTimeRemaining(prev => Math.max(0, prev - 1));
       }, 1000);
-    } else if (phase === 'TEST' && testTimeRemaining > 0) {
+    } else if (phase === 'TEST' && testTimeRemaining > 0 && !isPaused) {
       timer = setInterval(() => {
         setTestTimeRemaining(prev => {
           if (prev <= 1) {
@@ -222,7 +272,7 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ session, config, mcqQu
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [phase, introTimeRemaining, testTimeRemaining]);
+  }, [phase, introTimeRemaining, testTimeRemaining, isPaused]);
 
   // --- AUTO SAVE ---
   const performSave = async (currentState: typeof stateRef.current) => {
@@ -827,6 +877,14 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ session, config, mcqQu
 
     return (
       <div className="flex flex-col h-screen bg-white font-sans relative">
+        {/* Pause overlay — shown when admin pauses the test center session */}
+        {isPaused && (
+          <div className="absolute inset-0 z-50 bg-slate-900/90 flex flex-col items-center justify-center gap-4">
+            <Icons.Clock className="w-16 h-16 text-amber-400 animate-pulse" />
+            <h2 className="text-2xl font-bold text-white">Exam Paused</h2>
+            <p className="text-slate-400 text-sm">The proctor has paused this exam. Please wait.</p>
+          </div>
+        )}
         {/* Top Header - Dark Gray */}
         <div className="bg-[#333333] text-white px-3 sm:px-4 py-2 flex justify-between items-center h-16 shrink-0 z-20 relative">
           <div className="text-sm font-bold leading-tight min-w-0">
@@ -836,6 +894,11 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ session, config, mcqQu
 
           {/* Timer — always visible at center */}
           <div className="flex items-center gap-2 sm:gap-3 absolute left-1/2 -translate-x-1/2">
+            {testCenter && (
+              <span className="bg-[#8dc63f]/20 text-[#8dc63f] px-2 py-0.5 rounded text-[9px] font-bold mr-1">
+                STN {testCenter.stationNumber}
+              </span>
+            )}
             <Icons.Clock className="w-5 h-5 sm:w-6 sm:h-6 text-slate-300" />
             <div className="text-left">
               <div className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wide leading-none mb-0.5">Time Remaining</div>

@@ -882,6 +882,131 @@ function createLocalSession(
 }
 
 // ============================================
+// ESSAY GRADING QUEUE
+// ============================================
+
+/**
+ * Queue essay answers for AI grading after exam submission.
+ * Inserts into essay_grading_queue for backend worker processing.
+ */
+export const queueEssayGrading = async (
+    sessionId: string,
+    userId: string,
+    essayAnswers: Record<string, EssayAnswer>,
+    essayQuestions: EssayQuestion[],
+    priority: number = 0
+): Promise<boolean> => {
+    try {
+        // Build queue entries for each essay
+        const queueEntries = Object.entries(essayAnswers)
+            .filter(([, ans]) => ans.text && ans.text.trim().length > 10)
+            .map(([questionId, ans]) => {
+                const q = essayQuestions.find(eq => eq.id === questionId);
+                return {
+                    session_id: sessionId,
+                    user_id: userId,
+                    essay_question_id: questionId,
+                    essay_text: ans.text,
+                    scenario_text: q?.scenario_text || '',
+                    topic: q?.topic || 'General',
+                    status: 'PENDING',
+                    priority,
+                };
+            });
+
+        if (queueEntries.length === 0) {
+            console.warn('[ExamService] No valid essays to queue for grading');
+            return false;
+        }
+
+        // Insert queue entries
+        const { error: queueError } = await supabase
+            .from('essay_grading_queue')
+            .insert(queueEntries);
+
+        if (queueError) {
+            console.error('[ExamService] Failed to insert essay grading queue:', queueError);
+            // Non-fatal: essays are saved in exam_sessions.essay_answers
+        }
+
+        // Mark essay_scores as PENDING in exam session
+        const { error: sessionError } = await supabase
+            .from('exam_sessions')
+            .update({
+                essay_scores: {
+                    status: 'PENDING',
+                    essays: {},
+                    queuedAt: new Date().toISOString(),
+                    totalEssays: queueEntries.length,
+                }
+            })
+            .eq('id', sessionId);
+
+        if (sessionError) {
+            console.error('[ExamService] Failed to update essay_scores status:', sessionError);
+        }
+
+        return !queueError;
+    } catch (err) {
+        console.error('[ExamService] Critical error queuing essays:', err);
+        return false;
+    }
+};
+
+/**
+ * Poll for essay grading results. Returns the current essay_scores from exam_sessions.
+ */
+export const pollEssayResults = async (sessionId: string): Promise<{
+    status: 'PENDING' | 'PARTIAL' | 'COMPLETE' | null;
+    essays: Record<string, any>;
+    combinedEssayScore?: number;
+} | null> => {
+    try {
+        const { data, error } = await supabase
+            .from('exam_sessions')
+            .select('essay_scores')
+            .eq('id', sessionId)
+            .single();
+
+        if (error || !data?.essay_scores) return null;
+        return data.essay_scores;
+    } catch {
+        return null;
+    }
+};
+
+/**
+ * Subscribe to essay grading results via Supabase Realtime.
+ * Returns unsubscribe function.
+ */
+export const subscribeToEssayResults = (
+    sessionId: string,
+    onUpdate: (essayScores: any) => void
+): (() => void) => {
+    const channel = supabase
+        .channel(`essay-grading-${sessionId}`)
+        .on(
+            'postgres_changes',
+            {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'exam_sessions',
+                filter: `id=eq.${sessionId}`,
+            },
+            (payload) => {
+                if (payload.new?.essay_scores) {
+                    onUpdate(payload.new.essay_scores);
+                }
+            }
+        )
+        .subscribe();
+
+    return () => {
+        supabase.removeChannel(channel);
+    };
+};
+
+// ============================================
 // EXPORT DEFAULT EXAM SERVICE
 // ============================================
 
@@ -897,6 +1022,9 @@ export const examService = {
     getUserSessions,
     preGenerateQuestionBatch,
     recycleAIQuestionCache,
+    queueEssayGrading,
+    pollEssayResults,
+    subscribeToEssayResults,
 };
 
 export default examService;

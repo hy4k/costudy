@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Icons } from '../Icons';
 import { getUserProfile } from '../../services/fetsService';
-import { ExamConfig, saveExamProgress } from '../../services/examService';
+import { ExamConfig, saveExamProgress, queueEssayGrading, subscribeToEssayResults } from '../../services/examService';
+import { gradeMCQs, MCQGradingResult, EssayScores, calculateCombinedResult, CombinedResult } from '../../services/gradingService';
 
 interface Question {
   id: string;
@@ -148,6 +149,10 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ session, config, mcqQu
   const [introTimeRemaining, setIntroTimeRemaining] = useState(15 * 60);
 
   const [results, setResults] = useState({ correct: 0, total: 0, percentage: 0 });
+  const [mcqGrading, setMcqGrading] = useState<MCQGradingResult | null>(null);
+  const [essayScores, setEssayScores] = useState<EssayScores | null>(null);
+  const [resultsTab, setResultsTab] = useState<'summary' | 'questions' | 'essays'>('summary');
+  const [expandedQuestion, setExpandedQuestion] = useState<string | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showCalculator, setShowCalculator] = useState(false);
   const [essayTab, setEssayTab] = useState<'scenario' | 'requirements'>('scenario');
@@ -184,6 +189,19 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ session, config, mcqQu
   const candidateDisplay = candidateName.last
     ? `${candidateName.last.toUpperCase()}, ${candidateName.first}`
     : candidateName.first || userId?.split('-')[0]?.toUpperCase() || 'Candidate';
+
+  // Subscribe to essay grading results via Supabase Realtime
+  useEffect(() => {
+    if (phase !== 'RESULTS' || !sessionId || sessionId === 'local') return;
+    const hasEssays = questions.some(q => q.type === 'ESSAY');
+    if (!hasEssays) return;
+
+    const unsubscribe = subscribeToEssayResults(sessionId, (scores) => {
+      setEssayScores(scores);
+    });
+
+    return () => unsubscribe();
+  }, [phase, sessionId]);
 
   // --- TIMERS ---
   useEffect(() => {
@@ -289,18 +307,42 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ session, config, mcqQu
     setEssayTab('scenario'); // Reset to scenario tab when navigating
   };
 
-  const handleFinishTest = () => {
+  const handleFinishTest = async () => {
     performSave(stateRef.current);
-    let correct = 0;
+
+    // Grade MCQs with full breakdown
     const mcqs = questions.filter(q => q.type !== 'ESSAY');
-    mcqs.forEach(q => {
-      const answer = answers.get(q.id);
-      if (answer?.selected === q.correct_answer) correct++;
-    });
-    const total = mcqs.length;
-    const percentage = total > 0 ? Math.round((correct / total) * 100) : 0;
-    setResults({ correct, total, percentage });
+    const mcqResult = gradeMCQs(mcqs as any, answers);
+    setResults({ correct: mcqResult.correct, total: mcqResult.total, percentage: mcqResult.percentage });
+    setMcqGrading(mcqResult);
     setPhase('RESULTS');
+
+    // Queue essays for AI grading (async, non-blocking)
+    const essays = questions.filter(q => q.type === 'ESSAY');
+    if (essays.length > 0) {
+      const essayAnswerMap: Record<string, { text: string; wordCount: number; timeSpent: number }> = {};
+      essays.forEach(q => {
+        const ans = answers.get(q.id);
+        if (ans?.essayText && ans.essayText.trim().length > 10) {
+          essayAnswerMap[q.id] = {
+            text: ans.essayText,
+            wordCount: ans.essayText.split(/\s+/).filter(Boolean).length,
+            timeSpent: ans.timeSpent,
+          };
+        }
+      });
+      const essayQs = essayQuestions.map(q => ({
+        id: q.id || q.scenario_text?.substring(0, 20) || 'unknown',
+        scenario_text: q.scenario_text || q.question_text || '',
+        requirements: q.requirements || [],
+        topic: q.topic || 'General',
+        difficulty: q.difficulty || 'Medium',
+        time_allocation_minutes: q.time_allocation_minutes || 30,
+      }));
+      queueEssayGrading(sessionId, userId, essayAnswerMap, essayQs).catch(err => {
+        console.warn('[ExamSession] Essay queue failed (non-fatal):', err);
+      });
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -1132,38 +1174,327 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ session, config, mcqQu
   // 5. RESULTS
   if (phase === 'RESULTS') {
     const passed = results.percentage >= 72;
+    const hasEssays = questions.some(q => q.type === 'ESSAY');
+    const combined = mcqGrading ? calculateCombinedResult(mcqGrading, essayScores) : null;
+    const essayAvg = essayScores?.combinedEssayScore;
+
     return (
-      <div className="min-h-screen bg-slate-100 flex items-center justify-center font-sans p-6">
-        <div className="bg-white shadow-2xl max-w-2xl w-full border border-slate-300">
-          <div className="bg-[#4d4d4d] text-white px-6 py-4 font-bold text-lg flex justify-between">
-            <span>Examination Result</span>
-            <span className="text-[#8dc63f] uppercase tracking-widest text-sm self-center">Prometric</span>
+      <div className="min-h-screen bg-slate-100 font-sans">
+        {/* Header */}
+        <div className="bg-[#333333] text-white px-6 py-4 font-bold text-lg flex justify-between items-center">
+          <span>Examination Results</span>
+          <div className="flex items-center gap-4">
+            <span className="text-slate-400 text-sm">{candidateDisplay}</span>
+            <span className="text-[#8dc63f] uppercase tracking-widest text-sm">CoStudy</span>
+          </div>
+        </div>
+        <div className="bg-[#8dc63f] h-1.5" />
+
+        <div className="max-w-5xl mx-auto p-6">
+          {/* Score Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            {/* MCQ Score */}
+            <div className="bg-white border border-slate-200 shadow-sm p-6 text-center">
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 border-4 ${passed ? 'border-[#8dc63f] text-[#8dc63f]' : 'border-red-500 text-red-500'}`}>
+                {passed ? <Icons.CheckBadge className="w-8 h-8" /> : <Icons.AlertCircle className="w-8 h-8" />}
+              </div>
+              <div className="text-3xl font-black text-slate-800">{results.percentage}%</div>
+              <div className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mt-1">MCQ Score</div>
+              <div className="flex justify-center gap-6 mt-3 text-sm">
+                <span className="text-[#8dc63f] font-bold">{results.correct} correct</span>
+                <span className="text-red-500 font-bold">{results.total - results.correct} incorrect</span>
+              </div>
+            </div>
+
+            {/* Essay Score */}
+            <div className="bg-white border border-slate-200 shadow-sm p-6 text-center">
+              {!hasEssays ? (
+                <>
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 border-4 border-slate-200 text-slate-300">
+                    <Icons.FileText className="w-8 h-8" />
+                  </div>
+                  <div className="text-lg font-bold text-slate-300">N/A</div>
+                  <div className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mt-1">No Essays</div>
+                </>
+              ) : essayScores?.status === 'COMPLETE' ? (
+                <>
+                  <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 border-4 ${(essayAvg || 0) >= 50 ? 'border-[#8dc63f] text-[#8dc63f]' : 'border-red-500 text-red-500'}`}>
+                    <Icons.Award className="w-8 h-8" />
+                  </div>
+                  <div className="text-3xl font-black text-slate-800">{essayAvg || 0}%</div>
+                  <div className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mt-1">Essay Score</div>
+                  <div className="text-xs text-slate-500 mt-2">{Object.keys(essayScores.essays).length} essays graded</div>
+                </>
+              ) : (
+                <>
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 border-4 border-amber-300 text-amber-500">
+                    <Icons.CloudSync className="w-8 h-8 animate-spin" />
+                  </div>
+                  <div className="text-lg font-bold text-amber-600">Grading...</div>
+                  <div className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mt-1">Essay Evaluation</div>
+                  <div className="text-xs text-slate-500 mt-2">
+                    {essayScores?.status === 'PARTIAL'
+                      ? `${Object.keys(essayScores.essays || {}).length} of ${essayScores.totalEssays || '?'} graded`
+                      : 'AI evaluation in progress...'}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Combined / Overall */}
+            <div className="bg-white border border-slate-200 shadow-sm p-6 text-center">
+              {combined?.combinedScore !== null && combined?.combinedScore !== undefined ? (
+                <>
+                  <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 border-4 ${combined.overallPassed ? 'border-[#8dc63f] text-[#8dc63f]' : 'border-red-500 text-red-500'}`}>
+                    <Icons.Award className="w-8 h-8" />
+                  </div>
+                  <div className="text-3xl font-black text-slate-800">{combined.combinedScore}%</div>
+                  <div className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mt-1">Combined Score</div>
+                  <div className={`text-sm font-bold mt-2 ${combined.overallPassed ? 'text-[#8dc63f]' : 'text-red-500'}`}>
+                    {combined.overallPassed ? 'PASS' : 'DID NOT PASS'}
+                  </div>
+                  <div className="text-[9px] text-slate-400 mt-1">MCQ 75% + Essay 25%</div>
+                </>
+              ) : (
+                <>
+                  <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 border-4 ${passed ? 'border-[#8dc63f] text-[#8dc63f]' : 'border-red-500 text-red-500'}`}>
+                    {passed ? <Icons.CheckBadge className="w-8 h-8" /> : <Icons.AlertCircle className="w-8 h-8" />}
+                  </div>
+                  <div className="text-3xl font-black text-slate-800">{results.percentage}%</div>
+                  <div className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mt-1">
+                    {hasEssays ? 'MCQ Score (Essay Pending)' : 'Final Score'}
+                  </div>
+                  <div className={`text-sm font-bold mt-2 uppercase ${passed ? 'text-[#8dc63f]' : 'text-red-500'}`}>
+                    {passed ? 'Pass' : 'Did Not Pass'}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
-          <div className="p-10 flex flex-col items-center">
-            <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-6 border-4 ${passed ? 'border-[#8dc63f] text-[#8dc63f]' : 'border-red-500 text-red-500'}`}>
-              {passed ? <Icons.CheckBadge className="w-12 h-12" /> : <Icons.AlertCircle className="w-12 h-12" />}
-            </div>
+          {/* Tab Navigation */}
+          <div className="flex bg-white border border-slate-200 border-b-0 mb-0">
+            {(['summary', 'questions', ...(hasEssays ? ['essays'] : [])] as const).map(tab => (
+              <button
+                key={tab}
+                onClick={() => setResultsTab(tab as any)}
+                className={`px-6 py-3 text-xs font-bold uppercase tracking-wide transition-colors ${
+                  resultsTab === tab
+                    ? 'bg-white text-[#333] border-b-2 border-b-[#8dc63f]'
+                    : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                {tab === 'summary' ? 'Topic Analysis' : tab === 'questions' ? 'Question Review' : 'Essay Feedback'}
+              </button>
+            ))}
+          </div>
 
-            <h2 className="text-3xl font-black text-slate-800 mb-2 uppercase tracking-tight">{passed ? 'Pass' : 'Did Not Pass'}</h2>
-            <p className="text-slate-500 mb-2 font-medium">Candidate: {candidateDisplay}</p>
-            <p className="text-slate-500 mb-8 font-medium">Your MCQs have been scored. Essay results pending manual review.</p>
+          {/* Tab Content */}
+          <div className="bg-white border border-slate-200 p-6 min-h-[400px]">
+            {/* TOPIC ANALYSIS TAB */}
+            {resultsTab === 'summary' && mcqGrading && (
+              <div>
+                <h3 className="font-bold text-sm text-[#333] uppercase tracking-wide mb-4">Performance by Topic</h3>
+                {mcqGrading.topicBreakdown.length > 0 ? (
+                  <div className="space-y-3">
+                    {mcqGrading.topicBreakdown.map((t, idx) => (
+                      <div key={idx}>
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-sm font-medium text-slate-700 truncate max-w-[60%]">{t.topic}</span>
+                          <span className="text-sm font-bold text-slate-600">{t.correct}/{t.total} ({t.percentage}%)</span>
+                        </div>
+                        <div className="w-full bg-slate-100 h-4 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-700 ${
+                              t.percentage >= 80 ? 'bg-[#8dc63f]' :
+                              t.percentage >= 60 ? 'bg-amber-400' :
+                              'bg-red-400'
+                            }`}
+                            style={{ width: `${t.percentage}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-slate-500 text-sm italic">No topic data available.</p>
+                )}
 
-            <div className="w-full bg-slate-50 border border-slate-200 p-8 grid grid-cols-3 gap-8 text-center mb-8">
-              <div>
-                <div className="text-4xl font-black text-slate-800 mb-1">{results.percentage}%</div>
-                <div className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">MCQ Score</div>
+                <div className="mt-6 pt-4 border-t border-slate-200 grid grid-cols-2 gap-4 text-sm">
+                  <div className="bg-slate-50 p-3 rounded">
+                    <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wide">Avg. Time per Question</div>
+                    <div className="text-lg font-bold text-slate-700">{mcqGrading.avgTimePerQuestion}s</div>
+                  </div>
+                  <div className="bg-slate-50 p-3 rounded">
+                    <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wide">Pass Threshold</div>
+                    <div className="text-lg font-bold text-slate-700">72%</div>
+                  </div>
+                </div>
               </div>
-              <div>
-                <div className="text-4xl font-black text-[#8dc63f] mb-1">{results.correct}</div>
-                <div className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Correct</div>
-              </div>
-              <div>
-                <div className="text-4xl font-black text-red-500 mb-1">{results.total - results.correct}</div>
-                <div className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Incorrect</div>
-              </div>
-            </div>
+            )}
 
+            {/* QUESTION REVIEW TAB */}
+            {resultsTab === 'questions' && mcqGrading && (
+              <div>
+                <h3 className="font-bold text-sm text-[#333] uppercase tracking-wide mb-4">
+                  Question-by-Question Review ({mcqGrading.correct}/{mcqGrading.total} correct)
+                </h3>
+                <div className="space-y-2 max-h-[500px] overflow-y-auto">
+                  {mcqGrading.perQuestion.map((q, idx) => {
+                    const isExpanded = expandedQuestion === q.questionId;
+                    return (
+                      <div key={q.questionId} className={`border rounded ${q.isCorrect ? 'border-green-200 bg-green-50/30' : 'border-red-200 bg-red-50/30'}`}>
+                        <button
+                          onClick={() => setExpandedQuestion(isExpanded ? null : q.questionId)}
+                          className="w-full flex items-center gap-3 p-3 text-left"
+                        >
+                          <div className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold ${q.isCorrect ? 'bg-[#8dc63f]' : 'bg-red-500'}`}>
+                            {q.isCorrect ? '\u2713' : '\u2717'}
+                          </div>
+                          <span className="text-xs font-bold text-slate-500 shrink-0">Q{idx + 1}</span>
+                          <span className="text-sm text-slate-700 flex-1 truncate">{q.questionText}</span>
+                          <Icons.ChevronDown className={`w-4 h-4 text-slate-400 shrink-0 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                        </button>
+                        {isExpanded && (
+                          <div className="px-4 pb-4 pt-1 border-t border-slate-200 ml-10">
+                            <div className="text-sm text-slate-800 mb-3 leading-relaxed">{q.questionText}</div>
+                            {q.options && (
+                              <div className="space-y-1.5 mb-3">
+                                {Object.entries(q.options).map(([letter, text]) => {
+                                  const L = letter.toUpperCase();
+                                  const isCorrectOpt = L === q.correctAnswer;
+                                  const isSelectedOpt = L === q.selected;
+                                  return (
+                                    <div key={letter} className={`flex items-center gap-2 text-sm px-3 py-1.5 rounded ${
+                                      isCorrectOpt ? 'bg-green-100 text-green-800 font-bold' :
+                                      isSelectedOpt && !q.isCorrect ? 'bg-red-100 text-red-700 line-through' :
+                                      'text-slate-600'
+                                    }`}>
+                                      <span className="font-bold w-4">{L}.</span>
+                                      <span>{text}</span>
+                                      {isCorrectOpt && <span className="ml-auto text-green-600 text-xs font-bold">Correct</span>}
+                                      {isSelectedOpt && !isCorrectOpt && <span className="ml-auto text-red-500 text-xs font-bold">Your answer</span>}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                            <div className="flex gap-4 text-xs text-slate-500">
+                              <span>Section: {q.section}</span>
+                              <span>Time: {q.timeSpent}s</span>
+                              {!q.selected && <span className="text-amber-600 font-bold">Unanswered</span>}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* ESSAY FEEDBACK TAB */}
+            {resultsTab === 'essays' && (
+              <div>
+                <h3 className="font-bold text-sm text-[#333] uppercase tracking-wide mb-4">Essay Evaluation Results</h3>
+                {!essayScores || essayScores.status === 'PENDING' ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-slate-500">
+                    <Icons.CloudSync className="w-10 h-10 animate-spin text-amber-500 mb-4" />
+                    <p className="font-bold text-lg">AI Evaluation in Progress</p>
+                    <p className="text-sm mt-2">Your essays are being evaluated against CMA rubrics. This page will update automatically.</p>
+                    <p className="text-xs text-slate-400 mt-1">Typically takes 1-3 minutes per essay.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {Object.entries(essayScores.essays || {}).map(([qId, evaluation]: [string, any]) => {
+                      const essayQ = questions.find(q => q.id === qId);
+                      return (
+                        <div key={qId} className="border border-slate-200 rounded overflow-hidden">
+                          <div className="bg-slate-50 px-4 py-3 flex justify-between items-center border-b border-slate-200">
+                            <div>
+                              <span className="font-bold text-sm text-slate-700">{essayQ?.section || 'Essay'}</span>
+                              <span className="text-xs text-slate-400 ml-2">ID: {qId.substring(0, 8)}</span>
+                            </div>
+                            <div className={`text-2xl font-black ${(evaluation.overallScore || 0) >= 72 ? 'text-[#8dc63f]' : (evaluation.overallScore || 0) >= 50 ? 'text-amber-500' : 'text-red-500'}`}>
+                              {evaluation.overallScore || 0}%
+                            </div>
+                          </div>
+                          <div className="p-4 space-y-4">
+                            {/* Sub-scores */}
+                            <div className="grid grid-cols-3 gap-3">
+                              {[
+                                { label: 'Technical', score: evaluation.technicalAccuracy },
+                                { label: 'Strategic', score: evaluation.strategicApplication },
+                                { label: 'Communication', score: evaluation.communicationQuality },
+                              ].map(s => (
+                                <div key={s.label} className="text-center bg-slate-50 p-2 rounded">
+                                  <div className="text-lg font-bold text-slate-700">{s.score || '-'}%</div>
+                                  <div className="text-[9px] uppercase text-slate-400 font-bold">{s.label}</div>
+                                </div>
+                              ))}
+                            </div>
+                            {/* Summary */}
+                            {evaluation.executiveSummary && (
+                              <div>
+                                <div className="text-[10px] uppercase font-bold text-slate-400 mb-1">Summary</div>
+                                <p className="text-sm text-slate-700 leading-relaxed">{evaluation.executiveSummary}</p>
+                              </div>
+                            )}
+                            {/* Strengths */}
+                            {evaluation.strengths?.length > 0 && (
+                              <div>
+                                <div className="text-[10px] uppercase font-bold text-[#8dc63f] mb-1">Strengths</div>
+                                <ul className="text-sm text-slate-600 space-y-1">
+                                  {evaluation.strengths.map((s: string, i: number) => (
+                                    <li key={i} className="flex items-start gap-2">
+                                      <span className="text-[#8dc63f] mt-0.5 shrink-0">+</span>{s}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            {/* Omissions */}
+                            {evaluation.criticalOmissions?.length > 0 && (
+                              <div>
+                                <div className="text-[10px] uppercase font-bold text-red-500 mb-1">Critical Omissions</div>
+                                <ul className="text-sm text-slate-600 space-y-1">
+                                  {evaluation.criticalOmissions.map((s: string, i: number) => (
+                                    <li key={i} className="flex items-start gap-2">
+                                      <span className="text-red-500 mt-0.5 shrink-0">-</span>{s}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            {/* Roadmap */}
+                            {evaluation.roadmapTo100?.length > 0 && (
+                              <div>
+                                <div className="text-[10px] uppercase font-bold text-blue-500 mb-1">Roadmap to 100%</div>
+                                <ol className="text-sm text-slate-600 space-y-1 list-decimal list-inside">
+                                  {evaluation.roadmapTo100.map((s: string, i: number) => (
+                                    <li key={i}>{s}</li>
+                                  ))}
+                                </ol>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {essayScores.status === 'PARTIAL' && (
+                      <div className="flex items-center gap-2 text-amber-600 text-sm py-4">
+                        <Icons.CloudSync className="w-4 h-4 animate-spin" />
+                        More essays being graded...
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="flex justify-center mt-6 mb-8">
             <button onClick={onExit} className="bg-[#8dc63f] hover:bg-[#7db536] text-white px-12 py-3 rounded-sm font-bold shadow-lg transition-all uppercase tracking-widest text-sm">
               Return to Dashboard
             </button>

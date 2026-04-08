@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Icons } from '../Icons';
 import { syncStudyTelemetry, fetchGlobalPerformance } from '../../services/fetsService';
-import { examService, EXAM_CONFIGS, ExamConfig } from '../../services/examService';
+import { examService, EXAM_CONFIGS, ExamConfig, getTestCenterSessionById } from '../../services/examService';
 import { ExamSession } from './ExamSession';
 
 /** Session-only unlock for demo; clear with sessionStorage.removeItem(...) or new browser session. */
@@ -165,6 +165,82 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId, testCenter }) => {
         load();
     }, [userId, mockPortalLocked, portalUnlocked]);
 
+    // Test center session-locked mode: auto-start the admin-configured exam
+    const [tcLoading, setTcLoading] = useState(!!testCenter);
+    const [tcError, setTcError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!testCenter || !userId) return;
+        // Already have an active session — don't re-fetch
+        if (activeSession) return;
+
+        const autoStart = async () => {
+            setTcLoading(true);
+            setTcError(null);
+            try {
+                // Look up the test center session to get the exam config
+                const tcSession = await getTestCenterSessionById(testCenter.centerId);
+                if (!tcSession) {
+                    setTcError('Test center session not found. Please check the URL.');
+                    setTcLoading(false);
+                    return;
+                }
+
+                const config = EXAM_CONFIGS[tcSession.exam_config_key];
+                if (!config) {
+                    setTcError('Invalid exam configuration for this test center session.');
+                    setTcLoading(false);
+                    return;
+                }
+
+                // Fetch questions and create exam session automatically
+                const mcqs = config.mcqCount > 0
+                    ? await examService.fetchHybridMCQs(config.mcqCount, config.hybridRatio, config.part)
+                    : [];
+                const essays = config.essayCount > 0
+                    ? await examService.fetchEssayQuestions(config.essayCount, config.part)
+                    : [];
+
+                const session = await examService.createExamSession(userId, tcSession.exam_config_key, mcqs, essays);
+
+                setExamQuestions({ mcqs, essays });
+                setExamConfig(config);
+                setActiveSession(session);
+            } catch (err) {
+                console.error('Test center auto-start failed:', err);
+                setTcError('Failed to load exam. Please refresh or contact the proctor.');
+            } finally {
+                setTcLoading(false);
+            }
+        };
+        autoStart();
+    }, [testCenter, userId]);
+
+    // In test center mode, show loading/error states instead of exam picker
+    if (testCenter && (tcLoading || tcError)) {
+        return (
+            <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-4 font-sans">
+                {tcLoading ? (
+                    <>
+                        <Icons.CloudSync className="w-12 h-12 animate-spin text-[#8dc63f]" />
+                        <p className="text-slate-400 text-sm font-bold">Loading exam for Station {testCenter.stationNumber}...</p>
+                    </>
+                ) : (
+                    <>
+                        <Icons.AlertCircle className="w-12 h-12 text-red-400" />
+                        <p className="text-red-400 text-sm font-bold">{tcError}</p>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="mt-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded text-sm font-bold"
+                        >
+                            Retry
+                        </button>
+                    </>
+                )}
+            </div>
+        );
+    }
+
     const unlockMockPortal = (e: React.FormEvent) => {
         e.preventDefault();
         setPortalPwError('');
@@ -220,6 +296,8 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId, testCenter }) => {
     };
 
     const handleExamExit = () => {
+        // In test center mode, don't allow going back to exam picker
+        if (testCenter) return;
         setActiveSession(null);
         setExamConfig(null);
         setExamQuestions({ mcqs: [], essays: [] });

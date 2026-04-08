@@ -1235,6 +1235,51 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ session, config, mcqQu
   }
 
   // 5. RESULTS
+  // Test center mode: clean submission screen — no scores, no grading spinners
+  if (phase === 'RESULTS' && testCenter) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center font-sans">
+        <div className="text-center max-w-lg px-6">
+          <div className="w-20 h-20 rounded-full bg-[#8dc63f]/20 flex items-center justify-center mx-auto mb-6">
+            <Icons.CheckCircle className="w-10 h-10 text-[#8dc63f]" />
+          </div>
+          <h1 className="text-3xl font-bold text-white mb-3">Exam Submitted Successfully</h1>
+          <p className="text-slate-400 text-sm leading-relaxed mb-8">
+            Your responses have been recorded. Results will be available within 2–3 business days.
+            Please contact your proctor if you have any questions.
+          </p>
+          <div className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-3 text-left">
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-500">Candidate</span>
+              <span className="text-white font-bold">{candidateDisplay}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-500">Station</span>
+              <span className="text-white font-bold">STN {testCenter.stationNumber}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-500">Exam</span>
+              <span className="text-white font-bold">{title}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-500">Questions Answered</span>
+              <span className="text-white font-bold">
+                {Array.from(answers.values()).filter(a => a.selected !== null).length} / {questions.length}
+              </span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-500">Submitted At</span>
+              <span className="text-white font-bold">{new Date().toLocaleString()}</span>
+            </div>
+          </div>
+          <p className="text-slate-600 text-xs mt-8">
+            You may now close this window or wait for further instructions from your proctor.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (phase === 'RESULTS') {
     const passed = results.percentage >= 72;
     const hasEssays = questions.some(q => q.type === 'ESSAY');

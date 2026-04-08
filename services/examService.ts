@@ -1091,6 +1091,21 @@ export const createTestCenterSession = async (
 };
 
 /**
+ * Get a single test center session by ID (for station lookups).
+ */
+export const getTestCenterSessionById = async (sessionId: string): Promise<TestCenterSession | null> => {
+    try {
+        const { data, error } = await supabase
+            .from('test_center_sessions')
+            .select('*')
+            .eq('id', sessionId)
+            .single();
+        if (error) return null;
+        return data;
+    } catch { return null; }
+};
+
+/**
  * Get all test center sessions for an admin.
  */
 export const getTestCenterSessions = async (adminUserId: string): Promise<TestCenterSession[]> => {
@@ -1282,6 +1297,7 @@ export const examService = {
     pollEssayResults,
     subscribeToEssayResults,
     createTestCenterSession,
+    getTestCenterSessionById,
     getTestCenterSessions,
     getTestCenterStations,
     updateTestCenterStatus,

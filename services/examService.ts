@@ -1278,6 +1278,176 @@ export const subscribeToAdminCommands = (
 };
 
 // ============================================
+// TEST CENTER CANDIDATES
+// ============================================
+
+export interface TestCenterCandidate {
+    id: string;
+    session_id: string;
+    full_name: string;
+    email?: string;
+    phone?: string;
+    candidate_id?: string;
+    photo_url?: string;
+    notes?: string;
+    status: 'REGISTERED' | 'CHECKED_IN' | 'ASSIGNED' | 'IN_EXAM' | 'COMPLETED' | 'NO_SHOW';
+    checked_in_at?: string;
+    checked_in_by?: string;
+    assigned_station?: number;
+    assigned_at?: string;
+    exam_session_id?: string;
+    user_id?: string;
+    source: 'manual' | 'csv_upload' | 'fets_api' | 'registration_form';
+    created_at: string;
+    updated_at: string;
+}
+
+/**
+ * Get all candidates for a test center session.
+ */
+export const getSessionCandidates = async (sessionId: string): Promise<TestCenterCandidate[]> => {
+    try {
+        const { data, error } = await supabase
+            .from('test_center_candidates')
+            .select('*')
+            .eq('session_id', sessionId)
+            .order('full_name');
+        if (error) { console.error('Failed to fetch candidates:', error); return []; }
+        return data || [];
+    } catch { return []; }
+};
+
+/**
+ * Add a single candidate manually.
+ */
+export const addCandidate = async (
+    sessionId: string,
+    candidate: { full_name: string; email?: string; phone?: string; candidate_id?: string; notes?: string }
+): Promise<TestCenterCandidate | null> => {
+    try {
+        const { data, error } = await supabase
+            .from('test_center_candidates')
+            .insert({ session_id: sessionId, ...candidate, source: 'manual' })
+            .select()
+            .single();
+        if (error) { console.error('Failed to add candidate:', error); return null; }
+        return data;
+    } catch { return null; }
+};
+
+/**
+ * Bulk import candidates from CSV data.
+ */
+export const bulkImportCandidates = async (
+    sessionId: string,
+    candidates: { full_name: string; email?: string; phone?: string; candidate_id?: string }[]
+): Promise<number> => {
+    try {
+        const rows = candidates.map(c => ({
+            session_id: sessionId,
+            full_name: c.full_name,
+            email: c.email || null,
+            phone: c.phone || null,
+            candidate_id: c.candidate_id || null,
+            source: 'csv_upload' as const,
+        }));
+        const { data, error } = await supabase
+            .from('test_center_candidates')
+            .insert(rows)
+            .select();
+        if (error) { console.error('Bulk import failed:', error); return 0; }
+        return data?.length || 0;
+    } catch { return 0; }
+};
+
+/**
+ * Check in a candidate (proctor verified identity).
+ */
+export const checkInCandidate = async (
+    candidateId: string,
+    proctorUserId: string
+): Promise<boolean> => {
+    try {
+        const { error } = await supabase
+            .from('test_center_candidates')
+            .update({
+                status: 'CHECKED_IN',
+                checked_in_at: new Date().toISOString(),
+                checked_in_by: proctorUserId,
+            })
+            .eq('id', candidateId);
+        return !error;
+    } catch { return false; }
+};
+
+/**
+ * Assign a checked-in candidate to a station.
+ */
+export const assignCandidateToStation = async (
+    candidateId: string,
+    stationNumber: number
+): Promise<boolean> => {
+    try {
+        const { error } = await supabase
+            .from('test_center_candidates')
+            .update({
+                status: 'ASSIGNED',
+                assigned_station: stationNumber,
+                assigned_at: new Date().toISOString(),
+            })
+            .eq('id', candidateId);
+        return !error;
+    } catch { return false; }
+};
+
+/**
+ * Update candidate status (e.g. IN_EXAM, COMPLETED, NO_SHOW).
+ */
+export const updateCandidateStatus = async (
+    candidateId: string,
+    status: TestCenterCandidate['status']
+): Promise<boolean> => {
+    try {
+        const { error } = await supabase
+            .from('test_center_candidates')
+            .update({ status })
+            .eq('id', candidateId);
+        return !error;
+    } catch { return false; }
+};
+
+/**
+ * Delete a candidate from the roster.
+ */
+export const deleteCandidate = async (candidateId: string): Promise<boolean> => {
+    try {
+        const { error } = await supabase
+            .from('test_center_candidates')
+            .delete()
+            .eq('id', candidateId);
+        return !error;
+    } catch { return false; }
+};
+
+/**
+ * Subscribe to candidate changes in real-time.
+ */
+export const subscribeToCandidates = (
+    sessionId: string,
+    onUpdate: (candidates: TestCenterCandidate[]) => void
+): (() => void) => {
+    const channel = supabase
+        .channel(`tc-candidates-${sessionId}`)
+        .on('postgres_changes',
+            { event: '*', schema: 'public', table: 'test_center_candidates', filter: `session_id=eq.${sessionId}` },
+            () => { getSessionCandidates(sessionId).then(onUpdate); }
+        )
+        .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+};
+
+// ============================================
 // EXPORT DEFAULT EXAM SERVICE
 // ============================================
 
@@ -1306,6 +1476,14 @@ export const examService = {
     subscribeToStations,
     broadcastToStations,
     subscribeToAdminCommands,
+    getSessionCandidates,
+    addCandidate,
+    bulkImportCandidates,
+    checkInCandidate,
+    assignCandidateToStation,
+    updateCandidateStatus,
+    deleteCandidate,
+    subscribeToCandidates,
 };
 
 export default examService;

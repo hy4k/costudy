@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Icons } from '../Icons';
 import { syncStudyTelemetry, fetchGlobalPerformance } from '../../services/fetsService';
-import { examService, EXAM_CONFIGS, ExamConfig, getTestCenterSessionById } from '../../services/examService';
+import { examService, EXAM_CONFIGS, ExamConfig, getTestCenterSessionById, findActiveTestCenterExam } from '../../services/examService';
 import { ExamSession } from './ExamSession';
 
 /** Session-only unlock for demo; clear with sessionStorage.removeItem(...) or new browser session. */
@@ -193,7 +193,22 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId, testCenter }) => {
                     return;
                 }
 
-                // Fetch questions and create exam session automatically
+                // --- RECOVERY: Check for an existing in-progress session ---
+                const existingSession = await findActiveTestCenterExam(userId, testCenter.centerId);
+                if (existingSession && existingSession.full_questions) {
+                    console.log('[TestCenter] Recovering existing session:', existingSession.id);
+                    const fq = existingSession.full_questions as any;
+                    setExamQuestions({
+                        mcqs: fq.mcqs || [],
+                        essays: fq.essays || [],
+                    });
+                    setExamConfig(config);
+                    setActiveSession(existingSession);
+                    setTcLoading(false);
+                    return;
+                }
+
+                // --- NEW SESSION: Fetch questions and create ---
                 const mcqs = config.mcqCount > 0
                     ? await examService.fetchHybridMCQs(config.mcqCount, config.hybridRatio, config.part)
                     : [];
@@ -201,7 +216,10 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId, testCenter }) => {
                     ? await examService.fetchEssayQuestions(config.essayCount, config.part)
                     : [];
 
-                const session = await examService.createExamSession(userId, tcSession.exam_config_key, mcqs, essays);
+                const session = await examService.createExamSession(
+                    userId, tcSession.exam_config_key, mcqs, essays,
+                    { centerSessionId: testCenter.centerId }
+                );
 
                 setExamQuestions({ mcqs, essays });
                 setExamConfig(config);

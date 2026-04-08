@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Icons } from '../Icons';
 import { getUserProfile } from '../../services/fetsService';
-import { ExamConfig, saveExamProgress, queueEssayGrading, subscribeToEssayResults } from '../../services/examService';
+import { ExamConfig, saveExamProgress, queueEssayGrading, subscribeToEssayResults, saveSubmissionSnapshot } from '../../services/examService';
 import { gradeMCQs, MCQGradingResult, EssayScores, calculateCombinedResult, CombinedResult } from '../../services/gradingService';
 import { useTestCenterSync } from '../../hooks/useTestCenterSync';
 
@@ -132,13 +132,40 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ session, config, mcqQu
     return [...mcqs, ...essays];
   };
 
+  // Detect if this is a recovered session (has saved answers)
+  const savedMcqAnswers = session?.mcq_answers as Record<string, any> | undefined;
+  const savedEssayAnswers = session?.essay_answers as Record<string, any> | undefined;
+  const hasSavedProgress = savedMcqAnswers && Object.keys(savedMcqAnswers).length > 0;
+
   const [questions] = useState<Question[]>(buildQuestions);
-  const [phase, setPhase] = useState<ExamPhase>('CONFIRM');
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [phase, setPhase] = useState<ExamPhase>(hasSavedProgress ? 'TEST' : 'CONFIRM');
+  const [currentIndex, setCurrentIndex] = useState(hasSavedProgress ? (session?.current_question_index || 0) : 0);
   const [answers, setAnswers] = useState<Map<string, Answer>>(() => {
     const init = new Map<string, Answer>();
-    buildQuestions().forEach(q => {
-      init.set(q.id, { questionId: q.id, selected: null, essayText: '', flagged: false, timeSpent: 0 });
+    const builtQs = buildQuestions();
+    builtQs.forEach(q => {
+      // Try to restore from saved state
+      const savedMcq = savedMcqAnswers?.[q.id];
+      const savedEssay = savedEssayAnswers?.[q.id];
+      if (savedMcq) {
+        init.set(q.id, {
+          questionId: q.id,
+          selected: savedMcq.selected || null,
+          flagged: savedMcq.flagged || false,
+          timeSpent: savedMcq.timeSpent || 0,
+          essayText: '',
+        });
+      } else if (savedEssay) {
+        init.set(q.id, {
+          questionId: q.id,
+          selected: savedEssay.text ? 'ANSWERED' : null,
+          essayText: savedEssay.text || '',
+          flagged: false,
+          timeSpent: savedEssay.timeSpent || 0,
+        });
+      } else {
+        init.set(q.id, { questionId: q.id, selected: null, essayText: '', flagged: false, timeSpent: 0 });
+      }
     });
     return init;
   });
@@ -146,8 +173,13 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ session, config, mcqQu
   // Candidate name from profile
   const [candidateName, setCandidateName] = useState({ first: '', last: '' });
 
-  // Timers
-  const [testTimeRemaining, setTestTimeRemaining] = useState(durationMinutes * 60);
+  // Timers — restore from saved state if recovering
+  const savedTimeRemaining = session?.time_remaining_seconds;
+  const [testTimeRemaining, setTestTimeRemaining] = useState(
+    hasSavedProgress && savedTimeRemaining != null && savedTimeRemaining > 0
+      ? savedTimeRemaining
+      : durationMinutes * 60
+  );
   const [introTimeRemaining, setIntroTimeRemaining] = useState(15 * 60);
 
   const [results, setResults] = useState({ correct: 0, total: 0, percentage: 0 });
@@ -293,6 +325,7 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ session, config, mcqQu
         currentQuestionIndex: currentState.currentIndex,
         mcqAnswers,
         essayAnswers,
+        timeRemainingSeconds: currentState.testTimeRemaining,
       });
       setSaveStatus('SAVED');
       setLastSaved(new Date());
@@ -366,6 +399,40 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ session, config, mcqQu
     setResults({ correct: mcqResult.correct, total: mcqResult.total, percentage: mcqResult.percentage });
     setMcqGrading(mcqResult);
     setPhase('RESULTS');
+
+    // Build complete answer maps for snapshot
+    const allMcqAnswers: Record<string, any> = {};
+    const allEssayAnswers: Record<string, any> = {};
+    answers.forEach((ans, qId) => {
+      const q = questions.find(qq => qq.id === qId);
+      if (q?.type === 'ESSAY') {
+        allEssayAnswers[qId] = { text: ans.essayText || '', wordCount: (ans.essayText || '').split(/\s+/).filter(Boolean).length, timeSpent: ans.timeSpent };
+      } else {
+        allMcqAnswers[qId] = { selected: ans.selected, flagged: ans.flagged, timeSpent: ans.timeSpent };
+      }
+    });
+
+    // Save complete submission snapshot (for re-evaluation)
+    saveSubmissionSnapshot(sessionId, {
+      mcqAnswers: allMcqAnswers,
+      essayAnswers: allEssayAnswers,
+      questions: questions.map(q => ({ id: q.id, type: q.type, question_text: q.question_text, option_a: q.option_a, option_b: q.option_b, option_c: q.option_c, option_d: q.option_d, correct_answer: q.correct_answer, section: q.section })),
+      config: { title, testType: config.testType, mcqCount: config.mcqCount, essayCount: config.essayCount, durationMinutes },
+      candidateInfo: {
+        userId,
+        name: candidateDisplay,
+        station: testCenter?.stationNumber,
+        centerId: testCenter?.centerId,
+      },
+      timing: {
+        startedAt: session?.started_at || session?.created_at || new Date().toISOString(),
+        submittedAt: new Date().toISOString(),
+        totalDurationMinutes: durationMinutes,
+        timeRemainingSeconds: testTimeRemaining,
+      },
+    }).catch(err => {
+      console.warn('[ExamSession] Snapshot save failed (non-fatal):', err);
+    });
 
     // Queue essays for AI grading (async, non-blocking)
     const essays = questions.filter(q => q.type === 'ESSAY');

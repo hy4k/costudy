@@ -386,7 +386,8 @@ export const createExamSession = async (
     userId: string,
     configKey: string,
     prefetchedMcqs?: MCQQuestion[],
-    prefetchedEssays?: EssayQuestion[]
+    prefetchedEssays?: EssayQuestion[],
+    testCenterLink?: { centerSessionId: string; candidateId?: string }
 ): Promise<ExamSession | null> => {
     const config = EXAM_CONFIGS[configKey];
     if (!config) {
@@ -405,7 +406,7 @@ export const createExamSession = async (
         ? await fetchEssayQuestions(config.essayCount, config.part)
         : []);
 
-    const sessionData = {
+    const sessionData: any = {
         user_id: userId,
         test_type: config.testType,
         test_title: config.title,
@@ -418,8 +419,22 @@ export const createExamSession = async (
         essay_unlocked: config.testType === 'STANDARD' || config.testType === 'ESSAY_ONLY',
         status: 'IN_PROGRESS',
         real_questions_count: mcqs.filter(q => q.source === 'real').length,
-        ai_questions_count: mcqs.filter(q => q.source === 'ai_generated').length
+        ai_questions_count: mcqs.filter(q => q.source === 'ai_generated').length,
+        time_remaining_seconds: (config.mcqDurationMinutes + config.essayDurationMinutes) * 60,
+        // Store full question data for re-evaluation / recovery
+        full_questions: {
+            mcqs: mcqs.map(q => ({ id: q.id, question_text: q.question_text, option_a: q.option_a, option_b: q.option_b, option_c: q.option_c, option_d: q.option_d, correct_answer: q.correct_answer, section: q.section, difficulty: q.difficulty, source: q.source })),
+            essays: essays.map(e => ({ id: e.id, scenario_text: e.scenario_text, requirements: e.requirements, topic: e.topic, difficulty: e.difficulty, time_allocation_minutes: e.time_allocation_minutes })),
+        },
     };
+
+    // Link to test center if applicable
+    if (testCenterLink) {
+        sessionData.test_center_session_id = testCenterLink.centerSessionId;
+        if (testCenterLink.candidateId) {
+            sessionData.test_center_candidate_id = testCenterLink.candidateId;
+        }
+    }
     
     try {
         const { data, error } = await supabase
@@ -459,13 +474,14 @@ export const saveExamProgress = async (
         essayAnswers?: Record<string, EssayAnswer>;
         mcqTimeSpent?: number;
         essayTimeSpent?: number;
+        timeRemainingSeconds?: number;
     }
 ): Promise<boolean> => {
     const updates: any = {
         current_question_index: progress.currentQuestionIndex,
         last_activity_at: new Date().toISOString()
     };
-    
+
     if (progress.mcqAnswers) {
         updates.mcq_answers = progress.mcqAnswers;
     }
@@ -477,6 +493,9 @@ export const saveExamProgress = async (
     }
     if (progress.essayTimeSpent !== undefined) {
         updates.essay_time_spent_seconds = progress.essayTimeSpent;
+    }
+    if (progress.timeRemainingSeconds !== undefined) {
+        updates.time_remaining_seconds = progress.timeRemainingSeconds;
     }
     
     try {
@@ -1448,6 +1467,63 @@ export const subscribeToCandidates = (
 };
 
 // ============================================
+// EXAM SESSION RECOVERY & SUBMISSION SNAPSHOT
+// ============================================
+
+/**
+ * Find an active (IN_PROGRESS) exam session for a user in a test center context.
+ * Used when a station reconnects after a crash or when candidate moves to a new station.
+ * Returns the session with full question data if found.
+ */
+export const findActiveTestCenterExam = async (
+    userId: string,
+    centerSessionId: string
+): Promise<ExamSession | null> => {
+    try {
+        const { data, error } = await supabase
+            .from('exam_sessions')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('test_center_session_id', centerSessionId)
+            .eq('status', 'IN_PROGRESS')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+        if (error || !data) return null;
+        return data as ExamSession;
+    } catch { return null; }
+};
+
+/**
+ * Save complete submission snapshot when exam is finished.
+ * This is a frozen record of everything — can be used for re-evaluation even
+ * if the question bank changes or auto-save data gets corrupted.
+ */
+export const saveSubmissionSnapshot = async (
+    sessionId: string,
+    snapshot: {
+        mcqAnswers: Record<string, any>;
+        essayAnswers: Record<string, any>;
+        questions: any[];
+        config: any;
+        candidateInfo: { userId: string; name: string; station?: number; centerId?: string };
+        timing: { startedAt: string; submittedAt: string; totalDurationMinutes: number; timeRemainingSeconds: number };
+    }
+): Promise<boolean> => {
+    try {
+        const { error } = await supabase
+            .from('exam_sessions')
+            .update({
+                submitted_snapshot: snapshot,
+                status: 'COMPLETED',
+                last_activity_at: new Date().toISOString(),
+            })
+            .eq('id', sessionId);
+        return !error;
+    } catch { return false; }
+};
+
+// ============================================
 // EXPORT DEFAULT EXAM SERVICE
 // ============================================
 
@@ -1484,6 +1560,8 @@ export const examService = {
     updateCandidateStatus,
     deleteCandidate,
     subscribeToCandidates,
+    findActiveTestCenterExam,
+    saveSubmissionSnapshot,
 };
 
 export default examService;

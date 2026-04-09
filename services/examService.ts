@@ -1170,9 +1170,18 @@ export const getTestCenterExamResults = async (centerSessionId: string): Promise
             .select('id, user_id, test_title, status, mcq_score, mcq_correct, mcq_total, essay_scores, submitted_snapshot, created_at, last_activity_at, time_remaining_seconds, test_center_candidate_id')
             .eq('test_center_session_id', centerSessionId)
             .order('created_at', { ascending: false });
-        if (error) { console.error('Failed to fetch exam results:', error); return []; }
+        if (error) {
+            // 400: often missing column (run migration 008) or PostgREST schema cache stale.
+            // Empty + RLS: run migration 009 so proctors can SELECT linked rows.
+            const hint =
+                'Ensure migrations 008 and 009 are applied on Supabase; reload schema if needed.';
+            console.warn('[exam] getTestCenterExamResults:', error.message || error, hint);
+            return [];
+        }
         return data || [];
-    } catch { return []; }
+    } catch {
+        return [];
+    }
 };
 
 /**

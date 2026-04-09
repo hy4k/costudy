@@ -57,37 +57,56 @@ export const authService = {
       }
 
       return data;
-    } catch (networkError) {
-      console.warn("Network error during signup, trying local auth service");
-      return await localAuthService.signUp(email, pass, { full_name: name, role });
+    } catch (e) {
+      // Only fall back to proxy API on real network/CORS failures — not invalid credentials
+      const msg = e instanceof Error ? e.message : String(e);
+      if (
+        msg.includes('Failed to fetch') ||
+        msg.includes('CORS') ||
+        msg.includes('NetworkError') ||
+        (e instanceof TypeError && msg.includes('fetch'))
+      ) {
+        console.warn('Network error during signup, trying local auth service');
+        return await localAuthService.signUp(email, pass, { full_name: name, role });
+      }
+      throw e;
     }
   },
 
   signIn: async (email: string, pass: string) => {
     try {
-      // Clear any stale session before attempting fresh login
-      // This prevents "already authenticated" or stale token conflicts
       try {
         await supabase.auth.signOut({ scope: 'local' });
-      } catch (_) { /* ignore */ }
+      } catch (_) {
+        /* ignore */
+      }
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password: pass
+        password: pass,
       });
 
       if (error) {
-        console.error("Supabase signin error:", error);
-        if (error.message.includes("Failed to fetch") || error.message.includes("CORS")) {
-          console.warn("Using local auth service due to CORS/network issues");
+        console.error('Supabase signin error:', error);
+        if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
+          console.warn('Using local auth service due to CORS/network issues');
           return await localAuthService.signIn(email, pass);
         }
         throw error;
       }
       return data;
-    } catch (networkError) {
-      console.warn("Network error during signin, trying local auth service");
-      return await localAuthService.signIn(email, pass);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (
+        msg.includes('Failed to fetch') ||
+        msg.includes('CORS') ||
+        msg.includes('NetworkError') ||
+        (e instanceof TypeError && msg.includes('fetch'))
+      ) {
+        console.warn('Network error during signin, trying local auth service');
+        return await localAuthService.signIn(email, pass);
+      }
+      throw e;
     }
   },
 

@@ -38,10 +38,17 @@ export const localAuthService = {
       });
       
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Signup failed');
+        const text = await response.text();
+        let msg = `Signup failed (${response.status})`;
+        try {
+          const j = JSON.parse(text) as { message?: string };
+          if (j?.message) msg = j.message;
+        } catch {
+          /* response was HTML or plain text */
+        }
+        throw new Error(msg);
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('Local signup error:', error);
@@ -60,10 +67,17 @@ export const localAuthService = {
       });
       
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Signin failed');
+        const text = await response.text();
+        let msg = `Sign in failed (${response.status})`;
+        try {
+          const j = JSON.parse(text) as { message?: string };
+          if (j?.message) msg = j.message;
+        } catch {
+          /* HTML error page */
+        }
+        throw new Error(msg);
       }
-      
+
       return await response.json();
     } catch (error) {
       console.error('Local signin error:', error);

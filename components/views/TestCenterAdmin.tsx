@@ -29,6 +29,41 @@ import {
     TestCenterCandidate,
 } from '../../services/examService';
 
+/** Local 1s tick — keeps clocks off the main dashboard state to avoid full-tree re-renders (reduces flicker with heavy shadows). */
+const LiveClock = ({ className, withSeconds }: { className?: string; withSeconds?: boolean }) => {
+    const [t, setT] = useState(() => new Date());
+    useEffect(() => {
+        const id = setInterval(() => setT(new Date()), 1000);
+        return () => clearInterval(id);
+    }, []);
+    return (
+        <span className={className}>
+            {t.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+                ...(withSeconds ? { second: '2-digit' as const } : {}),
+            })}
+        </span>
+    );
+};
+
+const SessionElapsedBadge = ({ actualStart }: { actualStart?: string | null }) => {
+    const [now, setNow] = useState(() => Date.now());
+    useEffect(() => {
+        if (!actualStart) return;
+        const id = setInterval(() => setNow(Date.now()), 1000);
+        return () => clearInterval(id);
+    }, [actualStart]);
+    if (!actualStart) return null;
+    const diff = Math.floor((now - new Date(actualStart).getTime()) / 1000);
+    if (diff < 0) return null;
+    const h = Math.floor(diff / 3600);
+    const m = Math.floor((diff % 3600) / 60);
+    const s = diff % 60;
+    const str = `${h > 0 ? `${h}:` : ''}${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    return <span className="f-mono text-[11px] text-[#8dc63f]/70 tracking-wider">{str}</span>;
+};
+
 interface TestCenterAdminProps {
     userId: string;
     onLogout?: () => void;
@@ -37,36 +72,24 @@ interface TestCenterAdminProps {
 type View = 'LIST' | 'CREATE' | 'EDIT' | 'MANAGE';
 type ManageTab = 'CANDIDATES' | 'CHECK_IN' | 'MONITOR' | 'RESULTS';
 
-/* ─── Design Tokens ─── */
-const V = {
-    bg: '#040711',
-    surface: '#080c18',
-    elevated: '#0c1120',
-    border: 'rgba(255,255,255,.06)',
-    borderHover: 'rgba(255,255,255,.12)',
-    green: '#8dc63f',
-    greenDim: 'rgba(141,198,63,.08)',
-    greenGlow: 'rgba(141,198,63,.15)',
-};
-
-/* ─── Reusable Style Fragments ─── */
+/* ─── Reusable style fragments (light neumorphic — matches ExamApp PORTAL_CSS) ─── */
 const S = {
-    input: 'f-body w-full rounded-xl bg-[#0c1120] border border-white/[0.06] px-4 py-3 text-white placeholder:text-slate-600 text-sm outline-none transition-all duration-200 focus:border-[#8dc63f]/30 focus:shadow-[0_0_0_3px_rgba(141,198,63,0.06)]',
-    inputSm: 'f-body w-full rounded-lg bg-[#0c1120] border border-white/[0.06] px-3.5 py-2.5 text-white placeholder:text-slate-600 text-sm outline-none transition-all duration-200 focus:border-[#8dc63f]/30 focus:shadow-[0_0_0_2px_rgba(141,198,63,0.06)]',
+    input: 'f-body w-full rounded-xl ep-neu-inset border-0 px-4 py-3 text-slate-800 placeholder:text-slate-500 text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[#8dc63f]/35',
+    inputSm: 'f-body w-full rounded-lg ep-neu-inset border-0 px-3.5 py-2.5 text-slate-800 placeholder:text-slate-500 text-sm outline-none transition-all duration-200 focus:ring-2 focus:ring-[#8dc63f]/35',
     btnPrimary: 'ep-shimmer rounded-xl bg-gradient-to-r from-[#8dc63f] via-[#7db536] to-[#6ba52e] text-white font-semibold text-sm transition-all duration-200 shadow-[0_4px_16px_rgba(141,198,63,0.15)] hover:shadow-[0_6px_24px_rgba(141,198,63,0.25)] hover:-translate-y-px active:translate-y-px disabled:opacity-35 disabled:hover:translate-y-0',
-    btnGhost: 'rounded-lg bg-white/[0.04] border border-white/[0.06] text-slate-400 font-semibold text-sm transition-all duration-200 hover:bg-white/[0.07] hover:border-white/[0.1] hover:text-slate-200 active:translate-y-px',
-    btnDanger: 'rounded-lg bg-red-500/[0.06] border border-red-500/15 text-red-400 font-semibold text-sm transition-all duration-200 hover:bg-red-500/[0.12] hover:border-red-500/25 active:translate-y-px',
-    card: 'rounded-2xl bg-[#080c18] border border-white/[0.06] shadow-[0_8px_32px_rgba(0,0,0,0.25)]',
-    cardInteractive: 'rounded-2xl bg-[#080c18] border border-white/[0.06] shadow-[0_8px_32px_rgba(0,0,0,0.25)] transition-all duration-200 hover:border-white/[0.1] hover:shadow-[0_12px_40px_rgba(0,0,0,0.35)]',
-    table: 'rounded-2xl bg-[#080c18]/80 border border-white/[0.05] overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.2)]',
+    btnGhost: 'rounded-lg ep-neu-raised-sm bg-[#f6faf3]/90 border border-[#8dc63f]/18 text-slate-600 font-semibold text-sm transition-all duration-200 hover:bg-[#eef5ea] hover:border-[#8dc63f]/28 hover:text-slate-800 active:translate-y-px',
+    btnDanger: 'rounded-lg bg-red-500/[0.08] border border-red-500/22 text-red-700 font-semibold text-sm transition-all duration-200 hover:bg-red-500/[0.14] hover:border-red-500/30 active:translate-y-px',
+    card: 'ep-neu-panel rounded-2xl',
+    cardInteractive: 'ep-neu-panel rounded-2xl transition-all duration-200 hover:shadow-[0_14px_36px_rgba(95,115,88,0.2)]',
+    table: 'rounded-2xl ep-neu-panel overflow-hidden',
     badge: (color: 'green' | 'blue' | 'amber' | 'red' | 'slate' | 'cyan') => {
         const m: Record<string, string> = {
-            green: 'bg-[#8dc63f]/[0.1] text-[#8dc63f] border-[#8dc63f]/20',
-            blue: 'bg-blue-400/[0.1] text-blue-400 border-blue-400/20',
-            amber: 'bg-amber-400/[0.1] text-amber-400 border-amber-400/20',
-            red: 'bg-red-400/[0.1] text-red-400 border-red-400/20',
-            slate: 'bg-slate-400/[0.08] text-slate-400 border-slate-400/15',
-            cyan: 'bg-cyan-400/[0.1] text-cyan-400 border-cyan-400/20',
+            green: 'bg-[#8dc63f]/[0.12] text-[#3d6220] border-[#8dc63f]/25',
+            blue: 'bg-blue-400/[0.12] text-blue-800 border-blue-400/25',
+            amber: 'bg-amber-400/[0.12] text-amber-900 border-amber-400/25',
+            red: 'bg-red-400/[0.12] text-red-800 border-red-400/25',
+            slate: 'bg-slate-400/[0.12] text-slate-700 border-slate-400/22',
+            cyan: 'bg-cyan-400/[0.12] text-cyan-900 border-cyan-400/25',
         };
         return `f-mono inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] tracking-[0.05em] font-medium uppercase border ${m[color] || m.slate}`;
     },
@@ -91,7 +114,7 @@ function parseCSV(text: string): { full_name: string; email?: string; phone?: st
 /* ─── Mini Score Bar ─── */
 const ScoreBar = ({ pct, color }: { pct: number; color: string }) => (
     <div className="flex items-center gap-2 min-w-[100px]">
-        <div className="flex-1 h-[5px] rounded-full bg-white/[0.05] overflow-hidden">
+        <div className="flex-1 h-[5px] rounded-full bg-slate-300/50 overflow-hidden">
             <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%`, animation: 'bar-fill .8s ease-out' }} />
         </div>
         <span className={`f-mono text-[11px] font-medium ${pct >= 72 ? 'text-[#8dc63f]' : pct >= 50 ? 'text-amber-400' : 'text-red-400'}`}>
@@ -129,13 +152,6 @@ export const TestCenterAdmin: React.FC<TestCenterAdminProps> = ({ userId, onLogo
 
     // ─── NEW: Search ───
     const [searchQuery, setSearchQuery] = useState('');
-
-    // ─── NEW: Live clock ───
-    const [liveTime, setLiveTime] = useState(new Date());
-    useEffect(() => {
-        const t = setInterval(() => setLiveTime(new Date()), 1000);
-        return () => clearInterval(t);
-    }, []);
 
     // ─── NEW: Copy URL feedback ───
     const [copied, setCopied] = useState(false);
@@ -288,13 +304,13 @@ export const TestCenterAdmin: React.FC<TestCenterAdminProps> = ({ userId, onLogo
     const stationTileClass = (s: TestCenterStation) => {
         const hb = s.last_heartbeat ? new Date(s.last_heartbeat) : null;
         const stale = hb && (Date.now() - hb.getTime() > 90000);
-        if (stale) return 'border-red-500/25 bg-red-500/[0.05] text-red-300';
+        if (stale) return 'border-red-400/35 bg-red-50/90 text-red-800';
         switch (s.status) {
-            case 'ACTIVE': return 'border-[#8dc63f]/25 bg-[#8dc63f]/[0.05] text-[#8dc63f]';
-            case 'READY': return 'border-blue-400/25 bg-blue-400/[0.05] text-blue-300';
-            case 'SUBMITTED': return 'border-slate-400/20 bg-slate-400/[0.04] text-slate-400';
-            case 'ASSIGNED': return 'border-amber-400/25 bg-amber-400/[0.05] text-amber-300';
-            default: return 'border-white/[0.05] bg-white/[0.02] text-slate-700';
+            case 'ACTIVE': return 'border-[#8dc63f]/35 bg-[#f0f7ec] text-[#3d6220]';
+            case 'READY': return 'border-blue-400/35 bg-blue-50/90 text-blue-800';
+            case 'SUBMITTED': return 'border-slate-300/50 bg-slate-100/80 text-slate-600';
+            case 'ASSIGNED': return 'border-amber-400/35 bg-amber-50/90 text-amber-900';
+            default: return 'border-slate-200/80 bg-white/70 text-slate-700';
         }
     };
 
@@ -323,58 +339,34 @@ export const TestCenterAdmin: React.FC<TestCenterAdminProps> = ({ userId, onLogo
         })
         : candidates;
 
-    // ─── Elapsed time since session went live ───
-    const getElapsedStr = () => {
-        if (!activeSession?.settings?.actual_start) return null;
-        const diff = Math.floor((liveTime.getTime() - new Date(activeSession.settings.actual_start).getTime()) / 1000);
-        if (diff < 0) return null;
-        const h = Math.floor(diff / 3600);
-        const m = Math.floor((diff % 3600) / 60);
-        const s = diff % 60;
-        return `${h > 0 ? h + ':' : ''}${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-    };
-
     // ==========================================
     // SHARED SHELLS
     // ==========================================
     const Shell = ({ children }: { children: React.ReactNode }) => (
-        <div className="ep-noise min-h-screen bg-[#040711] text-white f-body relative overflow-hidden">
-            <div className="fixed inset-0 pointer-events-none select-none">
-                <div className="absolute top-[-8%] left-[-4%] w-[480px] h-[480px] rounded-full bg-[#8dc63f]/[0.018] blur-[150px]" />
-                <div className="absolute bottom-[-8%] right-[-4%] w-[380px] h-[380px] rounded-full bg-blue-500/[0.012] blur-[130px]" />
-                <div className="absolute inset-0 opacity-[0.018]" style={{
-                    backgroundImage: 'linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px)',
-                    backgroundSize: '56px 56px'
-                }} />
-            </div>
+        <div className="min-h-screen text-slate-800 f-body relative">
             <div className="relative z-10">{children}</div>
         </div>
     );
 
     const Header = ({ title, subtitle, showBack, backTo, right }: { title: string; subtitle?: string; showBack?: boolean; backTo?: () => void; right?: React.ReactNode }) => (
-        <header className="bg-[#080c18]/80 backdrop-blur-xl border-b border-white/[0.05] px-6 py-4 sticky top-0 z-30">
+        <header className="ep-neu-topbar backdrop-blur-sm border-b border-white/50 px-6 py-4 sticky top-0 z-30">
             <div className="max-w-7xl mx-auto flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     {showBack && (
-                        <button onClick={backTo} className="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/[0.08] transition-all">
+                        <button onClick={backTo} className="w-8 h-8 rounded-lg ep-neu-raised-sm flex items-center justify-center text-slate-600 hover:text-slate-900 transition-all">
                             <Icons.ChevronLeft className="w-4 h-4" />
                         </button>
                     )}
-                    <div className="ep-ring w-9 h-9 rounded-xl">
-                        <div className="w-full h-full rounded-xl bg-[#080c18] flex items-center justify-center">
-                            <Icons.Shield className="w-[18px] h-[18px] text-[#8dc63f] drop-shadow-[0_0_8px_rgba(141,198,63,0.4)]" />
-                        </div>
+                    <div className="ep-neu-raised-sm w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-br from-[#f4faf2] to-[#dce8d8] shrink-0">
+                        <Icons.Shield className="w-[18px] h-[18px] text-[#4a7a1c]" />
                     </div>
                     <div>
-                        <h1 className="text-sm font-bold tracking-wide">{title}</h1>
+                        <h1 className="text-sm font-bold tracking-wide text-slate-800">{title}</h1>
                         {subtitle && <p className="text-[11px] text-slate-500 mt-0.5">{subtitle}</p>}
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
-                    {/* Live clock */}
-                    <span className="f-mono text-[11px] text-slate-600 tracking-wider hidden md:block">
-                        {liveTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
+                    <LiveClock className="f-mono text-[11px] text-slate-600 tracking-wider hidden md:block" />
                     {right}
                     {onLogout && (
                         <button onClick={onLogout} className={`${S.btnGhost} px-3.5 py-2 text-xs`}>Sign Out</button>
@@ -405,18 +397,16 @@ export const TestCenterAdmin: React.FC<TestCenterAdminProps> = ({ userId, onLogo
 
                     {loading ? (
                         <div className="flex justify-center py-24">
-                            <div className="ep-ring w-14 h-14 rounded-[18px]">
-                                <div className="w-full h-full rounded-[18px] bg-[#080c18] flex items-center justify-center">
-                                    <Icons.CloudSync className="w-6 h-6 animate-spin text-[#8dc63f]" />
-                                </div>
+                            <div className="ep-neu-raised w-14 h-14 rounded-[18px] flex items-center justify-center bg-gradient-to-br from-[#f4faf2] to-[#dce8d8]">
+                                <Icons.CloudSync className="w-6 h-6 animate-spin text-[#4a7a1c]" />
                             </div>
                         </div>
                     ) : sessions.length === 0 ? (
                         <div className="text-center py-28 ep-up">
-                            <div className="w-20 h-20 rounded-[26px] bg-[#080c18] border border-white/[0.05] flex items-center justify-center mx-auto mb-6 shadow-[0_16px_48px_rgba(0,0,0,0.3)]">
-                                <Icons.Shield className="w-9 h-9 text-slate-700" />
+                            <div className="w-20 h-20 rounded-[26px] ep-neu-raised flex items-center justify-center mx-auto mb-6 bg-gradient-to-br from-[#f4faf2] to-[#dce8d8]">
+                                <Icons.Shield className="w-9 h-9 text-[#4a7a1c]" />
                             </div>
-                            <h3 className="f-display text-xl font-semibold text-slate-400 mb-2">No Sessions Yet</h3>
+                            <h3 className="f-display text-xl font-semibold text-slate-500 mb-2">No Sessions Yet</h3>
                             <p className="text-slate-600 text-sm mb-8 max-w-xs mx-auto">Create your first exam session to begin managing candidates and workstations.</p>
                             <button onClick={() => setView('CREATE')} className={`${S.btnPrimary} px-7 py-3`}>Create Session</button>
                         </div>
@@ -432,7 +422,7 @@ export const TestCenterAdmin: React.FC<TestCenterAdminProps> = ({ userId, onLogo
                                         <div className="flex items-center justify-between">
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-3 mb-1.5">
-                                                    <h3 className="font-bold text-white text-[15px] truncate">{session.name}</h3>
+                                                    <h3 className="font-bold text-slate-800 text-[15px] truncate">{session.name}</h3>
                                                     <span className={S.badge(statusColor(session.status))}>
                                                         {session.status === 'LIVE' && <span className="w-[5px] h-[5px] rounded-full bg-current mr-1.5 ep-pulse-dot inline-block" />}
                                                         {session.status}
@@ -483,7 +473,7 @@ export const TestCenterAdmin: React.FC<TestCenterAdminProps> = ({ userId, onLogo
                             <select value={formConfig} onChange={e => setFormConfig(e.target.value)}
                                 className={`${S.input} cursor-pointer`}>
                                 {Object.entries(EXAM_CONFIGS).map(([key, config]) => (
-                                    <option key={key} value={key} className="bg-[#080c18]">{config.title} ({config.mcqCount} MCQ + {config.essayCount} Essay)</option>
+                                    <option key={key} value={key} className="bg-[#eef2ec] text-slate-800">{config.title} ({config.mcqCount} MCQ + {config.essayCount} Essay)</option>
                                 ))}
                             </select>
                         </div>
@@ -512,57 +502,52 @@ export const TestCenterAdmin: React.FC<TestCenterAdminProps> = ({ userId, onLogo
     if (view === 'MANAGE' && activeSession) {
         const config = EXAM_CONFIGS[activeSession.exam_config_key];
         const cols = Math.min(6, Math.ceil(Math.sqrt(activeSession.station_count)));
-        const elapsed = getElapsedStr();
 
         return (
             <Shell>
                 {/* ─── Session Header ─── */}
-                <header className="bg-[#080c18]/80 backdrop-blur-xl border-b border-white/[0.05] sticky top-0 z-30">
+                <header className="ep-neu-topbar backdrop-blur-sm border-b border-white/50 sticky top-0 z-30">
                     <div className="max-w-7xl mx-auto px-6 py-3.5 flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <button onClick={() => { setView('LIST'); setActiveSession(null); }}
-                                className="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/[0.08] transition-all">
+                                className="w-8 h-8 rounded-lg ep-neu-raised-sm flex items-center justify-center text-slate-600 hover:text-slate-900 transition-all">
                                 <Icons.ChevronLeft className="w-4 h-4" />
                             </button>
-                            <div className="ep-ring w-9 h-9 rounded-xl">
-                                <div className="w-full h-full rounded-xl bg-[#080c18] flex items-center justify-center">
-                                    <Icons.Shield className="w-[18px] h-[18px] text-[#8dc63f] drop-shadow-[0_0_8px_rgba(141,198,63,0.4)]" />
-                                </div>
+                            <div className="ep-neu-raised-sm w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-br from-[#f4faf2] to-[#dce8d8] shrink-0">
+                                <Icons.Shield className="w-[18px] h-[18px] text-[#4a7a1c]" />
                             </div>
                             <div className="min-w-0">
                                 <div className="flex items-center gap-2.5">
-                                    <h1 className="text-sm font-bold truncate">{activeSession.name}</h1>
+                                    <h1 className="text-sm font-bold truncate text-slate-800">{activeSession.name}</h1>
                                     <span className={S.badge(statusColor(activeSession.status))}>
                                         {activeSession.status === 'LIVE' && <span className="w-[5px] h-[5px] rounded-full bg-current mr-1.5 ep-pulse-dot inline-block" />}
                                         {activeSession.status}
                                     </span>
-                                    {elapsed && (
-                                        <span className="f-mono text-[11px] text-[#8dc63f]/70 tracking-wider">{elapsed}</span>
-                                    )}
+                                    <SessionElapsedBadge actualStart={activeSession.settings?.actual_start} />
                                 </div>
                                 <span className="text-[11px] text-slate-500">{config?.title || activeSession.exam_config_key}</span>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="hidden lg:flex items-center gap-2 f-mono text-[10px]">
-                                <span className="px-2.5 py-1 rounded-lg bg-white/[0.03] border border-white/[0.05] text-slate-500">{cStats.total} cand.</span>
-                                {cStats.checkedIn > 0 && <span className="px-2.5 py-1 rounded-lg bg-blue-400/[0.06] border border-blue-400/10 text-blue-400">{cStats.checkedIn} in</span>}
-                                {cStats.assigned > 0 && <span className="px-2.5 py-1 rounded-lg bg-amber-400/[0.06] border border-amber-400/10 text-amber-400">{cStats.assigned} asgn</span>}
+                                <span className="px-2.5 py-1 rounded-lg bg-white/70 border border-[#8dc63f]/15 text-slate-600">{cStats.total} cand.</span>
+                                {cStats.checkedIn > 0 && <span className="px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200/80 text-blue-800">{cStats.checkedIn} in</span>}
+                                {cStats.assigned > 0 && <span className="px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200/80 text-amber-900">{cStats.assigned} asgn</span>}
                             </div>
-                            <span className="f-mono text-[11px] text-slate-600 hidden md:block">{liveTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+                            <LiveClock withSeconds className="f-mono text-[11px] text-slate-600 hidden md:block" />
                             {onLogout && <button onClick={onLogout} className={`${S.btnGhost} px-3.5 py-2 text-xs`}>Sign Out</button>}
                         </div>
                     </div>
 
                     {/* ─── Tab bar + controls ─── */}
                     <div className="max-w-7xl mx-auto px-6 pb-3 flex items-center gap-3">
-                        <nav className="flex items-center gap-0.5 rounded-xl bg-white/[0.025] p-1 border border-white/[0.04]">
+                        <nav className="flex items-center gap-0.5 rounded-xl ep-neu-toggle-pit p-1 border border-[#8dc63f]/12">
                             {(['CANDIDATES', 'CHECK_IN', 'MONITOR', 'RESULTS'] as ManageTab[]).map(tab => (
                                 <button key={tab} onClick={() => setManageTab(tab)}
                                     className={`px-4 py-2 rounded-lg text-[11px] font-semibold transition-all duration-200 ${
                                         manageTab === tab
-                                            ? 'bg-[#8dc63f] text-white shadow-[0_2px_10px_rgba(141,198,63,0.2)]'
-                                            : 'text-slate-500 hover:text-slate-300 hover:bg-white/[0.04]'
+                                            ? 'ep-neu-toggle-active shadow-[0_2px_10px_rgba(141,198,63,0.2)]'
+                                            : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
                                     }`}>
                                     {tab === 'CANDIDATES' ? 'Candidates' : tab === 'CHECK_IN' ? 'Check-In' : tab === 'MONITOR' ? 'Monitor' : 'Results'}
                                 </button>
@@ -646,7 +631,7 @@ export const TestCenterAdmin: React.FC<TestCenterAdminProps> = ({ userId, onLogo
                             <div className={`${S.table} ep-up ep-up-2`}>
                                 <table className="w-full text-sm">
                                     <thead>
-                                        <tr className="bg-white/[0.025] f-mono text-slate-500 text-[9px] tracking-[0.12em] uppercase">
+                                        <tr className="bg-[#eef5ea]/70 f-mono text-slate-600 text-[9px] tracking-[0.12em] uppercase border-b border-slate-200/60">
                                             <th className="text-left px-4 py-3 font-medium">#</th>
                                             <th className="text-left px-4 py-3 font-medium">Name</th>
                                             <th className="text-left px-4 py-3 font-medium">Email</th>
@@ -658,9 +643,9 @@ export const TestCenterAdmin: React.FC<TestCenterAdminProps> = ({ userId, onLogo
                                         </tr>
                                     </thead>
                                     <tbody>{filteredCandidates.map((c, i) => (
-                                        <tr key={c.id} className="border-t border-white/[0.035] hover:bg-white/[0.02] transition-colors">
+                                        <tr key={c.id} className="border-t border-slate-200/70 hover:bg-white/55 transition-colors">
                                             <td className="px-4 py-3 f-mono text-slate-600 text-xs">{i + 1}</td>
-                                            <td className="px-4 py-3 text-white font-semibold">{c.full_name}</td>
+                                            <td className="px-4 py-3 text-slate-800 font-semibold">{c.full_name}</td>
                                             <td className="px-4 py-3 text-slate-400 text-xs">{c.email || '—'}</td>
                                             <td className="px-4 py-3 text-slate-400 f-mono text-xs">{c.phone || '—'}</td>
                                             <td className="px-4 py-3 text-slate-400 f-mono text-xs">{c.candidate_id || '—'}</td>
@@ -700,13 +685,13 @@ export const TestCenterAdmin: React.FC<TestCenterAdminProps> = ({ userId, onLogo
                                         <div key={c.id}
                                             className={`rounded-xl border p-4 transition-all duration-200 cursor-pointer ${
                                                 selectedCandidate === c.id
-                                                    ? 'border-[#8dc63f]/25 bg-[#8dc63f]/[0.04] shadow-[0_0_0_1px_rgba(141,198,63,0.1)]'
-                                                    : 'border-white/[0.05] bg-[#080c18] hover:border-white/[0.1]'
+                                                    ? 'border-[#8dc63f]/35 bg-[#f0f7ec] shadow-[0_0_0_1px_rgba(141,198,63,0.15)]'
+                                                    : 'border-slate-200/80 bg-white/75 hover:border-[#8dc63f]/25 ep-neu-raised-sm'
                                             }`}
                                             onClick={() => setSelectedCandidate(c.id)}>
                                             <div className="flex items-center justify-between gap-3">
                                                 <div className="min-w-0">
-                                                    <div className="text-white font-semibold text-sm truncate">{c.full_name}</div>
+                                                    <div className="text-slate-800 font-semibold text-sm truncate">{c.full_name}</div>
                                                     <div className="text-slate-500 text-[11px] mt-0.5 truncate">
                                                         {c.candidate_id && <span className="mr-3">ID: {c.candidate_id}</span>}
                                                         {c.email && <span>{c.email}</span>}
@@ -730,7 +715,7 @@ export const TestCenterAdmin: React.FC<TestCenterAdminProps> = ({ userId, onLogo
                                         <>
                                             <p className="f-mono text-[9px] text-slate-600 tracking-[0.15em] uppercase mt-5 mb-1 pl-1">Assigned</p>
                                             {candidates.filter(c => c.status === 'ASSIGNED' || c.status === 'IN_EXAM').map(c => (
-                                                <div key={c.id} className="rounded-xl border border-white/[0.03] bg-white/[0.015] p-3 opacity-50">
+                                                <div key={c.id} className="rounded-xl border border-slate-200/60 bg-slate-100/50 p-3 opacity-70">
                                                     <div className="flex items-center justify-between">
                                                         <span className="text-slate-400 text-sm font-medium">{c.full_name}</span>
                                                         <div className="flex items-center gap-2">
@@ -756,7 +741,7 @@ export const TestCenterAdmin: React.FC<TestCenterAdminProps> = ({ userId, onLogo
                                     return (
                                         <div className={`${S.card} p-6`}>
                                             <div className="mb-5">
-                                                <div className="text-white font-bold text-lg">{c.full_name}</div>
+                                                <div className="text-slate-800 font-bold text-lg">{c.full_name}</div>
                                                 <div className="text-slate-500 text-xs mt-1">
                                                     {c.candidate_id && <span className="mr-4 f-mono">ID: {c.candidate_id}</span>}
                                                     {c.email && <span className="mr-4">{c.email}</span>}
@@ -780,8 +765,8 @@ export const TestCenterAdmin: React.FC<TestCenterAdminProps> = ({ userId, onLogo
                                                                     sel
                                                                         ? 'bg-[#8dc63f] text-white shadow-[0_4px_12px_rgba(141,198,63,0.25)] scale-105'
                                                                         : occ
-                                                                            ? 'bg-white/[0.02] text-slate-700 cursor-not-allowed'
-                                                                            : 'bg-[#0c1120] border border-white/[0.06] text-slate-400 hover:border-[#8dc63f]/25 hover:text-[#8dc63f]'
+                                                                            ? 'bg-slate-200/80 text-slate-600 cursor-not-allowed border border-slate-300/60'
+                                                                            : 'ep-neu-inset border-0 text-slate-700 hover:ring-2 hover:ring-[#8dc63f]/30'
                                                                 }`}>
                                                                 {stn}
                                                                 {occ && <div className="text-[7px] font-normal truncate px-0.5 opacity-60">{occ.full_name.split(' ')[0]}</div>}
@@ -884,7 +869,7 @@ export const TestCenterAdmin: React.FC<TestCenterAdminProps> = ({ userId, onLogo
                                 { cls: 'bg-amber-400/15 border-amber-400/30', label: 'Assigned' },
                                 { cls: 'bg-slate-400/15 border-slate-400/30', label: 'Submitted' },
                                 { cls: 'bg-red-400/15 border-red-400/30', label: 'Disconnected' },
-                                { cls: 'bg-white/[0.03] border-white/[0.08]', label: 'Empty' },
+                                { cls: 'bg-slate-100/90 border-slate-300/60', label: 'Empty' },
                             ].map(l => (
                                 <div key={l.label} className="flex items-center gap-2">
                                     <div className={`w-3 h-3 rounded border ${l.cls}`} />
@@ -919,7 +904,7 @@ export const TestCenterAdmin: React.FC<TestCenterAdminProps> = ({ userId, onLogo
                             <div className={`${S.table} ep-up ep-up-1`}>
                                 <table className="w-full text-sm">
                                     <thead>
-                                        <tr className="bg-white/[0.025] f-mono text-slate-500 text-[9px] tracking-[0.12em] uppercase">
+                                        <tr className="bg-[#eef5ea]/70 f-mono text-slate-600 text-[9px] tracking-[0.12em] uppercase border-b border-slate-200/60">
                                             <th className="text-left px-4 py-3 font-medium">#</th>
                                             <th className="text-left px-4 py-3 font-medium">Candidate</th>
                                             <th className="text-left px-4 py-3 font-medium">Stn</th>
@@ -943,9 +928,9 @@ export const TestCenterAdmin: React.FC<TestCenterAdminProps> = ({ userId, onLogo
                                         const submittedAt = snap?.timing?.submittedAt || r.last_activity_at;
 
                                         return (
-                                            <tr key={r.id} className="border-t border-white/[0.035] hover:bg-white/[0.02] transition-colors">
+                                            <tr key={r.id} className="border-t border-slate-200/70 hover:bg-white/55 transition-colors">
                                                 <td className="px-4 py-3 f-mono text-slate-600 text-xs">{i + 1}</td>
-                                                <td className="px-4 py-3 text-white font-semibold">{candName}</td>
+                                                <td className="px-4 py-3 text-slate-800 font-semibold">{candName}</td>
                                                 <td className="px-4 py-3 f-mono text-slate-400 text-xs">{stn || '—'}</td>
                                                 <td className="px-4 py-3"><span className={S.badge(statusColor(r.status))}>{r.status}</span></td>
                                                 <td className="px-4 py-3">

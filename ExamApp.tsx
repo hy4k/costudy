@@ -5,8 +5,7 @@
  * /exam?center=ID&station=N      → Candidate workstation (locked exam)
  */
 import React, { useState, useEffect, Suspense, lazy } from 'react';
-import { supabase } from './services/supabaseClient';
-import { authService } from './services/fetsService';
+import { examPortalAuth, examPortalSupabase } from './services/examPortalAuth';
 import { Icons } from './components/Icons';
 
 const MockTests = lazy(() =>
@@ -167,6 +166,57 @@ const PORTAL_CSS = `
     0 0 32px rgba(141, 198, 63, 0.35);
 }
 .ep-neu-icon { color: #5a8a28; filter: drop-shadow(0 1px 0 rgba(255,255,255,0.6)); }
+/* Inputs: readable size, vertically centered text (16px avoids iOS zoom) */
+.ep-neu-field {
+  font-size: 1rem !important;
+  line-height: 1.5 !important;
+  min-height: 3rem;
+  box-sizing: border-box;
+  text-align: left !important;
+  width: 100%;
+  min-width: 0;
+  padding-left: 3.5rem !important;
+  padding-top: 0.75rem !important;
+  padding-bottom: 0.75rem !important;
+}
+.ep-neu-field:not(.ep-neu-field--pwd) {
+  padding-right: 1rem !important;
+}
+.ep-neu-field--pwd {
+  padding-right: 3.5rem !important;
+}
+.ep-neu-field[type="password"],
+.ep-neu-field[type="text"],
+.ep-neu-field[type="email"] {
+  -webkit-text-fill-color: #1e293b;
+  caret-color: #3d6220;
+}
+/* Post-login shared shell (proctor dashboard) */
+.ep-neu-app-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse 95% 60% at 50% 100%, rgba(141, 198, 63, 0.18), transparent 55%),
+    radial-gradient(ellipse 55% 50% at 15% 10%, rgba(141, 198, 63, 0.06), transparent 45%),
+    linear-gradient(172deg, #dfe6e0 0%, #d4ddd4 38%, #dce3db 100%);
+}
+.ep-neu-panel {
+  background: linear-gradient(148deg, #eef2ec 0%, #e6ebe3 48%, #e0e8de 100%);
+  color: #1e293b;
+  border-radius: 1rem;
+  box-shadow:
+    12px 14px 32px rgba(95, 115, 88, 0.22),
+    -10px -12px 28px rgba(255, 255, 255, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 0 0 1px rgba(141, 198, 63, 0.12);
+}
+.ep-neu-topbar {
+  background: linear-gradient(180deg, #f2f7ef 0%, #e4ebe1 100%);
+  color: #1e293b;
+  box-shadow:
+    0 8px 24px rgba(95, 115, 88, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 0 0 1px rgba(141, 198, 63, 0.1);
+}
 `;
 
 const ExamApp: React.FC = () => {
@@ -201,7 +251,7 @@ const ExamApp: React.FC = () => {
   useEffect(() => {
     const init = async () => {
       try {
-        const session = await authService.getSession();
+        const session = await examPortalAuth.getSession();
         if (session?.user) setUser(session.user);
       } catch (e) {
         console.error('Session check failed:', e);
@@ -211,7 +261,7 @@ const ExamApp: React.FC = () => {
     };
     init();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = examPortalSupabase.auth.onAuthStateChange((event, session) => {
       if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
         setUser(session.user);
       } else if (event === 'SIGNED_OUT') {
@@ -240,11 +290,16 @@ const ExamApp: React.FC = () => {
     setError(null);
     try {
       if (authMode === 'login') {
-        await authService.signIn(email, password);
+        await examPortalAuth.signIn(email, password);
       } else {
-        await authService.signUp(email, password, name || (isCandidateMode ? 'Candidate' : 'Proctor'), isCandidateMode ? 'STUDENT' : 'ADMIN');
+        await examPortalAuth.signUp(
+          email,
+          password,
+          name || (isCandidateMode ? 'Candidate' : 'Proctor'),
+          isCandidateMode ? 'STUDENT' : 'ADMIN'
+        );
       }
-      const session = await authService.getSession();
+      const session = await examPortalAuth.getSession();
       if (session?.user) {
         try {
           if (rememberMe) {
@@ -272,7 +327,7 @@ const ExamApp: React.FC = () => {
     setForgotBusy(true);
     setForgotMsg(null);
     try {
-      await authService.resetPassword(email.trim());
+      await examPortalAuth.resetPassword(email.trim());
       setForgotMsg('If an account exists, check your inbox for a reset link.');
     } catch (err: any) {
       setForgotMsg(err.message || 'Could not send reset email.');
@@ -282,7 +337,7 @@ const ExamApp: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    await authService.signOut();
+    await examPortalAuth.signOut();
     setUser(null);
   };
 
@@ -328,9 +383,9 @@ const ExamApp: React.FC = () => {
       : 'Set up access to the test center portal';
 
     return (
-      <div className="min-h-[100dvh] min-h-screen ep-neu-page f-body flex flex-col items-center justify-center px-5 py-6 sm:px-8">
-        <div className="w-full max-w-[400px] mx-auto flex flex-col items-center justify-center text-center shrink-0">
-          <header className="mb-6 w-full ep-up space-y-3">
+      <div className="min-h-[100dvh] min-h-screen ep-neu-page f-body flex flex-col items-center justify-center w-full overflow-x-hidden px-4 py-8 sm:px-6">
+        <div className="w-full max-w-[min(100%,22rem)] sm:max-w-md mx-auto flex flex-col shrink-0">
+          <header className="mb-6 w-full ep-up space-y-3 text-center">
             <div
               className="mx-auto inline-flex w-[68px] h-[68px] rounded-[24px] items-center justify-center ep-neu-raised bg-gradient-to-br from-[#f4faf2] to-[#dce8d8] text-[#4a7a1c]"
               aria-hidden
@@ -363,8 +418,8 @@ const ExamApp: React.FC = () => {
             )}
           </header>
 
-          <form onSubmit={handleAuth} className="w-full space-y-4">
-            <div className="ep-neu-card p-7 sm:p-8 space-y-4 ep-up ep-up-1 text-left">
+          <form onSubmit={handleAuth} className="w-full max-w-full space-y-4 text-left">
+            <div className="ep-neu-card p-6 sm:p-7 space-y-4 ep-up ep-up-1 w-full">
                 <div className="ep-neu-toggle-pit flex p-1 gap-1">
                   {(['login', 'signup'] as const).map(mode => (
                     <button
@@ -382,13 +437,13 @@ const ExamApp: React.FC = () => {
 
                 {authMode === 'signup' && (
                   <div className="ep-up ep-up-2">
-                    <div className="relative">
-                      <Icons.User className="ep-neu-icon absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] pointer-events-none" />
+                    <div className="relative flex items-center">
+                      <Icons.User className="ep-neu-icon absolute left-4 z-10 w-5 h-5 pointer-events-none top-1/2 -translate-y-1/2" />
                       <input
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="f-body w-full rounded-2xl ep-neu-inset pl-11 pr-4 py-3.5 text-sm"
+                        className="f-body ep-neu-field w-full rounded-2xl ep-neu-inset text-slate-800"
                         required
                         autoComplete="name"
                         aria-label="Full name"
@@ -398,13 +453,13 @@ const ExamApp: React.FC = () => {
                 )}
 
                 <div className="ep-up ep-up-3">
-                  <div className="relative">
-                    <Icons.Mail className="ep-neu-icon absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] pointer-events-none" />
+                  <div className="relative flex items-center">
+                    <Icons.Mail className="ep-neu-icon absolute left-4 z-10 w-5 h-5 pointer-events-none top-1/2 -translate-y-1/2" />
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="f-body w-full rounded-2xl ep-neu-inset pl-11 pr-4 py-3.5 text-sm"
+                      className="f-body ep-neu-field w-full rounded-2xl ep-neu-inset text-slate-800"
                       required
                       autoComplete="email"
                       aria-label="Email address"
@@ -413,13 +468,13 @@ const ExamApp: React.FC = () => {
                 </div>
 
                 <div className="ep-up ep-up-4">
-                  <div className="relative">
-                    <Icons.Lock className="ep-neu-icon absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] pointer-events-none" />
+                  <div className="relative flex items-center">
+                    <Icons.Lock className="ep-neu-icon absolute left-4 z-10 w-5 h-5 pointer-events-none top-1/2 -translate-y-1/2" />
                     <input
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="f-body w-full rounded-2xl ep-neu-inset pl-11 pr-12 py-3.5 text-sm"
+                      className="f-body ep-neu-field ep-neu-field--pwd w-full rounded-2xl ep-neu-inset text-slate-800"
                       required
                       minLength={6}
                       autoComplete={authMode === 'login' ? 'current-password' : 'new-password'}
@@ -428,10 +483,10 @@ const ExamApp: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setShowPassword((v) => !v)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-xl flex items-center justify-center ep-neu-icon ep-neu-raised-sm bg-gradient-to-b from-[#eef5ea] to-[#dce8d8] hover:from-[#e8f2e3] hover:to-[#d4e4cf]"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ep-neu-raised-sm bg-gradient-to-b from-[#eef5ea] to-[#dce8d8] hover:from-[#e8f2e3] hover:to-[#d4e4cf]"
                       aria-label={showPassword ? 'Hide password' : 'Show password'}
                     >
-                      <Icons.Eye className="w-[18px] h-[18px] text-[#4a7a1c]" />
+                      <Icons.Eye className="w-5 h-5 text-[#4a7a1c]" />
                     </button>
                   </div>
                 </div>
@@ -485,7 +540,7 @@ const ExamApp: React.FC = () => {
               </div>
             </form>
 
-          <p className="f-mono text-[10px] tracking-[0.22em] text-[#6b8a55] mt-6 uppercase select-none">
+          <p className="f-mono text-[10px] tracking-[0.22em] text-[#6b8a55] mt-6 uppercase select-none text-center">
             Powered by costudy.in
           </p>
         </div>
@@ -498,35 +553,34 @@ const ExamApp: React.FC = () => {
   // ========================================
   if (isCandidateMode) {
     return (
-      <div className="min-h-screen bg-slate-100 f-body">
-        {/* Top bar */}
-        <div className="bg-[#080c18] text-white px-5 py-3 flex justify-between items-center shadow-[0_4px_24px_rgba(0,0,0,0.4)] relative z-20">
-          <div className="flex items-center gap-3">
-            <div className="ep-ring w-8 h-8 rounded-lg">
-              <div className="w-full h-full rounded-lg bg-[#0a0e1a] flex items-center justify-center">
-                <Icons.GraduationCap className="w-4 h-4 text-[#8dc63f]" />
-              </div>
+      <div className="min-h-screen ep-neu-app-shell f-body flex flex-col text-slate-800">
+        <div className="ep-neu-topbar shrink-0 px-4 sm:px-6 py-3 flex flex-wrap gap-y-2 justify-between items-center relative z-20 rounded-b-2xl mx-2 sm:mx-4 mt-2 border border-white/40">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="ep-neu-raised-sm w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br from-[#f4faf2] to-[#dce8d8]">
+              <Icons.GraduationCap className="w-5 h-5 text-[#4a7a1c]" />
             </div>
-            <span className="font-bold text-sm tracking-wide">CoStudy Exam</span>
-            <div className="flex items-center gap-1.5 rounded-full bg-[#8dc63f]/[0.08] border border-[#8dc63f]/15 px-3 py-1 ml-1">
+            <span className="font-bold text-sm tracking-wide text-slate-800 truncate">CoStudy Exam</span>
+            <div className="flex items-center gap-1.5 rounded-full ep-neu-raised-sm bg-[#f0f7ec] border border-[#8dc63f]/30 px-3 py-1 ml-1 shrink-0">
               <div className="w-[5px] h-[5px] rounded-full bg-[#8dc63f] ep-pulse-dot" />
-              <span className="f-mono text-[#8dc63f] text-[10px] tracking-[0.12em]">STN {stationNum}</span>
+              <span className="f-mono text-[#3d6220] text-[10px] tracking-[0.12em]">STN {stationNum}</span>
             </div>
           </div>
-          <span className="f-mono text-slate-500 text-[11px]">{user.email}</span>
+          <span className="f-mono text-slate-600 text-[11px] truncate max-w-[min(100%,14rem)]">{user.email}</span>
         </div>
 
         <Suspense fallback={
-          <div className="flex h-[80vh] items-center justify-center bg-slate-100">
-            <div className="w-14 h-14 rounded-[18px] bg-white shadow-[0_8px_32px_rgba(0,0,0,0.06)] flex items-center justify-center">
-              <Icons.CloudSync className="h-6 w-6 animate-spin text-[#8dc63f]" />
+          <div className="flex flex-1 min-h-[50vh] items-center justify-center ep-neu-app-shell">
+            <div className="ep-neu-raised w-14 h-14 rounded-[18px] flex items-center justify-center bg-gradient-to-br from-[#f4faf2] to-[#dce8d8]">
+              <Icons.CloudSync className="h-6 w-6 animate-spin text-[#4a7a1c]" />
             </div>
           </div>
         }>
-          <MockTests
-            userId={user.id}
-            testCenter={{ centerId: centerId!, stationNumber: parseInt(stationNum!, 10) }}
-          />
+          <div className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-6">
+            <MockTests
+              userId={user.id}
+              testCenter={{ centerId: centerId!, stationNumber: parseInt(stationNum!, 10) }}
+            />
+          </div>
         </Suspense>
       </div>
     );
@@ -537,18 +591,15 @@ const ExamApp: React.FC = () => {
   // ========================================
   return (
     <Suspense fallback={
-      <div className="ep-noise flex h-screen items-center justify-center bg-[#12141c] relative overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-[#8dc63f]/[0.025] blur-[140px]" />
-        <div className="ep-float">
-          <div className="ep-ring w-20 h-20 rounded-[26px]">
-            <div className="w-full h-full rounded-[26px] bg-[#080c18] flex items-center justify-center shadow-[0_20px_56px_rgba(0,0,0,0.5)]">
-              <Icons.CloudSync className="h-8 w-8 animate-spin text-[#8dc63f] drop-shadow-[0_0_14px_rgba(141,198,63,0.4)]" />
-            </div>
-          </div>
+      <div className="ep-neu-app-shell flex h-screen items-center justify-center f-body">
+        <div className="ep-neu-raised w-20 h-20 rounded-[26px] flex items-center justify-center bg-gradient-to-br from-[#f4faf2] to-[#dce8d8]">
+          <Icons.CloudSync className="h-8 w-8 animate-spin text-[#4a7a1c]" />
         </div>
       </div>
     }>
-      <TestCenterAdmin userId={user.id} onLogout={handleLogout} />
+      <div className="ep-neu-app-shell min-h-screen f-body text-slate-800">
+        <TestCenterAdmin userId={user.id} onLogout={handleLogout} />
+      </div>
     </Suspense>
   );
 };

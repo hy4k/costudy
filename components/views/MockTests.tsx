@@ -237,19 +237,21 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId, testCenter }) => {
     // In test center mode, show loading/error states instead of exam picker
     if (testCenter && (tcLoading || tcError)) {
         return (
-            <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-4 font-sans">
+            <div className="w-full min-h-[50vh] flex flex-col items-center justify-center gap-4 f-body text-slate-800 px-6">
                 {tcLoading ? (
                     <>
-                        <Icons.CloudSync className="w-12 h-12 animate-spin text-[#8dc63f]" />
-                        <p className="text-slate-400 text-sm font-bold">Loading exam for Station {testCenter.stationNumber}...</p>
+                        <div className="ep-neu-raised w-16 h-16 rounded-2xl flex items-center justify-center bg-gradient-to-br from-[#f4faf2] to-[#dce8d8]">
+                            <Icons.CloudSync className="w-8 h-8 animate-spin text-[#4a7a1c]" />
+                        </div>
+                        <p className="text-slate-600 text-sm font-bold">Loading exam for Station {testCenter.stationNumber}...</p>
                     </>
                 ) : (
                     <>
-                        <Icons.AlertCircle className="w-12 h-12 text-red-400" />
-                        <p className="text-red-400 text-sm font-bold">{tcError}</p>
+                        <Icons.AlertCircle className="w-12 h-12 text-red-600" />
+                        <p className="text-red-700 text-sm font-bold text-center max-w-md">{tcError}</p>
                         <button
                             onClick={() => window.location.reload()}
-                            className="mt-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded text-sm font-bold"
+                            className="mt-2 ep-neu-raised-sm px-5 py-2.5 rounded-xl text-slate-800 text-sm font-bold border border-[#8dc63f]/20 bg-[#f6faf3]/90 hover:bg-[#eef5ea]"
                         >
                             Retry
                         </button>
@@ -323,28 +325,28 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId, testCenter }) => {
 
     if (mockPortalLocked && !portalUnlocked) {
         return (
-            <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center px-6 py-16">
+            <div className="w-full flex flex-col items-center justify-center px-6 py-16 f-body text-slate-800">
                 <div className="w-full max-w-md">
                     <div className="flex items-center gap-3 mb-6 justify-center">
-                        <div className="p-2 bg-slate-900 rounded-xl">
-                            <Icons.Lock className="w-6 h-6 text-white" />
+                        <div className="p-2.5 ep-neu-raised-sm rounded-xl bg-gradient-to-br from-[#f4faf2] to-[#dce8d8]">
+                            <Icons.Lock className="w-6 h-6 text-[#4a7a1c]" />
                         </div>
-                        <span className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">
+                        <span className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">
                             Mock Exam Portal
                         </span>
                     </div>
-                    <div className="bg-white rounded-3xl border border-slate-200 shadow-xl p-8">
-                        <h1 className="text-2xl font-black text-slate-900 tracking-tight mb-2 text-center">
+                    <div className="ep-neu-card p-8">
+                        <h1 className="f-display text-2xl font-semibold text-slate-800 tracking-tight mb-2 text-center">
                             Demo access
                         </h1>
-                        <p className="text-slate-500 text-sm text-center mb-6">
+                        <p className="text-slate-600 text-sm text-center mb-6">
                             Enter the demo password to open mock exams.
                         </p>
                         <form onSubmit={unlockMockPortal} className="space-y-4">
                             <div>
                                 <label
                                     htmlFor="mock-portal-pw"
-                                    className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2"
+                                    className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2"
                                 >
                                     Password
                                 </label>
@@ -354,7 +356,7 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId, testCenter }) => {
                                     autoComplete="off"
                                     value={portalPw}
                                     onChange={(e) => setPortalPw(e.target.value)}
-                                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                                    className="w-full px-4 py-3 rounded-xl ep-neu-inset border-0 text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-[#8dc63f]/35"
                                     placeholder="••••••"
                                 />
                                 {portalPwError && (
@@ -363,7 +365,7 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId, testCenter }) => {
                             </div>
                             <button
                                 type="submit"
-                                className="w-full py-3.5 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-colors"
+                                className="w-full py-3.5 ep-neu-cta ep-shimmer rounded-xl bg-gradient-to-r from-[#8dc63f] via-[#7db536] to-[#6ba52e] text-white font-bold text-sm hover:opacity-95 transition-opacity"
                             >
                                 Unlock mock exams
                             </button>
@@ -390,19 +392,19 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId, testCenter }) => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 font-sans text-left">
+        <div className="w-full text-left f-body text-slate-800">
             {/* Header */}
-            <div className="border-b border-slate-200/80 bg-white/90 shadow-luxury-sm backdrop-blur-sm">
+            <div className="ep-neu-topbar border-b border-white/50 rounded-b-2xl mb-4">
                 <div className="mx-auto max-w-7xl px-6 py-12">
                     <div className="mb-5 flex items-center gap-3">
-                        <div className="rounded-2xl bg-slate-900 p-2.5 shadow-md">
-                            <Icons.FileText className="h-6 w-6 text-white" />
+                        <div className="rounded-2xl ep-neu-raised-sm p-2.5 bg-gradient-to-br from-[#f4faf2] to-[#dce8d8]">
+                            <Icons.FileText className="h-6 w-6 text-[#4a7a1c]" />
                         </div>
-                        <span className="font-display text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
+                        <span className="f-display text-xs font-medium uppercase tracking-[0.2em] text-slate-600">
                             CoStudy Assessment Engine
                         </span>
                     </div>
-                    <h1 className="font-display mb-4 text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
+                    <h1 className="f-display mb-4 text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
                         Mock Exam Portal
                     </h1>
                     <p className="max-w-2xl text-lg leading-[1.65] text-slate-600">
@@ -413,7 +415,7 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId, testCenter }) => {
 
             {/* Stats Bar */}
             {!loading && perf && (
-                <div className="bg-white border-b border-slate-200">
+                <div className="ep-neu-panel border-0 border-b border-white/40 mb-4">
                     <div className="max-w-7xl mx-auto px-6 py-6">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                             {[
@@ -423,9 +425,9 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId, testCenter }) => {
                                 { label: 'Sessions', value: recentSessions.length, icon: <Icons.Clock className="w-5 h-5" /> },
                             ].map((s, i) => (
                                 <div key={i} className="flex items-center gap-4">
-                                    <div className="p-3 bg-slate-100 rounded-xl text-slate-600">{s.icon}</div>
+                                    <div className="p-3 ep-neu-raised-sm rounded-xl text-[#4a7a1c] bg-[#f6faf3]/80">{s.icon}</div>
                                     <div>
-                                        <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">{s.label}</div>
+                                        <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">{s.label}</div>
                                         <div className="text-2xl font-black text-slate-900">{s.value}</div>
                                     </div>
                                 </div>
@@ -438,8 +440,10 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId, testCenter }) => {
             {/* Main Content */}
             <div className="max-w-7xl mx-auto px-6 py-12">
                 {loading ? (
-                    <div className="flex flex-col items-center gap-6 text-slate-400 py-20">
-                        <Icons.CloudSync className="w-16 h-16 animate-spin text-slate-300" />
+                    <div className="flex flex-col items-center gap-6 text-slate-500 py-20">
+                        <div className="ep-neu-raised w-16 h-16 rounded-2xl flex items-center justify-center bg-gradient-to-br from-[#f4faf2] to-[#dce8d8]">
+                            <Icons.CloudSync className="w-8 h-8 animate-spin text-[#4a7a1c]" />
+                        </div>
                         <span className="font-bold uppercase tracking-widest text-sm">Initializing Exam Environment...</span>
                     </div>
                 ) : (
@@ -494,9 +498,9 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId, testCenter }) => {
                                     <Icons.Clock className="w-6 h-6 text-slate-400" />
                                     Recent Sessions
                                 </h2>
-                                <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+                                <div className="ep-neu-panel rounded-2xl overflow-hidden border-0">
                                     <table className="w-full">
-                                        <thead className="bg-slate-50 border-b border-slate-200">
+                                        <thead className="bg-[#eef5ea]/70 border-b border-slate-200/70">
                                             <tr>
                                                 <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Test</th>
                                                 <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
@@ -532,26 +536,26 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId, testCenter }) => {
                         )}
 
                         {/* Hybrid Strategy Info */}
-                        <div className="mt-16 bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-10 text-white">
+                        <div className="mt-16 ep-neu-panel rounded-3xl p-10 text-slate-800">
                             <div className="flex items-start gap-6">
-                                <div className="p-4 bg-white/10 rounded-2xl">
-                                    <Icons.Sparkles className="w-8 h-8 text-amber-400" />
+                                <div className="p-4 ep-neu-raised-sm rounded-2xl bg-[#f6faf3]/90">
+                                    <Icons.Sparkles className="w-8 h-8 text-[#4a7a1c]" />
                                 </div>
                                 <div>
-                                    <h3 className="text-2xl font-black mb-2">Hybrid Question Strategy</h3>
-                                    <p className="text-slate-300 mb-4 max-w-2xl">
-                                        Our question pool combines <span className="text-white font-bold">70% real exam questions</span> from 
-                                        our curated database with <span className="text-white font-bold">30% AI-generated variations</span>. 
+                                    <h3 className="f-display text-2xl font-semibold mb-2 text-slate-900">Hybrid Question Strategy</h3>
+                                    <p className="text-slate-600 mb-4 max-w-2xl">
+                                        Our question pool combines <span className="text-slate-900 font-bold">70% real exam questions</span> from
+                                        our curated database with <span className="text-slate-900 font-bold">30% AI-generated variations</span>.
                                         This ensures you never memorize the bank — every session is fresh.
                                     </p>
-                                    <div className="flex gap-4">
-                                        <div className="flex items-center gap-2 text-sm">
-                                            <div className="w-3 h-3 rounded-full bg-emerald-400"></div>
-                                            <span className="text-slate-300">70% Real Questions</span>
+                                    <div className="flex gap-4 flex-wrap">
+                                        <div className="flex items-center gap-2 text-sm text-slate-700">
+                                            <div className="w-3 h-3 rounded-full bg-emerald-500" />
+                                            <span>70% Real Questions</span>
                                         </div>
-                                        <div className="flex items-center gap-2 text-sm">
-                                            <div className="w-3 h-3 rounded-full bg-purple-400"></div>
-                                            <span className="text-slate-300">30% AI-Generated</span>
+                                        <div className="flex items-center gap-2 text-sm text-slate-700">
+                                            <div className="w-3 h-3 rounded-full bg-purple-500" />
+                                            <span>30% AI-Generated</span>
                                         </div>
                                     </div>
                                 </div>
@@ -574,7 +578,7 @@ const ExamCardComponent: React.FC<{
 }> = ({ card, onStart, isStarting, disabled, compact }) => {
     if (compact) {
         return (
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-lg transition-shadow">
+            <div className="ep-neu-panel rounded-2xl p-6 transition-shadow hover:shadow-[0_14px_36px_rgba(95,115,88,0.18)] border-0">
                 <div className="flex justify-between items-start mb-4">
                     <div>
                         <span className={`px-2 py-1 ${card.badgeColor} text-white text-[10px] font-black uppercase tracking-wider rounded`}>
@@ -596,7 +600,7 @@ const ExamCardComponent: React.FC<{
                 <button
                     onClick={onStart}
                     disabled={isStarting || disabled}
-                    className="w-full py-3 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 transition-colors disabled:opacity-50"
+                    className="w-full py-3 ep-neu-cta ep-shimmer rounded-xl bg-gradient-to-r from-[#8dc63f] via-[#7db536] to-[#6ba52e] text-white font-bold text-sm transition-opacity hover:opacity-95 disabled:opacity-50"
                 >
                     {isStarting ? 'Starting...' : 'Start'}
                 </button>
@@ -605,7 +609,7 @@ const ExamCardComponent: React.FC<{
     }
 
     return (
-        <div className={`bg-white rounded-3xl border-2 ${card.highlight ? 'border-emerald-400 ring-4 ring-emerald-50' : 'border-slate-200'} p-8 hover:shadow-xl transition-all relative overflow-hidden`}>
+        <div className={`ep-neu-panel rounded-3xl p-8 hover:shadow-[0_18px_48px_rgba(95,115,88,0.2)] transition-all relative overflow-hidden border-0 ${card.highlight ? 'ring-2 ring-[#8dc63f]/35' : ''}`}>
             {card.highlight && (
                 <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl"></div>
             )}
@@ -625,11 +629,11 @@ const ExamCardComponent: React.FC<{
                 <p className="text-slate-600 mb-6">{card.description}</p>
 
                 <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="bg-slate-50 rounded-xl p-4 text-center">
+                    <div className="ep-neu-inset rounded-xl p-4 text-center">
                         <div className="text-3xl font-black text-slate-900">{card.mcqCount}</div>
                         <div className="text-xs font-bold text-slate-500 uppercase">MCQ Questions</div>
                     </div>
-                    <div className="bg-slate-50 rounded-xl p-4 text-center">
+                    <div className="ep-neu-inset rounded-xl p-4 text-center">
                         <div className="text-3xl font-black text-slate-900">{card.essayCount}</div>
                         <div className="text-xs font-bold text-slate-500 uppercase">Essay Scenarios</div>
                     </div>
@@ -647,7 +651,7 @@ const ExamCardComponent: React.FC<{
                 <button
                     onClick={onStart}
                     disabled={isStarting || disabled}
-                    className={`w-full py-5 ${card.highlight ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-slate-900 hover:bg-slate-800'} text-white rounded-2xl font-black text-sm uppercase tracking-widest transition-colors disabled:opacity-50 shadow-lg`}
+                    className="w-full py-5 ep-neu-cta ep-shimmer rounded-2xl font-black text-sm uppercase tracking-widest text-white transition-opacity hover:opacity-95 disabled:opacity-50 bg-gradient-to-r from-[#8dc63f] via-[#7db536] to-[#6ba52e]"
                 >
                     {isStarting ? (
                         <span className="flex items-center justify-center gap-2">

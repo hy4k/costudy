@@ -1125,6 +1125,51 @@ export const getTestCenterSessionById = async (sessionId: string): Promise<TestC
 };
 
 /**
+ * Update a test center session (edit name, config, station count).
+ */
+export const updateTestCenterSession = async (
+    sessionId: string,
+    updates: { name?: string; exam_config_key?: string; station_count?: number }
+): Promise<boolean> => {
+    try {
+        const { error } = await supabase
+            .from('test_center_sessions')
+            .update(updates)
+            .eq('id', sessionId);
+        return !error;
+    } catch { return false; }
+};
+
+/**
+ * Delete a test center session and all its stations/candidates.
+ */
+export const deleteTestCenterSession = async (sessionId: string): Promise<boolean> => {
+    try {
+        // Cascading delete handles stations and candidates via FK ON DELETE CASCADE
+        const { error } = await supabase
+            .from('test_center_sessions')
+            .delete()
+            .eq('id', sessionId);
+        return !error;
+    } catch { return false; }
+};
+
+/**
+ * Get all exam sessions linked to a test center session (for results view).
+ */
+export const getTestCenterExamResults = async (centerSessionId: string): Promise<any[]> => {
+    try {
+        const { data, error } = await supabase
+            .from('exam_sessions')
+            .select('id, user_id, test_title, status, mcq_score, mcq_correct, mcq_total, essay_scores, submitted_snapshot, created_at, last_activity_at, time_remaining_seconds, test_center_candidate_id')
+            .eq('test_center_session_id', centerSessionId)
+            .order('created_at', { ascending: false });
+        if (error) { console.error('Failed to fetch exam results:', error); return []; }
+        return data || [];
+    } catch { return []; }
+};
+
+/**
  * Get all test center sessions for an admin.
  */
 export const getTestCenterSessions = async (adminUserId: string): Promise<TestCenterSession[]> => {
@@ -1562,6 +1607,9 @@ export const examService = {
     subscribeToCandidates,
     findActiveTestCenterExam,
     saveSubmissionSnapshot,
+    updateTestCenterSession,
+    deleteTestCenterSession,
+    getTestCenterExamResults,
 };
 
 export default examService;

@@ -23,3 +23,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Data/migration input files (large PDFs, CSVs, DB dumps)
+migration-input/

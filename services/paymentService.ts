@@ -254,7 +254,7 @@ export const paymentService = {
       const expiresAt = new Date(now);
       
       // Calculate expiry
-      if (plan.interval === 'year') {
+      if ('interval' in plan && plan.interval === 'year') {
         expiresAt.setFullYear(expiresAt.getFullYear() + 1);
       } else {
         expiresAt.setMonth(expiresAt.getMonth() + 1);

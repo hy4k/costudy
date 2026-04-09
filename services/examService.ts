@@ -55,6 +55,12 @@ export interface ExamSession {
     status: SessionStatus;
     started_at: string;
     last_activity_at: string;
+    /** Snapshot of full question payloads (migration 008) — used for test-center recovery */
+    full_questions?: unknown;
+    time_remaining_seconds?: number;
+    submitted_snapshot?: unknown;
+    test_center_session_id?: string;
+    test_center_candidate_id?: string;
 }
 
 export interface MCQAnswer {

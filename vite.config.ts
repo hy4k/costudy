@@ -29,7 +29,7 @@ export default defineConfig(() => {
           }
         },
         chunkSizeWarningLimit: 600,
-        minify: 'esbuild',
+        minify: 'esbuild' as const,
         sourcemap: false,
       }
     };

@@ -1,5 +1,5 @@
-
 import { supabase } from './supabaseClient';
+import { localAuthService } from './localAuthService';
 import { CoStudyCloudStatus, User, UserRole, UserLevel } from '../types';
 
 export const COSTUDY_CONFIG = {

@@ -1331,7 +1331,7 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ session, config, mcqQu
             <div className="flex justify-between text-sm">
               <span className="text-slate-500">Questions Answered</span>
               <span className="text-white font-bold">
-                {Array.from(answers.values()).filter(a => a.selected !== null).length} / {questions.length}
+                {Array.from(answers.values()).filter((a: Answer) => a.selected !== null).length} / {questions.length}
               </span>
             </div>
             <div className="flex justify-between text-sm">

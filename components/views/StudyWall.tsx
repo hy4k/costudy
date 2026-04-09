@@ -50,7 +50,7 @@ const DEMO_STUDY_WALL_POSTS: Post[] = [
   },
   {
     id: 'demo-wall-2',
-    type: PostType.RESOURCE_DROP,
+    type: PostType.RESOURCE,
     author_id: 'demo-2',
     author: {
       name: 'Sneha R.',
@@ -65,7 +65,7 @@ const DEMO_STUDY_WALL_POSTS: Post[] = [
   },
   {
     id: 'demo-wall-3',
-    type: PostType.MCQ_SHARE,
+    type: PostType.MCQ,
     author_id: 'demo-3',
     author: {
       name: 'Marcus T.',

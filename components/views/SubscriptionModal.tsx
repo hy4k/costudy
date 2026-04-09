@@ -73,7 +73,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
           ${isCurrent ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
         `}
       >
-        {planKey === 'PRO_ANNUAL' && (
+        {planKey === 'PRO_ANNUAL' && 'discount' in plan && (
           <div className="absolute -top-3 right-4 bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-full">
             SAVE {plan.discount}%
           </div>
@@ -97,7 +97,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
         <div className="mb-4">
           <span className="text-3xl font-black text-slate-900">₹{plan.price}</span>
           {plan.interval && <span className="text-slate-500 ml-2">/{plan.interval}</span>}
-          {plan.monthlyEquivalent && (
+          {'monthlyEquivalent' in plan && plan.monthlyEquivalent != null && (
             <div className="text-sm text-emerald-600 mt-1">
               Just ₹{plan.monthlyEquivalent}/month
             </div>

@@ -64,16 +64,109 @@ const PORTAL_CSS = `
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* Font shortcuts */
-.f-display { font-family:'Fraunces',Georgia,serif; }
-.f-body { font-family:'Plus Jakarta Sans',system-ui,sans-serif; }
-.f-mono { font-family:'Geist Mono','JetBrains Mono',monospace; }
+/* Font shortcuts — premium exam portal */
+.f-display { font-family:'Cormorant Garamond','Times New Roman',serif; font-weight:600; letter-spacing:-0.02em; }
+.f-body { font-family:'Outfit',system-ui,sans-serif; }
+.f-mono { font-family:'IBM Plex Mono',ui-monospace,monospace; }
 
 /* Scrollbar */
 .ep-scroll::-webkit-scrollbar { width:5px; }
 .ep-scroll::-webkit-scrollbar-track { background:transparent; }
 .ep-scroll::-webkit-scrollbar-thumb { background:rgba(255,255,255,.08); border-radius:9px; }
 .ep-scroll::-webkit-scrollbar-thumb:hover { background:rgba(255,255,255,.15); }
+
+/* Neumorphic exam auth — stronger green tint + deeper soft UI */
+.ep-neu-page {
+  background:
+    radial-gradient(ellipse 95% 60% at 50% 100%, rgba(141, 198, 63, 0.22), transparent 55%),
+    radial-gradient(ellipse 55% 50% at 15% 10%, rgba(141, 198, 63, 0.08), transparent 45%),
+    radial-gradient(ellipse 50% 45% at 90% 20%, rgba(255, 255, 255, 0.35), transparent 50%),
+    linear-gradient(172deg, #dfe6e0 0%, #d4ddd4 38%, #dce3db 100%);
+}
+.ep-neu-card {
+  background: linear-gradient(148deg, #eef2ec 0%, #e8eee4 42%, #e2ebe0 100%);
+  border-radius: 32px;
+  box-shadow:
+    22px 24px 52px rgba(95, 115, 88, 0.28),
+    -18px -20px 48px rgba(255, 255, 255, 0.95),
+    0 0 0 1px rgba(255, 255, 255, 0.7),
+    0 0 0 2px rgba(141, 198, 63, 0.14),
+    inset 0 3px 2px rgba(255, 255, 255, 0.95),
+    inset 0 -2px 3px rgba(141, 198, 63, 0.1),
+    0 16px 48px rgba(141, 198, 63, 0.14);
+}
+.ep-neu-inset {
+  background: linear-gradient(168deg, #dce8d8 0%, #e4ebe1 55%, #dde6db 100%);
+  color: #1e293b;
+  box-shadow:
+    inset 8px 9px 18px rgba(90, 110, 85, 0.35),
+    inset -6px -7px 16px rgba(255, 255, 255, 0.88),
+    inset 0 0 0 1px rgba(141, 198, 63, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+.ep-neu-inset::placeholder { color: #94a3b8; opacity: 0.55; }
+.ep-neu-inset:focus {
+  outline: none;
+  box-shadow:
+    inset 8px 9px 18px rgba(90, 110, 85, 0.32),
+    inset -6px -7px 16px rgba(255, 255, 255, 0.88),
+    inset 0 0 0 1px rgba(141, 198, 63, 0.28),
+    0 0 0 4px rgba(141, 198, 63, 0.28),
+    0 0 36px rgba(141, 198, 63, 0.2);
+}
+.ep-neu-raised {
+  box-shadow:
+    12px 14px 28px rgba(100, 120, 95, 0.38),
+    -10px -10px 24px rgba(255, 255, 255, 0.92),
+    0 0 0 1px rgba(255, 255, 255, 0.6),
+    0 0 0 2px rgba(141, 198, 63, 0.1),
+    inset 0 2px 1px rgba(255, 255, 255, 0.85);
+}
+.ep-neu-raised-sm {
+  box-shadow:
+    6px 7px 14px rgba(100, 118, 95, 0.4),
+    -5px -5px 12px rgba(255, 255, 255, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    0 0 0 1px rgba(141, 198, 63, 0.08);
+}
+.ep-neu-raised:active {
+  box-shadow:
+    5px 6px 14px rgba(100, 118, 95, 0.35),
+    -4px -4px 10px rgba(255, 255, 255, 0.85);
+}
+.ep-neu-toggle-pit {
+  background: linear-gradient(180deg, #c9d4c6 0%, #d6e0d3 100%);
+  border-radius: 18px;
+  box-shadow:
+    inset 6px 6px 14px rgba(85, 105, 80, 0.38),
+    inset -5px -5px 12px rgba(255, 255, 255, 0.78),
+    0 2px 0 rgba(141, 198, 63, 0.12);
+}
+.ep-neu-toggle-active {
+  background: linear-gradient(165deg, #b8e860 0%, #8dc63f 38%, #5a9018 100%);
+  color: #fff;
+  box-shadow:
+    8px 10px 24px rgba(80, 130, 35, 0.5),
+    -3px -3px 10px rgba(255, 255, 255, 0.3),
+    inset 0 2px 2px rgba(255, 255, 255, 0.45),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.15);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.12);
+}
+.ep-neu-cta {
+  box-shadow:
+    12px 16px 32px rgba(70, 120, 35, 0.45),
+    -4px -4px 14px rgba(255, 255, 255, 0.25),
+    inset 0 2px 1px rgba(255, 255, 255, 0.35),
+    inset 0 -4px 10px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(141, 198, 63, 0.25);
+}
+.ep-neu-cta:hover:not(:disabled) {
+  box-shadow:
+    14px 18px 36px rgba(70, 120, 35, 0.5),
+    -4px -4px 12px rgba(255, 255, 255, 0.22),
+    0 0 32px rgba(141, 198, 63, 0.35);
+}
+.ep-neu-icon { color: #5a8a28; filter: drop-shadow(0 1px 0 rgba(255,255,255,0.6)); }
 `;
 
 const ExamApp: React.FC = () => {
@@ -85,6 +178,10 @@ const ExamApp: React.FC = () => {
   const [name, setName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [forgotMsg, setForgotMsg] = useState<string | null>(null);
+  const [forgotBusy, setForgotBusy] = useState(false);
 
   const urlParams = new URLSearchParams(window.location.search);
   const centerId = urlParams.get('center');
@@ -125,6 +222,18 @@ const ExamApp: React.FC = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    try {
+      if (localStorage.getItem('exam_auth_remember') === '1') {
+        const saved = localStorage.getItem('exam_auth_email');
+        if (saved) {
+          setRememberMe(true);
+          setEmail(saved);
+        }
+      }
+    } catch { /* ignore */ }
+  }, []);
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
@@ -136,11 +245,39 @@ const ExamApp: React.FC = () => {
         await authService.signUp(email, password, name || (isCandidateMode ? 'Candidate' : 'Proctor'), isCandidateMode ? 'STUDENT' : 'ADMIN');
       }
       const session = await authService.getSession();
-      if (session?.user) setUser(session.user);
+      if (session?.user) {
+        try {
+          if (rememberMe) {
+            localStorage.setItem('exam_auth_remember', '1');
+            localStorage.setItem('exam_auth_email', email);
+          } else {
+            localStorage.removeItem('exam_auth_remember');
+            localStorage.removeItem('exam_auth_email');
+          }
+        } catch { /* ignore */ }
+        setUser(session.user);
+      }
     } catch (err: any) {
       setError(err.message || 'Authentication failed');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      setForgotMsg('Enter your email above first.');
+      return;
+    }
+    setForgotBusy(true);
+    setForgotMsg(null);
+    try {
+      await authService.resetPassword(email.trim());
+      setForgotMsg('If an account exists, check your inbox for a reset link.');
+    } catch (err: any) {
+      setForgotMsg(err.message || 'Could not send reset email.');
+    } finally {
+      setForgotBusy(false);
     }
   };
 
@@ -149,15 +286,12 @@ const ExamApp: React.FC = () => {
     setUser(null);
   };
 
-  /* ─── Shared Input Style ─── */
-  const inputCls = 'f-body w-full rounded-2xl bg-[#0c1120] border border-white/[0.06] px-5 py-3.5 text-white placeholder:text-slate-600 text-sm outline-none transition-all duration-300 focus:border-[#8dc63f]/30 focus:shadow-[0_0_0_3px_rgba(141,198,63,0.06),0_0_20px_rgba(141,198,63,0.04)]';
-
   // ========================================
   // LOADING
   // ========================================
   if (isLoading) {
     return (
-      <div className="ep-noise flex h-screen w-full flex-col items-center justify-center bg-[#040711] relative overflow-hidden f-body">
+      <div className="ep-noise flex h-screen w-full flex-col items-center justify-center bg-[#12141c] relative overflow-hidden f-body">
         {/* Central ambient glow */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-[#8dc63f]/[0.03] blur-[160px]" />
 
@@ -185,110 +319,161 @@ const ExamApp: React.FC = () => {
   }
 
   // ========================================
-  // AUTH SCREEN
+  // AUTH SCREEN (centered neumorphic card)
   // ========================================
   if (!user) {
+    const headline = authMode === 'login' ? 'Welcome back' : 'Create account';
+    const subline = authMode === 'login'
+      ? 'Please sign in to continue'
+      : 'Set up access to the test center portal';
+
     return (
-      <div className="ep-noise min-h-screen bg-[#040711] flex items-center justify-center p-6 relative overflow-hidden f-body">
-        {/* Background composition */}
-        <div className="fixed inset-0 pointer-events-none select-none">
-          {/* Soft orbs */}
-          <div className="absolute top-[-12%] right-[-8%] w-[550px] h-[550px] rounded-full bg-[#8dc63f]/[0.025] blur-[160px]"
-            style={{ animation: 'breathe 8s ease-in-out infinite' }} />
-          <div className="absolute bottom-[-12%] left-[-8%] w-[450px] h-[450px] rounded-full bg-blue-500/[0.015] blur-[140px]"
-            style={{ animation: 'breathe 10s ease-in-out infinite 3s' }} />
-
-          {/* Fine grid */}
-          <div className="absolute inset-0 opacity-[0.02]" style={{
-            backgroundImage: 'linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px)',
-            backgroundSize: '56px 56px'
-          }} />
-
-          {/* Slow horizontal scan */}
-          <div className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#8dc63f]/15 to-transparent"
-            style={{ animation: 'scan-line 10s linear infinite' }} />
-        </div>
-
-        <div className="w-full max-w-[400px] relative z-10">
-          {/* ─── Brand ─── */}
-          <div className="text-center mb-12 ep-up">
-            <div className="inline-block mb-6">
-              <div className="ep-ring w-[68px] h-[68px] rounded-[22px]">
-                <div className="w-full h-full rounded-[22px] bg-[#080c18] flex items-center justify-center shadow-[0_16px_48px_rgba(0,0,0,0.5)]">
-                  {isCandidateMode
-                    ? <Icons.GraduationCap className="w-8 h-8 text-[#8dc63f] drop-shadow-[0_0_12px_rgba(141,198,63,0.5)]" />
-                    : <Icons.Shield className="w-8 h-8 text-[#8dc63f] drop-shadow-[0_0_12px_rgba(141,198,63,0.5)]" />}
-                </div>
-              </div>
+      <div className="min-h-[100dvh] min-h-screen ep-neu-page f-body flex flex-col items-center justify-center px-5 py-6 sm:px-8">
+        <div className="w-full max-w-[400px] mx-auto flex flex-col items-center justify-center text-center shrink-0">
+          <header className="mb-6 w-full ep-up space-y-3">
+            <div
+              className="mx-auto inline-flex w-[68px] h-[68px] rounded-[24px] items-center justify-center ep-neu-raised bg-gradient-to-br from-[#f4faf2] to-[#dce8d8] text-[#4a7a1c]"
+              aria-hidden
+            >
+              {isCandidateMode
+                ? <Icons.GraduationCap className="w-8 h-8" />
+                : <Icons.Shield className="w-8 h-8" />}
             </div>
-            <h1 className="f-display text-[38px] font-semibold text-white tracking-tight leading-none">
-              CoStudy
-            </h1>
+            <div>
+              <p className="f-mono text-[10px] tracking-[0.32em] text-[#5a7a40] uppercase">CoStudy Exam</p>
+              <h1 className="f-display text-[clamp(1.85rem,4.5vw,2.5rem)] text-slate-800 leading-[1.15] mt-1.5">
+                {headline}
+              </h1>
+              <p className="f-body text-slate-600 text-[14px] font-normal mt-2 max-w-[280px] mx-auto leading-snug">
+                {subline}
+              </p>
+            </div>
             {isCandidateMode ? (
-              <div className="mt-4">
-                <p className="text-slate-400 text-[13px]">CMA Mock Exam — Candidate Portal</p>
-                <div className="mt-4 inline-flex items-center gap-2.5 rounded-full bg-[#8dc63f]/[0.06] border border-[#8dc63f]/15 px-5 py-2">
-                  <div className="w-[7px] h-[7px] rounded-full bg-[#8dc63f] ep-breathe" />
-                  <span className="f-mono text-[#8dc63f] text-[11px] tracking-[0.18em]">STATION {stationNum}</span>
-                </div>
+              <div className="mx-auto inline-flex items-center gap-2 rounded-full bg-gradient-to-b from-[#f6fcf3] to-[#e0ebd8] px-4 py-2 text-[13px] font-medium text-slate-700 ep-neu-raised-sm border border-[#8dc63f]/25">
+                <span className="w-2 h-2 rounded-full bg-[#8dc63f] shadow-[0_0_12px_rgba(141,198,63,0.65)]" />
+                <span className="f-mono tracking-[0.12em] text-[#3d6220]">STATION {stationNum}</span>
+                <span className="text-slate-400">·</span>
+                <span>Candidate</span>
               </div>
             ) : (
-              <div className="mt-3">
-                <p className="text-slate-500 text-[13px]">Test Center Administration</p>
-                <p className="f-mono text-slate-700 text-[10px] mt-1.5 tracking-[0.22em] uppercase">Proctor Console</p>
-              </div>
+              <p className="f-body text-slate-600 text-sm max-w-xs mx-auto leading-snug">
+                Test Center Administration
+                <span className="block f-mono text-[11px] tracking-[0.2em] text-[#6b8a55] uppercase mt-1.5">Proctor Console</span>
+              </p>
             )}
-          </div>
+          </header>
 
-          {/* ─── Auth Card ─── */}
-          <form onSubmit={handleAuth}>
-            <div className="ep-ring rounded-[28px] ep-up ep-up-1">
-              <div className="rounded-[28px] bg-[#080c18]/95 backdrop-blur-2xl border border-white/[0.04] p-8 space-y-6">
-
-                {/* Toggle */}
-                <div className="ep-up ep-up-2 flex rounded-2xl bg-white/[0.025] p-1.5 border border-white/[0.04]">
+          <form onSubmit={handleAuth} className="w-full space-y-4">
+            <div className="ep-neu-card p-7 sm:p-8 space-y-4 ep-up ep-up-1 text-left">
+                <div className="ep-neu-toggle-pit flex p-1 gap-1">
                   {(['login', 'signup'] as const).map(mode => (
-                    <button key={mode} type="button" onClick={() => setAuthMode(mode)}
-                      className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
-                        authMode === mode
-                          ? 'bg-[#8dc63f] text-white shadow-[0_4px_16px_rgba(141,198,63,0.25)]'
-                          : 'text-slate-500 hover:text-slate-300'
-                      }`}>
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => { setAuthMode(mode); setError(null); setForgotMsg(null); }}
+                      className={`flex-1 py-2.5 rounded-[14px] text-sm font-semibold transition-all ${
+                        authMode === mode ? 'ep-neu-toggle-active' : 'text-slate-600 hover:text-slate-800'
+                      }`}
+                    >
                       {mode === 'login' ? 'Sign In' : 'Sign Up'}
                     </button>
                   ))}
                 </div>
 
-                {/* Name (signup only) */}
                 {authMode === 'signup' && (
-                  <div className="ep-up space-y-2">
-                    <label className="f-mono text-[9px] text-slate-500 tracking-[0.22em] uppercase pl-1">Full Name</label>
-                    <input type="text" placeholder="Your full name" value={name}
-                      onChange={(e) => setName(e.target.value)} className={inputCls} required />
+                  <div className="ep-up ep-up-2">
+                    <div className="relative">
+                      <Icons.User className="ep-neu-icon absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] pointer-events-none" />
+                      <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="f-body w-full rounded-2xl ep-neu-inset pl-11 pr-4 py-3.5 text-sm"
+                        required
+                        autoComplete="name"
+                        aria-label="Full name"
+                      />
+                    </div>
                   </div>
                 )}
 
-                <div className="ep-up ep-up-3 space-y-2">
-                  <label className="f-mono text-[9px] text-slate-500 tracking-[0.22em] uppercase pl-1">Email</label>
-                  <input type="email" placeholder="your@email.com" value={email}
-                    onChange={(e) => setEmail(e.target.value)} className={inputCls} required />
+                <div className="ep-up ep-up-3">
+                  <div className="relative">
+                    <Icons.Mail className="ep-neu-icon absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] pointer-events-none" />
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="f-body w-full rounded-2xl ep-neu-inset pl-11 pr-4 py-3.5 text-sm"
+                      required
+                      autoComplete="email"
+                      aria-label="Email address"
+                    />
+                  </div>
                 </div>
 
-                <div className="ep-up ep-up-4 space-y-2">
-                  <label className="f-mono text-[9px] text-slate-500 tracking-[0.22em] uppercase pl-1">Password</label>
-                  <input type="password" placeholder="Min. 6 characters" value={password}
-                    onChange={(e) => setPassword(e.target.value)} className={inputCls} required minLength={6} />
+                <div className="ep-up ep-up-4">
+                  <div className="relative">
+                    <Icons.Lock className="ep-neu-icon absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] pointer-events-none" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="f-body w-full rounded-2xl ep-neu-inset pl-11 pr-12 py-3.5 text-sm"
+                      required
+                      minLength={6}
+                      autoComplete={authMode === 'login' ? 'current-password' : 'new-password'}
+                      aria-label="Password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-xl flex items-center justify-center ep-neu-icon ep-neu-raised-sm bg-gradient-to-b from-[#eef5ea] to-[#dce8d8] hover:from-[#e8f2e3] hover:to-[#d4e4cf]"
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      <Icons.Eye className="w-[18px] h-[18px] text-[#4a7a1c]" />
+                    </button>
+                  </div>
                 </div>
+
+                {authMode === 'login' && (
+                  <div className="flex items-center justify-between gap-3 text-xs pt-1">
+                    <label className="flex items-center gap-2 cursor-pointer text-slate-600 select-none">
+                      <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="rounded border-slate-400 text-[#8dc63f] focus:ring-[#8dc63f]"
+                      />
+                      Remember me
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleForgotPassword}
+                      disabled={forgotBusy}
+                      className="text-[#8dc63f] font-semibold hover:underline disabled:opacity-50"
+                    >
+                      {forgotBusy ? 'Sending…' : 'Forgot password?'}
+                    </button>
+                  </div>
+                )}
+
+                {forgotMsg && (
+                  <p className="text-xs text-slate-600 bg-white/50 rounded-lg px-3 py-2 border border-slate-200/80">{forgotMsg}</p>
+                )}
 
                 {error && (
-                  <div className="rounded-xl bg-red-500/[0.06] border border-red-500/15 text-red-400 px-4 py-3 text-sm flex items-center gap-2.5">
-                    <Icons.AlertCircle className="w-4 h-4 shrink-0" />
+                  <div className="rounded-xl bg-red-50 border border-red-200 text-red-800 px-4 py-3 text-sm flex items-start gap-2.5">
+                    <Icons.AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                     {error}
                   </div>
                 )}
 
-                <button type="submit" disabled={submitting}
-                  className="ep-shimmer ep-up ep-up-5 w-full rounded-2xl bg-gradient-to-r from-[#8dc63f] via-[#7db536] to-[#6ba52e] text-white py-4 font-bold text-sm transition-all duration-300 shadow-[0_8px_28px_rgba(141,198,63,0.18)] hover:shadow-[0_12px_36px_rgba(141,198,63,0.28)] hover:-translate-y-px active:translate-y-px disabled:opacity-40 disabled:hover:translate-y-0">
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="ep-neu-cta ep-up ep-up-5 w-full rounded-2xl bg-gradient-to-b from-[#9ed654] via-[#8dc63f] to-[#5a9018] text-white py-3.5 f-body font-semibold text-sm tracking-wide hover:brightness-[1.02] active:brightness-95 active:scale-[0.99] disabled:opacity-45 disabled:cursor-not-allowed disabled:active:scale-100 transition-all"
+                >
                   {submitting ? (
                     <span className="flex items-center justify-center gap-2">
                       <Icons.CloudSync className="w-4 h-4 animate-spin" /> Please wait...
@@ -298,10 +483,9 @@ const ExamApp: React.FC = () => {
                     : (isCandidateMode ? 'Create Candidate Account' : 'Create Proctor Account')}
                 </button>
               </div>
-            </div>
-          </form>
+            </form>
 
-          <p className="text-center f-mono text-[10px] tracking-[0.2em] text-slate-700 mt-10 uppercase select-none">
+          <p className="f-mono text-[10px] tracking-[0.22em] text-[#6b8a55] mt-6 uppercase select-none">
             Powered by costudy.in
           </p>
         </div>
@@ -353,7 +537,7 @@ const ExamApp: React.FC = () => {
   // ========================================
   return (
     <Suspense fallback={
-      <div className="ep-noise flex h-screen items-center justify-center bg-[#040711] relative overflow-hidden">
+      <div className="ep-noise flex h-screen items-center justify-center bg-[#12141c] relative overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-[#8dc63f]/[0.025] blur-[140px]" />
         <div className="ep-float">
           <div className="ep-ring w-20 h-20 rounded-[26px]">

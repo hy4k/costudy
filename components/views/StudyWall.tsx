@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, Fragment } from 'react';
 import { Icons } from '../Icons';
 import { Post, UserRole, UserLevel, Comment, ViewState, PostType, User, AlignmentPurpose, AlignmentDuration } from '../../types';
 import { summarizePost } from '../../services/geminiService';
@@ -210,7 +210,7 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
-    setNewPostTags(newPostTags.filter(tag => tag !== tagToRemove));
+    setNewPostTags((prev) => prev.filter((tag) => tag !== tagToRemove));
   };
 
   const toggleTag = (tag: string) => {
@@ -547,8 +547,49 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
         }
       >
         {isStudentWall ? (
-          <div className="mx-auto max-w-3xl px-4 pb-4 pt-6 text-left sm:px-6 sm:pb-5 sm:pt-8">
-            <h1 className="font-display text-3xl font-semibold tracking-tight text-[#1a0a0a] sm:text-[2.15rem]">Study Wall</h1>
+          <div className="mx-auto max-w-3xl px-4 pb-8 pt-6 text-center sm:px-6 sm:pb-10 sm:pt-10">
+            <h1 className="font-display text-4xl font-semibold tracking-tight text-[#1a0a0a] sm:text-[2.5rem] sm:tracking-tight">
+              Study Wall
+            </h1>
+            {/* Hand-drawn pencil line — ties masthead to feed */}
+            <div className="mx-auto mt-4 flex max-w-[min(100%,14rem)] justify-center" aria-hidden>
+              <svg viewBox="0 0 240 14" className="h-3.5 w-full text-brand/[0.42]" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M4 8c28-4 56-6 84-5s56 4 84 6 56 2 64-1"
+                  stroke="currentColor"
+                  strokeWidth="1.35"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  vectorEffect="non-scaling-stroke"
+                />
+                <path
+                  d="M218 5l6 4-5 4"
+                  stroke="currentColor"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  opacity="0.85"
+                />
+              </svg>
+            </div>
+            <div className="mx-auto mt-8 w-full max-w-2xl overflow-x-auto px-0.5 no-scrollbar sm:mt-9">
+              <div className="flex min-w-max justify-center gap-1.5 rounded-2xl border border-[#e8d4d4]/90 bg-white/80 p-1.5 shadow-[0_4px_28px_-8px_rgba(137,11,11,0.1)] backdrop-blur-md sm:gap-2 sm:p-2">
+                {categories.map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setActiveCategory(cat)}
+                    className={`whitespace-nowrap rounded-full px-3.5 py-2 text-[12px] font-medium transition-all duration-200 sm:px-4 sm:text-[13px] ${
+                      activeCategory === cat
+                        ? 'bg-gradient-to-b from-brand to-brand-600 text-white shadow-[0_8px_22px_-6px_rgba(237,0,0,0.45)] ring-1 ring-white/25'
+                        : 'border border-transparent text-slate-700 hover:border-brand/20 hover:bg-brand/[0.05] hover:text-brand-900'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         ) : (
           <>
@@ -573,7 +614,7 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
           </>
         )}
       </header>
-      <div className="mx-auto flex w-full max-w-3xl flex-col items-stretch overflow-visible px-3 pb-24 pt-6 text-left sm:px-6 sm:pb-12 sm:pt-10">
+      <div className="mx-auto flex w-full max-w-3xl flex-col items-stretch overflow-visible px-3 pb-24 pt-4 text-left sm:px-6 sm:pb-12 sm:pt-6">
 
       {/* TOAST FEEDBACK */}
       {alignFeedback && (
@@ -799,16 +840,21 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
               <Icons.Plus className="h-5 w-5 rotate-45" />
             </button>
 
+            {mode === 'FACULTY' && (
             <div className="mb-6">
-                <h3 className="font-display mb-1 text-xl font-semibold text-[#1a0a0a]">
-                  {mode === 'FACULTY' ? 'Faculty Insight' : 'Compose'}
-                </h3>
-                <p className="text-sm text-slate-600">
-                    {mode === 'FACULTY' ? 'Share updates or strategies with colleagues.' : 'Share knowledge with fellow candidates—in the tradition of the Study Wall.'}
-                </p>
+                <h3 className="font-display mb-1 text-xl font-semibold text-[#1a0a0a]">Faculty Insight</h3>
+                <p className="text-sm text-slate-600">Share updates or strategies with colleagues.</p>
             </div>
+            )}
+            {isStudentWall && <h2 className="sr-only">New post</h2>}
 
-            <div className="flex flex-wrap gap-2 mb-6">
+            <div
+              className={
+                isStudentWall
+                  ? 'mb-6 grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3'
+                  : 'mb-6 flex flex-wrap gap-2'
+              }
+            >
               {mode === 'FACULTY' ? (
                   [
                     { type: PostType.FACULTY_DISCUSS, label: 'Discussion', icon: <Icons.MessageCircle className="w-3.5 h-3.5" /> },
@@ -836,14 +882,14 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
                       key={item.type}
                       type="button"
                       onClick={() => setNewPostType(item.type)}
-                      className={`flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-semibold transition-all ${
+                      className={`flex flex-col items-center justify-center gap-1.5 rounded-2xl border px-3 py-3 text-center text-xs font-semibold transition-all sm:py-3.5 ${
                         newPostType === item.type
-                          ? 'bg-gradient-to-b from-brand to-brand-600 text-white shadow-[0_8px_22px_-6px_rgba(237,0,0,0.4)] ring-1 ring-white/25'
-                          : 'border border-[#e8e4e2] bg-white text-slate-600 hover:border-brand/25 hover:bg-brand/[0.04] hover:text-brand-900'
+                          ? 'border-brand/30 bg-gradient-to-b from-brand to-brand-600 text-white shadow-[0_8px_22px_-6px_rgba(237,0,0,0.4)] ring-1 ring-white/25'
+                          : 'border-[#e8e4e2] bg-white text-slate-600 shadow-sm hover:border-brand/25 hover:bg-brand/[0.04] hover:text-brand-900'
                       }`}
                     >
-                      {item.icon}
-                      {item.label}
+                      <span className="opacity-90">{item.icon}</span>
+                      <span className="leading-tight">{item.label}</span>
                     </button>
                   ))
               )}
@@ -904,7 +950,13 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
                           }
                         >
                            <span>{tag}</span>
-                           <button type="button" onClick={() => handleRemoveTag(tag)} className="hover:text-rose-200/90">
+                           <button
+                             type="button"
+                             onMouseDown={(e) => e.preventDefault()}
+                             onClick={() => handleRemoveTag(tag)}
+                             className="rounded p-0.5 hover:bg-white/15 hover:text-white"
+                             aria-label={`Remove tag ${tag}`}
+                           >
                              <Icons.Plus className="w-3 h-3 rotate-45" />
                            </button>
                         </div>
@@ -970,15 +1022,10 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
         </div>
       )}
 
-      {/* CATEGORY TABS — classic pill rail (student) */}
+      {/* Category filters — student rail lives in header; faculty only here */}
+      {!isStudentWall && (
       <div className="mb-6 w-full overflow-x-auto text-left no-scrollbar">
-        <div
-          className={
-            isStudentWall
-              ? 'flex min-w-max justify-start gap-1.5 rounded-2xl border border-[#e8d4d4]/90 bg-white/75 p-1.5 shadow-[0_4px_28px_-8px_rgba(137,11,11,0.08)] backdrop-blur-md sm:gap-2 sm:p-2'
-              : 'flex min-w-max justify-start gap-2'
-          }
-        >
+        <div className="flex min-w-max justify-start gap-2">
           {categories.map(cat => (
             <button
               key={cat}
@@ -986,12 +1033,8 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
               onClick={() => setActiveCategory(cat)}
               className={`whitespace-nowrap rounded-full px-4 py-2 text-[13px] font-medium transition-all duration-200 ${
                 activeCategory === cat
-                  ? isStudentWall
-                    ? 'bg-gradient-to-b from-brand to-brand-600 text-white shadow-[0_8px_22px_-6px_rgba(237,0,0,0.45)] ring-1 ring-white/25'
-                    : 'bg-brand text-white shadow-md shadow-brand/25 ring-1 ring-brand/30'
-                  : isStudentWall
-                    ? 'border border-transparent text-slate-700 hover:border-brand/20 hover:bg-brand/[0.05] hover:text-brand-900'
-                    : 'border border-slate-200/90 bg-white/95 text-slate-700 hover:border-brand/35 hover:bg-brand/[0.07] hover:text-brand'
+                  ? 'bg-brand text-white shadow-md shadow-brand/25 ring-1 ring-brand/30'
+                  : 'border border-slate-200/90 bg-white/95 text-slate-700 hover:border-brand/35 hover:bg-brand/[0.07] hover:text-brand'
               }`}
             >
               {cat}
@@ -999,6 +1042,7 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
           ))}
         </div>
       </div>
+      )}
 
       {/* FEED */}
       <div className="w-full">
@@ -1061,11 +1105,23 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
                 const isLast = idx === displayPosts.length - 1;
 
                 return (
+                <Fragment key={post.id}>
+                {isStudentWall && idx > 0 && (
+                  <div
+                    className="flex items-center justify-center gap-2.5 bg-[#fffdfb] px-4 py-2"
+                    aria-hidden
+                  >
+                    <div className="h-px min-w-[2rem] flex-1 bg-gradient-to-r from-transparent to-brand/30" />
+                    <div className="flex items-center gap-1 text-brand/45">
+                      <Icons.PenLine className="h-3.5 w-3.5" />
+                    </div>
+                    <div className="h-px min-w-[2rem] flex-1 bg-gradient-to-l from-transparent to-brand/30" />
+                  </div>
+                )}
                 <article
-                  key={post.id}
                   className={`relative transition-colors ${
                     isStudentWall
-                      ? `hover:bg-[#fffbf9]/90 ${!isLast ? 'border-b border-[#f0e6e3]' : ''}`
+                      ? 'hover:bg-[#fffbf9]/90'
                       : `hover:bg-slate-50/50 ${!isLast ? 'border-b border-slate-100' : ''}`
                   }`}
                 >
@@ -1296,6 +1352,7 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
                     </div>
                   )}
                 </article>
+                </Fragment>
               );
               })}
             </div>

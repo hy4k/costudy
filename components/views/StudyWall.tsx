@@ -80,24 +80,6 @@ const DEMO_STUDY_WALL_POSTS: Post[] = [
   },
 ];
 
-// ICMA exam windows (Jan, May/Jun, Sep)
-const getNextExamDate = () => {
-  const now = new Date();
-  const year = now.getFullYear();
-  const windows = [
-    new Date(year, 0, 15),  // Jan 15
-    new Date(year, 4, 1),   // May 1
-    new Date(year, 8, 1),   // Sep 1
-    new Date(year + 1, 0, 15),
-  ];
-  return windows.find(d => d > now) || windows[windows.length - 1];
-};
-
-const getDaysUntilExam = () => {
-  const next = getNextExamDate();
-  return Math.ceil((next.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-};
-
 export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = false, userId, onAuthRequired, mode = 'PUBLIC' }) => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -153,8 +135,6 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
   const categories = mode === 'FACULTY'
     ? ['Faculty Lounge', 'Exam Intelligence', 'Resource Exchange', 'Policy Updates']
     : ['All Feed', 'Audit Desk', 'Bounty Board', 'Strategic Notes', 'Expert Q&A', 'Discussions'];
-
-  const daysUntilExam = getDaysUntilExam();
 
   const displayPosts = useMemo(() => {
     if (mode !== 'PUBLIC') return posts;
@@ -454,8 +434,10 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
       }
     };
 
+    const wallClassic = mode !== 'FACULTY';
+
     return (
-      <div className={`mt-4 ${depth > 0 ? 'ml-8 border-l-2 border-slate-100 pl-6' : ''}`}>
+      <div className={`mt-4 ${depth > 0 ? (wallClassic ? 'ml-8 border-l-2 border-brand/15 pl-6' : 'ml-8 border-l-2 border-slate-100 pl-6') : ''}`}>
         <div className="flex gap-3">
           {comment.author?.avatar ? (
             <img src={comment.author.avatar} className="w-8 h-8 rounded-lg object-cover ring-1 ring-slate-100 shrink-0" alt="" />
@@ -465,16 +447,22 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+            <div
+              className={
+                wallClassic
+                  ? 'rounded-2xl border border-[#ebe3df] bg-[#fffdfb] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]'
+                  : 'rounded-2xl border border-slate-100 bg-slate-50 p-4'
+              }
+            >
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-xs font-bold text-slate-900">{comment.author?.name || 'Anonymous'}</span>
                 <span className="text-[10px] text-slate-400">{comment.created_at ? new Date(comment.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'now'}</span>
               </div>
               <p className="text-sm text-slate-600 leading-relaxed">{comment.content}</p>
             </div>
-            <button onClick={() => setShowReplyInput(!showReplyInput)} className="text-[10px] font-bold text-slate-400 hover:text-brand mt-1.5 ml-2 transition-colors">Reply</button>
+            <button type="button" onClick={() => setShowReplyInput(!showReplyInput)} className="ml-2 mt-1.5 text-[10px] font-bold text-slate-400 transition-colors hover:text-brand">Reply</button>
             {showReplyInput && (
-              <div className="mt-3 flex gap-2 animate-in slide-in-from-top-2 duration-200">
+              <div className="mt-3 flex animate-in gap-2 slide-in-from-top-2 duration-200">
                 <input
                   type="text"
                   autoFocus
@@ -482,9 +470,23 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
                   onChange={(e) => setReplyText(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && submitReply()}
                   placeholder="Write a reply..."
-                  className="flex-1 bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs outline-none focus:ring-2 focus:ring-brand/10 focus:border-brand/30"
+                  className={
+                    wallClassic
+                      ? 'flex-1 rounded-xl border border-[#e5ddd9] bg-white px-4 py-2 text-xs outline-none focus:border-brand/35 focus:ring-2 focus:ring-brand/10'
+                      : 'flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs outline-none focus:border-brand/30 focus:ring-2 focus:ring-brand/10'
+                  }
                 />
-                <button onClick={submitReply} className="px-4 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-bold hover:bg-brand transition-colors">Send</button>
+                <button
+                  type="button"
+                  onClick={submitReply}
+                  className={
+                    wallClassic
+                      ? 'rounded-xl bg-gradient-to-b from-brand to-brand-600 px-4 py-2 text-[10px] font-bold text-white shadow-sm hover:opacity-95'
+                      : 'rounded-xl bg-slate-900 px-4 py-2 text-[10px] font-bold text-white transition-colors hover:bg-brand'
+                  }
+                >
+                  Send
+                </button>
               </div>
             )}
           </div>
@@ -503,6 +505,8 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
   const charCount = newPostContent.length;
   const isOverLimit = charCount > MAX_CHARS;
   const isUnderLimit = charCount > 0 && charCount < MIN_CHARS;
+
+  const isStudentWall = mode !== 'FACULTY';
 
   const timeAgo = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
@@ -529,54 +533,60 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
   };
 
   return (
-    <div className="flex min-h-full w-full flex-col font-sans text-left">
+    <div
+      className={
+        isStudentWall
+          ? 'flex min-h-full w-full flex-col bg-gradient-to-b from-[#faf7f5] via-white to-[#f9f5f3] font-sans text-left'
+          : 'flex min-h-full w-full flex-col font-sans text-left'
+      }
+    >
       <header
         className={
-          mode === 'FACULTY'
-            ? 'w-full shrink-0 border-b border-slate-200/70 bg-gradient-to-b from-white via-slate-50/40 to-transparent'
-            : 'w-full shrink-0 border-b border-brand/15 bg-gradient-to-br from-brand/[0.12] via-white to-slate-50/90 shadow-luxury-sm'
+          isStudentWall
+            ? 'relative w-full shrink-0 overflow-hidden border-b border-[#e8d4d4]/70 bg-gradient-to-b from-[#fffefc] via-[#fff8f6] to-[#fff4f0] shadow-[inset_0_1px_0_rgba(255,255,255,0.92)]'
+            : 'relative w-full shrink-0 border-b border-slate-200/70 bg-gradient-to-b from-white via-slate-50/40 to-transparent'
         }
       >
-        <div className="mx-auto max-w-3xl px-4 pb-8 pt-10 text-left sm:px-6">
-          <div className="flex items-start gap-4 text-left">
-            <div
-              className={
-                mode === 'FACULTY'
-                  ? 'flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand/10 text-brand ring-1 ring-brand/20'
-                  : 'flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand text-white shadow-lg shadow-brand/30 ring-2 ring-white/80'
-              }
-            >
-              <Icons.MessageSquare className="h-5 w-5" />
-            </div>
-            <div>
-              <p
-                className={
-                  mode === 'FACULTY'
-                    ? 'font-display text-xs font-medium uppercase tracking-[0.22em] text-slate-500'
-                    : 'font-display text-xs font-medium uppercase tracking-[0.22em] text-brand'
-                }
-              >
-                {mode === 'FACULTY' ? 'Faculty' : 'Community'}
-              </p>
-              <h1 className="font-display mt-2 text-3xl font-semibold tracking-tight text-slate-900 sm:text-[2.15rem]">
-                {mode === 'FACULTY' ? 'Faculty wall' : 'Study Wall'}
-              </h1>
-              <p className="mt-3 max-w-[min(100%,40rem)] text-left text-sm leading-[1.7] text-slate-600">
-                {mode === 'FACULTY'
-                  ? 'Professional updates, resources, and discussion with your teaching colleagues.'
-                  : 'Questions, resources, and peer discussion—aligned with your CMA US journey.'}
-              </p>
-            </div>
+        {isStudentWall ? (
+          <div className="mx-auto max-w-3xl px-4 pb-6 pt-8 text-left sm:px-6 sm:pb-8 sm:pt-10">
+            <h1 className="font-display text-3xl font-semibold tracking-tight text-[#1a0a0a] sm:text-[2.15rem]">Study Wall</h1>
           </div>
-        </div>
+        ) : (
+          <>
+            <div
+              className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand/25 to-transparent"
+              aria-hidden
+            />
+            <div className="mx-auto max-w-3xl px-4 pb-8 pt-10 text-left sm:px-6">
+              <div className="flex items-start gap-4 text-left sm:gap-5">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand/10 text-brand ring-1 ring-brand/20">
+                  <Icons.MessageSquare className="h-5 w-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-display text-xs font-medium uppercase tracking-[0.22em] text-slate-500">Faculty</p>
+                  <h1 className="font-display mt-2 text-3xl font-semibold tracking-tight text-[#1a0a0a] sm:text-[2.15rem]">Faculty wall</h1>
+                  <p className="mt-3 max-w-[min(100%,40rem)] text-left text-sm leading-[1.7] text-slate-600">
+                    Professional updates, resources, and discussion with your teaching colleagues.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </header>
       <div className="mx-auto flex w-full max-w-3xl flex-col items-stretch overflow-visible px-3 pb-24 pt-6 text-left sm:px-6 sm:pb-12 sm:pt-10">
 
       {/* TOAST FEEDBACK */}
       {alignFeedback && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[70] animate-in slide-in-from-top-4 duration-300">
-          <div className="bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl shadow-slate-900/20 text-sm font-medium flex items-center gap-2.5 backdrop-blur-xl">
-            <Icons.CheckBadge className="w-4 h-4 text-emerald-400 shrink-0" />
+          <div
+            className={
+              isStudentWall
+                ? 'flex items-center gap-2.5 rounded-2xl border border-white/15 bg-gradient-to-r from-[#5c0a0a] to-[#890b0b] px-6 py-3.5 text-sm font-medium text-[#fff9f4] shadow-[0_20px_50px_-12px_rgba(89,11,11,0.55)] backdrop-blur-sm'
+                : 'flex items-center gap-2.5 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-medium text-white shadow-2xl shadow-slate-900/20 backdrop-blur-xl'
+            }
+          >
+            <Icons.CheckBadge className={`h-4 w-4 shrink-0 ${isStudentWall ? 'text-amber-200/90' : 'text-emerald-400'}`} />
             {alignFeedback}
           </div>
         </div>
@@ -585,13 +595,18 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
       {/* FLOATING ACTION BUTTON */}
       <div className="fixed bottom-8 right-6 sm:bottom-10 sm:right-10 z-10">
         <button
+          type="button"
           onClick={() => {
               if (isLoggedIn) setIsPostModalOpen(true);
               else onAuthRequired?.('LOGIN');
           }}
-          className="group relative flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-slate-900 rounded-2xl text-white shadow-xl shadow-slate-900/20 hover:bg-brand hover:shadow-brand/30 transition-all duration-300 hover:scale-105 active:scale-95"
+          className={
+            isStudentWall
+              ? 'group relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand via-[#e01010] to-brand-900 text-white shadow-[0_16px_44px_-10px_rgba(237,0,0,0.55)] ring-2 ring-white/90 transition-all duration-300 hover:scale-105 hover:shadow-[0_20px_50px_-12px_rgba(237,0,0,0.5)] active:scale-95 sm:h-16 sm:w-16'
+              : 'group relative flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-xl shadow-slate-900/20 transition-all duration-300 hover:scale-105 hover:bg-brand hover:shadow-brand/30 active:scale-95 sm:h-16 sm:w-16'
+          }
         >
-            <Icons.Plus className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
+            <Icons.Plus className="h-6 w-6 transition-transform duration-300 group-hover:rotate-90" />
         </button>
       </div>
 
@@ -763,19 +778,34 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
 
       {/* New Post Modal */}
       {isPostModalOpen && (
-        <div className="fixed inset-0 z-30 bg-slate-900/80 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-300">
-          <div className="bg-white rounded-3xl w-full max-w-2xl p-6 md:p-8 shadow-2xl relative animate-in zoom-in-95 duration-500 max-h-[90vh] overflow-y-auto no-scrollbar">
+        <div className="fixed inset-0 z-30 flex animate-in items-center justify-center bg-slate-900/80 p-4 backdrop-blur-xl fade-in duration-300">
+          <div
+            className={
+              isStudentWall
+                ? 'no-scrollbar relative max-h-[90vh] w-full max-w-2xl animate-in zoom-in-95 overflow-y-auto rounded-[1.75rem] border border-[#e8d4d4]/80 bg-gradient-to-b from-[#fffefc] to-white p-6 shadow-[0_24px_64px_-16px_rgba(137,11,11,0.18)] duration-500 md:p-8'
+                : 'no-scrollbar relative max-h-[90vh] w-full max-w-2xl animate-in zoom-in-95 overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl duration-500 md:p-8'
+            }
+          >
+            {isStudentWall && (
+              <div
+                className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-brand/30 to-transparent md:inset-x-10"
+                aria-hidden
+              />
+            )}
             <button
+              type="button"
               onClick={() => setIsPostModalOpen(false)}
-              className="absolute top-5 right-5 p-2 hover:bg-slate-100 rounded-xl transition-all text-slate-400 hover:text-slate-900 z-10"
+              className="absolute right-5 top-5 z-10 rounded-xl p-2 text-slate-400 transition-all hover:bg-black/[0.04] hover:text-slate-900"
             >
-              <Icons.Plus className="w-5 h-5 rotate-45" />
+              <Icons.Plus className="h-5 w-5 rotate-45" />
             </button>
 
             <div className="mb-6">
-                <h3 className="text-xl font-bold text-slate-900 mb-1">{mode === 'FACULTY' ? 'Faculty Insight' : 'New Post'}</h3>
-                <p className="text-slate-500 text-sm">
-                    {mode === 'FACULTY' ? 'Share updates or strategies with colleagues.' : 'Share knowledge with the CMA community.'}
+                <h3 className="font-display mb-1 text-xl font-semibold text-[#1a0a0a]">
+                  {mode === 'FACULTY' ? 'Faculty Insight' : 'Compose'}
+                </h3>
+                <p className="text-sm text-slate-600">
+                    {mode === 'FACULTY' ? 'Share updates or strategies with colleagues.' : 'Share knowledge with fellow candidates—in the tradition of the Study Wall.'}
                 </p>
             </div>
 
@@ -788,8 +818,9 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
                   ].map(item => (
                     <button
                       key={item.type}
+                      type="button"
                       onClick={() => setNewPostType(item.type)}
-                      className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-medium transition-all ${newPostType === item.type ? 'bg-slate-900 text-white shadow-md' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
+                      className={`flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-semibold transition-all ${newPostType === item.type ? 'bg-slate-900 text-white shadow-md' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
                     >
                       {item.icon}
                       {item.label}
@@ -804,8 +835,13 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
                   ].map(item => (
                     <button
                       key={item.type}
+                      type="button"
                       onClick={() => setNewPostType(item.type)}
-                      className={`flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-medium transition-all ${newPostType === item.type ? 'bg-slate-900 text-white shadow-md' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
+                      className={`flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-semibold transition-all ${
+                        newPostType === item.type
+                          ? 'bg-gradient-to-b from-brand to-brand-600 text-white shadow-[0_8px_22px_-6px_rgba(237,0,0,0.4)] ring-1 ring-white/25'
+                          : 'border border-[#e8e4e2] bg-white text-slate-600 hover:border-brand/25 hover:bg-brand/[0.04] hover:text-brand-900'
+                      }`}
                     >
                       {item.icon}
                       {item.label}
@@ -824,7 +860,13 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
                       newPostType === PostType.PEER_AUDIT_REQUEST ? "Paste your essay scenario and argument." :
                       "What did you learn today?"
                   }
-                  className={`w-full h-36 p-5 bg-slate-50 rounded-2xl border-2 text-sm font-medium outline-none transition-all resize-none leading-relaxed ${isOverLimit ? 'border-rose-200 text-rose-500 bg-rose-50' : 'border-transparent focus:border-brand/20 focus:bg-white text-slate-800'}`}
+                  className={`h-36 w-full resize-none rounded-2xl border-2 p-5 text-sm font-medium leading-relaxed outline-none transition-all ${
+                    isOverLimit
+                      ? 'border-rose-200 bg-rose-50 text-rose-500'
+                      : isStudentWall
+                        ? 'border-[#ebe3e0] bg-white text-slate-800 focus:border-brand/35 focus:bg-[#fffdfb] focus:ring-2 focus:ring-brand/10'
+                        : 'border-transparent bg-slate-50 text-slate-800 focus:border-brand/20 focus:bg-white'
+                  }`}
                 />
                 <div className={`absolute bottom-4 right-5 text-[10px] font-medium transition-colors ${isOverLimit ? 'text-rose-500' : isUnderLimit ? 'text-amber-500' : 'text-slate-400'}`}>
                     {charCount}/{MAX_CHARS}
@@ -843,16 +885,27 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
                     onKeyDown={handleTagKeyDown}
                     onBlur={handleAddTag}
                     placeholder="Add tags (press Enter)"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 outline-none focus:ring-2 focus:ring-brand/10 focus:border-brand/20 transition-all"
+                    className={
+                      isStudentWall
+                        ? 'w-full rounded-xl border border-[#e5ddd9] bg-[#fffdfb] px-4 py-3 text-sm text-slate-800 outline-none transition-all focus:border-brand/30 focus:ring-2 focus:ring-brand/10'
+                        : 'w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition-all focus:border-brand/20 focus:ring-2 focus:ring-brand/10'
+                    }
                   />
                 </div>
 
                 {newPostTags.length > 0 && (
                    <div className="flex flex-wrap gap-1.5 mb-3">
                       {newPostTags.map(tag => (
-                        <div key={tag} className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 text-white rounded-lg text-[10px] font-medium">
+                        <div
+                          key={tag}
+                          className={
+                            isStudentWall
+                              ? 'flex items-center gap-1.5 rounded-lg border border-brand-900/10 bg-gradient-to-r from-brand-900 to-[#5c0a0a] px-3 py-1.5 text-[10px] font-semibold text-[#fff9f4]'
+                              : 'flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-1.5 text-[10px] font-medium text-white'
+                          }
+                        >
                            <span>{tag}</span>
-                           <button onClick={() => handleRemoveTag(tag)} className="hover:text-rose-300">
+                           <button type="button" onClick={() => handleRemoveTag(tag)} className="hover:text-rose-200/90">
                              <Icons.Plus className="w-3 h-3 rotate-45" />
                            </button>
                         </div>
@@ -864,8 +917,17 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
                    {tagsList.map(tag => (
                       <button
                         key={tag}
+                        type="button"
                         onClick={() => toggleTag(tag)}
-                        className={`px-2.5 py-1 rounded-lg text-[10px] font-medium border transition-all ${newPostTags.includes(tag) ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-400 border-slate-100 hover:border-slate-300 hover:text-slate-600'}`}
+                        className={`rounded-lg border px-2.5 py-1 text-[10px] font-semibold transition-all ${
+                          newPostTags.includes(tag)
+                            ? isStudentWall
+                              ? 'border-brand-900/20 bg-brand/[0.12] text-brand-900'
+                              : 'border-slate-900 bg-slate-900 text-white'
+                            : isStudentWall
+                              ? 'border-[#e8e0dd] bg-white text-slate-500 hover:border-brand/30 hover:text-brand-900'
+                              : 'border-slate-100 bg-white text-slate-400 hover:border-slate-300 hover:text-slate-600'
+                        }`}
                       >
                          {tag}
                       </button>
@@ -888,9 +950,16 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
             )}
 
             <button
+              type="button"
               onClick={handleCreatePost}
               disabled={isSubmitting || isOverLimit || isUnderLimit}
-              className={`w-full py-4 text-white rounded-xl text-sm font-bold shadow-lg transition-all flex items-center justify-center gap-2 ${isSubmitting || isOverLimit || isUnderLimit ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-900 hover:bg-brand active:scale-[0.98]'}`}
+              className={`flex w-full items-center justify-center gap-2 rounded-xl py-4 text-sm font-bold text-white shadow-lg transition-all ${
+                isSubmitting || isOverLimit || isUnderLimit
+                  ? 'cursor-not-allowed bg-slate-200 text-slate-400'
+                  : isStudentWall
+                    ? 'bg-gradient-to-r from-brand to-brand-900 shadow-[0_12px_32px_-10px_rgba(237,0,0,0.45)] hover:opacity-95 active:scale-[0.98]'
+                    : 'bg-slate-900 hover:bg-brand active:scale-[0.98]'
+              }`}
             >
               {isSubmitting ? (
                   <><Icons.CloudSync className="w-4 h-4 animate-spin" /> Publishing...</>
@@ -902,35 +971,28 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
         </div>
       )}
 
-      {/* EXAM COUNTDOWN — compact inline bar */}
-      {mode !== 'FACULTY' && daysUntilExam <= 60 && (
-        <div className="w-full mb-4 flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-slate-900 text-white">
-          <div className="flex items-center gap-3 min-w-0">
-            <Icons.Clock className="w-4 h-4 text-brand shrink-0" />
-            <span className="text-sm font-semibold truncate">
-              ICMA exam window in <span className="text-brand">{daysUntilExam} days</span>
-            </span>
-          </div>
-          <button
-            onClick={() => setView(ViewState.TESTS)}
-            className="px-4 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap"
-          >
-            Practice
-          </button>
-        </div>
-      )}
-
-      {/* CATEGORY TABS — sticky pill row */}
-      <div className="mb-5 w-full overflow-x-auto text-left no-scrollbar">
-        <div className="flex min-w-max justify-start gap-2">
+      {/* CATEGORY TABS — classic pill rail (student) */}
+      <div className="mb-6 w-full overflow-x-auto text-left no-scrollbar">
+        <div
+          className={
+            isStudentWall
+              ? 'flex min-w-max justify-start gap-1.5 rounded-2xl border border-[#e8d4d4]/90 bg-white/75 p-1.5 shadow-[0_4px_28px_-8px_rgba(137,11,11,0.08)] backdrop-blur-md sm:gap-2 sm:p-2'
+              : 'flex min-w-max justify-start gap-2'
+          }
+        >
           {categories.map(cat => (
             <button
               key={cat}
+              type="button"
               onClick={() => setActiveCategory(cat)}
-              className={`px-4 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-all ${
+              className={`whitespace-nowrap rounded-full px-4 py-2 text-[13px] font-medium transition-all duration-200 ${
                 activeCategory === cat
-                  ? 'bg-brand text-white shadow-md shadow-brand/25 ring-1 ring-brand/30'
-                  : 'border border-slate-200/90 bg-white/95 text-slate-700 hover:border-brand/35 hover:bg-brand/[0.07] hover:text-brand'
+                  ? isStudentWall
+                    ? 'bg-gradient-to-b from-brand to-brand-600 text-white shadow-[0_8px_22px_-6px_rgba(237,0,0,0.45)] ring-1 ring-white/25'
+                    : 'bg-brand text-white shadow-md shadow-brand/25 ring-1 ring-brand/30'
+                  : isStudentWall
+                    ? 'border border-transparent text-slate-700 hover:border-brand/20 hover:bg-brand/[0.05] hover:text-brand-900'
+                    : 'border border-slate-200/90 bg-white/95 text-slate-700 hover:border-brand/35 hover:bg-brand/[0.07] hover:text-brand'
               }`}
             >
               {cat}
@@ -943,30 +1005,53 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
       <div className="w-full">
           {loading ? (
             <div className="flex items-center justify-center py-24">
-               <div className="w-8 h-8 border-[3px] border-slate-200 border-t-brand rounded-full animate-spin" />
+               <div
+                 className={
+                   isStudentWall
+                     ? 'h-9 w-9 animate-spin rounded-full border-[3px] border-[#e8d4d4] border-t-brand shadow-sm'
+                     : 'h-8 w-8 animate-spin rounded-full border-[3px] border-slate-200 border-t-brand'
+                 }
+               />
             </div>
           ) : displayPosts.length === 0 ? (
-            <div className="flex flex-col items-center py-20 gap-4 text-center">
-              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center">
-                <Icons.PenLine className="w-5 h-5 text-slate-400" />
+            <div className="flex flex-col items-center gap-5 py-20 text-center">
+              <div
+                className={
+                  isStudentWall
+                    ? 'flex h-14 w-14 items-center justify-center rounded-2xl border border-[#e8d4d4]/80 bg-gradient-to-br from-white to-[#fff5f2] shadow-[0_8px_28px_-8px_rgba(137,11,11,0.1)]'
+                    : 'flex h-12 w-12 items-center justify-center rounded-full bg-slate-100'
+                }
+              >
+                <Icons.PenLine className={isStudentWall ? 'h-6 w-6 text-brand/70' : 'h-5 w-5 text-slate-400'} />
               </div>
               <div>
-                <p className="text-base font-semibold text-slate-800 mb-1">
+                <p className="font-display mb-1.5 text-lg font-semibold text-[#1a0a0a]">
                   {activeCategory === 'All Feed' ? 'No posts yet' : `Nothing in ${activeCategory}`}
                 </p>
-                <p className="text-sm text-slate-400 max-w-xs mx-auto">
-                  Start a conversation. Ask a question, share a resource, or help a peer.
+                <p className="mx-auto max-w-xs text-sm leading-relaxed text-slate-500">
+                  Start a conversation—ask a question, share a resource, or help a peer along the way.
                 </p>
               </div>
               <button
+                type="button"
                 onClick={() => isLoggedIn ? setIsPostModalOpen(true) : onAuthRequired?.('SIGNUP')}
-                className="mt-1 px-5 py-2.5 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-brand transition-colors"
+                className={
+                  isStudentWall
+                    ? 'mt-1 rounded-xl bg-gradient-to-r from-brand to-brand-900 px-6 py-2.5 text-sm font-semibold text-white shadow-[0_10px_28px_-8px_rgba(237,0,0,0.4)] transition hover:opacity-95'
+                    : 'mt-1 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand'
+                }
               >
                 {isLoggedIn ? 'Write a post' : 'Sign up to post'}
               </button>
             </div>
           ) : (
-            <div className="space-y-px overflow-hidden rounded-2xl border border-slate-200/90 bg-white text-left shadow-[0_1px_0_rgba(15,23,42,0.04),0_12px_40px_-12px_rgba(15,23,42,0.08)]">
+            <div
+              className={
+                isStudentWall
+                  ? 'space-y-0 overflow-hidden rounded-2xl border border-[#e5d4d0]/90 bg-[#fffdfb] text-left shadow-[0_16px_48px_-16px_rgba(137,11,11,0.09),inset_0_1px_0_rgba(255,255,255,0.95)]'
+                  : 'space-y-px overflow-hidden rounded-2xl border border-slate-200/90 bg-white text-left shadow-[0_1px_0_rgba(15,23,42,0.04),0_12px_40px_-12px_rgba(15,23,42,0.08)]'
+              }
+            >
               {displayPosts.map((post, idx) => {
                 const isAuditRequest = post.type === PostType.PEER_AUDIT_REQUEST;
                 const isBounty = post.type === PostType.BOUNTY;
@@ -977,8 +1062,15 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
                 const isLast = idx === displayPosts.length - 1;
 
                 return (
-                <article key={post.id} className={`relative hover:bg-slate-50/50 transition-colors ${!isLast ? 'border-b border-slate-100' : ''}`}>
-                  <div className="px-5 sm:px-6 py-4 sm:py-5">
+                <article
+                  key={post.id}
+                  className={`relative transition-colors ${
+                    isStudentWall
+                      ? `hover:bg-[#fffbf9]/90 ${!isLast ? 'border-b border-[#f0e6e3]' : ''}`
+                      : `hover:bg-slate-50/50 ${!isLast ? 'border-b border-slate-100' : ''}`
+                  }`}
+                >
+                  <div className="px-5 py-4 sm:px-6 sm:py-5">
                     {/* Author row */}
                     <div className="flex gap-3">
                       <div className="shrink-0 cursor-pointer mt-0.5" onClick={() => initiateAlignment(post.author || {})}>
@@ -1061,12 +1153,18 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
                         {activeSummaryId === post.id && (
                           <div className="mt-3">
                             {summary ? (
-                              <div className="p-3 bg-violet-50 border border-violet-100 rounded-lg">
-                                <div className="flex items-center gap-1.5 mb-1.5">
-                                  <Icons.Sparkles className="w-3 h-3 text-violet-500" />
-                                  <span className="text-[10px] font-semibold text-violet-500 uppercase tracking-wide">AI Summary</span>
+                              <div
+                                className={
+                                  isStudentWall
+                                    ? 'rounded-xl border border-[#e8d4d4]/80 bg-gradient-to-br from-[#fffefb] to-[#fff5f2] p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]'
+                                    : 'rounded-lg border border-violet-100 bg-violet-50 p-3'
+                                }
+                              >
+                                <div className="mb-1.5 flex items-center gap-1.5">
+                                  <Icons.Sparkles className={`h-3 w-3 ${isStudentWall ? 'text-brand' : 'text-violet-500'}`} />
+                                  <span className={`text-[10px] font-semibold uppercase tracking-wide ${isStudentWall ? 'text-brand-900/80' : 'text-violet-500'}`}>AI Summary</span>
                                 </div>
-                                <p className="text-sm text-slate-600 leading-relaxed">{summary}</p>
+                                <p className="text-sm leading-relaxed text-slate-600">{summary}</p>
                               </div>
                             ) : (
                               <div className="p-3 bg-slate-50 rounded-lg flex items-center gap-2">
@@ -1079,9 +1177,18 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
 
                         {/* Tags */}
                         {post.tags && post.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-3">
+                          <div className="mt-3 flex flex-wrap gap-1">
                             {post.tags.map(tag => (
-                              <span key={tag} className="text-xs text-blue-500 hover:underline cursor-pointer">#{tag.replace(/\s+/g, '')}</span>
+                              <span
+                                key={tag}
+                                className={
+                                  isStudentWall
+                                    ? 'cursor-pointer text-xs font-medium text-brand-900/70 hover:text-brand hover:underline'
+                                    : 'cursor-pointer text-xs text-blue-500 hover:underline'
+                                }
+                              >
+                                #{tag.replace(/\s+/g, '')}
+                              </span>
                             ))}
                           </div>
                         )}
@@ -1090,17 +1197,25 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
                         <div className="flex items-center mt-3 -ml-2">
                           {isAuditRequest ? (
                             <button
+                              type="button"
                               onClick={() => openAuditPanel(post)}
                               disabled={post.auditStatus !== 'OPEN'}
-                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-colors ${post.auditStatus !== 'OPEN' ? 'text-slate-300 cursor-not-allowed' : 'text-slate-500 hover:text-blue-500 hover:bg-blue-50'}`}
+                              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs transition-colors ${
+                                post.auditStatus !== 'OPEN'
+                                  ? 'cursor-not-allowed text-slate-300'
+                                  : isStudentWall
+                                    ? 'text-slate-500 hover:bg-brand/[0.07] hover:text-brand-900'
+                                    : 'text-slate-500 hover:bg-blue-50 hover:text-blue-500'
+                              }`}
                             >
                               <Icons.Scale className="w-4 h-4" />
                               <span>Audit</span>
                             </button>
                           ) : (
                             <button
+                              type="button"
                               onClick={() => handleVouch(post.id)}
-                              className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs text-slate-500 hover:text-rose-500 hover:bg-rose-50 transition-colors group"
+                              className="group flex items-center gap-1 rounded-full px-3 py-1.5 text-xs text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-600"
                             >
                               <Icons.Heart className="w-4 h-4 group-hover:scale-110 transition-transform" />
                               {(post.likes || 0) > 0 && <span>{post.likes}</span>}
@@ -1108,24 +1223,51 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
                           )}
 
                           <button
+                            type="button"
                             onClick={() => loadDiscussion(post.id)}
-                            className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs transition-colors ${openDiscussionId === post.id ? 'text-blue-500 bg-blue-50' : 'text-slate-500 hover:text-blue-500 hover:bg-blue-50'}`}
+                            className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-xs transition-colors ${
+                              openDiscussionId === post.id
+                                ? isStudentWall
+                                  ? 'bg-brand/10 text-brand-900'
+                                  : 'bg-blue-50 text-blue-500'
+                                : isStudentWall
+                                  ? 'text-slate-500 hover:bg-brand/[0.06] hover:text-brand-900'
+                                  : 'text-slate-500 hover:bg-blue-50 hover:text-blue-500'
+                            }`}
                           >
                             <Icons.MessageCircle className="w-4 h-4" />
                             <span className="hidden sm:inline">Reply</span>
                           </button>
 
                           <button
+                            type="button"
                             onClick={() => handleSummarize(post.id, post.content)}
-                            className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs transition-colors ${activeSummaryId === post.id && summary ? 'text-violet-500 bg-violet-50' : 'text-slate-500 hover:text-violet-500 hover:bg-violet-50'}`}
+                            className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-xs transition-colors ${
+                              activeSummaryId === post.id && summary
+                                ? isStudentWall
+                                  ? 'bg-[#faf5f5] text-brand-900 ring-1 ring-brand/15'
+                                  : 'bg-violet-50 text-violet-500'
+                                : isStudentWall
+                                  ? 'text-slate-500 hover:bg-brand/[0.05] hover:text-brand-900'
+                                  : 'text-slate-500 hover:bg-violet-50 hover:text-violet-500'
+                            }`}
                           >
                             <Icons.Sparkles className="w-4 h-4" />
                             <span className="hidden sm:inline">AI</span>
                           </button>
 
                           <button
+                            type="button"
                             onClick={() => toggleBookmark(post.id)}
-                            className={`flex items-center px-3 py-1.5 rounded-full text-xs transition-colors ml-auto ${isBookmarked ? 'text-amber-500' : 'text-slate-400 hover:text-amber-500 hover:bg-amber-50'}`}
+                            className={`ml-auto flex items-center rounded-full px-3 py-1.5 text-xs transition-colors ${
+                              isBookmarked
+                                ? isStudentWall
+                                  ? 'text-brand'
+                                  : 'text-amber-500'
+                                : isStudentWall
+                                  ? 'text-slate-400 hover:bg-brand/[0.06] hover:text-brand'
+                                  : 'text-slate-400 hover:bg-amber-50 hover:text-amber-500'
+                            }`}
                           >
                             <Icons.Flag className="w-4 h-4" />
                           </button>
@@ -1136,8 +1278,14 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
 
                   {/* Discussion thread */}
                   {openDiscussionId === post.id && (
-                    <div className="px-5 sm:px-6 pb-4 border-t border-slate-100 bg-slate-50/30">
-                      <h4 className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mt-3 mb-2">Replies</h4>
+                    <div
+                      className={
+                        isStudentWall
+                          ? 'border-t border-[#f0e6e3] bg-gradient-to-b from-[#fff9f7]/90 to-[#faf7f5]/80 px-5 pb-4 sm:px-6'
+                          : 'border-t border-slate-100 bg-slate-50/30 px-5 pb-4 sm:px-6'
+                      }
+                    >
+                      <h4 className="mb-2 mt-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Replies</h4>
                       {discussions[post.id]?.length === 0 && (
                         <p className="text-xs text-slate-400 py-2">No replies yet.</p>
                       )}

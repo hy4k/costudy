@@ -29,6 +29,15 @@ export default {
         'neon-emerald': '0 0 20px rgba(16,185,129,0.5), 0 0 40px rgba(16,185,129,0.3)',
         'neon-amber': '0 0 20px rgba(251,191,36,0.5), 0 0 40px rgba(251,191,36,0.3)',
         'neon-cyan': '0 0 20px rgba(6,182,212,0.5), 0 0 40px rgba(6,182,212,0.3)',
+        /** Soft red-tinted clay (student nav / chrome) */
+        'clay-red-raised':
+          '4px 5px 12px rgba(137, 11, 11, 0.12), -3px -3px 10px rgba(255, 255, 255, 0.95), 0 0 0 1px rgba(255, 200, 200, 0.35)',
+        'clay-red-raised-sm':
+          '3px 4px 10px rgba(137, 11, 11, 0.1), -2px -2px 8px rgba(255, 255, 255, 0.9)',
+        'clay-red-inset':
+          'inset 3px 3px 8px rgba(137, 11, 11, 0.22), inset -2px -2px 8px rgba(255, 255, 255, 0.55)',
+        'clay-red-logo':
+          '4px 6px 14px rgba(137, 11, 11, 0.14), -3px -3px 12px rgba(255, 255, 255, 0.98), inset 0 1px 0 rgba(255, 255, 255, 0.85)',
       },
       colors: {
         brand: {

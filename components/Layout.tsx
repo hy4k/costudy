@@ -133,6 +133,8 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
       setIsMobileMenuOpen(false);
   };
 
+  const isStudentNav = userRole !== UserRole.TEACHER;
+
   const NavButton = ({ view, label, isMobile = false }: { view: keyof ViewState; label: string; isMobile?: boolean }) => {
     const isActive = currentView === view;
 
@@ -143,8 +145,12 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
                 onClick={() => handleNavClick(view)}
                 className={`w-full rounded-2xl px-4 py-3.5 text-left font-sans text-sm font-semibold tracking-tight transition-all ${
                   isActive
-                    ? 'bg-brand text-white shadow-neomorph-inset'
-                    : 'bg-slate-100/80 text-slate-700 shadow-neomorph-sm hover:text-brand active:shadow-neomorph-inset'
+                    ? isStudentNav
+                      ? 'bg-brand text-white shadow-clay-red-inset'
+                      : 'bg-brand text-white shadow-neomorph-inset'
+                    : isStudentNav
+                      ? 'bg-white/90 text-slate-700 shadow-clay-red-raised hover:text-brand-900 active:shadow-clay-red-inset'
+                      : 'bg-slate-100/80 text-slate-700 shadow-neomorph-sm hover:text-brand active:shadow-neomorph-inset'
                 }`}
             >
                 {label}
@@ -157,8 +163,12 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
           onClick={() => setView(view)}
           className={`rounded-xl px-3.5 py-2.5 font-sans text-[13px] font-semibold tracking-tight whitespace-nowrap transition-all duration-200 ${
             isActive
-              ? 'bg-brand text-white shadow-neomorph-inset'
-              : 'text-slate-600 shadow-neomorph-sm hover:text-brand active:bg-slate-100/90'
+              ? isStudentNav
+                ? 'bg-brand text-white shadow-clay-red-inset'
+                : 'bg-brand text-white shadow-neomorph-inset'
+              : isStudentNav
+                ? 'bg-white/90 text-slate-700 shadow-clay-red-raised hover:bg-white hover:text-brand-900'
+                : 'text-slate-600 shadow-neomorph-sm hover:text-brand active:bg-slate-100/90'
           }`}
         >
           {label}
@@ -205,12 +215,18 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
             </button>
 
             <div className="cursor-pointer group" onClick={() => setView(userRole === UserRole.TEACHER ? ViewState.FACULTY_ROOM : ViewState.WALL)}>
-                <CoStudyLogo size="sm" variant="light" className="group-hover:opacity-90 transition-opacity" />
+                <CoStudyLogo size="sm" variant="light" elevated={isStudentNav} className="group-hover:opacity-95 transition-opacity" />
             </div>
         </div>
 
         <div className="hidden min-w-0 flex-1 justify-center px-2 lg:flex">
-          <div className="flex max-w-full items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/80 bg-slate-200/50 p-1.5 shadow-neomorph-inset-light backdrop-blur-sm no-scrollbar">
+          <div
+            className={
+              isStudentNav
+                ? 'flex max-w-full items-center gap-1.5 overflow-x-auto rounded-2xl border border-brand/15 bg-gradient-to-b from-brand/[0.06] to-red-50/40 p-1.5 shadow-clay-red-inset backdrop-blur-sm no-scrollbar'
+                : 'flex max-w-full items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/80 bg-slate-200/50 p-1.5 shadow-neomorph-inset-light backdrop-blur-sm no-scrollbar'
+            }
+          >
             {renderNavItems()}
           </div>
         </div>

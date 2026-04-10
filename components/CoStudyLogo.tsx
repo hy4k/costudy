@@ -10,6 +10,8 @@ interface CoStudyLogoProps {
   showIcon?: boolean;
   /** Optional custom className for the wrapper */
   className?: string;
+  /** Soft clay capsule + red-tinted shadow (e.g. top nav for students) */
+  elevated?: boolean;
 }
 
 const sizeMap = {
@@ -21,28 +23,40 @@ const sizeMap = {
 
 /**
  * Premium COSTUDY header: red hexagonal icon + CO/STUDY split (red + black) for elegant, vibrant branding.
- * Matches the attached design: combination of red and black, premium and elegant feel.
  */
 export const CoStudyLogo: React.FC<CoStudyLogoProps> = ({
   size = 'md',
   variant = 'light',
   showIcon = true,
-  className = ''
+  className = '',
+  elevated = false,
 }) => {
   const { icon: iconClass, text: textClass } = sizeMap[size];
   const isDark = variant === 'dark';
 
-  return (
-    <div className={`flex items-center gap-3 sm:gap-4 ${className}`}>
+  const inner = (
+    <>
       {showIcon && (
         <div className="shrink-0">
           <Icons.Logo className={iconClass} />
         </div>
       )}
-      <span className={`font-black tracking-tighter uppercase ${textClass}`}>
+      <span className={`font-black uppercase tracking-[-0.04em] ${textClass}`}>
         <span className={isDark ? 'text-red-500' : 'text-red-600'}>CO</span>
         <span className={isDark ? 'text-white' : 'text-slate-900'}>STUDY</span>
       </span>
-    </div>
+    </>
   );
+
+  if (elevated) {
+    return (
+      <div
+        className={`inline-flex rounded-2xl border border-white/90 bg-gradient-to-b from-white to-brand-50/40 px-2.5 py-1.5 shadow-clay-red-logo sm:px-3 sm:py-2 ${className}`}
+      >
+        <div className="flex items-center gap-2.5 sm:gap-3.5">{inner}</div>
+      </div>
+    );
+  }
+
+  return <div className={`flex items-center gap-3 sm:gap-4 ${className}`}>{inner}</div>;
 };

@@ -5,6 +5,7 @@ import { Mentor, User } from '../../types';
 import { matchMentorForStudent } from '../../services/matchingService';
 import { costudyService } from '../../services/costudyService';
 import { getUserProfile } from '../../services/fetsService';
+import { STUDENT_PAGE_BG, StudentPageChrome } from '../student/StudentPageChrome';
 
 interface TeachersLoungeProps {
   userId?: string;
@@ -53,15 +54,18 @@ export const TeachersLounge: React.FC<TeachersLoungeProps> = ({ userId }) => {
   const matchResults = currentUser ? matchMentorForStudent(currentUser, mentors) : [];
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-20 flex flex-col items-center">
-      <header className="w-full text-center mb-24 relative">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-brand/5 blur-[120px] pointer-events-none"></div>
-        <h2 className="text-7xl font-black text-slate-900 tracking-tighter leading-[0.7] mb-8 scale-y-110 uppercase">Hiring Built On Trust</h2>
-        <div className="mt-16 flex justify-center gap-6">
-          <button onClick={() => setMatchingMode(false)} className={`px-10 py-5 rounded-3xl text-xs font-black uppercase tracking-widest border transition-all ${!matchingMode ? 'bg-slate-900 text-white shadow-2xl' : 'bg-white text-slate-400 border-slate-200'}`}>Explore All</button>
-          <button onClick={() => setMatchingMode(true)} className={`px-10 py-5 rounded-3xl text-xs font-black uppercase tracking-widest border transition-all flex items-center gap-3 ${matchingMode ? 'bg-brand text-white shadow-brand/30 shadow-2xl' : 'bg-white text-slate-400 border-slate-200'}`}><Icons.Sparkles className="w-4 h-4" /> Smart Match</button>
+    <div className={`${STUDENT_PAGE_BG} flex flex-col`}>
+      <StudentPageChrome
+        eyebrow="Mentors"
+        title="Hiring built on trust"
+        description="Browse verified specialists or use smart match to align with your exam focus and study style."
+        icon={<Icons.GraduationCap className="h-6 w-6" />}
+      />
+      <div className="mx-auto flex w-full max-w-7xl flex-col items-center px-4 pb-20 pt-2 sm:px-6">
+        <div className="mb-12 flex flex-wrap justify-center gap-4">
+          <button onClick={() => setMatchingMode(false)} className={`rounded-2xl border px-8 py-4 text-xs font-black uppercase tracking-widest transition-all ${!matchingMode ? 'border-brand/20 bg-brand text-white shadow-clay-red-raised' : 'border-slate-200 bg-white/90 text-slate-500 shadow-sm hover:border-brand/20'}`}>Explore All</button>
+          <button onClick={() => setMatchingMode(true)} className={`flex items-center gap-3 rounded-2xl border px-8 py-4 text-xs font-black uppercase tracking-widest transition-all ${matchingMode ? 'border-brand/20 bg-brand text-white shadow-clay-red-raised' : 'border-slate-200 bg-white/90 text-slate-500 shadow-sm hover:border-brand/20'}`}><Icons.Sparkles className="h-4 w-4" /> Smart Match</button>
         </div>
-      </header>
 
       {loading ? (
         <div className="flex flex-col items-center gap-6 text-slate-300 py-20">
@@ -77,6 +81,7 @@ export const TeachersLounge: React.FC<TeachersLoungeProps> = ({ userId }) => {
             )}
         </div>
       )}
+      </div>
     </div>
   );
 };

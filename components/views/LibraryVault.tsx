@@ -4,6 +4,7 @@ import { Icons } from '../Icons';
 import { LibraryItem } from '../../types';
 import { costudyService } from '../../services/costudyService';
 import { costudyAPI } from '../../services/costudyAPI';
+import { STUDENT_PAGE_BG, StudentPageChrome } from '../student/StudentPageChrome';
 
 export const LibraryVault: React.FC = () => {
     const [library, setLibrary] = useState<LibraryItem[]>([]);
@@ -100,7 +101,14 @@ export const LibraryVault: React.FC = () => {
     );
 
     return (
-        <div className="max-w-7xl mx-auto px-12 py-20 relative">
+        <div className={`${STUDENT_PAGE_BG} font-sans`}>
+            <StudentPageChrome
+                eyebrow="Knowledge vault"
+                title="Success library"
+                description="Synchronize your CMA resources with the CoStudy RAG engine. Turn up to 1GB of static material into a living, searchable index for the AI Deck."
+                icon={<Icons.BookOpen className="h-6 w-6" />}
+            />
+        <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-12">
             {/* RAG Search Results Overlay */}
             {showSearchResults && (
                 <div className="fixed inset-0 z-40 bg-slate-950/98 backdrop-blur-3xl flex items-start justify-center p-10 pt-20 animate-in fade-in zoom-in-95 duration-500 overflow-y-auto">
@@ -202,28 +210,22 @@ export const LibraryVault: React.FC = () => {
                 </div>
             )}
 
-            <header className="mb-20 text-center relative">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[400px] bg-brand/5 blur-[150px] pointer-events-none"></div>
-                <div className="flex justify-center gap-4 mb-8">
-                    <div className="inline-flex items-center gap-3 bg-slate-900 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] shadow-2xl">
-                        <div className={`w-2 h-2 rounded-full ${apiStatus === 'online' ? 'bg-emerald-500' : apiStatus === 'offline' ? 'bg-red-500' : 'bg-yellow-500 animate-pulse'}`}></div>
-                        {apiStatus === 'online' ? 'RAG Engine Online' : apiStatus === 'offline' ? 'RAG Offline' : 'Connecting...'}
+            <div className="mb-10 flex flex-wrap items-center justify-center gap-4">
+                    <div className="inline-flex items-center gap-3 rounded-2xl border border-brand/15 bg-white/90 px-6 py-3 text-[10px] font-black uppercase tracking-[0.4em] text-slate-900 shadow-clay-red-raised">
+                        <div className={`h-2 w-2 rounded-full ${apiStatus === 'online' ? 'bg-emerald-500' : apiStatus === 'offline' ? 'bg-red-500' : 'bg-yellow-500 animate-pulse'}`} />
+                        {apiStatus === 'online' ? 'RAG engine online' : apiStatus === 'offline' ? 'RAG offline' : 'Connecting...'}
                     </div>
                     <button 
+                        type="button"
                         onClick={() => setShowArchitecture(true)}
-                        className="inline-flex items-center gap-3 bg-white border border-slate-200 text-slate-900 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] hover:bg-brand hover:text-white transition-all shadow-xl"
+                        className="inline-flex items-center gap-3 rounded-2xl border border-brand/15 bg-white px-6 py-3 text-[10px] font-black uppercase tracking-[0.4em] text-slate-900 shadow-sm transition-all hover:bg-brand hover:text-white"
                     >
-                        <Icons.Brain className="w-5 h-5" />
-                        Engineering Specs
+                        <Icons.Brain className="h-5 w-5" />
+                        Engineering specs
                     </button>
-                </div>
-                <h2 className="text-8xl font-black text-slate-900 tracking-tighter leading-tight scale-y-110 mb-4 uppercase">Success Library</h2>
-                <p className="text-xl text-slate-500 font-medium max-w-3xl mx-auto leading-relaxed">
-                    Synchronize your personal CMA resources with the **CoStudy RAG Engine**. Transform 1GB of static text into a living, searchable neural network.
-                </p>
-            </header>
+            </div>
 
-            <div className="flex flex-col md:flex-row gap-12 mb-16 items-center justify-between bg-white/40 backdrop-blur-xl p-8 rounded-[4rem] border border-white/80 shadow-sm">
+            <div className="mb-16 flex flex-col items-center justify-between gap-12 rounded-[3rem] border border-brand/15 bg-white/80 p-8 shadow-clay-red-raised backdrop-blur-xl md:flex-row">
                 <div className="relative w-full max-w-xl">
                     <input 
                         type="text" 
@@ -348,6 +350,7 @@ export const LibraryVault: React.FC = () => {
                     100% { width: 100%; }
                 }
             `}</style>
+        </div>
         </div>
     );
 };

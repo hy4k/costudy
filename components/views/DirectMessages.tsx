@@ -4,6 +4,7 @@ import { Icons } from '../Icons';
 import { User, ChatConversation, ChatMessage, ThreadContextType, SignalLevel, SignalConfig } from '../../types';
 import { chatService } from '../../services/chatService';
 import { supabase } from '../../services/supabaseClient';
+import { STUDENT_PAGE_BG, StudentPageChrome } from '../student/StudentPageChrome';
 
 interface DirectMessagesProps {
   userId?: string;
@@ -153,7 +154,15 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({ userId }) => {
   const signalConfig = otherParticipant?.signalLevel ? SignalConfig[otherParticipant.signalLevel as SignalLevel] : SignalConfig['ACTIVE_SOLVER'];
 
   return (
-    <div className="max-w-[1600px] mx-auto p-4 sm:p-6 h-[calc(100vh-80px)] flex flex-col md:flex-row gap-6">
+    <div className={`${STUDENT_PAGE_BG} flex min-h-0 flex-col`}>
+      <StudentPageChrome
+        eyebrow="Inbox"
+        title="Messages"
+        description="Direct conversations with scholars and mentors."
+        icon={<Icons.MessageCircle className="h-6 w-6" />}
+        compact
+      />
+    <div className="mx-auto flex h-[min(100vh-12rem,900px)] min-h-0 max-w-[1600px] flex-1 flex-col gap-6 p-4 sm:p-6 md:flex-row">
       
       {/* SIDEBAR: ROSTER & MISSIONS */}
       <div className={`w-full md:w-[400px] flex flex-col bg-[#0f172a] text-white rounded-[2.5rem] border border-slate-800 shadow-2xl overflow-hidden shrink-0 ${activeConvoId ? 'hidden md:flex' : 'flex'}`}>
@@ -496,6 +505,6 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({ userId }) => {
         )}
       </div>
     </div>
+    </div>
   );
 };
-    

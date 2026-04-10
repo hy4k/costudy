@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { referralService, ReferralStats } from '../../services/referralService';
 import { Icons } from '../Icons';
+import { STUDENT_PAGE_BG, StudentPageChrome } from '../student/StudentPageChrome';
 
 interface ReferralDashboardProps {
   userId: string;
@@ -75,40 +76,40 @@ export const ReferralDashboard: React.FC<ReferralDashboardProps> = ({ userId, us
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-brand to-blue-600 rounded-xl p-6 text-white">
-        <h2 className="text-2xl font-black mb-2">Refer & Earn ₹100</h2>
-        <p className="text-white/90 text-sm">
-          Share CoStudy with friends and earn ₹100 for every successful referral. They get 50% OFF too!
-        </p>
-      </div>
+    <div className={`${STUDENT_PAGE_BG} flex flex-col`}>
+      <StudentPageChrome
+        eyebrow="Referrals"
+        title="Refer & earn ₹100"
+        description="Share CoStudy with friends and earn ₹100 for every successful referral. They get 50% off their first month too."
+        icon={<Icons.Gift className="h-6 w-6" />}
+      />
+      <div className="mx-auto w-full max-w-4xl flex-1 space-y-6 px-4 pb-12 pt-2 sm:px-6">
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg border border-slate-200 p-4">
+        <div className="rounded-xl border border-brand/15 bg-white p-4 shadow-sm">
           <div className="text-3xl font-black text-slate-900 mb-1">{stats?.totalReferrals || 0}</div>
           <div className="text-sm text-slate-500">Total Referrals</div>
         </div>
 
-        <div className="bg-white rounded-lg border border-slate-200 p-4">
+        <div className="rounded-xl border border-brand/15 bg-white p-4 shadow-sm">
           <div className="text-3xl font-black text-emerald-600 mb-1">{stats?.activeReferrals || 0}</div>
           <div className="text-sm text-slate-500">Active</div>
         </div>
 
-        <div className="bg-white rounded-lg border border-slate-200 p-4">
+        <div className="rounded-xl border border-brand/15 bg-white p-4 shadow-sm">
           <div className="text-3xl font-black text-brand mb-1">₹{stats?.totalEarned || 0}</div>
           <div className="text-sm text-slate-500">Earned</div>
         </div>
 
-        <div className="bg-white rounded-lg border border-slate-200 p-4">
+        <div className="rounded-xl border border-brand/15 bg-white p-4 shadow-sm">
           <div className="text-3xl font-black text-amber-600 mb-1">₹{stats?.pendingRewards || 0}</div>
           <div className="text-sm text-slate-500">Pending</div>
         </div>
       </div>
 
       {/* Referral Code Card */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="rounded-xl border border-brand/15 bg-white p-6 shadow-clay-red-raised">
         <h3 className="font-bold text-slate-900 mb-4">Your Referral Code</h3>
         
         <div className="flex items-center gap-3 mb-4">
@@ -182,7 +183,7 @@ export const ReferralDashboard: React.FC<ReferralDashboardProps> = ({ userId, us
 
       {/* Referral List */}
       {referrals.length > 0 && (
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="rounded-xl border border-brand/15 bg-white p-6 shadow-sm">
           <h3 className="font-bold text-slate-900 mb-4">Your Referrals</h3>
           <div className="space-y-3">
             {referrals.map((ref) => (
@@ -212,6 +213,7 @@ export const ReferralDashboard: React.FC<ReferralDashboardProps> = ({ userId, us
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

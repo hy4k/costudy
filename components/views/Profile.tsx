@@ -293,6 +293,16 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
     const isExpert = vouchCount > 50;
 
     return (
+        <div className={isTeacher ? 'contents' : 'flex min-h-full flex-col bg-gradient-to-b from-[#faf7f5] via-white to-[#f9f5f3]'}>
+            {!isTeacher && (
+                <header className="w-full shrink-0 border-b border-[#e8d4d4]/70 bg-gradient-to-b from-[#fffefc] via-[#fff8f6] to-[#fff4f0]">
+                    <div className="mx-auto max-w-[95%] px-4 py-6 sm:px-6 sm:py-8">
+                        <p className="font-display text-[11px] font-semibold uppercase tracking-[0.22em] text-brand-900/75">Account</p>
+                        <h1 className="font-display text-2xl font-semibold tracking-tight text-[#1a0a0a] sm:text-[2.15rem]">Profile</h1>
+                        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-600">Your identity, alignments, and reputation on CoStudy.</p>
+                    </div>
+                </header>
+            )}
         <div className="mx-auto px-6 py-12 flex flex-col gap-12 animate-in fade-in duration-700 pb-40 w-full max-w-[95%]">
             <input 
                 type="file" 
@@ -804,6 +814,7 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
                     ID: {userId?.split('-')[0] || 'Unknown'}
                 </div>
             </div>
+        </div>
         </div>
     );
 };

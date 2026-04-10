@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Icons } from '../Icons';
-import { CoStudyLogo } from '../CoStudyLogo';
 import { Post, UserRole, UserLevel, Comment, ViewState, PostType, User, AlignmentPurpose, AlignmentDuration } from '../../types';
 import { summarizePost } from '../../services/geminiService';
 import { costudyService } from '../../services/costudyService';
@@ -548,7 +547,7 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
         }
       >
         {isStudentWall ? (
-          <div className="mx-auto max-w-3xl px-4 pb-6 pt-8 text-left sm:px-6 sm:pb-8 sm:pt-10">
+          <div className="mx-auto max-w-3xl px-4 pb-4 pt-6 text-left sm:px-6 sm:pb-5 sm:pt-8">
             <h1 className="font-display text-3xl font-semibold tracking-tight text-[#1a0a0a] sm:text-[2.15rem]">Study Wall</h1>
           </div>
         ) : (

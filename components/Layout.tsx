@@ -215,7 +215,11 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
             </button>
 
             <div className="cursor-pointer group" onClick={() => setView(userRole === UserRole.TEACHER ? ViewState.FACULTY_ROOM : ViewState.WALL)}>
-                <CoStudyLogo size="sm" variant="light" elevated={isStudentNav} className="group-hover:opacity-95 transition-opacity" />
+                <CoStudyLogo
+                  size="sm"
+                  variant={isStudentNav ? 'nav' : 'light'}
+                  className="group-hover:opacity-95 transition-opacity"
+                />
             </div>
         </div>
 
@@ -323,8 +327,14 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-          <div className="fixed inset-0 top-[4.25rem] z-40 flex flex-col overflow-y-auto bg-gradient-to-b from-brand/[0.1] via-white to-slate-50 p-6 shadow-luxury-sm backdrop-blur-xl animate-in slide-in-from-top-10 duration-300 lg:hidden">
-              <div className="space-y-2">
+          <div className="fixed inset-0 top-[4.25rem] z-40 flex flex-col overflow-y-auto bg-gradient-to-b from-brand/[0.08] via-white to-slate-50 p-6 shadow-luxury-sm backdrop-blur-xl animate-in slide-in-from-top-10 duration-300 lg:hidden">
+              <div
+                className={
+                  isStudentNav
+                    ? 'space-y-2 rounded-2xl border border-brand/15 bg-gradient-to-b from-brand/[0.06] to-red-50/40 p-2 shadow-clay-red-inset'
+                    : 'space-y-2'
+                }
+              >
                   {renderNavItems(true)}
               </div>
           </div>

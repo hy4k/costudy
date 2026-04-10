@@ -2,6 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Icons } from '../Icons';
 import { getChatResponse, generateStudyContent, evaluateEssay } from '../../services/geminiService';
+import { STUDENT_PAGE_BG, StudentPageChrome } from '../student/StudentPageChrome';
 
 type Tool = 'CHAT' | 'NOTES' | 'FLASHCARDS' | 'TOPIC' | 'ESSAY';
 type ChatMode = 'STANDARD' | 'FOLLOW_UP' | 'VAULT_REF';
@@ -182,18 +183,19 @@ export const AIDeck: React.FC = () => {
     );
 
     return (
-        <div className="flex h-full min-h-0 flex-col bg-gradient-to-br from-brand/[0.08] via-white to-slate-50 font-sans text-left md:flex-row">
+        <div className={`flex h-full min-h-0 flex-col font-sans text-left ${STUDENT_PAGE_BG}`}>
+            <StudentPageChrome
+                eyebrow="AI workspace"
+                title="CMA Mastermind"
+                description="IMA-aligned tools for chat, notes, and drills."
+                icon={<Icons.Sparkles className="h-6 w-6" />}
+                compact
+            />
+            <div className="flex min-h-0 flex-1 flex-col md:flex-row">
             {/* Sidebar for Tools */}
-            <div className="flex w-full flex-col gap-2 border-b border-brand/15 bg-gradient-to-b from-white/90 to-brand/[0.05] p-6 backdrop-blur-xl md:w-80 md:border-b-0 md:border-r md:border-brand/15 md:p-8">
-                <div className="mb-6 flex items-start gap-3 border-b border-brand/10 pb-6 text-left">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand text-white shadow-lg shadow-brand/30 ring-2 ring-brand/20">
-                        <Icons.Sparkles className="h-6 w-6" />
-                    </div>
-                    <div className="min-w-0 pt-0.5">
-                        <p className="font-display text-[11px] font-semibold uppercase tracking-[0.14em] text-brand">AI workspace</p>
-                        <h2 className="font-display mt-0.5 text-lg font-bold tracking-tight text-slate-900">CMA Mastermind</h2>
-                        <p className="mt-1 text-xs font-medium leading-[1.6] text-slate-600">IMA-aligned tools for chat, notes, and drills.</p>
-                    </div>
+            <div className="flex w-full flex-col gap-2 border-b border-brand/15 bg-gradient-to-b from-white/95 to-brand/[0.04] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur-xl md:w-80 md:border-b-0 md:border-r md:border-brand/15 md:p-8">
+                <div className="mb-2 flex items-center gap-2 border-b border-brand/10 pb-4 text-left md:hidden">
+                    <span className="font-display text-xs font-semibold uppercase tracking-[0.14em] text-brand">Tools</span>
                 </div>
 
                 {toolBtn('CHAT', <Icons.MessageCircle className="h-[18px] w-[18px]" />, 'Chat', 'Ask anything across Part 1 & 2')}
@@ -536,6 +538,7 @@ export const AIDeck: React.FC = () => {
                         )}
                     </div>
                 )}
+            </div>
             </div>
         </div>
     );

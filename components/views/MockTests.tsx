@@ -3,6 +3,7 @@ import { Icons } from '../Icons';
 import { syncStudyTelemetry, fetchGlobalPerformance } from '../../services/fetsService';
 import { examService, EXAM_CONFIGS, ExamConfig, getTestCenterSessionById, findActiveTestCenterExam } from '../../services/examService';
 import { ExamSession } from './ExamSession';
+import { STUDENT_PAGE_BG, StudentPageChrome } from '../student/StudentPageChrome';
 
 /** Session-only unlock for demo; clear with sessionStorage.removeItem(...) or new browser session. */
 const MOCK_PORTAL_STORAGE_KEY = 'costudy_mock_portal_unlocked';
@@ -28,6 +29,7 @@ interface ExamCard {
 }
 
 export const MockTests: React.FC<MockTestsProps> = ({ userId, testCenter }) => {
+    const isStudentMocks = !testCenter;
     const mockPortalLocked =
         import.meta.env.VITE_MOCK_TESTS_LOCKED !== 'false';
     const mockPortalPassword =
@@ -325,8 +327,19 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId, testCenter }) => {
 
     if (mockPortalLocked && !portalUnlocked) {
         return (
-            <div className="w-full flex flex-col items-center justify-center px-6 py-16 f-body text-slate-800">
+            <div className={`w-full f-body text-slate-800 ${isStudentMocks ? `${STUDENT_PAGE_BG} min-h-full flex flex-col` : ''}`}>
+                {isStudentMocks && (
+                    <StudentPageChrome
+                        eyebrow="Assessment"
+                        title="Mock exam portal"
+                        description="Demo access is password-protected. Ask your admin for the unlock code."
+                        icon={<Icons.Lock className="h-6 w-6" />}
+                        compact
+                    />
+                )}
+                <div className={`flex flex-col items-center justify-center px-6 py-16 ${isStudentMocks ? 'flex-1' : ''}`}>
                 <div className="w-full max-w-md">
+                    {!isStudentMocks && (
                     <div className="flex items-center gap-3 mb-6 justify-center">
                         <div className="p-2.5 ep-neu-raised-sm rounded-xl bg-gradient-to-br from-[#f4faf2] to-[#dce8d8]">
                             <Icons.Lock className="w-6 h-6 text-[#4a7a1c]" />
@@ -335,7 +348,8 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId, testCenter }) => {
                             Mock Exam Portal
                         </span>
                     </div>
-                    <div className="ep-neu-card p-8">
+                    )}
+                    <div className={isStudentMocks ? 'rounded-2xl border border-brand/15 bg-white/95 p-8 shadow-clay-red-raised' : 'ep-neu-card p-8'}>
                         <h1 className="f-display text-2xl font-semibold text-slate-800 tracking-tight mb-2 text-center">
                             Demo access
                         </h1>
@@ -356,7 +370,11 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId, testCenter }) => {
                                     autoComplete="off"
                                     value={portalPw}
                                     onChange={(e) => setPortalPw(e.target.value)}
-                                    className="w-full px-4 py-3 rounded-xl ep-neu-inset border-0 text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-[#8dc63f]/35"
+                                    className={
+                                        isStudentMocks
+                                            ? 'w-full rounded-xl border border-brand/20 bg-white px-4 py-3 font-medium text-slate-800 shadow-sm outline-none focus:ring-2 focus:ring-brand/30'
+                                            : 'w-full px-4 py-3 rounded-xl ep-neu-inset border-0 text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-[#8dc63f]/35'
+                                    }
                                     placeholder="••••••"
                                 />
                                 {portalPwError && (
@@ -365,12 +383,17 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId, testCenter }) => {
                             </div>
                             <button
                                 type="submit"
-                                className="w-full py-3.5 ep-neu-cta ep-shimmer rounded-xl bg-gradient-to-r from-[#8dc63f] via-[#7db536] to-[#6ba52e] text-white font-bold text-sm hover:opacity-95 transition-opacity"
+                                className={
+                                    isStudentMocks
+                                        ? 'w-full rounded-xl bg-gradient-to-r from-brand to-brand-600 py-3.5 text-sm font-bold text-white shadow-md transition-opacity hover:opacity-95'
+                                        : 'w-full py-3.5 ep-neu-cta ep-shimmer rounded-xl bg-gradient-to-r from-[#8dc63f] via-[#7db536] to-[#6ba52e] text-white font-bold text-sm hover:opacity-95 transition-opacity'
+                                }
                             >
                                 Unlock mock exams
                             </button>
                         </form>
                     </div>
+                </div>
                 </div>
             </div>
         );
@@ -392,8 +415,15 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId, testCenter }) => {
     }
 
     return (
-        <div className="w-full text-left f-body text-slate-800">
-            {/* Header */}
+        <div className={isStudentMocks ? `min-h-full ${STUDENT_PAGE_BG} f-body text-slate-800` : 'w-full text-left f-body text-slate-800'}>
+            {isStudentMocks ? (
+                <StudentPageChrome
+                    eyebrow="CoStudy assessment engine"
+                    title="Mock exam portal"
+                    description="Prometric-style exam simulations. Your performance data refines your Study Cluster recommendations."
+                    icon={<Icons.FileText className="h-6 w-6" />}
+                />
+            ) : (
             <div className="ep-neu-topbar border-b border-white/50 rounded-b-2xl mb-4">
                 <div className="mx-auto max-w-7xl px-6 py-12">
                     <div className="mb-5 flex items-center gap-3">
@@ -412,12 +442,13 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId, testCenter }) => {
                     </p>
                 </div>
             </div>
+            )}
 
             {/* Stats Bar */}
             {!loading && perf && (
-                <div className="ep-neu-panel border-0 border-b border-white/40 mb-4">
-                    <div className="max-w-7xl mx-auto px-6 py-6">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div className={isStudentMocks ? 'mb-4 border-b border-brand/10 bg-white/90 shadow-sm' : 'ep-neu-panel border-0 border-b border-white/40 mb-4'}>
+                    <div className="mx-auto max-w-7xl px-6 py-6">
+                        <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
                             {[
                                 { label: 'Global Rank', value: `#${perf.globalRank}`, icon: <Icons.Trophy className="w-5 h-5" /> },
                                 { label: 'Avg Score', value: `${perf.averageMockScore}%`, icon: <Icons.TrendingUp className="w-5 h-5" /> },
@@ -425,9 +456,9 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId, testCenter }) => {
                                 { label: 'Sessions', value: recentSessions.length, icon: <Icons.Clock className="w-5 h-5" /> },
                             ].map((s, i) => (
                                 <div key={i} className="flex items-center gap-4">
-                                    <div className="p-3 ep-neu-raised-sm rounded-xl text-[#4a7a1c] bg-[#f6faf3]/80">{s.icon}</div>
+                                    <div className={isStudentMocks ? 'rounded-xl bg-brand/10 p-3 text-brand' : 'p-3 ep-neu-raised-sm rounded-xl text-[#4a7a1c] bg-[#f6faf3]/80'}>{s.icon}</div>
                                     <div>
-                                        <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">{s.label}</div>
+                                        <div className="text-xs font-bold uppercase tracking-wider text-slate-500">{s.label}</div>
                                         <div className="text-2xl font-black text-slate-900">{s.value}</div>
                                     </div>
                                 </div>
@@ -438,25 +469,25 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId, testCenter }) => {
             )}
 
             {/* Main Content */}
-            <div className="max-w-7xl mx-auto px-6 py-12">
+            <div className="mx-auto max-w-7xl px-6 py-12">
                 {loading ? (
-                    <div className="flex flex-col items-center gap-6 text-slate-500 py-20">
-                        <div className="ep-neu-raised w-16 h-16 rounded-2xl flex items-center justify-center bg-gradient-to-br from-[#f4faf2] to-[#dce8d8]">
-                            <Icons.CloudSync className="w-8 h-8 animate-spin text-[#4a7a1c]" />
+                    <div className="flex flex-col items-center gap-6 py-20 text-slate-500">
+                        <div className={isStudentMocks ? 'flex h-16 w-16 items-center justify-center rounded-2xl bg-brand/10' : 'ep-neu-raised flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[#f4faf2] to-[#dce8d8]'}>
+                            <Icons.CloudSync className={`h-8 w-8 animate-spin ${isStudentMocks ? 'text-brand' : 'text-[#4a7a1c]'}`} />
                         </div>
-                        <span className="font-bold uppercase tracking-widest text-sm">Initializing Exam Environment...</span>
+                        <span className="text-sm font-bold uppercase tracking-widest">Initializing exam environment...</span>
                     </div>
                 ) : (
                     <>
                         {/* Full Simulations Section */}
                         <div className="mb-16">
-                            <h2 className="text-2xl font-black text-slate-900 mb-2 flex items-center gap-3">
-                                <Icons.Target className="w-6 h-6 text-emerald-500" />
+                            <h2 className="mb-2 flex items-center gap-3 text-2xl font-black text-slate-900">
+                                <Icons.Target className={`h-6 w-6 ${isStudentMocks ? 'text-brand' : 'text-emerald-500'}`} />
                                 Full CMA Simulations
                             </h2>
-                            <p className="text-slate-500 mb-8">Complete 4-hour exam experience with MCQ and Essay sections</p>
+                            <p className="mb-8 text-slate-500">Complete 4-hour exam experience with MCQ and Essay sections</p>
                             
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
                                 {examCards.filter(c => c.id.startsWith('full-')).map(card => (
                                     <ExamCardComponent
                                         key={card.id}
@@ -464,6 +495,7 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId, testCenter }) => {
                                         onStart={() => startExam(card.configKey)}
                                         isStarting={startingKey === card.configKey}
                                         disabled={!!startingKey && startingKey !== card.configKey}
+                                        studentTheme={isStudentMocks}
                                     />
                                 ))}
                             </div>
@@ -471,13 +503,13 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId, testCenter }) => {
 
                         {/* Practice Sessions Section */}
                         <div className="mb-16">
-                            <h2 className="text-2xl font-black text-slate-900 mb-2 flex items-center gap-3">
-                                <Icons.Zap className="w-6 h-6 text-blue-500" />
+                            <h2 className="mb-2 flex items-center gap-3 text-2xl font-black text-slate-900">
+                                <Icons.Zap className={`h-6 w-6 ${isStudentMocks ? 'text-brand-900/80' : 'text-blue-500'}`} />
                                 Practice Sessions
                             </h2>
-                            <p className="text-slate-500 mb-8">Focused practice for specific areas</p>
+                            <p className="mb-8 text-slate-500">Focused practice for specific areas</p>
                             
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                                 {examCards.filter(c => !c.id.startsWith('full-')).map(card => (
                                     <ExamCardComponent
                                         key={card.id}
@@ -486,6 +518,7 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId, testCenter }) => {
                                         isStarting={startingKey === card.configKey}
                                         disabled={!!startingKey && startingKey !== card.configKey}
                                         compact
+                                        studentTheme={isStudentMocks}
                                     />
                                 ))}
                             </div>
@@ -494,13 +527,13 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId, testCenter }) => {
                         {/* Recent Sessions */}
                         {recentSessions.length > 0 && (
                             <div>
-                                <h2 className="text-2xl font-black text-slate-900 mb-6 flex items-center gap-3">
-                                    <Icons.Clock className="w-6 h-6 text-slate-400" />
+                                <h2 className="mb-6 flex items-center gap-3 text-2xl font-black text-slate-900">
+                                    <Icons.Clock className="h-6 w-6 text-slate-400" />
                                     Recent Sessions
                                 </h2>
-                                <div className="ep-neu-panel rounded-2xl overflow-hidden border-0">
+                                <div className={isStudentMocks ? 'overflow-hidden rounded-2xl border border-brand/15 bg-white shadow-clay-red-raised' : 'ep-neu-panel overflow-hidden rounded-2xl border-0'}>
                                     <table className="w-full">
-                                        <thead className="bg-[#eef5ea]/70 border-b border-slate-200/70">
+                                        <thead className={isStudentMocks ? 'border-b border-brand/10 bg-brand/[0.06]' : 'border-b border-slate-200/70 bg-[#eef5ea]/70'}>
                                             <tr>
                                                 <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Test</th>
                                                 <th className="text-left px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
@@ -536,10 +569,10 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId, testCenter }) => {
                         )}
 
                         {/* Hybrid Strategy Info */}
-                        <div className="mt-16 ep-neu-panel rounded-3xl p-10 text-slate-800">
+                        <div className={`mt-16 rounded-3xl p-10 text-slate-800 ${isStudentMocks ? 'border border-brand/15 bg-white/95 shadow-clay-red-raised' : 'ep-neu-panel'}`}>
                             <div className="flex items-start gap-6">
-                                <div className="p-4 ep-neu-raised-sm rounded-2xl bg-[#f6faf3]/90">
-                                    <Icons.Sparkles className="w-8 h-8 text-[#4a7a1c]" />
+                                <div className={isStudentMocks ? 'rounded-2xl bg-brand/10 p-4' : 'p-4 ep-neu-raised-sm rounded-2xl bg-[#f6faf3]/90'}>
+                                    <Icons.Sparkles className={`h-8 w-8 ${isStudentMocks ? 'text-brand' : 'text-[#4a7a1c]'}`} />
                                 </div>
                                 <div>
                                     <h3 className="f-display text-2xl font-semibold mb-2 text-slate-900">Hybrid Question Strategy</h3>
@@ -575,10 +608,11 @@ const ExamCardComponent: React.FC<{
     isStarting: boolean;
     disabled?: boolean;
     compact?: boolean;
-}> = ({ card, onStart, isStarting, disabled, compact }) => {
+    studentTheme?: boolean;
+}> = ({ card, onStart, isStarting, disabled, compact, studentTheme }) => {
     if (compact) {
         return (
-            <div className="ep-neu-panel rounded-2xl p-6 transition-shadow hover:shadow-[0_14px_36px_rgba(95,115,88,0.18)] border-0">
+            <div className={studentTheme ? 'rounded-2xl border border-brand/15 bg-white/95 p-6 shadow-clay-red-raised transition-shadow hover:shadow-md' : 'ep-neu-panel rounded-2xl border-0 p-6 transition-shadow hover:shadow-[0_14px_36px_rgba(95,115,88,0.18)]'}>
                 <div className="flex justify-between items-start mb-4">
                     <div>
                         <span className={`px-2 py-1 ${card.badgeColor} text-white text-[10px] font-black uppercase tracking-wider rounded`}>
@@ -600,7 +634,11 @@ const ExamCardComponent: React.FC<{
                 <button
                     onClick={onStart}
                     disabled={isStarting || disabled}
-                    className="w-full py-3 ep-neu-cta ep-shimmer rounded-xl bg-gradient-to-r from-[#8dc63f] via-[#7db536] to-[#6ba52e] text-white font-bold text-sm transition-opacity hover:opacity-95 disabled:opacity-50"
+                    className={
+                        studentTheme
+                            ? 'w-full rounded-xl bg-gradient-to-r from-brand to-brand-600 py-3 text-sm font-bold text-white shadow-md transition-opacity hover:opacity-95 disabled:opacity-50'
+                            : 'w-full py-3 ep-neu-cta ep-shimmer rounded-xl bg-gradient-to-r from-[#8dc63f] via-[#7db536] to-[#6ba52e] text-white font-bold text-sm transition-opacity hover:opacity-95 disabled:opacity-50'
+                    }
                 >
                     {isStarting ? 'Starting...' : 'Start'}
                 </button>
@@ -609,9 +647,15 @@ const ExamCardComponent: React.FC<{
     }
 
     return (
-        <div className={`ep-neu-panel rounded-3xl p-8 hover:shadow-[0_18px_48px_rgba(95,115,88,0.2)] transition-all relative overflow-hidden border-0 ${card.highlight ? 'ring-2 ring-[#8dc63f]/35' : ''}`}>
+        <div
+            className={
+                studentTheme
+                    ? `relative overflow-hidden rounded-3xl border border-brand/15 bg-white/95 p-8 shadow-clay-red-raised transition-all hover:shadow-md ${card.highlight ? 'ring-2 ring-brand/30' : ''}`
+                    : `ep-neu-panel relative overflow-hidden rounded-3xl border-0 p-8 transition-all hover:shadow-[0_18px_48px_rgba(95,115,88,0.2)] ${card.highlight ? 'ring-2 ring-[#8dc63f]/35' : ''}`
+            }
+        >
             {card.highlight && (
-                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl"></div>
+                <div className={`absolute right-0 top-0 h-32 w-32 blur-3xl ${studentTheme ? 'bg-brand/10' : 'bg-emerald-500/5'}`} />
             )}
             <div className="relative">
                 <div className="flex justify-between items-start mb-6">
@@ -628,21 +672,21 @@ const ExamCardComponent: React.FC<{
                 <p className="text-lg text-slate-500 mb-4">{card.subtitle}</p>
                 <p className="text-slate-600 mb-6">{card.description}</p>
 
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="ep-neu-inset rounded-xl p-4 text-center">
+                <div className="mb-6 grid grid-cols-2 gap-4">
+                    <div className={studentTheme ? 'rounded-xl border border-brand/10 bg-brand/[0.04] p-4 text-center' : 'ep-neu-inset rounded-xl p-4 text-center'}>
                         <div className="text-3xl font-black text-slate-900">{card.mcqCount}</div>
-                        <div className="text-xs font-bold text-slate-500 uppercase">MCQ Questions</div>
+                        <div className="text-xs font-bold uppercase text-slate-500">MCQ Questions</div>
                     </div>
-                    <div className="ep-neu-inset rounded-xl p-4 text-center">
+                    <div className={studentTheme ? 'rounded-xl border border-brand/10 bg-brand/[0.04] p-4 text-center' : 'ep-neu-inset rounded-xl p-4 text-center'}>
                         <div className="text-3xl font-black text-slate-900">{card.essayCount}</div>
-                        <div className="text-xs font-bold text-slate-500 uppercase">Essay Scenarios</div>
+                        <div className="text-xs font-bold uppercase text-slate-500">Essay Scenarios</div>
                     </div>
                 </div>
 
-                <ul className="space-y-2 mb-8">
+                <ul className="mb-8 space-y-2">
                     {card.features.map((f, i) => (
                         <li key={i} className="flex items-center gap-2 text-sm text-slate-600">
-                            <Icons.CheckBadge className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                            <Icons.CheckBadge className={`h-4 w-4 shrink-0 ${studentTheme ? 'text-brand' : 'text-emerald-500'}`} />
                             {f}
                         </li>
                     ))}
@@ -651,7 +695,11 @@ const ExamCardComponent: React.FC<{
                 <button
                     onClick={onStart}
                     disabled={isStarting || disabled}
-                    className="w-full py-5 ep-neu-cta ep-shimmer rounded-2xl font-black text-sm uppercase tracking-widest text-white transition-opacity hover:opacity-95 disabled:opacity-50 bg-gradient-to-r from-[#8dc63f] via-[#7db536] to-[#6ba52e]"
+                    className={
+                        studentTheme
+                            ? 'w-full rounded-2xl bg-gradient-to-r from-brand to-brand-600 py-5 font-black text-sm uppercase tracking-widest text-white shadow-md transition-opacity hover:opacity-95 disabled:opacity-50'
+                            : 'w-full py-5 ep-neu-cta ep-shimmer rounded-2xl font-black text-sm uppercase tracking-widest text-white transition-opacity hover:opacity-95 disabled:opacity-50 bg-gradient-to-r from-[#8dc63f] via-[#7db536] to-[#6ba52e]'
+                    }
                 >
                     {isStarting ? (
                         <span className="flex items-center justify-center gap-2">

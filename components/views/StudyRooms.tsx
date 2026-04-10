@@ -4,6 +4,7 @@ import { StudyRoom, User } from '../../types';
 import { costudyService } from '../../services/costudyService';
 import { getUserProfile } from '../../services/fetsService';
 import { supabase } from '../../services/supabaseClient';
+import { STUDENT_PAGE_BG, StudentPageChrome } from '../student/StudentPageChrome';
 
 // ============================================
 // TYPES
@@ -191,26 +192,16 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
     
     if (!selectedRoom) {
         return (
-            <div className="min-h-full bg-gradient-to-b from-brand/[0.1] via-white to-slate-50 font-sans text-left">
-                <div className="relative mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
-                    <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-brand/20 to-transparent" aria-hidden />
-                    {/* Header */}
-                    <div className="relative mb-10 sm:mb-14">
-                        <div className="mb-6 flex flex-wrap items-start gap-4">
-                            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-brand text-white shadow-xl shadow-brand/35 ring-4 ring-brand/15">
-                                <Icons.Users className="h-7 w-7" />
-                            </div>
-                            <div className="min-w-0">
-                                <p className="font-display text-xs font-medium uppercase tracking-[0.22em] text-brand">Collaboration</p>
-                                <h1 className="font-display mt-2 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
-                                    Study rooms
-                                </h1>
-                            </div>
-                        </div>
-                        <p className="max-w-2xl text-left text-base leading-[1.65] text-slate-700 sm:text-lg">
-                            Join a cluster, align on missions, run focus sessions, and share resources—built for CMA US study groups.
-                        </p>
-                    </div>
+            <div className={`${STUDENT_PAGE_BG} font-sans text-left`}>
+                <StudentPageChrome
+                    eyebrow="Collaboration"
+                    title="Study rooms"
+                    description="Join a cluster, align on missions, run focus sessions, and share resources—built for CMA US study groups."
+                    icon={<Icons.Users className="h-6 w-6" />}
+                    maxWidthClassName="max-w-6xl"
+                />
+                <div className="relative mx-auto max-w-6xl px-4 pb-12 pt-6 sm:px-6 sm:pb-14">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-brand/[0.08] to-transparent" aria-hidden />
 
                     {/* Room Grid */}
                     {loading ? (
@@ -223,7 +214,7 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
                                 <div 
                                     key={room.id}
                                     onClick={() => setSelectedRoom(room)}
-                                    className="group cursor-pointer rounded-2xl border border-white/50 bg-white/35 p-6 shadow-glass backdrop-blur-xl transition-all hover:border-white/70 hover:bg-white/50 hover:shadow-[0_12px_48px_-8px_rgba(15,23,42,0.12)]"
+                                    className="group cursor-pointer rounded-2xl border border-brand/15 bg-white/90 p-6 shadow-clay-red-raised backdrop-blur-xl transition-all hover:border-brand/25 hover:bg-white hover:shadow-md"
                                 >
                                     <div className="mb-4 flex items-start justify-between gap-3">
                                         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-brand/90 to-brand-600 text-lg font-bold text-white shadow-md shadow-brand/20">
@@ -247,7 +238,7 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
                             ))}
                             
                             {/* Create Room Card */}
-                            <div className="flex min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-white/60 bg-white/25 p-6 text-center shadow-glass backdrop-blur-xl transition-all hover:border-brand/40 hover:bg-white/40">
+                            <div className="flex min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-brand/25 bg-white/60 p-6 text-center shadow-sm backdrop-blur-xl transition-all hover:border-brand/40 hover:bg-white/90">
                                 <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-brand/90 text-white shadow-neomorph-sm">
                                     <Icons.Plus className="h-6 w-6" />
                                 </div>
@@ -276,7 +267,7 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
     ];
 
     return (
-        <div className="flex min-h-full bg-gradient-to-br from-slate-50 via-white to-brand/[0.03]">
+        <div className={`flex min-h-full ${STUDENT_PAGE_BG}`}>
             {/* Sidebar */}
             <div className="flex w-72 flex-col border-r border-slate-200/90 bg-white/95 backdrop-blur-sm">
                 {/* Room Header */}

@@ -4,13 +4,13 @@ import { Icons } from './Icons';
 interface CoStudyLogoProps {
   /** Size variant: 'sm' | 'md' | 'lg' | 'xl' */
   size?: 'sm' | 'md' | 'lg' | 'xl';
-  /** Light background (e.g. Landing nav) - uses dark text. Dark background (Login/SignUp) - uses light text. */
-  variant?: 'light' | 'dark';
+  /** Light / dark wordmark. `nav` = student top bar: clay capsule + red shadow (same as elevated). */
+  variant?: 'light' | 'dark' | 'nav';
   /** Show icon + text. Set false for text-only in hero. */
   showIcon?: boolean;
   /** Optional custom className for the wrapper */
   className?: string;
-  /** Soft clay capsule + red-tinted shadow (e.g. top nav for students) */
+  /** Soft clay capsule + red-tinted shadow (e.g. top nav). Prefer variant="nav" for Layout. */
   elevated?: boolean;
 }
 
@@ -33,6 +33,8 @@ export const CoStudyLogo: React.FC<CoStudyLogoProps> = ({
 }) => {
   const { icon: iconClass, text: textClass } = sizeMap[size];
   const isDark = variant === 'dark';
+  const useElevated = elevated || variant === 'nav';
+  const tracking = useElevated ? 'tracking-[-0.055em]' : 'tracking-[-0.04em]';
 
   const inner = (
     <>
@@ -41,14 +43,14 @@ export const CoStudyLogo: React.FC<CoStudyLogoProps> = ({
           <Icons.Logo className={iconClass} />
         </div>
       )}
-      <span className={`font-black uppercase tracking-[-0.04em] ${textClass}`}>
+      <span className={`font-black uppercase ${tracking} ${textClass}`}>
         <span className={isDark ? 'text-red-500' : 'text-red-600'}>CO</span>
         <span className={isDark ? 'text-white' : 'text-slate-900'}>STUDY</span>
       </span>
     </>
   );
 
-  if (elevated) {
+  if (useElevated) {
     return (
       <div
         className={`inline-flex rounded-2xl border border-white/90 bg-gradient-to-b from-white to-brand-50/40 px-2.5 py-1.5 shadow-clay-red-logo sm:px-3 sm:py-2 ${className}`}

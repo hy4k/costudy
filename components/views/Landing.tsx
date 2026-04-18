@@ -103,16 +103,12 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
         </p>
 
         <div
-          className="relative z-10 mt-12 flex flex-wrap justify-content-center gap-4"
-          style={{ animation: 'fadeIn 0.8s ease-out 0.4s both', display: 'flex', justifyContent: 'center' }}
+          className="relative z-10 mt-12 flex flex-wrap justify-center gap-4"
+          style={{ animation: 'fadeIn 0.8s ease-out 0.4s both' }}
         >
           <button
             onClick={onGetStarted}
-            className="relative overflow-hidden rounded-2xl px-10 py-[1.125rem] text-sm font-bold uppercase tracking-[0.1em] text-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_60px_-10px_rgba(239,68,68,0.6),0_0_40px_rgba(239,68,68,0.3)]"
-            style={{
-              background: 'linear-gradient(135deg, #ff1a1a 0%, #ed0000 100%)',
-              boxShadow: '0 6px 20px -4px rgba(239,68,68,0.5), inset 0 1px 0 rgba(255,255,255,0.25), 0 2px 4px rgba(0,0,0,0.1)',
-            }}
+            className="relative overflow-hidden rounded-2xl bg-[linear-gradient(135deg,_#ff1a1a_0%,_#ed0000_100%)] px-10 py-[1.125rem] text-sm font-bold uppercase tracking-[0.1em] text-white shadow-[0_6px_20px_-4px_rgba(239,68,68,0.5),_inset_0_1px_0_rgba(255,255,255,0.25),_0_2px_4px_rgba(0,0,0,0.1)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_60px_-10px_rgba(239,68,68,0.6),_0_0_40px_rgba(239,68,68,0.3)]"
           >
             Join the Beta →
           </button>
@@ -149,10 +145,8 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
       {/* Features Timeline */}
       <section
         id="features"
-        className="relative px-6 py-32"
-        style={{ background: 'linear-gradient(180deg, #f8fafc 0%, #ffffff 50%, #f8fafc 100%)' }}
+        className="relative px-6 py-32 bg-[linear-gradient(180deg,_#f8fafc_0%,_#ffffff_50%,_#f8fafc_100%)] dark:bg-[linear-gradient(180deg,_#0f172a_0%,_#1e293b_50%,_#0f172a_100%)]"
       >
-        <style>{`html.dark #features { background: linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #0f172a 100%) !important; }`}</style>
 
         <div className="mx-auto mb-24 max-w-2xl text-center">
           <div className="mb-4 text-sm font-extrabold uppercase tracking-[0.2em] text-brand">

@@ -1,70 +1,42 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  darkMode: 'class',
-  content: ['./index.html', './App.tsx', './index.tsx', './components/**/*.{tsx,ts,jsx,js}', './lib/**/*.{ts,tsx}', './services/**/*.{tsx,ts,jsx,js}'],
+  content: ["./index.html", "./src/**/*.{ts,tsx}"],
   theme: {
+    screens: {
+      sm: "480px",
+      md: "768px",
+      lg: "1024px",
+      xl: "1280px",
+      "2xl": "1536px",
+    },
     extend: {
-      backgroundImage: {
-        'gradient-conic': 'conic-gradient(var(--tw-gradient-stops))',
+      colors: {
+        bg: {
+          DEFAULT: "#070707",
+          alt: "#0d0d0d",
+        },
+        ink: {
+          DEFAULT: "#f5f5f0",
+          dim: "#9a9a92",
+          faint: "#4a4a44",
+        },
+        signal: {
+          DEFAULT: "#FFD633",
+          alt: "#ffb800",
+        },
+        line: {
+          DEFAULT: "rgba(255,214,51,.14)",
+          soft: "rgba(255,255,255,.06)",
+        },
       },
       fontFamily: {
-        sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
-        mono: ['Geist Mono', 'ui-monospace', 'monospace'],
-        display: ['Fraunces', 'Georgia', 'ui-serif', 'serif'],
+        display: ["'Bebas Neue'", "sans-serif"],
+        body: ["'Syne'", "sans-serif"],
+        mono: ["'JetBrains Mono'", "monospace"],
       },
-      boxShadow: {
-        neomorph:
-          '6px 6px 14px rgba(15, 23, 42, 0.07), -5px -5px 14px rgba(255, 255, 255, 0.85)',
-        'neomorph-sm':
-          '4px 4px 10px rgba(15, 23, 42, 0.06), -3px -3px 10px rgba(255, 255, 255, 0.9)',
-        'neomorph-inset':
-          'inset 3px 3px 8px rgba(15, 23, 42, 0.12), inset -2px -2px 8px rgba(255, 255, 255, 0.65)',
-        'neomorph-inset-light':
-          'inset 2px 2px 6px rgba(15, 23, 42, 0.08), inset -2px -2px 6px rgba(255, 255, 255, 0.95)',
-        glass: '0 8px 32px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6)',
-        luxury:
-          '0 32px 64px -16px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(15, 23, 42, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.75)',
-        'luxury-sm': '0 12px 40px -8px rgba(15, 23, 42, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.5)',
-        'neon-red': '0 0 20px rgba(239,68,68,0.5), 0 0 40px rgba(239,68,68,0.3)',
-        'neon-emerald': '0 0 20px rgba(16,185,129,0.5), 0 0 40px rgba(16,185,129,0.3)',
-        'neon-amber': '0 0 20px rgba(251,191,36,0.5), 0 0 40px rgba(251,191,36,0.3)',
-        'neon-cyan': '0 0 20px rgba(6,182,212,0.5), 0 0 40px rgba(6,182,212,0.3)',
-        /** Soft red-tinted clay (student nav / chrome) */
-        'clay-red-raised':
-          '4px 5px 12px rgba(137, 11, 11, 0.12), -3px -3px 10px rgba(255, 255, 255, 0.95), 0 0 0 1px rgba(255, 200, 200, 0.35)',
-        'clay-red-raised-sm':
-          '3px 4px 10px rgba(137, 11, 11, 0.1), -2px -2px 8px rgba(255, 255, 255, 0.9)',
-        'clay-red-inset':
-          'inset 3px 3px 8px rgba(137, 11, 11, 0.22), inset -2px -2px 8px rgba(255, 255, 255, 0.55)',
-        'clay-red-logo':
-          '4px 6px 14px rgba(137, 11, 11, 0.14), -3px -3px 12px rgba(255, 255, 255, 0.98), inset 0 1px 0 rgba(255, 255, 255, 0.85)',
-      },
-      colors: {
-        brand: {
-          DEFAULT: 'var(--color-brand-500)',
-          50: 'var(--color-brand-50)',
-          100: 'var(--color-brand-100)',
-          200: 'var(--color-brand-200)',
-          300: 'var(--color-brand-300)',
-          400: 'var(--color-brand-400)',
-          500: 'var(--color-brand-500)',
-          600: 'var(--color-brand-600)',
-          700: 'var(--color-brand-700)',
-          800: 'var(--color-brand-800)',
-          900: 'var(--color-brand-900)',
-        },
-        slate: {
-          50: '#f8fafc',
-          100: '#f1f5f9',
-          200: '#e2e8f0',
-          300: '#cbd5e1',
-          400: '#94a3b8',
-          500: '#64748b',
-          600: '#475569',
-          700: '#334155',
-          800: '#1e293b',
-          900: '#0f172a',
-        },
+      letterSpacing: {
+        signal: "0.18em",
+        wide2: "0.25em",
       },
     },
   },

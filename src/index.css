@@ -1,0 +1,328 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─────────────────────────────────────────
+   DESIGN TOKENS (mirrored from tailwind.config)
+   so we can use them in raw CSS where needed.
+   ───────────────────────────────────────── */
+:root {
+  --bg: #070707;
+  --bg-alt: #0d0d0d;
+  --ink: #f5f5f0;
+  --ink-dim: #9a9a92;
+  --ink-faint: #4a4a44;
+  --signal: #ffd633;
+  --signal-alt: #ffb800;
+  --line: rgba(255, 214, 51, 0.14);
+  --line-soft: rgba(255, 255, 255, 0.06);
+  --grid: rgba(255, 255, 255, 0.025);
+}
+
+/* ─────────────────────────────────────────
+   BASE
+   Mobile-first: cursor visible by default,
+   only hidden on devices with a real pointer.
+   ───────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Syne", sans-serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+@media (hover: hover) and (pointer: fine) {
+  body.has-custom-cursor,
+  body.has-custom-cursor * {
+    cursor: none !important;
+  }
+}
+
+/* ─────────────────────────────────────────
+   GRAIN + SCANLINES — atmospheric overlays
+   Slightly lighter on mobile (less performance hit + smaller screens)
+   ───────────────────────────────────────── */
+.fx-grain::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.07;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+@media (min-width: 768px) {
+  .fx-grain::before {
+    opacity: 0.1;
+  }
+}
+.fx-scanlines::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 3px,
+    rgba(255, 255, 255, 0.012) 3px,
+    rgba(255, 255, 255, 0.012) 4px
+  );
+}
+
+/* ─────────────────────────────────────────
+   HUD CORNERS — for cinematic panels
+   ───────────────────────────────────────── */
+.hud-corner {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 1px solid var(--signal);
+}
+@media (min-width: 768px) {
+  .hud-corner {
+    width: 14px;
+    height: 14px;
+  }
+}
+.hud-corner.tl { top: 8px; left: 8px; border-right: none; border-bottom: none; }
+.hud-corner.tr { top: 8px; right: 8px; border-left: none; border-bottom: none; }
+.hud-corner.bl { bottom: 8px; left: 8px; border-right: none; border-top: none; }
+.hud-corner.br { bottom: 8px; right: 8px; border-left: none; border-top: none; }
+
+/* ─────────────────────────────────────────
+   KEYFRAMES
+   ───────────────────────────────────────── */
+@keyframes pulse-dot {
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+@keyframes blink-dot {
+  50% { opacity: 0.2; }
+}
+@keyframes line-in {
+  to { transform: scaleX(1); }
+}
+@keyframes boot-fill {
+  to { width: 100%; }
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes typing-dot {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1); opacity: 1; }
+}
+@keyframes caret-blink {
+  50% { opacity: 0; }
+}
+@keyframes dash-march {
+  to { stroke-dashoffset: -30; }
+}
+@keyframes bar-rise {
+  from { height: 0 !important; opacity: 0; }
+}
+@keyframes bar-fill {
+  to { width: var(--w); }
+}
+
+/* ─────────────────────────────────────────
+   COMPONENT-LEVEL UTILITIES
+   ───────────────────────────────────────── */
+.signal-glow { box-shadow: 0 0 12px var(--signal); }
+.text-signal-glow { text-shadow: 0 0 8px rgba(255, 214, 51, 0.4); }
+
+.brand-mark-pulse::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  background: var(--signal);
+  box-shadow: 0 0 12px var(--signal);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+.signal-blink {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: var(--signal);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--signal);
+  animation: blink-dot 1.2s ease-in-out infinite;
+}
+
+.signal-strike-underline {
+  position: relative;
+  display: inline-block;
+}
+.signal-strike-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 6%;
+  width: 100%;
+  height: 3px;
+  background: var(--signal);
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: line-in 1.4s 1.2s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.boot-bar-fill {
+  background: var(--signal);
+  width: 0;
+  animation: boot-fill 1.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Reveal-on-scroll baseline */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+.reveal.in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Custom cursor (only used when supported) */
+.cc {
+  position: fixed;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--signal);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 10000;
+  transform: translate(-50%, -50%);
+  transition: width 0.2s, height 0.2s, background 0.2s;
+  mix-blend-mode: difference;
+}
+.cc.hover {
+  width: 64px;
+  height: 64px;
+  background: rgba(255, 214, 51, 0.08);
+}
+.cc-dot {
+  position: fixed;
+  width: 4px;
+  height: 4px;
+  background: var(--signal);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 10001;
+  transform: translate(-50%, -50%);
+}
+
+/* Mock test option states */
+.mock-opt {
+  transition: all 0.2s;
+}
+.mock-opt:hover {
+  border-color: var(--signal);
+  background: rgba(255, 214, 51, 0.03);
+}
+.mock-opt.correct {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.08);
+  color: #4ade80;
+}
+.mock-opt.wrong {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+  color: #ef4444;
+}
+
+/* Network graph */
+.net-node {
+  fill: rgba(255, 214, 51, 0.1);
+  stroke: var(--signal);
+  stroke-width: 1.5;
+  transition: all 0.3s;
+}
+.net-node.active,
+.net-node:hover {
+  fill: var(--signal);
+  filter: drop-shadow(0 0 12px var(--signal));
+}
+.net-edge {
+  stroke: rgba(255, 214, 51, 0.2);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  animation: dash-march 4s linear infinite;
+}
+.net-label {
+  fill: var(--ink);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+/* Typing indicator */
+.typing-dot {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+.typing-dot span {
+  width: 6px;
+  height: 6px;
+  background: var(--signal);
+  border-radius: 50%;
+  animation: typing-dot 1.2s ease-in-out infinite;
+}
+.typing-dot span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot span:nth-child(3) { animation-delay: 0.4s; }
+
+/* CLI caret */
+.cli-caret {
+  display: inline-block;
+  width: 7px;
+  height: 13px;
+  background: var(--signal);
+  animation: caret-blink 1s steps(2) infinite;
+}
+
+/* Grid background mask */
+.grid-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 60px 60px;
+  -webkit-mask-image: radial-gradient(ellipse 60% 70% at 50% 30%, #000 30%, transparent 70%);
+  mask-image: radial-gradient(ellipse 60% 70% at 50% 30%, #000 30%, transparent 70%);
+}
+@media (min-width: 768px) {
+  .grid-bg { background-size: 80px 80px; }
+}
+
+/* Ambient gradient bg */
+.ambient-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 60% 40% at 80% 0%, rgba(255, 214, 51, 0.08), transparent 60%),
+    radial-gradient(ellipse 70% 50% at 0% 100%, rgba(255, 184, 0, 0.05), transparent 60%),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%);
+}
+
+/* Hide scrollbar on horizontal scroll containers (mobile feature tabs) */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+
+/* iOS safe-area (for mobile bottom CTA) */
+.safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 16px); }
+.safe-top { padding-top: max(env(safe-area-inset-top), 16px); }

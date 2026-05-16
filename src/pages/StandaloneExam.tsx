@@ -56,9 +56,9 @@ export function StandaloneExam({ token }: Props) {
   }, [token, name, email, phone, institute]);
 
   const handleStart = useCallback(() => {
-    if (!name.trim()) return;
+    if (!name.trim() || !email.trim() || !phone.trim()) return;
     setStage("exam");
-  }, [name]);
+  }, [name, email, phone]);
 
   const handleComplete = useCallback((id: string, finalResult?: unknown) => {
     setAttemptId(id);
@@ -156,23 +156,25 @@ export function StandaloneExam({ token }: Props) {
         {label || "Practice Examination"}
       </div>
 
-      <div className="flex-1 flex items-center justify-center p-6 overflow-y-auto">
-        <div className="w-full max-w-md">
-          <h1 className="text-2xl font-bold text-slate-900 mb-1">{examInfo?.title || "Examination"}</h1>
-          <p className="text-sm text-slate-500 mb-8">{label ? `Provided by ${label}` : "Practice Examination"}</p>
-
-          <div className="grid grid-cols-3 gap-4 mb-8 pb-8 border-b border-slate-200">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-slate-900">{examInfo?.mcq_count || 0}</div>
-              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Questions</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-slate-900">{timeStr}</div>
-              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Time Limit</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-slate-900">{examInfo?.essay_count || 0}</div>
-              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Essays</div>
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="w-full max-w-md mx-auto">
+          {/* Exam Info Card - prominent at top */}
+          <div className="mb-8 p-6 rounded-xl border border-slate-200 bg-slate-50">
+            <h1 className="text-2xl font-bold text-slate-900 mb-1">{examInfo?.title || "Examination"}</h1>
+            <p className="text-sm text-slate-500 mb-5">{label ? `Provided by ${label}` : "Practice Examination"}</p>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="text-center p-3 rounded-lg bg-white border border-slate-200">
+                <div className="text-2xl font-bold text-slate-900">{examInfo?.mcq_count || 0}</div>
+                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Questions</div>
+              </div>
+              <div className="text-center p-3 rounded-lg bg-white border border-slate-200">
+                <div className="text-2xl font-bold text-slate-900">{timeStr}</div>
+                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Duration</div>
+              </div>
+              <div className="text-center p-3 rounded-lg bg-white border border-slate-200">
+                <div className="text-2xl font-bold text-slate-900">{examInfo?.essay_count || 0}</div>
+                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Essays</div>
+              </div>
             </div>
           </div>
 
@@ -186,34 +188,34 @@ export function StandaloneExam({ token }: Props) {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter your full name"
-                className="w-full px-4 py-3 border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-[#8dc63f] focus:ring-1 focus:ring-[#8dc63f]"
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-[#8dc63f] focus:ring-1 focus:ring-[#8dc63f]"
                 autoFocus
                 onKeyDown={(e) => e.key === "Enter" && handleStart()}
               />
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">
-                Email <span className="text-slate-400">(optional)</span>
+                Email <span className="text-red-500">*</span>
               </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="your@email.com"
-                className="w-full px-4 py-3 border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-[#8dc63f] focus:ring-1 focus:ring-[#8dc63f]"
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-[#8dc63f] focus:ring-1 focus:ring-[#8dc63f]"
                 onKeyDown={(e) => e.key === "Enter" && handleStart()}
               />
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">
-                Phone Number <span className="text-slate-400">(optional)</span>
+                Phone Number <span className="text-red-500">*</span>
               </label>
               <input
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+91 98765 43210"
-                className="w-full px-4 py-3 border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-[#8dc63f] focus:ring-1 focus:ring-[#8dc63f]"
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-[#8dc63f] focus:ring-1 focus:ring-[#8dc63f]"
                 onKeyDown={(e) => e.key === "Enter" && handleStart()}
               />
             </div>
@@ -226,7 +228,7 @@ export function StandaloneExam({ token }: Props) {
                 value={institute}
                 onChange={(e) => setInstitute(e.target.value)}
                 placeholder="e.g. FETS Academy, Self-study"
-                className="w-full px-4 py-3 border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-[#8dc63f] focus:ring-1 focus:ring-[#8dc63f]"
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg text-sm text-slate-900 focus:outline-none focus:border-[#8dc63f] focus:ring-1 focus:ring-[#8dc63f]"
                 onKeyDown={(e) => e.key === "Enter" && handleStart()}
               />
             </div>
@@ -234,8 +236,8 @@ export function StandaloneExam({ token }: Props) {
 
           <button
             onClick={handleStart}
-            disabled={!name.trim()}
-            className="w-full py-3.5 text-white font-bold text-sm uppercase tracking-widest transition-opacity disabled:opacity-40"
+            disabled={!name.trim() || !email.trim() || !phone.trim()}
+            className="w-full py-3.5 text-white font-bold text-sm uppercase tracking-widest rounded-lg transition-opacity disabled:opacity-40"
             style={{ background: GREEN }}
           >
             Begin Examination

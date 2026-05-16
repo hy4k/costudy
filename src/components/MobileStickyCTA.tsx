@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useViewport } from "@/hooks/useViewport";
 
 /**
@@ -9,6 +10,7 @@ import { useViewport } from "@/hooks/useViewport";
  * Hidden entirely on desktop where the standard CTA section is enough.
  */
 export function MobileStickyCTA() {
+  const nav = useNavigate();
   const { isMobile } = useViewport();
   const [show, setShow] = useState(false);
 
@@ -29,7 +31,7 @@ export function MobileStickyCTA() {
       }`}
       aria-hidden={!show}
     >
-      <button className="w-full font-mono text-xs uppercase tracking-wide2 font-bold bg-signal text-black px-5 py-3.5 flex items-center justify-center gap-2">
+      <button onClick={() => nav("/signup")} className="w-full font-mono text-xs uppercase tracking-wide2 font-bold bg-signal text-black px-5 py-3.5 flex items-center justify-center gap-2">
         Claim Your Beta Seat <span>→</span>
       </button>
     </div>

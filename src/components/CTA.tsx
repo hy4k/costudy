@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Reveal } from "./Reveal";
 
 /**
@@ -5,6 +6,7 @@ import { Reveal } from "./Reveal";
  * compact + thumb-reachable on mobile.
  */
 export function CTA() {
+  const nav = useNavigate();
   return (
     <section className="px-5 md:px-10 pb-16 md:pb-28">
       <Reveal
@@ -34,6 +36,7 @@ export function CTA() {
         <div className="relative flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
           <button
             data-hover
+            onClick={() => nav("/signup")}
             className="font-mono text-[11px] md:text-xs uppercase tracking-wide2 font-bold bg-signal text-black px-7 py-4 md:py-[18px] inline-flex items-center justify-center gap-2.5 transition-all hover:bg-white hover:-translate-y-0.5 hover:shadow-[0_12px_40px_rgba(255,214,51,0.3)]"
           >
             Claim Your Beta Seat <span>→</span>

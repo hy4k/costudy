@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { NAV_LINKS } from "@/data/content";
 
 /**
@@ -13,6 +14,7 @@ import { NAV_LINKS } from "@/data/content";
  * Touch targets are min 56px tall; type is sized for thumb reach.
  */
 export function MobileNav() {
+  const nav = useNavigate();
   const [open, setOpen] = useState(false);
 
   // Lock body scroll while drawer open
@@ -91,7 +93,7 @@ export function MobileNav() {
           </ul>
         </div>
         <div className="px-6 pb-8 safe-bottom">
-          <button className="w-full font-mono text-xs uppercase tracking-wide2 font-bold bg-signal text-black px-5 py-4">
+          <button onClick={() => { setOpen(false); nav("/login"); }} className="w-full font-mono text-xs uppercase tracking-wide2 font-bold bg-signal text-black px-5 py-4">
             Enter Deck →
           </button>
           <div className="font-mono text-[10px] uppercase tracking-wide2 text-ink-faint mt-5 text-center">

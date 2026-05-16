@@ -28,6 +28,9 @@ import { OnboardingPage } from "@/pages/OnboardingPage";
 import { MockList } from "@/pages/MockList";
 import { MockAttempt } from "@/pages/MockAttempt";
 import { MockResults } from "@/pages/MockResults";
+import { StandaloneExam } from "@/pages/StandaloneExam";
+import { AdminResults } from "@/pages/AdminResults";
+import { CandidateResults } from "@/pages/CandidateResults";
 
 export default function App() {
   return (
@@ -41,7 +44,7 @@ function AppRoutes() {
   const nav = useNavigate();
   const { user, loading } = useAuth();
 
-  if (loading) return null;
+  if (loading) return <div className="fixed inset-0 bg-white" />;
 
   return (
     <Routes>
@@ -155,6 +158,15 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+
+      {/* ── Standalone exam (token-based, no auth) ──── */}
+      <Route path="/exam/:token" element={<StandaloneExamWrapper />} />
+
+      {/* ── Candidate results (token-scoped, no auth) ── */}
+      <Route path="/exam/:token/results/:attemptId" element={<CandidateResultsWrapper />} />
+
+      {/* ── Admin results (token-scoped, no auth) ───── */}
+      <Route path="/admin/results/:token" element={<AdminResultsWrapper />} />
 
       {/* ── 404 ───────────────────────────────────────── */}
       <Route path="*" element={<Navigate to="/" replace />} />
@@ -273,6 +285,12 @@ function DashCard({
 
 // ─── Route param wrappers ────────────────────────────────────────
 
+function StandaloneExamWrapper() {
+  const { token } = useParams<{ token: string }>();
+  if (!token) return <Navigate to="/" replace />;
+  return <StandaloneExam token={token} />;
+}
+
 function MockAttemptWrapper() {
   const { slug } = useParams<{ slug: string }>();
   const nav = useNavigate();
@@ -284,4 +302,16 @@ function MockResultsWrapper() {
   const { id } = useParams<{ id: string }>();
   if (!id) return <Navigate to="/mocks" replace />;
   return <MockResults attemptId={id} />;
+}
+
+function CandidateResultsWrapper() {
+  const { token, attemptId } = useParams<{ token: string; attemptId: string }>();
+  if (!token || !attemptId) return <Navigate to="/" replace />;
+  return <CandidateResults token={token} attemptId={attemptId} />;
+}
+
+function AdminResultsWrapper() {
+  const { token } = useParams<{ token: string }>();
+  if (!token) return <Navigate to="/" replace />;
+  return <AdminResults token={token} />;
 }

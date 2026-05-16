@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { HERO_STATS } from "@/data/content";
 import { useCountUp } from "@/hooks/useCountUp";
 
@@ -43,6 +44,7 @@ function StatValue({ stat, idx }: { stat: (typeof HERO_STATS)[number]; idx: numb
  * - Side ticker only renders ≥ md (no room on phones)
  */
 export function Hero() {
+  const nav = useNavigate();
   return (
     <section className="relative min-h-screen flex flex-col justify-center px-5 md:px-10 pt-28 md:pt-32 pb-16 md:pb-24">
       {/* Side ticker — desktop only */}
@@ -75,6 +77,7 @@ export function Hero() {
       <div className="mt-10 md:mt-12 flex flex-col sm:flex-row gap-3 sm:gap-4">
         <button
           data-hover
+          onClick={() => nav("/signup")}
           className="font-mono text-[11px] md:text-xs uppercase tracking-wide2 font-bold bg-signal text-black px-7 py-4 md:py-[18px] inline-flex items-center justify-center gap-2.5 transition-all hover:bg-white hover:-translate-y-0.5 hover:shadow-[0_12px_40px_rgba(255,214,51,0.3)]"
         >
           Launch a Study Room <span className="transition-transform group-hover:translate-x-1">→</span>

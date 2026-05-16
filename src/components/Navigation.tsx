@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { useViewport } from "@/hooks/useViewport";
 import { NAV_LINKS } from "@/data/content";
 import { MobileNav } from "./MobileNav";
@@ -7,6 +8,7 @@ import { MobileNav } from "./MobileNav";
  * Single source of truth for nav links lives in `data/content.ts`.
  */
 export function Navigation() {
+  const nav = useNavigate();
   const { isMobile } = useViewport();
   if (isMobile) return <MobileNav />;
 
@@ -33,6 +35,7 @@ export function Navigation() {
       </div>
       <button
         data-hover
+        onClick={() => nav("/login")}
         className="font-mono text-[11px] uppercase tracking-wide2 font-bold bg-signal text-black px-4 lg:px-5 py-2.5 hover:bg-white hover:tracking-[0.25em] transition-all"
       >
         Enter Deck →

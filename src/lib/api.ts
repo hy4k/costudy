@@ -39,7 +39,7 @@ export interface EssayPrompt {
 
 export interface AttemptStartResponse {
   attempt_id: string;
-  exam: { id: string; total_minutes: number; pass_threshold: number };
+  exam: { id: string; total_minutes: number; mcq_minutes?: number; essay_minutes?: number; pass_threshold: number };
   mcqs: MCQQuestion[];
   essays: EssayPrompt[];
 }
@@ -72,6 +72,66 @@ export interface AttemptDetail {
     mock_exams: { slug: string; title: string; exam: string; mcq_count: number; essay_count: number };
   };
   essays: EssaySubmissionStatus[];
+}
+
+// ─── Standalone exam API (token-based, no auth) ─────────────────
+
+export interface ExamApi {
+  start: () => Promise<AttemptStartResponse>;
+  saveMcqAnswer: (attemptId: string, body: {
+    question_id: string;
+    selected_key: string | null;
+    flagged?: boolean;
+    time_seconds?: number;
+  }) => Promise<{ ok: true; is_correct: boolean | null }>;
+  submitEssay: (attemptId: string, body: { prompt_id: string; content: string }) => Promise<{ submission_id: string; grading_state: string }>;
+  finalize: (attemptId: string) => Promise<{
+    state: string;
+    mcq_score: number;
+    total_score: number | null;
+    correct: number;
+    total: number;
+  }>;
+}
+
+async function plainFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...init,
+    headers: { "Content-Type": "application/json", ...(init.headers ?? {}) },
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: "request_failed" }));
+    throw new ApiError(res.status, body.error ?? "request_failed", body);
+  }
+  return res.json() as Promise<T>;
+}
+
+export function createTokenApi(token: string, guestName?: string, guestEmail?: string): ExamApi {
+  return {
+    start: () =>
+      plainFetch<AttemptStartResponse>(`/api/exam/${token}/start`, {
+        method: "POST",
+        body: JSON.stringify({ guest_name: guestName, guest_email: guestEmail }),
+      }),
+    saveMcqAnswer: (attemptId, body) =>
+      plainFetch(`/api/exam/${token}/attempts/${attemptId}/mcq`, {
+        method: "PUT",
+        body: JSON.stringify(body),
+      }),
+    submitEssay: (attemptId, body) =>
+      plainFetch(`/api/exam/${token}/attempts/${attemptId}/essay`, {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    finalize: (attemptId) =>
+      plainFetch(`/api/exam/${token}/attempts/${attemptId}/finalize`, { method: "POST" }),
+  };
+}
+
+export function validateToken(token: string) {
+  return plainFetch<{ ok: true; exam: { title: string; mcq_count: number; essay_count: number; total_minutes: number }; label: string | null }>(
+    `/api/exam/${token}/validate`
+  );
 }
 
 // ─── Internal helpers ────────────────────────────────────────────

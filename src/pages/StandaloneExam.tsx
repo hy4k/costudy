@@ -30,6 +30,8 @@ export function StandaloneExam({ token }: Props) {
   const [errorMsg, setErrorMsg] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [institute, setInstitute] = useState("");
   const [result, setResult] = useState<ResultData | null>(null);
   const [attemptId, setAttemptId] = useState<string | null>(null);
 
@@ -50,8 +52,8 @@ export function StandaloneExam({ token }: Props) {
 
   const examApi = useMemo(() => {
     if (!name.trim()) return null;
-    return createTokenApi(token, name.trim(), email.trim() || undefined);
-  }, [token, name, email]);
+    return createTokenApi(token, name.trim(), email.trim() || undefined, phone.trim() || undefined, institute.trim() || undefined);
+  }, [token, name, email, phone, institute]);
 
   const handleStart = useCallback(() => {
     if (!name.trim()) return;
@@ -198,6 +200,32 @@ export function StandaloneExam({ token }: Props) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="your@email.com"
+                className="w-full px-4 py-3 border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-[#8dc63f] focus:ring-1 focus:ring-[#8dc63f]"
+                onKeyDown={(e) => e.key === "Enter" && handleStart()}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">
+                Phone Number <span className="text-slate-400">(optional)</span>
+              </label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+91 98765 43210"
+                className="w-full px-4 py-3 border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-[#8dc63f] focus:ring-1 focus:ring-[#8dc63f]"
+                onKeyDown={(e) => e.key === "Enter" && handleStart()}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-widest mb-2">
+                Institute / Coaching Centre <span className="text-slate-400">(if applicable)</span>
+              </label>
+              <input
+                type="text"
+                value={institute}
+                onChange={(e) => setInstitute(e.target.value)}
+                placeholder="e.g. FETS Academy, Self-study"
                 className="w-full px-4 py-3 border border-slate-300 text-sm text-slate-900 focus:outline-none focus:border-[#8dc63f] focus:ring-1 focus:ring-[#8dc63f]"
                 onKeyDown={(e) => e.key === "Enter" && handleStart()}
               />

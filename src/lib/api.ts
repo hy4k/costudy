@@ -106,12 +106,23 @@ async function plainFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-export function createTokenApi(token: string, guestName?: string, guestEmail?: string): ExamApi {
+export function createTokenApi(
+  token: string,
+  guestName?: string,
+  guestEmail?: string,
+  guestPhone?: string,
+  guestInstitute?: string,
+): ExamApi {
   return {
     start: () =>
       plainFetch<AttemptStartResponse>(`/api/exam/${token}/start`, {
         method: "POST",
-        body: JSON.stringify({ guest_name: guestName, guest_email: guestEmail }),
+        body: JSON.stringify({
+          guest_name: guestName,
+          guest_email: guestEmail,
+          guest_phone: guestPhone || undefined,
+          guest_institute: guestInstitute || undefined,
+        }),
       }),
     saveMcqAnswer: (attemptId, body) =>
       plainFetch(`/api/exam/${token}/attempts/${attemptId}/mcq`, {

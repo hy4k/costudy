@@ -14,11 +14,8 @@ export function Navigation() {
 
   return (
     <nav className="fixed top-0 inset-x-0 z-[100] px-6 lg:px-10 py-4 lg:py-5 flex items-center justify-between bg-bg/60 backdrop-blur-md border-b border-line-soft">
-      <div className="flex items-center gap-3 font-display text-2xl tracking-[0.06em]">
+      <div className="flex items-center gap-3">
         <div className="w-7 h-7 border-[1.5px] border-signal grid place-items-center brand-mark-pulse" />
-        <span>
-          Co<span className="text-signal">·</span>Study
-        </span>
       </div>
       <div className="hidden md:flex gap-8 font-mono text-[11px] uppercase tracking-signal" style={{ counterReset: "navc" }}>
         {NAV_LINKS.map((l) => (

@@ -61,18 +61,16 @@ export function Hero() {
         SYSTEM ONLINE / FOR THE 70% WHO REFUSE TO FAIL
       </div>
 
-      <h1 className="font-display text-[clamp(56px,16vw,220px)] leading-[0.85] tracking-tight">
-        Studying
-        <br />
-        <span className="line-through decoration-signal decoration-[4px] md:decoration-[6px]">
-          alone
-        </span>{" "}
-        <span className="signal-strike-underline text-signal italic">together.</span>
+      <h1 className="font-display tracking-tight">
+        <span className="block text-[clamp(48px,14vw,180px)] leading-[0.85] text-signal">
+          COSTUDY.IN
+        </span>
+        <span className="block text-[clamp(36px,10vw,140px)] leading-[0.85] mt-2 md:mt-3">
+          THE CMA US
+          <br />
+          <span className="signal-strike-underline text-signal italic">STUDY UNIVERSE</span>
+        </span>
       </h1>
-
-      <p className="mt-8 md:mt-10 max-w-xl text-base md:text-lg leading-relaxed text-ink-dim">
-        CoStudy is the <b className="text-ink font-semibold">mission control deck</b> for serious aspirants of CMA US, IELTS, TOEFL, and GRE — a collaborative AI-powered platform where rooms run on focus, vouches build trust, and your weakest topic gets engineered into your sharpest.
-      </p>
 
       <div className="mt-10 md:mt-12 flex flex-col sm:flex-row gap-3 sm:gap-4">
         <button

@@ -30,11 +30,8 @@ export function MobileNav() {
   return (
     <>
       <nav className="fixed top-0 inset-x-0 z-[100] px-5 py-3 flex items-center justify-between bg-bg/80 backdrop-blur-md border-b border-line-soft safe-top">
-        <div className="flex items-center gap-2.5 font-display text-xl tracking-[0.06em]">
+        <div className="flex items-center gap-2.5">
           <div className="w-6 h-6 border-[1.5px] border-signal grid place-items-center brand-mark-pulse" />
-          <span>
-            Co<span className="text-signal">·</span>Study
-          </span>
         </div>
         <button
           aria-label={open ? "Close menu" : "Open menu"}

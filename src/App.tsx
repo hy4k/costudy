@@ -31,6 +31,7 @@ import { MockResults } from "@/pages/MockResults";
 import { StandaloneExam } from "@/pages/StandaloneExam";
 import { AdminResults } from "@/pages/AdminResults";
 import { CandidateResults } from "@/pages/CandidateResults";
+import { StudyWall } from "@/pages/StudyWall";
 
 export default function App() {
   return (
@@ -111,7 +112,7 @@ function AppRoutes() {
         }
       />
 
-      {/* ── App: dashboard (authed + onboarded) ──────── */}
+      {/* ── App: Study Wall (authed + onboarded) ──────── */}
       <Route
         path="/app"
         element={
@@ -119,7 +120,7 @@ function AppRoutes() {
             onRequireLogin={() => nav("/login")}
             onRequireOnboarding={() => nav("/onboarding")}
           >
-            <Dashboard />
+            <StudyWall />
           </ProtectedRoute>
         }
       />

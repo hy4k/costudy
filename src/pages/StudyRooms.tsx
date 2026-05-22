@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 
 /* ── Design tokens (shared with StudyWall) ──────── */
@@ -27,11 +27,11 @@ const S = {
 
 /* ── Nav items (synced with StudyWall) ───────────── */
 const NAV_ITEMS = [
-  { id: "wall", label: "Study Wall", icon: "\u{1F4E1}", route: "/app", active: true },
-  { id: "mocks", label: "Mock Engine", icon: "\u{1F4DD}", route: "/mocks", active: true },
-  { id: "rooms", label: "Study Rooms", icon: "\u{1F3A7}", route: "/rooms", active: true },
-  { id: "ai", label: "AI Mastermind", icon: "\u{1F916}", route: null, active: false },
-  { id: "mentors", label: "Mentors", icon: "\u{1F9D1}‍\u{1F3EB}", route: null, active: false },
+  { id: "wall", label: "Study Wall", icon: "W", route: "/app", active: true },
+  { id: "mocks", label: "Mock Engine", icon: "M", route: "/mocks", active: true },
+  { id: "rooms", label: "Study Rooms", icon: "R", route: "/rooms", active: true },
+  { id: "ai", label: "AI Mastermind", icon: "AI", route: null, active: false },
+  { id: "mentors", label: "Mentors", icon: "Mt", route: null, active: false },
 ];
 
 /* ── CMA US Topics ─────────────────────────────────── */
@@ -985,6 +985,8 @@ function CreateRoomModal({ onClose, onCreate }: { onClose: () => void; onCreate:
 export function StudyRooms() {
   const { profile, signOut } = useAuth();
   const nav = useNavigate();
+  const location = useLocation();
+  const currentPage = location.pathname === "/app" ? "wall" : location.pathname === "/rooms" ? "rooms" : location.pathname.startsWith("/mock") ? "mocks" : "";
   const [rooms, setRooms] = useState<StudyRoom[]>(SEED_ROOMS);
   const [activeFilter, setActiveFilter] = useState<"all" | "live" | "my">("all");
   const [openRoom, setOpenRoom] = useState<string | null>(null);
@@ -1006,51 +1008,93 @@ export function StudyRooms() {
   return (
     <div className="min-h-screen" style={{ background: S.bg, color: S.ink, fontFamily: "'Syne', sans-serif" }}>
 
-      {/* ════ TOP BAR ════ */}
-      <header className="sticky top-0 z-50 border-b" style={{ background: "rgba(7,7,7,0.92)", borderColor: S.border, backdropFilter: "blur(12px)" }}>
-        <div className="max-w-5xl mx-auto px-4 md:px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 border-[1.5px] grid place-items-center brand-mark-pulse" style={{ borderColor: S.signal }} />
-            <span className="font-mono text-[11px] uppercase tracking-[0.2em] font-bold" style={{ color: S.signal }}>CoStudy</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-full flex items-center justify-center font-mono text-[10px] font-bold" style={{ background: "rgba(255,214,51,0.1)", color: S.signal }}>
-              {(profile?.display_name || "U")[0]}
+      {/* ════ Top bar ════ */}
+      <header className="sticky top-0 z-50" style={{ background: "rgba(7,7,7,0.85)", backdropFilter: "blur(20px) saturate(180%)", borderBottom: `1px solid ${S.border}` }}>
+        <div className="max-w-[1200px] mx-auto px-4 md:px-8 h-14 flex items-center justify-between">
+          {/* Brand */}
+          <button onClick={() => nav("/app")} className="flex items-center gap-2.5 group">
+            <div className="w-7 h-7 rounded-md flex items-center justify-center relative overflow-hidden"
+              style={{ background: `linear-gradient(135deg, ${S.signal}, ${S.signalAlt})` }}>
+              <span className="font-mono text-[11px] font-black text-black">C</span>
             </div>
-            <span className="hidden sm:inline font-mono text-[10px] uppercase tracking-wider" style={{ color: S.inkDim }}>{profile?.display_name || "User"}</span>
-            <button onClick={signOut} className="font-mono text-[10px] uppercase tracking-[0.15em] px-3 py-1.5 rounded border transition-all hover:border-signal/40 hover:text-signal"
-              style={{ color: S.inkFaint, borderColor: S.border }}>{"↗"} Out</button>
-          </div>
-        </div>
-      </header>
+            <span className="font-mono text-[11px] uppercase tracking-[0.2em] font-bold transition-colors group-hover:text-signal" style={{ color: S.ink }}>
+              CoStudy
+            </span>
+          </button>
 
-      {/* ════ COMMAND BAR ════ */}
-      <div className="border-b" style={{ borderColor: S.border, background: "rgba(13,13,13,0.6)" }}>
-        <div className="max-w-5xl mx-auto px-4 md:px-6">
-          <div className="flex items-center gap-2 py-2.5 overflow-x-auto no-scrollbar">
+          {/* Center nav */}
+          <nav className="hidden md:flex items-center gap-1 rounded-xl px-1.5 py-1"
+            style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${S.border}` }}>
             {NAV_ITEMS.map(item => {
-              const isCurrent = item.id === "rooms";
+              const isCurrent = item.id === currentPage;
               return (
                 <button key={item.id}
                   onClick={() => item.route ? nav(item.route) : undefined}
                   disabled={!item.active}
-                  className={`shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-lg font-mono text-[11px] uppercase tracking-[0.15em] font-bold transition-all border ${
-                    isCurrent
-                      ? "text-black border-transparent shadow-[0_0_20px_rgba(255,214,51,0.15)]"
-                      : item.active
-                        ? "border-white/10 hover:border-signal/40 hover:text-signal hover:shadow-[0_0_12px_rgba(255,214,51,0.08)]"
-                        : "border-white/[0.04] cursor-not-allowed opacity-40"
+                  className={`relative flex items-center gap-2 px-4 py-2 rounded-lg font-mono text-[10px] uppercase tracking-[0.15em] font-bold transition-all ${
+                    !item.active ? "cursor-not-allowed opacity-30" : "hover:bg-white/[0.04]"
                   }`}
-                  style={isCurrent ? { background: S.signal, color: "#000" } : { color: item.active ? S.inkDim : S.inkFaint }}>
-                  <span className="text-sm">{item.icon}</span>
+                  style={{
+                    background: isCurrent ? "rgba(255,214,51,0.1)" : undefined,
+                    color: isCurrent ? S.signal : item.active ? S.inkDim : S.inkFaint,
+                  }}>
+                  {isCurrent && (
+                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full" style={{ background: S.signal }} />
+                  )}
+                  <span className="w-5 h-5 rounded-md flex items-center justify-center text-[9px] font-black"
+                    style={{
+                      background: isCurrent ? "rgba(255,214,51,0.15)" : "rgba(255,255,255,0.04)",
+                      color: isCurrent ? S.signal : S.inkFaint,
+                      border: `1px solid ${isCurrent ? "rgba(255,214,51,0.2)" : "rgba(255,255,255,0.06)"}`,
+                    }}>
+                    {item.icon}
+                  </span>
                   <span>{item.label}</span>
-                  {!item.active && <span className="text-[8px] tracking-widest opacity-60">SOON</span>}
+                  {!item.active && <span className="text-[7px] tracking-[0.2em] opacity-60 ml-0.5">SOON</span>}
                 </button>
               );
             })}
+          </nav>
+
+          {/* Mobile nav */}
+          <nav className="flex md:hidden items-center gap-1">
+            {NAV_ITEMS.filter(i => i.active).map(item => {
+              const isCurrent = item.id === currentPage;
+              return (
+                <button key={item.id} onClick={() => item.route ? nav(item.route) : undefined}
+                  className="w-9 h-9 rounded-lg flex items-center justify-center font-mono text-[10px] font-black transition-all"
+                  style={{
+                    background: isCurrent ? "rgba(255,214,51,0.12)" : "rgba(255,255,255,0.03)",
+                    color: isCurrent ? S.signal : S.inkFaint,
+                    border: `1px solid ${isCurrent ? "rgba(255,214,51,0.2)" : "transparent"}`,
+                  }}>
+                  {item.icon}
+                </button>
+              );
+            })}
+          </nav>
+
+          {/* User */}
+          <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-all hover:bg-white/[0.03]"
+              style={{ border: `1px solid ${S.border}` }}>
+              <div className="w-6 h-6 rounded-full flex items-center justify-center font-mono text-[9px] font-bold"
+                style={{ background: `linear-gradient(135deg, rgba(255,214,51,0.2), rgba(255,184,0,0.1))`, color: S.signal }}>
+                {(profile?.display_name || "U")[0]}
+              </div>
+              <span className="hidden sm:inline font-mono text-[10px] uppercase tracking-wider" style={{ color: S.inkDim }}>
+                {profile?.display_name || "User"}
+              </span>
+            </div>
+            <button onClick={signOut}
+              className="w-8 h-8 rounded-lg flex items-center justify-center font-mono text-[10px] transition-all hover:bg-white/[0.04] hover:border-signal/30"
+              style={{ color: S.inkFaint, border: `1px solid ${S.border}` }}
+              title="Sign out">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            </button>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* ════ MAIN ════ */}
       {openRoomData ? (
@@ -1059,7 +1103,7 @@ export function StudyRooms() {
         <>
           {/* Filter bar — simple, clean */}
           <div className="border-b" style={{ borderColor: S.border }}>
-            <div className="max-w-3xl mx-auto px-4 md:px-6">
+            <div className="max-w-[1200px] mx-auto px-4 md:px-8">
               <div className="flex items-center justify-between py-3">
                 <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
                   {([["all", "All Rooms"], ["live", "Live"], ["my", "My Rooms"]] as const).map(([key, label]) => (
@@ -1083,7 +1127,7 @@ export function StudyRooms() {
           </div>
 
           {/* Room List — single column, clean */}
-          <div className="max-w-3xl mx-auto px-4 md:px-6 py-6">
+          <div className="max-w-[1200px] mx-auto px-4 md:px-8 py-6">
             {filteredRooms.length === 0 ? (
               <div className="text-center py-16">
                 <h3 className="font-display text-xl mb-2" style={{ color: S.ink }}>No rooms found</h3>

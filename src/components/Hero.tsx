@@ -55,11 +55,7 @@ export function Hero() {
         SIGNAL <span className="text-signal">●</span> COSTUDY.IN <span className="text-signal">●</span> KERALA · INDIA <span className="text-signal">●</span> EST 2025
       </div>
 
-      <div className="font-mono text-[10px] md:text-[11px] uppercase tracking-wide2 text-signal flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
-        <span className="w-5 md:w-6 h-px bg-signal" />
-        <span className="signal-blink" />
-        SYSTEM ONLINE / FOR THE 70% WHO REFUSE TO FAIL
-      </div>
+      <div className="mb-6 md:mb-8 h-6" />
 
       <h1 className="font-display tracking-tight">
         <span className="block text-[clamp(48px,14vw,180px)] leading-[0.85] text-signal">

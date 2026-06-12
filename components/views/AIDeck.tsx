@@ -1,8 +1,6 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Icons } from '../Icons';
 import { getChatResponse, generateStudyContent, evaluateEssay } from '../../services/geminiService';
-import { STUDENT_PAGE_BG, StudentPageChrome } from '../student/StudentPageChrome';
 
 type Tool = 'CHAT' | 'NOTES' | 'FLASHCARDS' | 'TOPIC' | 'ESSAY';
 type ChatMode = 'STANDARD' | 'FOLLOW_UP' | 'VAULT_REF';
@@ -14,12 +12,27 @@ interface Message {
     source?: string;
 }
 
+const DECK_TOOLS: { key: Tool; icon: keyof typeof Icons; title: string; hint: string }[] = [
+    { key: 'CHAT', icon: 'Sparkles', title: 'Mastermind Chat', hint: 'Ask anything, IMA-aligned' },
+    { key: 'NOTES', icon: 'BookOpen', title: 'Notes Refiner', hint: 'Turn rough material into clean notes' },
+    { key: 'FLASHCARDS', icon: 'ClipboardList', title: 'Flashcards', hint: 'Drill a topic deck' },
+    { key: 'TOPIC', icon: 'Grid', title: 'Topic Blueprint', hint: 'Map a section in minutes' },
+    { key: 'ESSAY', icon: 'Scale', title: 'Essay Audit', hint: 'Rubric-graded feedback' },
+];
+
+const GEN_CONF: Record<Exclude<Tool, 'CHAT'>, { label: string; placeholder: string; rows: number; cta: string }> = {
+    TOPIC: { label: 'Topic blueprint', placeholder: 'e.g. Part 1 Section F — Technology & Analytics', rows: 2, cta: 'Generate blueprint' },
+    NOTES: { label: 'Study guide', placeholder: 'Paste rough notes or a transcript — e.g. a paragraph about joint costing methods…', rows: 5, cta: 'Refine notes' },
+    FLASHCARDS: { label: 'Flashcard deck', placeholder: 'e.g. CMA Part 2 — Risk Management & Financial Strategy', rows: 3, cta: 'Generate deck' },
+    ESSAY: { label: 'Essay audit', placeholder: 'Write or paste your essay response here…', rows: 8, cta: 'Audit essay' },
+};
+
 export const AIDeck: React.FC = () => {
     const [activeTool, setActiveTool] = useState<Tool>('CHAT');
 
     // Chat State
     const [messages, setMessages] = useState<Message[]>([
-        { role: 'model', content: "Greetings, future CMA! I am the CMA-US Mastermind. I'm here to analyze your progress, drill core concepts, and guide you to exam mastery. Ready to tackle Part 1 or Part 2? 🚀" }
+        { role: 'model', content: "Greetings, future CMA. I'm grounded in your library — ask me anything from Part 1 or Part 2, and I'll guide you to exam mastery." }
     ]);
     const [chatInput, setChatInput] = useState('');
     const [subject, setSubject] = useState('CMA Part 1');
@@ -30,31 +43,15 @@ export const AIDeck: React.FC = () => {
     const chatEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    // Notes State
-    const [noteInput, setNoteInput] = useState('');
-    const [generatedNotes, setGeneratedNotes] = useState('');
-    const [isNotesLoading, setIsNotesLoading] = useState(false);
-
-    // Flashcards State
-    const [cardTopic, setCardTopic] = useState('');
-    const [generatedCards, setGeneratedCards] = useState('');
-    const [isCardsLoading, setIsCardsLoading] = useState(false);
-
-    // Topic Blueprint State
-    const [topicInput, setTopicInput] = useState('');
-    const [generatedTopic, setGeneratedTopic] = useState('');
-    const [isTopicLoading, setIsTopicLoading] = useState(false);
-
-    // Essay Evaluation State
-    const [essayInput, setEssayInput] = useState('');
-    const [essayEvaluation, setEssayEvaluation] = useState('');
-    const [isEssayLoading, setIsEssayLoading] = useState(false);
+    // Generator tools state (one slot per tool)
+    const [genInput, setGenInput] = useState<Record<string, string>>({});
+    const [genOutput, setGenOutput] = useState<Record<string, string>>({});
+    const [genLoading, setGenLoading] = useState<Record<string, boolean>>({});
 
     useEffect(() => {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, isChatLoading]);
 
-    // Auto-focus input when tool changes to CHAT
     useEffect(() => {
         if (activeTool === 'CHAT') {
             setTimeout(() => inputRef.current?.focus(), 100);
@@ -88,49 +85,46 @@ export const AIDeck: React.FC = () => {
             setMessages(prev => [...prev, { role: 'model', content: "Connection interrupted. Please retry." }]);
         } finally {
             setIsChatLoading(false);
-            // Refocus input after response
             setTimeout(() => inputRef.current?.focus(), 50);
         }
     };
 
-    const handleGenerateNotes = async () => {
-        if (!noteInput.trim()) return;
-        setIsNotesLoading(true);
-        const result = await generateStudyContent(
-            `Convert the following material into professional, structured CMA US strategic study notes with clear headers, bullet points, and key formula highlights where applicable:\n\n${noteInput}`,
-            "You are a world-class CMA US academic coach specializing in strategic and clear note-taking based on official IMA standards."
-        );
-        setGeneratedNotes(result);
-        setIsNotesLoading(false);
-    };
+    const runGenerator = async (tool: Exclude<Tool, 'CHAT'>) => {
+        const input = (genInput[tool] || '').trim();
+        if (!input) return;
+        setGenLoading(prev => ({ ...prev, [tool]: true }));
 
-    const handleGenerateCards = async () => {
-        if (!cardTopic.trim()) return;
-        setIsCardsLoading(true);
-        const result = await generateStudyContent(
-            `Generate 5 high-impact CMA US flashcards (Question and Answer format) for the following topic/material. Focus on exam-heavy concepts and key definitions:\n\n${cardTopic}`,
-            "You are a specialized CMA exam designer creating flashcards for strategic mastery."
-        );
-        setGeneratedCards(result);
-        setIsCardsLoading(false);
-    };
+        try {
+            let result = '';
+            if (tool === 'NOTES') {
+                result = await generateStudyContent(
+                    `Convert the following material into professional, structured CMA US strategic study notes with clear headers, bullet points, and key formula highlights where applicable:\n\n${input}`,
+                    "You are a world-class CMA US academic coach specializing in strategic and clear note-taking based on official IMA standards."
+                );
+            } else if (tool === 'FLASHCARDS') {
+                result = await generateStudyContent(
+                    `Generate 5 high-impact CMA US flashcards (Question and Answer format) for the following topic/material. Focus on exam-heavy concepts and key definitions:\n\n${input}`,
+                    "You are a specialized CMA exam designer creating flashcards for strategic mastery."
+                );
+            } else if (tool === 'TOPIC') {
+                result = await generateStudyContent(
+                    `Create a comprehensive, deep-dive CMA US study guide for the topic: "${input}".
 
-    const handleGenerateTopic = async () => {
-        if (!topicInput.trim()) return;
-        setIsTopicLoading(true);
-        const result = await generateStudyContent(
-            `Create a comprehensive, deep-dive CMA US study guide for the topic: "${topicInput}".
-            
             Structure Required:
             1. Concept Definition (Official IMA Definition if applicable)
             2. Strategic Relevance (Why it matters for Part 1/2)
             3. Key Formulas / Components (with breakdown)
             4. Example Scenario (Practical Application)
             5. Exam Tips (Common pitfalls & Weightage)`,
-            "You are a CMA Exam Curriculum Expert."
-        );
-        setGeneratedTopic(result);
-        setIsTopicLoading(false);
+                    "You are a CMA Exam Curriculum Expert."
+                );
+            } else if (tool === 'ESSAY') {
+                result = await evaluateEssay(input, subject);
+            }
+            setGenOutput(prev => ({ ...prev, [tool]: result }));
+        } finally {
+            setGenLoading(prev => ({ ...prev, [tool]: false }));
+        }
     };
 
     const handleChatAboutContext = (content: string, source: string) => {
@@ -139,18 +133,10 @@ export const AIDeck: React.FC = () => {
         setActiveTool('CHAT');
         setMessages([{
             role: 'model',
-            content: `I've analyzed the ${source}. What specific concept or exam-related strategy from this material should we break down further? 🧠`,
+            content: `I've analyzed the ${source}. What specific concept or exam-related strategy from this material should we break down further?`,
             isContextual: true,
             source: source
         }]);
-    };
-
-    const handleEvaluateEssay = async () => {
-        if (!essayInput.trim()) return;
-        setIsEssayLoading(true);
-        const result = await evaluateEssay(essayInput, subject);
-        setEssayEvaluation(result);
-        setIsEssayLoading(false);
     };
 
     const clearContext = () => {
@@ -158,387 +144,204 @@ export const AIDeck: React.FC = () => {
         if (chatMode === 'FOLLOW_UP') setChatMode('STANDARD');
     };
 
-    const toolBtn = (tool: Tool, icon: React.ReactNode, title: string, hint: string) => (
-        <button
-            type="button"
-            onClick={() => setActiveTool(tool)}
-            className={`group flex w-full items-start gap-3 rounded-2xl border p-4 text-left transition-all ${
-                activeTool === tool
-                    ? 'border-brand/40 bg-brand/[0.1] shadow-md shadow-brand/10 ring-1 ring-brand/25'
-                    : 'border-transparent bg-transparent hover:border-brand/25 hover:bg-brand/[0.06]'
-            }`}
-        >
-            <span
-                className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors ${
-                    activeTool === tool ? 'bg-brand text-white shadow-md shadow-brand/25' : 'bg-brand/10 text-brand group-hover:bg-brand/15'
-                }`}
-            >
-                {icon}
-            </span>
-            <span className="min-w-0 text-left">
-                <span className={`block text-sm font-semibold ${activeTool === tool ? 'text-slate-900' : 'text-slate-700'}`}>{title}</span>
-                <span className="mt-0.5 block text-xs font-medium leading-[1.5] text-slate-600">{hint}</span>
-            </span>
-        </button>
-    );
+    const genConf = activeTool !== 'CHAT' ? GEN_CONF[activeTool] : null;
+    const genSourceLabel: Record<string, string> = {
+        TOPIC: 'Generated Blueprint',
+        NOTES: 'Generated Study Guide',
+        FLASHCARDS: 'Flashcard Deck',
+        ESSAY: 'Essay Audit Report',
+    };
 
     return (
-        <div className={`flex h-full min-h-0 flex-col font-sans text-left ${STUDENT_PAGE_BG}`}>
-            <StudentPageChrome
-                eyebrow="AI workspace"
-                title="CMA Mastermind"
-                description="IMA-aligned tools for chat, notes, and drills."
-                icon={<Icons.Sparkles className="h-6 w-6" />}
-                compact
-            />
-            <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-            {/* Sidebar for Tools */}
-            <div className="flex w-full flex-col gap-2 border-b border-brand/15 bg-gradient-to-b from-white/95 to-brand/[0.04] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] backdrop-blur-xl md:w-80 md:border-b-0 md:border-r md:border-brand/15 md:p-8">
-                <div className="mb-2 flex items-center gap-2 border-b border-brand/10 pb-4 text-left md:hidden">
-                    <span className="font-display text-xs font-semibold uppercase tracking-[0.14em] text-brand">Tools</span>
-                </div>
-
-                {toolBtn('CHAT', <Icons.MessageCircle className="h-[18px] w-[18px]" />, 'Chat', 'Ask anything across Part 1 & 2')}
-                {toolBtn('TOPIC', <Icons.Grid className="h-[18px] w-[18px]" />, 'Topic blueprint', 'Structured deep-dives by topic')}
-                {toolBtn('NOTES', <Icons.BookOpen className="h-[18px] w-[18px]" />, 'Notes refiner', 'Turn rough material into clean notes')}
-                {toolBtn('FLASHCARDS', <Icons.ClipboardList className="h-[18px] w-[18px]" />, 'Formula cards', 'Quick recall for exam-heavy ideas')}
-                {toolBtn('ESSAY', <Icons.Pencil className="h-[18px] w-[18px]" />, 'Essay auditor', 'Practice responses with feedback')}
-
-                <div className="mt-auto space-y-3 pt-6">
-                    <div
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                setChatMode('VAULT_REF');
-                            }
-                        }}
-                        onClick={() => setChatMode('VAULT_REF')}
-                        className={`cursor-pointer rounded-2xl border p-4 transition-all ${
-                            chatMode === 'VAULT_REF' ? 'border-brand bg-brand/15 shadow-md shadow-brand/15' : 'border-brand/25 bg-brand/[0.04] hover:border-brand/50 hover:bg-brand/10'
-                        }`}
-                    >
-                        <p className="text-xs font-semibold text-brand">Resource library</p>
-                        <div className="mt-2 flex items-center gap-2 text-slate-700">
-                            <Icons.BookOpen className="h-4 w-4 shrink-0 text-brand" />
-                            <span className="text-xs font-medium leading-snug">IMA-linked reference mode for chat</span>
-                        </div>
+        <div className="proto wall-embedded">
+            <div className="wall" data-page="ai">
+                <main className="shell-solo shell-wide">
+                    {/* Masthead */}
+                    <div className="feed-hello">
+                        <h1 className="font-display">CMA Mastermind</h1>
+                        <p>IMA-aligned tools for chat, notes, and drills — grounded in your materials.</p>
                     </div>
-                    {activeContext && (
-                        <div className="animate-in slide-in-from-bottom-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-lg duration-500 group">
-                            <div className="mb-2 flex items-center justify-between">
-                                <p className="text-xs font-semibold text-brand">Active context</p>
-                                <div className="h-2 w-2 animate-pulse rounded-full bg-brand" />
-                            </div>
-                            <div className="mb-3 line-clamp-3 text-xs font-medium italic leading-relaxed text-slate-600">"{activeContext}"</div>
-                            <button
-                                type="button"
-                                onClick={clearContext}
-                                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 text-xs font-medium text-slate-600 transition-colors hover:border-brand/30 hover:bg-brand/[0.06] hover:text-slate-900"
-                            >
-                                Reset context
-                            </button>
-                        </div>
-                    )}
-                </div>
-            </div>
 
-            {/* Tool View */}
-            <div className="flex flex-1 flex-col overflow-hidden p-6 text-left sm:p-8">
-                {activeTool === 'CHAT' && (
-                    <div className="relative flex flex-1 flex-col overflow-hidden rounded-[2rem] border border-slate-200/90 bg-white/95 shadow-glass backdrop-blur-sm">
-                        {/* Chat Header */}
-                        <div className="z-20 flex flex-col gap-4 border-b border-slate-100/90 bg-white/95 px-6 py-4 text-left backdrop-blur-md sm:flex-row sm:items-center sm:justify-between sm:px-8 sm:py-5">
-                            <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:gap-6">
-                                <span className="font-display shrink-0 text-sm font-bold tracking-tight text-slate-900">CMA US tutor</span>
-                                <div className="flex gap-1 rounded-full border border-brand/20 bg-brand/[0.08] p-1">
+                    <div className="deck-wrap">
+                        {/* Tools rail */}
+                        <div className="deck-tools">
+                            {DECK_TOOLS.map((t) => {
+                                const TIc = Icons[t.icon] as React.FC<{ className?: string }>;
+                                return (
                                     <button
+                                        key={t.key}
                                         type="button"
-                                        onClick={() => setChatMode('STANDARD')}
-                                        className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${chatMode === 'STANDARD' ? 'bg-brand text-white shadow-md shadow-brand/25' : 'text-slate-700 hover:bg-white/80 hover:text-brand'}`}
+                                        className={`deck-tool ${activeTool === t.key ? 'on' : ''}`}
+                                        onClick={() => setActiveTool(t.key)}
                                     >
-                                        Global
+                                        <span className="deck-tool-ic"><TIc className="w-[18px] h-[18px]" /></span>
+                                        <span className="deck-tool-tx">
+                                            <strong>{t.title}</strong>
+                                            <span>{t.hint}</span>
+                                        </span>
                                     </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setChatMode('VAULT_REF')}
-                                        className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${chatMode === 'VAULT_REF' ? 'bg-brand text-white shadow-md shadow-brand/25' : 'text-slate-700 hover:bg-white/80 hover:text-brand'}`}
-                                    >
-                                        Library
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setChatMode('FOLLOW_UP')}
-                                        disabled={!activeContext}
-                                        className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${chatMode === 'FOLLOW_UP' ? 'bg-brand text-white shadow-md shadow-brand/25' : activeContext ? 'text-slate-700 hover:bg-white/80 hover:text-brand' : 'cursor-not-allowed text-slate-300'}`}
-                                    >
-                                        Follow-up
+                                );
+                            })}
+
+                            {/* Active context card */}
+                            {activeContext && (
+                                <div className="post" style={{ padding: '14px 15px', marginTop: 6 }}>
+                                    <p style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--accent-deep)', marginBottom: 6 }}>
+                                        Active context
+                                    </p>
+                                    <p style={{ fontSize: '0.74rem', color: 'var(--muted)', fontStyle: 'italic', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', marginBottom: 10 }}>
+                                        “{activeContext}”
+                                    </p>
+                                    <button type="button" className="clay-option" style={{ padding: '8px 12px', fontSize: '0.72rem' }} onClick={clearContext}>
+                                        Reset context
                                     </button>
                                 </div>
-                            </div>
-                            <select
-                                value={subject}
-                                onChange={(e) => setSubject(e.target.value)}
-                                className="bg-slate-50 border border-slate-200 text-slate-900 font-bold text-xs rounded-xl px-4 py-2 focus:ring-2 focus:ring-brand outline-none"
-                            >
-                                <option>CMA Part 1</option>
-                                <option>CMA Part 2</option>
-                                <option>Ethics & Standards</option>
-                                <option>Cost Management</option>
-                            </select>
+                            )}
                         </div>
 
-                        {/* Messages Area */}
-                        <div className="flex-1 space-y-8 overflow-y-auto scroll-smooth p-6 sm:p-10 no-scrollbar">
-                            {messages.map((m, i) => (
-                                <div key={i} className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'}`}>
-                                    <div className={`max-w-[min(100%,36rem)] rounded-3xl p-5 text-sm leading-[1.65] sm:p-6 ${m.role === 'user'
-                                        ? 'bg-brand text-right text-white shadow-lg shadow-brand/20'
-                                        : 'border border-slate-100/90 bg-slate-50/95 text-left font-medium text-slate-800 backdrop-blur-sm'
-                                        }`}>
-                                        {m.isContextual && m.role === 'model' && (
-                                            <div className="mb-3 flex items-center gap-2 border-b border-brand/15 pb-2 text-left text-[10px] font-semibold uppercase tracking-wider text-brand">
-                                                <Icons.Award className="h-3 w-3 shrink-0" />
-                                                {m.source || 'Strategic Reference Active'}
+                        {/* Panel */}
+                        <div className="post deck-panel">
+                            {activeTool === 'CHAT' ? (
+                                <div className="deck-chat">
+                                    {/* Modes + subject */}
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+                                        <div className="deck-modes" style={{ marginBottom: 0 }}>
+                                            <button type="button" className={`seg ${chatMode === 'STANDARD' ? 'seg-on' : ''}`} onClick={() => setChatMode('STANDARD')}>Global</button>
+                                            <button type="button" className={`seg ${chatMode === 'VAULT_REF' ? 'seg-on' : ''}`} onClick={() => setChatMode('VAULT_REF')}>Library</button>
+                                            <button
+                                                type="button"
+                                                className={`seg ${chatMode === 'FOLLOW_UP' ? 'seg-on' : ''}`}
+                                                disabled={!activeContext}
+                                                style={!activeContext ? { opacity: 0.4, cursor: 'not-allowed' } : undefined}
+                                                onClick={() => activeContext && setChatMode('FOLLOW_UP')}
+                                            >
+                                                Follow-up
+                                            </button>
+                                        </div>
+                                        <select
+                                            value={subject}
+                                            onChange={(e) => setSubject(e.target.value)}
+                                            style={{
+                                                border: '1.5px solid var(--line)', borderRadius: 12, padding: '7px 12px',
+                                                fontSize: '0.78rem', fontWeight: 700, color: 'var(--ink)',
+                                                background: 'var(--card)', outline: 'none', marginBottom: 14,
+                                            }}
+                                        >
+                                            <option>CMA Part 1</option>
+                                            <option>CMA Part 2</option>
+                                            <option>Ethics & Standards</option>
+                                            <option>Cost Management</option>
+                                        </select>
+                                    </div>
+
+                                    {/* Messages */}
+                                    <div className="deck-msgs">
+                                        {messages.map((m, i) => (
+                                            <div key={i} className={`dm-bubble ${m.role === 'user' ? 'mine' : ''}`}>
+                                                {m.isContextual && m.role === 'model' && m.source && (
+                                                    <span className="dm-src"><Icons.BookOpen className="w-[11px] h-[11px]" /> {m.source}</span>
+                                                )}
+                                                {m.content}
+                                            </div>
+                                        ))}
+                                        {isChatLoading && (
+                                            <div className="dm-bubble" style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--muted)' }}>
+                                                <span style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid var(--line)', borderTopColor: 'var(--accent)', animation: 'spin 0.8s linear infinite', flex: 'none' }} />
+                                                Mastermind is thinking…
                                             </div>
                                         )}
-                                        <div className={`max-w-none whitespace-pre-wrap ${m.role === 'user' ? 'text-right text-[15px] text-white' : 'text-left text-[15px] text-slate-800'}`}>{m.content}</div>
+                                        <div ref={chatEndRef} />
+                                    </div>
+
+                                    {/* Follow-up context strip */}
+                                    {activeContext && chatMode === 'FOLLOW_UP' && (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px', borderRadius: 14, background: 'var(--accent-soft)', margin: '10px 0 0', fontSize: '0.74rem', color: 'var(--accent-deep)' }}>
+                                            <Icons.Brain className="w-4 h-4" style={{ flex: 'none' }} />
+                                            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontStyle: 'italic' }}>
+                                                Focusing on: “{activeContext}”
+                                            </span>
+                                            <button type="button" onClick={clearContext} style={{ fontWeight: 800, flex: 'none' }}>Clear ✕</button>
+                                        </div>
+                                    )}
+
+                                    {/* Input */}
+                                    <div className="deck-input">
+                                        <input
+                                            ref={inputRef}
+                                            type="text"
+                                            value={chatInput}
+                                            placeholder={chatMode === 'VAULT_REF' ? 'Ask about Part 1 or Part 2 specific content…' : 'Ask your CMA mentor anything…'}
+                                            disabled={isChatLoading}
+                                            onChange={(e) => setChatInput(e.target.value)}
+                                            onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+                                        />
+                                        <button
+                                            type="button"
+                                            className="comment-send"
+                                            onClick={handleSendMessage}
+                                            disabled={isChatLoading || !chatInput.trim()}
+                                            aria-label="Send"
+                                            style={isChatLoading || !chatInput.trim() ? { opacity: 0.4 } : undefined}
+                                        >
+                                            <Icons.Send className="w-[15px] h-[15px]" />
+                                        </button>
                                     </div>
                                 </div>
-                            ))}
-                            {isChatLoading && (
-                                <div className="flex items-center gap-3 text-slate-400 text-xs font-bold animate-pulse px-4">
-                                    <Icons.Sparkles className="w-4 h-4 animate-spin text-brand" />
-                                    <span>Mastermind is calculating strategic response...</span>
+                            ) : genConf && (
+                                <div className="deck-gen">
+                                    <textarea
+                                        className="composer-text"
+                                        rows={genConf.rows}
+                                        placeholder={genConf.placeholder}
+                                        value={genInput[activeTool] || ''}
+                                        onChange={(e) => setGenInput(prev => ({ ...prev, [activeTool]: e.target.value }))}
+                                    ></textarea>
+                                    <div className="deck-gen-row">
+                                        <button
+                                            type="button"
+                                            className="btn-post"
+                                            disabled={genLoading[activeTool] || !(genInput[activeTool] || '').trim()}
+                                            onClick={() => runGenerator(activeTool as Exclude<Tool, 'CHAT'>)}
+                                        >
+                                            <Icons.Sparkles className="w-[14px] h-[14px]" />
+                                            {genLoading[activeTool] ? 'Generating…' : genConf.cta}
+                                        </button>
+                                        {genOutput[activeTool] && (
+                                            <>
+                                                <button
+                                                    type="button"
+                                                    className="rooms-create"
+                                                    onClick={() => handleChatAboutContext(genOutput[activeTool], genSourceLabel[activeTool])}
+                                                >
+                                                    Discuss with Mastermind
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="rooms-create"
+                                                    onClick={() => setGenOutput(prev => ({ ...prev, [activeTool]: '' }))}
+                                                >
+                                                    Clear
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                    {genLoading[activeTool] && (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--muted)', fontSize: '0.82rem', padding: '14px 4px' }}>
+                                            <span style={{ width: 16, height: 16, borderRadius: '50%', border: '2px solid var(--line)', borderTopColor: 'var(--accent)', animation: 'spin 0.8s linear infinite' }} />
+                                            Working on your {genConf.label.toLowerCase()}…
+                                        </div>
+                                    )}
+                                    {genOutput[activeTool] && !genLoading[activeTool] && (
+                                        <div className="ai-summary deck-out">
+                                            <span className="ai-chip"><Icons.Sparkles className="w-3 h-3" /> {genConf.label}</span>
+                                            <p style={{ whiteSpace: 'pre-wrap' }}>{genOutput[activeTool]}</p>
+                                        </div>
+                                    )}
                                 </div>
                             )}
-                            <div ref={chatEndRef} />
-                        </div>
-
-                        {/* Input Area */}
-                        <div className="border-t border-slate-100/90 bg-slate-50/80 p-6 backdrop-blur-sm sm:p-8">
-                            {/* Integrated Active Context Banner */}
-                            {activeContext && chatMode === 'FOLLOW_UP' && (
-                                <div className="max-w-4xl mx-auto mb-6 flex items-center justify-between bg-brand/[0.04] border border-brand/10 rounded-[1.5rem] px-6 py-4 animate-in slide-in-from-bottom-4 duration-500 shadow-sm ring-1 ring-brand/5">
-                                    <div className="flex items-center gap-4 overflow-hidden">
-                                        <div className="p-2.5 bg-brand text-white rounded-xl shadow-lg shadow-brand/20 shrink-0">
-                                            <Icons.Brain className="w-4 h-4" />
-                                        </div>
-                                        <div className="flex flex-col overflow-hidden">
-                                            <span className="text-[9px] font-black text-brand uppercase tracking-[0.2em] mb-0.5">Focusing Discussion On</span>
-                                            <span className="text-[11px] text-slate-600 font-bold truncate italic leading-none">"{activeContext}"</span>
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={clearContext}
-                                        className="ml-4 px-4 py-2 bg-white/50 hover:bg-brand hover:text-white border border-brand/10 text-brand rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-sm flex items-center gap-2"
-                                        title="Clear Focus"
-                                    >
-                                        <Icons.Plus className="w-3.5 h-3.5 rotate-45" />
-                                        Clear Focus
-                                    </button>
-                                </div>
-                            )}
-
-                            <div className="relative mx-auto max-w-4xl">
-                                <input
-                                    ref={inputRef}
-                                    className="w-full rounded-2xl border border-slate-200/90 bg-white px-6 py-4 pr-20 text-left text-sm font-medium text-slate-900 outline-none shadow-sm transition-all focus:border-brand focus:ring-4 focus:ring-brand/10 sm:px-8 sm:py-5"
-                                    placeholder={chatMode === 'VAULT_REF' ? "Ask about Part 1 or Part 2 specific content..." : "Ask your CMA US Mentor anything..."}
-                                    value={chatInput}
-                                    onChange={(e) => setChatInput(e.target.value)}
-                                    onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                                    disabled={isChatLoading}
-                                />
-                                <button
-                                    onClick={handleSendMessage}
-                                    disabled={isChatLoading || !chatInput.trim()}
-                                    className="absolute right-3 top-3 bottom-3 px-6 bg-brand text-white rounded-xl hover:bg-brand-600 transition-all disabled:opacity-30 shadow-lg shadow-brand/20 flex items-center justify-center active:scale-95"
-                                >
-                                    <Icons.Send className="w-5 h-5" />
-                                </button>
-                            </div>
                         </div>
                     </div>
-                )}
-
-                {activeTool === 'TOPIC' && (
-                    <div className="flex-1 flex flex-col gap-8 overflow-hidden">
-                        <div className="animate-in rounded-[2rem] border border-slate-200/90 bg-white/90 p-8 shadow-glass backdrop-blur-md fade-in duration-500 sm:rounded-[3rem] sm:p-10">
-                            <h3 className="font-display mb-3 text-2xl font-bold tracking-tight text-slate-900">Topic blueprint</h3>
-                            <p className="mb-8 text-left text-sm leading-[1.65] text-slate-600">Enter any CMA topic (for example variance analysis or internal controls) to generate a structured study guide.</p>
-
-                            <input
-                                value={topicInput}
-                                onChange={(e) => setTopicInput(e.target.value)}
-                                className="w-full bg-slate-50 border border-slate-100 rounded-[2rem] px-8 py-5 text-sm font-medium outline-none focus:ring-4 focus:ring-brand/5 focus:bg-white transition-all mb-6"
-                                placeholder="Enter Topic Name..."
-                                onKeyDown={(e) => e.key === 'Enter' && handleGenerateTopic()}
-                            />
-
-                            <button
-                                onClick={handleGenerateTopic}
-                                disabled={isTopicLoading || !topicInput.trim()}
-                                className="w-full py-5 bg-slate-900 text-white rounded-[2rem] text-[10px] font-black uppercase tracking-[0.3em] shadow-xl hover:bg-brand transition-all flex items-center justify-center gap-4 disabled:opacity-50"
-                            >
-                                {isTopicLoading ? <><Icons.CloudSync className="w-5 h-5 animate-spin" /> Drafting Blueprint...</> : <><Icons.Grid className="w-5 h-5" /> Generate Guide</>}
-                            </button>
-                        </div>
-
-                        {generatedTopic && (
-                            <div className="flex-1 bg-white rounded-[3rem] border border-slate-200 p-10 shadow-sm overflow-y-auto no-scrollbar animate-in slide-in-from-bottom-8 duration-700">
-                                <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-6">
-                                    <span className="text-[10px] font-black text-brand uppercase tracking-[0.4em]">Strategic Blueprint</span>
-                                    <div className="flex gap-4">
-                                        <button
-                                            onClick={() => handleChatAboutContext(generatedTopic, 'Generated Blueprint')}
-                                            className="px-6 py-2 bg-brand/5 text-brand rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-brand hover:text-white transition-all"
-                                        >
-                                            Deep Dive
-                                        </button>
-                                        <button className="px-6 py-2 bg-slate-100 text-slate-400 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">Save to Vault</button>
-                                    </div>
-                                </div>
-                                <div className="prose prose-slate max-w-none">
-                                    <div className="whitespace-pre-wrap font-sans text-slate-700 leading-relaxed text-sm">{generatedTopic}</div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {activeTool === 'NOTES' && (
-                    <div className="flex flex-1 flex-col gap-8 overflow-hidden text-left">
-                        <div className="animate-in rounded-[2rem] border border-slate-200/90 bg-white/90 p-8 shadow-glass backdrop-blur-md fade-in duration-500 sm:rounded-[3rem] sm:p-10">
-                            <h3 className="font-display mb-3 text-2xl font-bold tracking-tight text-slate-900">Notes refiner</h3>
-                            <p className="mb-8 text-sm leading-[1.65] text-slate-600">Paste rough notes or transcripts. We restructure them into clear, exam-style study guides.</p>
-
-                            <textarea
-                                value={noteInput}
-                                onChange={(e) => setNoteInput(e.target.value)}
-                                className="w-full h-40 bg-slate-50 border border-slate-100 rounded-[2rem] p-8 text-sm font-medium outline-none focus:ring-4 focus:ring-brand/5 focus:bg-white transition-all resize-none mb-6"
-                                placeholder="Example: Paste a paragraph about Joint Costing methods here..."
-                            />
-
-                            <button
-                                onClick={handleGenerateNotes}
-                                disabled={isNotesLoading || !noteInput.trim()}
-                                className="w-full py-5 bg-slate-900 text-white rounded-[2rem] text-[10px] font-black uppercase tracking-[0.3em] shadow-xl hover:bg-brand transition-all flex items-center justify-center gap-4 disabled:opacity-50"
-                            >
-                                {isNotesLoading ? <><Icons.CloudSync className="w-5 h-5 animate-spin" /> Synthesizing Strategy...</> : <><Icons.Brain className="w-5 h-5" /> Refine Notes</>}
-                            </button>
-                        </div>
-
-                        {generatedNotes && (
-                            <div className="flex-1 bg-white rounded-[3rem] border border-slate-200 p-10 shadow-sm overflow-y-auto no-scrollbar animate-in slide-in-from-bottom-8 duration-700">
-                                <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-6">
-                                    <span className="text-[10px] font-black text-brand uppercase tracking-[0.4em]">Draft Strategy Guide</span>
-                                    <div className="flex gap-4">
-                                        <button
-                                            onClick={() => handleChatAboutContext(generatedNotes, 'Generated Study Guide')}
-                                            className="px-6 py-2 bg-brand/5 text-brand rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-brand hover:text-white transition-all"
-                                        >
-                                            Analyze with Mentor
-                                        </button>
-                                        <button className="px-6 py-2 bg-slate-100 text-slate-400 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">Export PDF</button>
-                                    </div>
-                                </div>
-                                <div className="prose prose-slate max-w-none">
-                                    <div className="whitespace-pre-wrap font-sans text-slate-700 leading-relaxed text-sm">{generatedNotes}</div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {activeTool === 'FLASHCARDS' && (
-                    <div className="flex-1 flex flex-col gap-8 overflow-hidden">
-                        <div className="bg-white rounded-[3rem] border border-slate-200 p-10 shadow-sm animate-in fade-in duration-500">
-                            <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-4">Formula Card Creator</h3>
-                            <p className="text-slate-500 text-sm mb-8 font-medium italic">Generate high-impact flashcards for CMA definitions, formulas, and standards.</p>
-
-                            <textarea
-                                value={cardTopic}
-                                onChange={(e) => setCardTopic(e.target.value)}
-                                className="w-full h-40 bg-slate-50 border border-slate-100 rounded-[2rem] p-8 text-sm font-medium outline-none focus:ring-4 focus:ring-brand/5 focus:bg-white transition-all resize-none mb-6"
-                                placeholder="Example: CMA Part 2 - Risk Management & Financial Strategy..."
-                            />
-
-                            <button
-                                onClick={handleGenerateCards}
-                                disabled={isCardsLoading || !cardTopic.trim()}
-                                className="w-full py-5 bg-slate-900 text-white rounded-[2rem] text-[10px] font-black uppercase tracking-[0.3em] shadow-xl hover:bg-brand transition-all flex items-center justify-center gap-4 disabled:opacity-50"
-                            >
-                                {isCardsLoading ? <><Icons.CloudSync className="w-5 h-5 animate-spin" /> Coding Cards...</> : <><Icons.Plus className="w-5 h-5" /> Generate Deck</>}
-                            </button>
-                        </div>
-
-                        {generatedCards && (
-                            <div className="flex-1 bg-white rounded-[3rem] border border-slate-200 p-10 shadow-sm overflow-y-auto no-scrollbar animate-in slide-in-from-bottom-8 duration-700">
-                                <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-6">
-                                    <span className="text-[10px] font-black text-brand uppercase tracking-[0.4em]">Strategic Flashcards</span>
-                                    <div className="flex gap-4">
-                                        <button
-                                            onClick={() => handleChatAboutContext(generatedCards, 'Flashcard Deck')}
-                                            className="px-6 py-2 bg-brand/5 text-brand rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-brand hover:text-white transition-all"
-                                        >
-                                            Practice Mode
-                                        </button>
-                                        <button className="px-6 py-2 bg-slate-100 text-slate-400 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">Save to Vault</button>
-                                    </div>
-                                </div>
-                                <div className="prose prose-slate max-w-none">
-                                    <div className="whitespace-pre-wrap font-sans text-slate-700 leading-relaxed text-sm">{generatedCards}</div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                )}
-                {activeTool === 'ESSAY' && (
-                    <div className="flex-1 flex flex-col gap-8 overflow-hidden">
-                        <div className="bg-white rounded-[3rem] border border-slate-200 p-10 shadow-sm animate-in fade-in duration-500">
-                            <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-4">Essay Sandbox & Auditor</h3>
-                            <p className="text-slate-500 text-sm mb-8 font-medium italic">Paste your essay here. The Mastermind will audit it against official IMA rubrics from the Knowledge Vault.</p>
-
-                            <textarea
-                                value={essayInput}
-                                onChange={(e) => setEssayInput(e.target.value)}
-                                className="w-full h-64 bg-slate-50 border border-slate-100 rounded-[2rem] p-8 text-sm font-medium outline-none focus:ring-4 focus:ring-brand/5 focus:bg-white transition-all resize-none mb-6"
-                                placeholder="Write or paste your essay response here..."
-                            />
-
-                            <button
-                                onClick={handleEvaluateEssay}
-                                disabled={isEssayLoading || !essayInput.trim()}
-                                className="w-full py-5 bg-slate-900 text-white rounded-[2rem] text-[10px] font-black uppercase tracking-[0.3em] shadow-xl hover:bg-brand transition-all flex items-center justify-center gap-4 disabled:opacity-50"
-                            >
-                                {isEssayLoading ? <><Icons.CloudSync className="w-5 h-5 animate-spin" /> Performing Audit...</> : <><Icons.Award className="w-5 h-5" /> Audit Essay</>}
-                            </button>
-                        </div>
-
-                        {essayEvaluation && (
-                            <div className="flex-1 bg-white rounded-[3rem] border border-slate-200 p-10 shadow-sm overflow-y-auto no-scrollbar animate-in slide-in-from-bottom-8 duration-700">
-                                <div className="flex justify-between items-center mb-8 border-b border-slate-100 pb-6">
-                                    <span className="text-[10px] font-black text-brand uppercase tracking-[0.4em]">Official Audit Report</span>
-                                    <div className="flex gap-4">
-                                        <button
-                                            onClick={() => handleChatAboutContext(essayEvaluation, 'Essay Audit Report')}
-                                            className="px-6 py-2 bg-brand/5 text-brand rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-brand hover:text-white transition-all"
-                                        >
-                                            Discuss Gaps
-                                        </button>
-                                        <button className="px-6 py-2 bg-slate-100 text-slate-400 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">Download Audit</button>
-                                    </div>
-                                </div>
-                                <div className="prose prose-slate max-w-none">
-                                    <div className="whitespace-pre-wrap font-sans text-slate-700 leading-relaxed text-sm">{essayEvaluation}</div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                )}
-            </div>
+                </main>
             </div>
         </div>
     );

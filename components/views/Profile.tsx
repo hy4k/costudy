@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Icons } from '../Icons';
-import { User, UserRole, AlignmentPurpose, ActiveAlignment, AlignmentRequest, AlignmentDuration, TrackingRecord, ObserverRecord, SignalLevel, SignalConfig } from '../../types';
+import { User, UserRole, ActiveAlignment, AlignmentRequest, AlignmentDuration, TrackingRecord, ObserverRecord, SignalLevel, SignalConfig } from '../../types';
 import { getUserProfile, updateUserProfile } from '../../services/fetsService';
 import { alignmentService } from '../../services/alignmentService';
 import { InviteCard } from '../InviteCard';
@@ -12,15 +11,20 @@ interface ProfileProps {
   onProfileUpdate?: () => void;
 }
 
+const eyebrow: React.CSSProperties = {
+    fontSize: 11, fontWeight: 700, letterSpacing: '0.08em',
+    textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 8,
+};
+
 export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpdate }) => {
     const [me, setMe] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
-    
+
     // Tab State for Network Section
     const [networkTab, setNetworkTab] = useState<'CONTRACTS' | 'RADAR'>('CONTRACTS');
     const [activeAlignTab, setActiveAlignTab] = useState<'ACTIVE' | 'ARCHIVED'>('ACTIVE');
-    
+
     // Form state for editing
     const [editForm, setEditForm] = useState({
         name: '',
@@ -73,7 +77,7 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
                         yearsExperience: data.yearsExperience || '',
                         hourlyRate: data.hourlyRate || ''
                     });
-                    
+
                     // Load CAN Network data
                     loadNetworkData(userId);
                 }
@@ -96,7 +100,7 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
                 alignmentService.getTracking(uid),
                 alignmentService.getObservers(uid)
             ]);
-            
+
             setAlignments(alignmentsData);
             setPendingRequests(requestsData);
             setTrackingList(trackingData);
@@ -138,7 +142,6 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
         } catch (e: any) {
             console.error("Save failed", e);
             setSaveStatus('ERROR');
-            alert(`Synchronization Failed: ${e.message || 'Check your database connection'}`);
         } finally {
             setIsSaving(false);
         }
@@ -154,7 +157,7 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
         const file = e.target.files?.[0];
         if (file) {
             if (file.size > 2 * 1024 * 1024) {
-                alert("Visual Identity too large. Please select an image under 2MB.");
+                setSaveStatus('ERROR');
                 return;
             }
             const reader = new FileReader();
@@ -168,7 +171,6 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
     const handleAcceptRequest = async (req: AlignmentRequest) => {
         const newAlignmentId = await alignmentService.acceptRequest(req.id);
         if (newAlignmentId && userId) {
-            // Refresh alignments and requests
             const [alignmentsData, requestsData] = await Promise.all([
                 alignmentService.getMyAlignments(userId),
                 alignmentService.getPendingRequests(userId)
@@ -188,17 +190,16 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
     const handleRenewAlignment = async (id: string) => {
         const success = await alignmentService.renewAlignment(id);
         if (success) {
-            setAlignments(prev => prev.map(a => 
+            setAlignments(prev => prev.map(a =>
                 a.id === id ? { ...a, status: 'ACTIVE', startDate: new Date().toISOString(), streak: 0 } : a
             ));
-            alert("Protocol renewed successfully.");
         }
     };
 
     // Boundary Actions
     const handleBoundaryAction = async (action: 'PAUSE' | 'RESTRICT' | 'END', payload?: any) => {
         if (!boundaryTarget) return;
-        
+
         let success = false;
         if (action === 'PAUSE') {
             const pausedUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
@@ -208,7 +209,7 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
         } else if (action === 'RESTRICT') {
             success = await alignmentService.updateRestrictions(boundaryTarget.id, payload);
         }
-        
+
         if (success) {
             setAlignments(prev => prev.map(a => {
                 if (a.id === boundaryTarget.id) {
@@ -219,602 +220,576 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
                 return a;
             }));
         }
-        
+
         setBoundaryTarget(null);
     };
 
-    const getDaysRemaining = (startDate: string, duration: AlignmentDuration) => {
-        let durationDays = 30; 
-        if (duration === '7 Days') durationDays = 7;
-        if (duration === '14 Days') durationDays = 14;
-        if (duration === '30 Days') durationDays = 30;
-        if (duration === 'Until Exam') durationDays = 90;
+    const durationDaysOf = (duration: AlignmentDuration) => {
+        if (duration === '7 Days') return 7;
+        if (duration === '14 Days') return 14;
+        if (duration === '30 Days') return 30;
+        if (duration === 'Until Exam') return 90;
+        return 30;
+    };
 
-        const start = new Date(startDate).getTime();
-        const now = new Date().getTime();
-        const elapsed = (now - start) / (1000 * 60 * 60 * 24);
+    const getDaysRemaining = (startDate: string, duration: AlignmentDuration) => {
+        const durationDays = durationDaysOf(duration);
+        const elapsed = (Date.now() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24);
         return Math.max(0, Math.ceil(durationDays - elapsed));
     };
 
     const getProgress = (startDate: string, duration: AlignmentDuration) => {
-        let durationDays = 30;
-        if (duration === '7 Days') durationDays = 7;
-        if (duration === '14 Days') durationDays = 14;
-        if (duration === '30 Days') durationDays = 30;
-        if (duration === 'Until Exam') durationDays = 90;
-
-        const start = new Date(startDate).getTime();
-        const now = new Date().getTime();
-        const elapsed = (now - start) / (1000 * 60 * 60 * 24);
+        const durationDays = durationDaysOf(duration);
+        const elapsed = (Date.now() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24);
         return Math.min(100, Math.max(0, (elapsed / durationDays) * 100));
     };
 
+    // ---------- Loading / not-found states ----------
     if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8 opacity-40">
-                <Icons.CloudSync className="w-16 h-16 animate-spin text-brand" />
-                <span className="font-black uppercase tracking-[0.4em] text-sm animate-pulse text-slate-900">Establishing Identity Link...</span>
+            <div className="proto wall-embedded">
+                <div className="wall" data-page="profile">
+                    <main className="shell-solo">
+                        <div style={{ display: 'flex', justifyContent: 'center', padding: '120px 0' }}>
+                            <div style={{ width: 36, height: 36, borderRadius: '50%', border: '3px solid var(--line)', borderTopColor: 'var(--accent)', animation: 'spin 0.8s linear infinite' }} />
+                        </div>
+                    </main>
+                </div>
             </div>
         );
     }
 
     if (!me) {
-      return (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8 py-40 text-center">
-           <div className="p-8 bg-brand/5 rounded-full border border-brand/10">
-              <Icons.HelpCircle className="w-20 h-20 text-brand/20" />
-           </div>
-           <div className="space-y-4">
-              <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">Identity Not Found</h2>
-              <p className="text-slate-400 font-bold uppercase tracking-widest text-xs max-w-sm mx-auto">
-                 We couldn't retrieve your professional profile. Please ensure your Supabase 'user_profiles' table is active.
-              </p>
-           </div>
-           {onLogout && (
-             <button onClick={onLogout} className="px-12 py-5 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-2xl hover:bg-brand transition-all">
-               Sign Out Universe
-             </button>
-           )}
-        </div>
-      );
+        return (
+            <div className="proto wall-embedded">
+                <div className="wall" data-page="profile">
+                    <main className="shell-solo">
+                        <div className="post dm-empty prof-empty" style={{ textAlign: 'center', padding: '48px 28px' }}>
+                            <Icons.HelpCircle className="w-8 h-8" style={{ color: 'var(--muted)', margin: '0 auto 10px' }} />
+                            <p className="font-display" style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--ink)' }}>Profile not found</p>
+                            <span style={{ color: 'var(--muted)', fontSize: '0.84rem', display: 'block', margin: '6px 0 18px' }}>
+                                We couldn't retrieve your profile. Please try signing in again.
+                            </span>
+                            {onLogout && (
+                                <button type="button" className="clay-cta" style={{ maxWidth: 200, margin: '0 auto' }} onClick={onLogout}>
+                                    Sign out
+                                </button>
+                            )}
+                        </div>
+                    </main>
+                </div>
+            </div>
+        );
     }
 
     const isTeacher = me.role === UserRole.TEACHER;
-    const themeBrand = isTeacher ? 'text-emerald-600' : 'text-brand';
-    const themeBg = isTeacher ? 'bg-emerald-600' : 'bg-brand';
-    const themeBgLight = isTeacher ? 'bg-emerald-50' : 'bg-brand/5';
 
     // Filter alignments
     const activeAlignments = alignments.filter(a => a.status === 'ACTIVE' || a.status === 'PAUSED');
     const archivedAlignments = alignments.filter(a => a.status === 'EXPIRED' || a.status === 'ARCHIVED');
 
     const currentSignal = SignalConfig[me.signalLevel] || SignalConfig['ACTIVE_SOLVER'];
-    const vouchCount = me.reputation.vouchesReceived || 0;
+    const vouchCount = me.reputation?.vouchesReceived || 0;
     const isExpert = vouchCount > 50;
 
+    const stats = isTeacher
+        ? [
+            { n: String(me.yearsExperience || 0), l: 'Years exp.' },
+            { n: `₹${me.hourlyRate || 0}`, l: 'Per hour' },
+            { n: String(vouchCount), l: 'Vouches' },
+            { n: String(me.reputation?.professionalSkepticism || 0), l: 'Skepticism' },
+          ]
+        : [
+            { n: String(vouchCount), l: 'Vouches earned' },
+            { n: String(me.reputation?.professionalSkepticism || 0), l: 'Skepticism pts' },
+            { n: String(activeAlignments.length), l: 'Active contracts' },
+            { n: String(trackingList.length), l: 'Tracking' },
+          ];
+
     return (
-        <div className={isTeacher ? 'contents' : 'flex min-h-full flex-col bg-gradient-to-b from-[#faf7f5] via-white to-[#f9f5f3]'}>
-            {!isTeacher && (
-                <header className="w-full shrink-0 border-b border-[#e8d4d4]/70 bg-gradient-to-b from-[#fffefc] via-[#fff8f6] to-[#fff4f0]">
-                    <div className="mx-auto max-w-[95%] px-4 py-6 sm:px-6 sm:py-8">
-                        <p className="font-display text-[11px] font-semibold uppercase tracking-[0.22em] text-brand-900/75">Account</p>
-                        <h1 className="font-display text-2xl font-semibold tracking-tight text-[#1a0a0a] sm:text-[2.15rem]">Profile</h1>
-                        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-600">Your identity, alignments, and reputation on CoStudy.</p>
+        <div className="proto wall-embedded" data-theme={isTeacher ? 'faculty' : undefined}>
+            <div className="wall" data-page="profile">
+                <main className="shell-solo">
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        style={{ display: 'none' }}
+                        accept="image/*"
+                        onChange={handleFileChange}
+                    />
+
+                    {/* Masthead */}
+                    <div className="feed-hello">
+                        <h1 className="font-display">{isTeacher ? 'Faculty Profile' : 'My Study'}</h1>
+                        <p>{isTeacher ? 'Your identity, verification, and mentoring settings.' : 'Your identity, alignments, and reputation on CoStudy.'}</p>
                     </div>
-                </header>
-            )}
-        <div className="mx-auto px-6 py-12 flex flex-col gap-12 animate-in fade-in duration-700 pb-40 w-full max-w-[95%]">
-            <input 
-                type="file" 
-                ref={fileInputRef} 
-                className="hidden" 
-                accept="image/*" 
-                onChange={handleFileChange} 
-            />
 
-            {/* BOUNDARY SETTINGS MODAL */}
-            {boundaryTarget && (
-                <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xl flex items-center justify-center p-6 animate-in fade-in duration-300">
-                    <div className="bg-white rounded-[3rem] w-full max-w-lg p-10 shadow-2xl relative animate-in zoom-in-95 duration-300">
-                        <button onClick={() => setBoundaryTarget(null)} className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-900"><Icons.Plus className="w-6 h-6 rotate-45" /></button>
-                        
-                        <div className="mb-8 text-center">
-                            <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-2">Protocol Boundary</h3>
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Managing: {boundaryTarget.peerName}</p>
-                        </div>
-
-                        <div className="space-y-4">
-                            <button 
-                                onClick={() => handleBoundaryAction('PAUSE')}
-                                className="w-full p-5 rounded-2xl bg-amber-50 border border-amber-100 text-left hover:border-amber-300 transition-all group"
+                    {/* Identity card */}
+                    <div className="post prof-card">
+                        <div className="prof-id">
+                            <button
+                                type="button"
+                                onClick={handleAvatarClick}
+                                style={{ position: 'relative', flex: 'none', cursor: isEditing ? 'pointer' : 'default' }}
+                                aria-label={isEditing ? 'Change photo' : undefined}
                             >
-                                <div className="flex justify-between items-center mb-1">
-                                    <span className="text-[10px] font-black text-amber-600 uppercase tracking-widest">Pause Protocol (7 Days)</span>
-                                    <Icons.Clock className="w-4 h-4 text-amber-400" />
-                                </div>
-                                <p className="text-xs font-medium text-amber-800/70">Suspend expectations. Streak frozen.</p>
+                                {(isEditing ? editForm.avatar : me.avatar) ? (
+                                    <img
+                                        src={isEditing ? editForm.avatar : me.avatar}
+                                        alt="Profile"
+                                        style={{ width: 68, height: 68, borderRadius: 22, objectFit: 'cover', boxShadow: 'var(--nm-xs)', filter: isEditing ? 'brightness(0.7)' : undefined }}
+                                    />
+                                ) : (
+                                    <span style={{ width: 68, height: 68, borderRadius: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--accent-soft)', color: 'var(--accent-deep)', fontWeight: 800, fontSize: 24, boxShadow: 'var(--nm-xs)' }}>
+                                        {(me.name || 'U').charAt(0)}
+                                    </span>
+                                )}
+                                {isEditing && (
+                                    <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                                        <Icons.Plus className="w-5 h-5" />
+                                    </span>
+                                )}
                             </button>
-
-                            <button 
-                                onClick={() => handleBoundaryAction('RESTRICT', ['NO_ESSAYS'])}
-                                className="w-full p-5 rounded-2xl bg-blue-50 border border-blue-100 text-left hover:border-blue-300 transition-all group"
-                            >
-                                <div className="flex justify-between items-center mb-1">
-                                    <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Restrict Scope</span>
-                                    <Icons.Lock className="w-4 h-4 text-blue-400" />
+                            <div className="prof-id-tx">
+                                <strong className="font-display">{me.name}</strong>
+                                <div className="prof-chips">
+                                    {isTeacher ? (
+                                        <>
+                                            <span className="role-chip role-mentor"><Icons.CheckBadge className="w-[11px] h-[11px]" /> Verified mentor</span>
+                                            {me.specialties && me.specialties.length > 0 && (
+                                                <span className="role-chip role-student">{me.specialties.slice(0, 2).join(', ')}</span>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className="role-chip role-student">@{me.handle} · {me.examFocus || 'CMA candidate'}</span>
+                                            <span className="role-chip role-mentor">{currentSignal.label}</span>
+                                            {isExpert && <span className="tag tag-gold"><Icons.CheckBadge className="w-[11px] h-[11px]" /> Peer expert</span>}
+                                        </>
+                                    )}
                                 </div>
-                                <p className="text-xs font-medium text-blue-800/70">Limit interactions to MCQs only. No Essays.</p>
-                            </button>
-
-                            <button 
-                                onClick={() => handleBoundaryAction('END')}
-                                className="w-full p-5 rounded-2xl bg-slate-50 border border-slate-200 text-left hover:border-rose-300 hover:bg-rose-50 transition-all group"
-                            >
-                                <div className="flex justify-between items-center mb-1">
-                                    <span className="text-[10px] font-black text-slate-500 group-hover:text-rose-600 uppercase tracking-widest">Conclude Contract</span>
-                                    <Icons.Trash2 className="w-4 h-4 text-slate-400 group-hover:text-rose-500" />
-                                </div>
-                                <p className="text-xs font-medium text-slate-400 group-hover:text-rose-800/70">Archive this connection cleanly. No notification sent.</p>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Main Identity Header */}
-            <div className="relative bg-white/70 backdrop-blur-3xl border border-white p-12 sm:p-20 rounded-[4rem] sm:rounded-[6.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.1)] overflow-hidden min-h-[60vh] flex flex-col justify-center">
-                <div className={`absolute top-0 right-0 w-[800px] h-[800px] ${isTeacher ? 'bg-emerald-500/5' : 'bg-brand/5'} blur-[150px] rounded-full -mr-60 -mt-60 pointer-events-none`}></div>
-                <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/5 blur-[120px] rounded-full -ml-40 -mb-40 pointer-events-none"></div>
-
-                <div className="relative z-10 flex flex-col xl:flex-row items-center gap-16 sm:gap-24">
-                    {/* Avatar Logic */}
-                    <div className="relative group shrink-0">
-                        <div 
-                          className={`w-64 h-64 sm:w-96 sm:h-96 ${isTeacher ? 'rounded-[3rem]' : 'rounded-[4.5rem] sm:rounded-[6rem]'} overflow-hidden ring-[1.5rem] sm:ring-[2rem] ring-white shadow-2xl transition-all duration-700 relative ${isEditing ? 'cursor-pointer hover:ring-brand/10 active:scale-95' : ''}`}
-                          onClick={handleAvatarClick}
-                        >
-                            <img 
-                                src={isEditing ? editForm.avatar : me.avatar} 
-                                className={`w-full h-full object-cover transition-all duration-700 ${isEditing ? 'brightness-50 grayscale-[0.5]' : 'group-hover:scale-110'}`} 
-                                alt="Profile" 
-                            />
-                            {isEditing && (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-6 text-center pointer-events-none bg-black/20 backdrop-blur-sm">
-                                    <Icons.Plus className="w-16 h-16 mb-4 animate-bounce" />
-                                    <span className="text-[11px] font-black uppercase tracking-[0.4em] leading-tight">Update<br/>Photo</span>
-                                </div>
-                            )}
-                        </div>
-                        {isTeacher ? (
-                             <div className="absolute -bottom-6 -right-6 bg-emerald-600 text-white p-6 sm:p-8 rounded-[2rem] shadow-2xl border-[6px] sm:border-[8px] border-white flex items-center gap-2">
-                                <Icons.CheckBadge className="w-10 h-10 sm:w-12 sm:h-12" />
-                             </div>
-                        ) : isExpert ? (
-                            <div className="absolute -bottom-6 -right-6 bg-amber-400 text-white p-6 sm:p-8 rounded-[2.5rem] sm:rounded-[3rem] shadow-2xl border-[6px] sm:border-[8px] border-white animate-pulse">
-                               <Icons.Stamp className="w-10 h-10 sm:w-12 sm:h-12" />
                             </div>
-                        ) : (
-                            <div className="absolute -bottom-6 -right-6 bg-slate-900 text-brand p-6 sm:p-8 rounded-[2.5rem] sm:rounded-[3rem] shadow-2xl border-[6px] sm:border-[8px] border-white animate-pulse">
-                               <Icons.Trophy className="w-10 h-10 sm:w-12 sm:h-12" />
+                            <div className="prof-btns">
+                                {!isEditing && (
+                                    <button type="button" className="rooms-create" onClick={() => setIsEditing(true)}>Edit profile</button>
+                                )}
+                                <button type="button" className="prof-logout" onClick={onLogout}>Sign out</button>
                             </div>
-                        )}
+                        </div>
+
+                        {/* Stats */}
+                        <div className="prof-stats">
+                            {stats.map((s) => (
+                                <div key={s.l} className="prof-stat">
+                                    <strong className="font-display">{s.n}</strong>
+                                    <span>{s.l}</span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
 
-                    {/* Content Section */}
-                    <div className="flex-1 w-full flex flex-col items-center xl:items-start text-center xl:text-left">
-                        {isEditing ? (
-                            <div className="space-y-8 w-full max-w-2xl animate-in slide-in-from-bottom-6 duration-500">
-                                {/* SIGNAL LEVEL SELECTOR */}
-                                <div className="bg-slate-50 p-6 rounded-[2.5rem] border border-slate-100">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mb-4 block ml-2">Signal Level (Visibility)</label>
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                        {(Object.keys(SignalConfig) as SignalLevel[]).map(level => {
-                                            const cfg = SignalConfig[level];
-                                            const isSelected = editForm.signalLevel === level;
-                                            return (
-                                                <button
-                                                    key={level}
-                                                    onClick={() => setEditForm(prev => ({ ...prev, signalLevel: level }))}
-                                                    className={`p-4 rounded-2xl border-2 text-left transition-all ${isSelected ? 'border-brand bg-white shadow-lg scale-[1.02]' : 'border-transparent bg-white/50 hover:bg-white text-slate-400'}`}
-                                                >
-                                                    <div className={`w-3 h-3 rounded-full mb-2 ${cfg.color}`}></div>
-                                                    <div className={`text-[9px] font-black uppercase tracking-widest leading-tight ${isSelected ? 'text-slate-900' : 'text-slate-500'}`}>{cfg.label}</div>
-                                                </button>
-                                            )
-                                        })}
-                                    </div>
-                                </div>
+                    {/* ---------- Edit form ---------- */}
+                    {isEditing && (
+                        <div className="post" style={{ marginTop: 16 }}>
+                            <p style={eyebrow}>Signal level (visibility)</p>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 10, marginBottom: 18 }}>
+                                {(Object.keys(SignalConfig) as SignalLevel[]).map(level => {
+                                    const cfg = SignalConfig[level];
+                                    return (
+                                        <button
+                                            key={level}
+                                            type="button"
+                                            className={`clay-option ${editForm.signalLevel === level ? 'on' : ''}`}
+                                            onClick={() => setEditForm(prev => ({ ...prev, signalLevel: level }))}
+                                        >
+                                            {cfg.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-2 text-left">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] ml-4">Full Name</label>
-                                        <input 
-                                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-[2rem] px-8 py-5 text-lg font-black text-slate-900 outline-none focus:ring-4 focus:ring-brand/5 focus:border-brand/30 transition-all"
-                                            value={editForm.name}
-                                            onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
-                                            placeholder="Enter Legal Name"
-                                        />
-                                    </div>
-                                    <div className="space-y-2 text-left">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] ml-4">Handle</label>
-                                        <input 
-                                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-[2rem] px-8 py-5 text-lg font-black text-slate-900 outline-none focus:ring-4 focus:ring-brand/5 focus:border-brand/30 transition-all"
-                                            value={editForm.handle}
-                                            onChange={(e) => setEditForm(prev => ({ ...prev, handle: e.target.value.toLowerCase().replace(/\s/g, '_') }))}
-                                            placeholder="@handle"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2 text-left">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] ml-4">{isTeacher ? 'Professional Bio' : 'Personal Bio'}</label>
-                                    <textarea 
-                                        className="w-full h-32 bg-slate-50 border-2 border-slate-100 rounded-[2.5rem] p-8 text-slate-700 font-medium text-base outline-none focus:ring-4 focus:ring-brand/5 focus:border-brand/30 transition-all leading-relaxed resize-none"
-                                        value={editForm.bio}
-                                        onChange={(e) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
-                                        placeholder="Briefly describe your profile..."
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14, marginBottom: 14 }}>
+                                <div>
+                                    <p style={eyebrow}>Full name</p>
+                                    <input
+                                        className="clay-textarea"
+                                        style={{ height: 'auto', resize: 'none' }}
+                                        value={editForm.name}
+                                        onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                                        placeholder="Your name"
                                     />
                                 </div>
-
-                                <div className="flex gap-4 pt-4">
-                                    <button 
-                                        onClick={handleSave}
-                                        disabled={isSaving}
-                                        className={`flex-1 py-5 rounded-[2rem] text-[11px] font-black uppercase tracking-widest transition-all shadow-xl active:scale-95 ${saveStatus === 'SUCCESS' ? 'bg-emerald-600 text-white' : 'bg-slate-900 text-white'}`}
-                                    >
-                                        {isSaving ? 'Saving...' : saveStatus === 'SUCCESS' ? 'Saved' : 'Confirm Updates'}
-                                    </button>
-                                    <button 
-                                        onClick={() => setIsEditing(false)}
-                                        className="px-8 py-5 bg-white border border-slate-200 text-slate-400 rounded-[2rem] text-[11px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all"
-                                    >
-                                        Cancel
-                                    </button>
+                                <div>
+                                    <p style={eyebrow}>Handle</p>
+                                    <input
+                                        className="clay-textarea"
+                                        style={{ height: 'auto', resize: 'none' }}
+                                        value={editForm.handle}
+                                        onChange={(e) => setEditForm(prev => ({ ...prev, handle: e.target.value.toLowerCase().replace(/\s/g, '_') }))}
+                                        placeholder="@handle"
+                                    />
                                 </div>
                             </div>
-                        ) : (
-                            <div className="w-full animate-in fade-in duration-500">
-                                <div className="flex flex-wrap items-center justify-center xl:justify-start gap-4 mb-6">
-                                    {isExpert && (
-                                        <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] shadow-lg bg-amber-400 text-white">
-                                            <Icons.Stamp className="w-4 h-4" />
-                                            Certified Peer Expert
+
+                            <p style={eyebrow}>{isTeacher ? 'Professional bio' : 'Personal bio'}</p>
+                            <textarea
+                                className="clay-textarea"
+                                style={{ height: 100, marginBottom: 14 }}
+                                value={editForm.bio}
+                                onChange={(e) => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
+                                placeholder="Briefly describe your profile…"
+                            />
+
+                            {isTeacher && (
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14, marginBottom: 14 }}>
+                                    <div>
+                                        <p style={eyebrow}>Specialties (comma-separated)</p>
+                                        <input
+                                            className="clay-textarea"
+                                            style={{ height: 'auto' }}
+                                            value={editForm.specialties}
+                                            onChange={(e) => setEditForm(prev => ({ ...prev, specialties: e.target.value }))}
+                                            placeholder="Costing, US GAAP, Part 1"
+                                        />
+                                    </div>
+                                    <div>
+                                        <p style={eyebrow}>Years experience</p>
+                                        <input
+                                            className="clay-textarea"
+                                            style={{ height: 'auto' }}
+                                            type="number"
+                                            value={editForm.yearsExperience}
+                                            onChange={(e) => setEditForm(prev => ({ ...prev, yearsExperience: e.target.value }))}
+                                        />
+                                    </div>
+                                    <div>
+                                        <p style={eyebrow}>Hourly rate (₹)</p>
+                                        <input
+                                            className="clay-textarea"
+                                            style={{ height: 'auto' }}
+                                            type="number"
+                                            value={editForm.hourlyRate}
+                                            onChange={(e) => setEditForm(prev => ({ ...prev, hourlyRate: e.target.value }))}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {saveStatus === 'ERROR' && (
+                                <p style={{ color: 'var(--accent-deep)', fontSize: '0.8rem', fontWeight: 700, marginBottom: 10 }}>
+                                    Save failed — check your connection and try again. (Images must be under 2MB.)
+                                </p>
+                            )}
+
+                            <div style={{ display: 'flex', gap: 10 }}>
+                                <button type="button" className="clay-cta" disabled={isSaving} onClick={handleSave} style={{ flex: 1 }}>
+                                    {isSaving ? 'Saving…' : saveStatus === 'SUCCESS' ? 'Saved ✓' : 'Confirm updates'}
+                                </button>
+                                <button type="button" className="clay-option" style={{ width: 'auto', padding: '13px 22px' }} onClick={() => setIsEditing(false)}>
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Invite Card — students only */}
+                    {!isTeacher && !isEditing && (
+                        <div style={{ marginTop: 18 }}>
+                            <InviteCard />
+                        </div>
+                    )}
+
+                    {/* ---------- Faculty extras ---------- */}
+                    {isTeacher && !isEditing && (
+                        <>
+                            <h2 className="mock-h2">Specialties</h2>
+                            <div className="post">
+                                <div className="post-tags" style={{ marginTop: 0 }}>
+                                    {(me.specialties || []).map((s) => <span key={s} className="tag">{s}</span>)}
+                                    <button type="button" className="tag tag-pick" onClick={() => setIsEditing(true)}>+ Add</button>
+                                </div>
+                            </div>
+                        </>
+                    )}
+
+                    {/* ---------- Student network section ---------- */}
+                    {!isTeacher && !isEditing && (
+                        <>
+                            <div className="prof-sec-head">
+                                <h2 className="mock-h2">CAN network</h2>
+                                <div className="focus-presets">
+                                    <button type="button" className={`seg ${networkTab === 'CONTRACTS' ? 'seg-on' : ''}`} onClick={() => setNetworkTab('CONTRACTS')}>Contracts</button>
+                                    <button type="button" className={`seg ${networkTab === 'RADAR' ? 'seg-on' : ''}`} onClick={() => setNetworkTab('RADAR')}>Radar</button>
+                                </div>
+                            </div>
+
+                            {networkLoading && (
+                                <div style={{ display: 'flex', justifyContent: 'center', padding: '30px 0' }}>
+                                    <div style={{ width: 28, height: 28, borderRadius: '50%', border: '3px solid var(--line)', borderTopColor: 'var(--accent)', animation: 'spin 0.8s linear infinite' }} />
+                                </div>
+                            )}
+
+                            {!networkLoading && networkTab === 'CONTRACTS' && (
+                                <>
+                                    {/* Pending requests */}
+                                    {pendingRequests.length > 0 && (
+                                        <div className="missions" style={{ marginBottom: 18 }}>
+                                            <p style={eyebrow}>Incoming requests · {pendingRequests.length}</p>
+                                            {pendingRequests.map(req => (
+                                                <div key={req.id} className="post mission-card">
+                                                    <div className="mission-card-top">
+                                                        <div className="prof-can-peer">
+                                                            {req.senderAvatar ? (
+                                                                <img src={req.senderAvatar} alt="" style={{ width: 36, height: 36, borderRadius: 12, objectFit: 'cover' }} />
+                                                            ) : (
+                                                                <span style={{ width: 36, height: 36, borderRadius: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--accent-soft)', color: 'var(--accent-deep)', fontWeight: 800 }}>
+                                                                    {(req.senderName || 'P').charAt(0)}
+                                                                </span>
+                                                            )}
+                                                            <div>
+                                                                <h3>{req.senderName}</h3>
+                                                                <p>{req.purpose} · {req.duration}</p>
+                                                            </div>
+                                                        </div>
+                                                        <span className="status-chip">New</span>
+                                                    </div>
+                                                    {req.note && (
+                                                        <p style={{ fontSize: '0.84rem', color: 'var(--muted)', fontStyle: 'italic', margin: '4px 0 10px' }}>
+                                                            “{req.note}”
+                                                        </p>
+                                                    )}
+                                                    <div style={{ display: 'flex', gap: 10 }}>
+                                                        <button type="button" className="clay-cta" style={{ flex: 1, padding: '11px' }} onClick={() => handleAcceptRequest(req)}>
+                                                            Sign contract
+                                                        </button>
+                                                        <button type="button" className="clay-option" style={{ width: 'auto', padding: '11px 18px' }} onClick={() => handleRejectRequest(req.id)}>
+                                                            Decline
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
                                     )}
-                                    <div className={`inline-flex items-center gap-3 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] shadow-lg ${isTeacher ? 'bg-emerald-600 text-white' : 'bg-slate-900 text-brand'}`}>
-                                        <Icons.Award className="w-4 h-4" />
-                                        {isTeacher ? 'Accredited Faculty' : 'Master Tier Scholar'}
-                                    </div>
-                                    {/* Signal Level Badge */}
-                                    <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-[9px] font-black uppercase tracking-widest border bg-white ${currentSignal.color.replace('bg-', 'text-')} border-slate-100`}>
-                                        <div className={`w-2 h-2 rounded-full ${currentSignal.color}`}></div>
-                                        {currentSignal.label}
-                                    </div>
-                                </div>
 
-                                <h1 className="text-6xl sm:text-8xl md:text-9xl font-black text-slate-900 tracking-tighter leading-[0.85] mb-6 uppercase md:whitespace-nowrap overflow-hidden text-ellipsis">
-                                    {me.name}
-                                    {isTeacher && <span className={`text-3xl sm:text-5xl align-top ml-4 ${themeBrand} tracking-normal inline-block`}>CMA, CPA</span>}
-                                </h1>
-                                
-                                <div className="flex flex-wrap items-center justify-center xl:justify-start gap-x-6 gap-y-4 mb-12">
-                                    <p className="text-2xl sm:text-3xl text-slate-400 font-black uppercase tracking-widest">@{me.handle}</p>
-                                    <div className="hidden sm:block w-2 h-2 rounded-full bg-slate-300"></div>
-                                    <div className="flex gap-6">
-                                        <div className="flex flex-col">
-                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Credibility</span>
-                                            <div className="text-xl font-black text-brand flex items-center gap-2"><Icons.Stamp className="w-4 h-4" /> {vouchCount} Vouches</div>
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Skepticism</span>
-                                            <div className="text-xl font-black text-slate-900 flex items-center gap-2"><Icons.Scale className="w-4 h-4" /> {me.reputation?.professionalSkepticism || 0} Points</div>
+                                    {/* Active / archived toggle */}
+                                    <div className="prof-sec-head" style={{ margin: '14px 0 12px' }}>
+                                        <p style={{ ...eyebrow, marginBottom: 0 }}>Study contracts</p>
+                                        <div className="focus-presets">
+                                            <button type="button" className={`seg ${activeAlignTab === 'ACTIVE' ? 'seg-on' : ''}`} onClick={() => setActiveAlignTab('ACTIVE')}>Active</button>
+                                            <button type="button" className={`seg ${activeAlignTab === 'ARCHIVED' ? 'seg-on' : ''}`} onClick={() => setActiveAlignTab('ARCHIVED')}>Archived</button>
                                         </div>
                                     </div>
-                                </div>
-                                
-                                <div className="flex flex-wrap gap-4 justify-center xl:justify-start">
-                                    <button 
-                                        onClick={() => setIsEditing(true)}
-                                        className={`px-10 py-5 text-white rounded-[2rem] text-[11px] font-black uppercase tracking-widest transition-all shadow-xl active:scale-95 hover:scale-105 ${themeBg} shadow-brand/20`}
-                                    >
-                                        Edit Identity
-                                    </button>
-                                    <button 
-                                        onClick={onLogout}
-                                        className="px-10 py-5 bg-white border border-slate-200 text-slate-400 rounded-[2rem] text-[11px] font-black uppercase tracking-widest hover:bg-slate-900 hover:text-white transition-all shadow-sm active:scale-95"
-                                    >
-                                        Sign Out
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
 
-            {/* Invite Card - Students Only */}
-            {!isTeacher && (
-                <div className="animate-in slide-in-from-bottom-6 duration-500">
-                    <InviteCard />
-                </div>
-            )}
-
-            {/* ... (Rest of Network Section - Unchanged) ... */}
-            {!isTeacher && (
-                <div className="animate-in slide-in-from-bottom-8 duration-700">
-                    <div className="flex justify-center mb-12">
-                        <div className="flex gap-4 p-2 bg-white rounded-3xl border border-slate-200 shadow-xl">
-                            <button 
-                                onClick={() => setNetworkTab('CONTRACTS')} 
-                                className={`px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${networkTab === 'CONTRACTS' ? 'bg-violet-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-900'}`}
-                            >
-                                CAN Contracts
-                            </button>
-                            <button 
-                                onClick={() => setNetworkTab('RADAR')} 
-                                className={`px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${networkTab === 'RADAR' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-900'}`}
-                            >
-                                <Icons.Search className="w-3 h-3" /> Academic Radar
-                            </button>
-                        </div>
-                    </div>
-
-                    {networkTab === 'CONTRACTS' ? (
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                            {/* Active Alignments */}
-                            <div className="bg-white border border-slate-200 rounded-[3rem] p-10 lg:p-14 shadow-xl flex flex-col relative overflow-hidden min-h-[600px]">
-                                <div className="absolute top-0 right-0 p-10 opacity-[0.03]"><Icons.Link className="w-48 h-48" /></div>
-                                
-                                <div className="flex items-center justify-between mb-10 relative z-10">
-                                    <div className="flex items-center gap-4">
-                                        <div className="p-4 bg-violet-100 rounded-2xl text-violet-600"><Icons.Link className="w-6 h-6" /></div>
-                                        <div>
-                                            <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Alignment Hub</h3>
-                                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Protocol Management</div>
-                                        </div>
-                                    </div>
-                                    <div className="flex gap-2 p-1 bg-slate-50 rounded-xl border border-slate-100">
-                                        <button onClick={() => setActiveAlignTab('ACTIVE')} className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${activeAlignTab === 'ACTIVE' ? 'bg-violet-600 text-white shadow-lg' : 'text-slate-400 hover:bg-white'}`}>Active</button>
-                                        <button onClick={() => setActiveAlignTab('ARCHIVED')} className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${activeAlignTab === 'ARCHIVED' ? 'bg-slate-800 text-white shadow-lg' : 'text-slate-400 hover:bg-white'}`}>Past</button>
-                                    </div>
-                                </div>
-
-                                {activeAlignTab === 'ACTIVE' ? (
-                                    activeAlignments.length > 0 ? (
-                                        <div className="space-y-6 relative z-10 flex-1 overflow-y-auto no-scrollbar pr-2">
-                                            {activeAlignments.map(align => {
-                                                const daysLeft = getDaysRemaining(align.startDate, align.duration);
-                                                const progress = getProgress(align.startDate, align.duration);
-                                                const isUrgent = daysLeft <= 3;
-                                                const isPaused = align.status === 'PAUSED';
-
-                                                return (
-                                                    <div key={align.id} className={`p-6 border rounded-[2rem] flex flex-col gap-4 group transition-all relative overflow-hidden ${isPaused ? 'bg-slate-100 border-slate-200 grayscale opacity-80' : isUrgent ? 'bg-orange-50 border-orange-200' : 'bg-slate-50 border-slate-100 hover:border-violet-200'}`}>
-                                                        <div className="flex items-start justify-between">
-                                                            <div className="flex items-center gap-4">
-                                                                <img src={align.peerAvatar} className="w-14 h-14 rounded-2xl object-cover ring-2 ring-white shadow-md" />
-                                                                <div>
-                                                                    <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight">{align.peerName}</h4>
-                                                                    <div className="text-[10px] font-bold text-violet-500 uppercase tracking-widest mb-1">{align.purpose}</div>
+                                    {activeAlignTab === 'ACTIVE' ? (
+                                        activeAlignments.length > 0 ? (
+                                            <div className="missions">
+                                                {activeAlignments.map(align => {
+                                                    const daysLeft = getDaysRemaining(align.startDate, align.duration);
+                                                    const progress = Math.round(getProgress(align.startDate, align.duration));
+                                                    const isPaused = align.status === 'PAUSED';
+                                                    return (
+                                                        <div key={align.id} className="post mission-card" style={isPaused ? { opacity: 0.7 } : undefined}>
+                                                            <div className="mission-card-top">
+                                                                <div className="prof-can-peer">
+                                                                    {align.peerAvatar ? (
+                                                                        <img src={align.peerAvatar} alt="" style={{ width: 36, height: 36, borderRadius: 12, objectFit: 'cover' }} />
+                                                                    ) : (
+                                                                        <span style={{ width: 36, height: 36, borderRadius: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--accent-soft)', color: 'var(--accent-deep)', fontWeight: 800 }}>
+                                                                            {(align.peerName || 'P').charAt(0)}
+                                                                        </span>
+                                                                    )}
+                                                                    <div>
+                                                                        <h3>{align.peerName}</h3>
+                                                                        <p>{align.purpose}</p>
+                                                                    </div>
+                                                                </div>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                                    <span className={`status-chip ${isPaused ? 'status-bad' : ''}`}>{isPaused ? 'Paused' : 'Active'}</span>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setBoundaryTarget(align)}
+                                                                        aria-label="Manage boundary"
+                                                                        style={{ color: 'var(--muted)', padding: 4 }}
+                                                                    >
+                                                                        <Icons.MoreVertical className="w-4 h-4" />
+                                                                    </button>
                                                                 </div>
                                                             </div>
-                                                            
-                                                            {/* Manage Boundary Button (Gear) */}
-                                                            <button 
-                                                                onClick={() => setBoundaryTarget(align)}
-                                                                className="p-2 hover:bg-white rounded-xl transition-all text-slate-400 hover:text-slate-900"
-                                                            >
-                                                                <Icons.Plus className="w-4 h-4 rotate-0" /> {/* Gear substitute */}
-                                                            </button>
+                                                            {!isPaused && align.goal && (
+                                                                <p style={{ fontSize: '0.82rem', color: 'var(--muted)', fontStyle: 'italic', margin: '2px 0 8px' }}>
+                                                                    “{align.goal}”
+                                                                </p>
+                                                            )}
+                                                            <div className="mission-row">
+                                                                <span>{daysLeft} days left{align.streak > 0 ? ` · ${align.streak}d streak` : ''}</span>
+                                                                <strong>{progress}%</strong>
+                                                            </div>
+                                                            <div className="mission-bar"><i style={{ width: `${progress}%` }}></i></div>
                                                         </div>
-                                                        
-                                                        {isPaused ? (
-                                                            <div className="bg-white/50 p-4 rounded-xl border border-black/5 text-center">
-                                                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Protocol Paused</span>
-                                                            </div>
-                                                        ) : (
-                                                            <>
-                                                                <div className="bg-white/50 p-4 rounded-xl border border-black/5">
-                                                                    <p className="text-[11px] font-medium text-slate-600 italic">"{align.goal}"</p>
-                                                                </div>
-                                                                <div className="flex items-center gap-4 mt-2">
-                                                                    <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
-                                                                        <div className={`h-full rounded-full ${isUrgent ? 'bg-orange-500' : 'bg-violet-500'}`} style={{ width: `${progress}%` }}></div>
-                                                                    </div>
-                                                                    <div className="flex items-center gap-1 text-[9px] font-bold text-slate-400">
-                                                                        <Icons.TrendingUp className="w-3 h-3" /> Streak: {align.streak}
-                                                                    </div>
-                                                                </div>
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        ) : (
+                                            <div className="post dm-empty prof-empty">
+                                                <Icons.Link className="w-[30px] h-[30px]" />
+                                                <p>No active contracts</p>
+                                                <span>Request alignment from the Study Wall to find a study partner.</span>
+                                            </div>
+                                        )
                                     ) : (
-                                        <div className="flex-1 flex flex-col items-center justify-center text-center opacity-50 py-10 relative z-10">
-                                            <Icons.Link className="w-12 h-12 text-slate-300 mb-4" />
-                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest max-w-xs">No active protocols. Request alignment from the Social Wall.</p>
-                                        </div>
-                                    )
-                                ) : (
-                                    archivedAlignments.length > 0 ? (
-                                        <div className="space-y-6 relative z-10 flex-1 overflow-y-auto no-scrollbar pr-2">
-                                            {archivedAlignments.map(align => (
-                                                <div key={align.id} className="p-6 bg-slate-100 border border-slate-200 rounded-[2rem] flex flex-col gap-4 grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all">
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-4">
-                                                            <img src={align.peerAvatar} className="w-12 h-12 rounded-2xl object-cover ring-2 ring-slate-200" />
+                                        archivedAlignments.length > 0 ? (
+                                            <div className="missions">
+                                                {archivedAlignments.map(align => (
+                                                    <div key={align.id} className="post mission-card" style={{ opacity: 0.75 }}>
+                                                        <div className="mission-card-top">
+                                                            <div className="prof-can-peer">
+                                                                {align.peerAvatar ? (
+                                                                    <img src={align.peerAvatar} alt="" style={{ width: 36, height: 36, borderRadius: 12, objectFit: 'cover' }} />
+                                                                ) : (
+                                                                    <span style={{ width: 36, height: 36, borderRadius: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--accent-soft)', color: 'var(--accent-deep)', fontWeight: 800 }}>
+                                                                        {(align.peerName || 'P').charAt(0)}
+                                                                    </span>
+                                                                )}
+                                                                <div>
+                                                                    <h3>{align.peerName}</h3>
+                                                                    <p>Ended · {align.duration}</p>
+                                                                </div>
+                                                            </div>
+                                                            <span className="status-chip status-bad">Expired</span>
+                                                        </div>
+                                                        <button type="button" className="clay-option" style={{ marginTop: 8 }} onClick={() => handleRenewAlignment(align.id)}>
+                                                            Renegotiate contract
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="post dm-empty prof-empty">
+                                                <Icons.Clock className="w-[30px] h-[30px]" />
+                                                <p>No archived contracts</p>
+                                                <span>Completed and ended alignments will appear here.</span>
+                                            </div>
+                                        )
+                                    )}
+                                </>
+                            )}
+
+                            {!networkLoading && networkTab === 'RADAR' && (
+                                <>
+                                    <p style={eyebrow}>You track · {trackingList.length}</p>
+                                    {trackingList.length > 0 ? (
+                                        <div className="missions" style={{ marginBottom: 18 }}>
+                                            {trackingList.map(track => (
+                                                <div key={track.id} className="post mission-card">
+                                                    <div className="mission-card-top">
+                                                        <div className="prof-can-peer">
+                                                            {track.targetAvatar ? (
+                                                                <img src={track.targetAvatar} alt="" style={{ width: 36, height: 36, borderRadius: 12, objectFit: 'cover' }} />
+                                                            ) : (
+                                                                <span style={{ width: 36, height: 36, borderRadius: 12, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--accent-soft)', color: 'var(--accent-deep)', fontWeight: 800 }}>
+                                                                    {(track.targetName || 'T').charAt(0)}
+                                                                </span>
+                                                            )}
                                                             <div>
-                                                                <h4 className="text-sm font-black text-slate-700 uppercase tracking-tight">{align.peerName}</h4>
-                                                                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ended: {align.duration}</div>
+                                                                <h3>{track.targetName}</h3>
+                                                                <p>Tracked since {new Date(track.trackedSince).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</p>
                                                             </div>
                                                         </div>
-                                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest bg-slate-200 px-3 py-1 rounded-lg">Expired</span>
                                                     </div>
-                                                    <button onClick={() => handleRenewAlignment(align.id)} className="w-full py-3 bg-white border border-slate-300 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:border-violet-500 hover:text-violet-600 transition-all shadow-sm">
-                                                        Renegotiate Contract
-                                                    </button>
+                                                    <div className="prof-stats" style={{ marginTop: 12 }}>
+                                                        <div className="prof-stat">
+                                                            <strong className="font-display">{track.stats.consistencyStreak}d</strong>
+                                                            <span>Consistency</span>
+                                                        </div>
+                                                        <div className="prof-stat">
+                                                            <strong className="font-display">{track.stats.lastMockScore ?? '—'}%</strong>
+                                                            <span>Last mock</span>
+                                                        </div>
+                                                        <div className="prof-stat">
+                                                            <strong className="font-display">{track.stats.essaysSubmitted}</strong>
+                                                            <span>Essays</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
                                     ) : (
-                                        <div className="flex-1 flex flex-col items-center justify-center text-center opacity-50 py-10 relative z-10">
-                                            <Icons.Clock className="w-12 h-12 text-slate-300 mb-4" />
-                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest max-w-xs">No history found.</p>
-                                        </div>
-                                    )
-                                )}
-                            </div>
-
-                            {/* Pending Treaties */}
-                            <div className="bg-slate-900 text-white rounded-[3rem] p-10 lg:p-14 shadow-2xl flex flex-col relative overflow-hidden h-fit">
-                                <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-violet-500/20 blur-[80px] rounded-full pointer-events-none"></div>
-                                <div className="flex items-center justify-between mb-10 relative z-10">
-                                    <div>
-                                        <h3 className="text-2xl font-black uppercase tracking-tighter">Incoming Treaties</h3>
-                                        <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Review Contracts</div>
-                                    </div>
-                                    {pendingRequests.length > 0 && (
-                                        <div className="bg-red-500 text-white text-[10px] font-black px-3 py-1 rounded-full">{pendingRequests.length}</div>
-                                    )}
-                                </div>
-                                {pendingRequests.length > 0 ? (
-                                    <div className="space-y-6 relative z-10">
-                                        {pendingRequests.map(req => (
-                                            <div key={req.id} className="p-6 bg-white/5 border border-white/10 rounded-[2rem] hover:bg-white/10 transition-all">
-                                                <div className="flex items-center gap-4 mb-4">
-                                                    <img src={req.senderAvatar} className="w-10 h-10 rounded-xl object-cover ring-2 ring-white/20" />
-                                                    <div>
-                                                        <div className="text-sm font-black uppercase tracking-tight">{req.senderName}</div>
-                                                        <div className="text-[9px] font-bold text-violet-400 uppercase tracking-widest">{req.purpose} • {req.duration}</div>
-                                                    </div>
-                                                </div>
-                                                <div className="p-4 bg-black/20 rounded-xl mb-6">
-                                                    <p className="text-xs font-medium italic text-slate-300 leading-relaxed">"{req.note}"</p>
-                                                </div>
-                                                <div className="flex gap-3">
-                                                    <button onClick={() => handleAcceptRequest(req)} className="flex-1 py-3 bg-violet-600 hover:bg-violet-500 text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all shadow-lg">Sign Contract</button>
-                                                    <button onClick={() => handleRejectRequest(req.id)} className="px-6 py-3 bg-white/10 hover:bg-white/20 text-slate-300 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all">Decline</button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="py-20 flex flex-col items-center justify-center text-center opacity-30 relative z-10">
-                                        <Icons.CheckBadge className="w-16 h-16 text-slate-500 mb-4" />
-                                        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">All protocols synced.</p>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    ) : (
-                        // --- RADAR VIEW (TRACKING) ---
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                            {/* YOU TRACK (DASHBOARD) */}
-                            <div className="lg:col-span-2 bg-slate-900 text-white rounded-[3rem] p-10 lg:p-14 shadow-2xl relative overflow-hidden">
-                                <div className="absolute top-0 right-0 p-10 opacity-10"><Icons.Search className="w-64 h-64 text-brand" /></div>
-                                
-                                <div className="flex items-center gap-4 mb-10 relative z-10">
-                                    <div className="p-4 bg-brand rounded-2xl text-white"><Icons.Search className="w-6 h-6" /></div>
-                                    <div>
-                                        <h3 className="text-2xl font-black uppercase tracking-tighter">Your Scope</h3>
-                                        <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Subjects Tracked: {trackingList.length}</div>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 gap-6 relative z-10">
-                                    {trackingList.map(track => (
-                                        <div key={track.id} className="bg-white/5 border border-white/10 p-6 rounded-[2rem] hover:bg-white/10 transition-all group">
-                                            <div className="flex items-center justify-between mb-6">
-                                                <div className="flex items-center gap-4">
-                                                    <img src={track.targetAvatar} className="w-12 h-12 rounded-2xl object-cover ring-2 ring-white/10" />
-                                                    <div>
-                                                        <h4 className="text-sm font-black uppercase tracking-tight">{track.targetName}</h4>
-                                                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Tracked Since {new Date(track.trackedSince).toLocaleDateString()}</span>
-                                                    </div>
-                                                </div>
-                                                <div className="text-brand opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <Icons.CloudSync className="w-5 h-5 animate-spin" />
-                                                </div>
-                                            </div>
-                                            
-                                            {/* Metrics Grid - The "Data" aspect */}
-                                            <div className="grid grid-cols-3 gap-4">
-                                                <div className="bg-black/30 p-3 rounded-xl text-center border border-white/5">
-                                                    <div className="text-slate-400 text-[8px] font-black uppercase tracking-widest mb-1">Consistency</div>
-                                                    <div className="text-lg font-black text-white flex items-center justify-center gap-1">
-                                                        <Icons.TrendingUp className="w-3 h-3 text-orange-500" /> {track.stats.consistencyStreak}d
-                                                    </div>
-                                                </div>
-                                                <div className="bg-black/30 p-3 rounded-xl text-center border border-white/5">
-                                                    <div className="text-slate-400 text-[8px] font-black uppercase tracking-widest mb-1">Last Mock</div>
-                                                    <div className="text-lg font-black text-emerald-400">{track.stats.lastMockScore || 'N/A'}%</div>
-                                                </div>
-                                                <div className="bg-black/30 p-3 rounded-xl text-center border border-white/5">
-                                                    <div className="text-slate-400 text-[8px] font-black uppercase tracking-widest mb-1">Essays</div>
-                                                    <div className="text-lg font-black text-blue-400">{track.stats.essaysSubmitted}</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    {trackingList.length === 0 && (
-                                        <div className="text-center py-20 opacity-30">
-                                            <p className="text-sm font-bold uppercase tracking-widest text-slate-500">Radar Empty. Find subjects on the Social Wall.</p>
+                                        <div className="post dm-empty prof-empty" style={{ marginBottom: 18 }}>
+                                            <Icons.Search className="w-[30px] h-[30px]" />
+                                            <p>Radar empty</p>
+                                            <span>Find people to track on the Study Wall.</span>
                                         </div>
                                     )}
-                                </div>
-                            </div>
 
-                            {/* TRACKED BY (AUDIENCE) */}
-                            <div className="bg-white border border-slate-200 rounded-[3rem] p-10 shadow-xl relative overflow-hidden">
-                                <div className="flex items-center gap-4 mb-8">
-                                    <div className="p-3 bg-slate-100 rounded-xl text-slate-500"><Icons.Users className="w-5 h-5" /></div>
-                                    <div>
-                                        <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Observers</h3>
-                                        <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Watching Your Progress</div>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-4">
-                                    {observerList.map(obs => (
-                                        <div key={obs.id} className="flex items-center gap-4 p-4 hover:bg-slate-50 rounded-2xl transition-all border border-transparent hover:border-slate-100">
-                                            <img src={obs.observerAvatar} className="w-10 h-10 rounded-xl object-cover grayscale opacity-70" />
-                                            <div>
-                                                <div className="text-xs font-black text-slate-700 uppercase tracking-wide">{obs.observerName}</div>
-                                                <div className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Silent Observer</div>
+                                    <p style={eyebrow}>Observers · watching your progress</p>
+                                    <div className="post">
+                                        {observerList.length > 0 ? (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                                {observerList.map(obs => (
+                                                    <div key={obs.id} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                                        {obs.observerAvatar ? (
+                                                            <img src={obs.observerAvatar} alt="" style={{ width: 32, height: 32, borderRadius: 10, objectFit: 'cover', opacity: 0.8 }} />
+                                                        ) : (
+                                                            <span style={{ width: 32, height: 32, borderRadius: 10, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--accent-soft)', color: 'var(--accent-deep)', fontWeight: 800, fontSize: 13 }}>
+                                                                {(obs.observerName || 'O').charAt(0)}
+                                                            </span>
+                                                        )}
+                                                        <div>
+                                                            <strong style={{ fontSize: '0.86rem', color: 'var(--ink)' }}>{obs.observerName}</strong>
+                                                            <p style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>Silent observer</p>
+                                                        </div>
+                                                    </div>
+                                                ))}
                                             </div>
-                                        </div>
-                                    ))}
-                                </div>
-                                
-                                <div className="mt-8 pt-8 border-t border-slate-100 text-center">
-                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
-                                        These users receive data updates on your public activity (Mocks, Doubts). They cannot DM you unless aligned.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                                        ) : (
+                                            <p style={{ color: 'var(--muted)', fontSize: '0.84rem' }}>No observers yet.</p>
+                                        )}
+                                        <p style={{ fontSize: '0.72rem', color: 'var(--muted)', marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--line)' }}>
+                                            Observers receive updates on your public activity (mocks, doubts). They cannot DM you unless aligned.
+                                        </p>
+                                    </div>
+                                </>
+                            )}
+                        </>
                     )}
-                </div>
-            )}
+                </main>
 
-            {/* Authenticated Footer */}
-            <div className="bg-white border border-slate-200 rounded-[3rem] p-10 flex flex-col md:flex-row items-center justify-between gap-8 shadow-sm">
-                <div className="flex items-center gap-6">
-                    <div className={`p-4 rounded-2xl ${themeBgLight} ${themeBrand}`}><Icons.Fingerprint className="w-8 h-8" /></div>
-                    <div>
-                        <span className="text-[11px] font-black text-slate-900 uppercase tracking-[0.3em] block mb-1">Session Active</span>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                           {isTeacher ? "Faculty Credentials Verified" : "Student Neural Link Stable"}
-                        </span>
+                {/* ---------- Boundary modal ---------- */}
+                {boundaryTarget && (
+                    <div className="modal-veil" onClick={(e) => { if (e.target === e.currentTarget) setBoundaryTarget(null); }}>
+                        <div className="clay-modal" style={{ maxWidth: 480 }} role="dialog" aria-modal="true" aria-label="Contract boundary">
+                            <header className="composer-head" style={{ marginBottom: 14 }}>
+                                <h3>Contract boundary</h3>
+                                <button type="button" className="composer-x" onClick={() => setBoundaryTarget(null)} aria-label="Close">
+                                    <Icons.Plus className="w-[18px] h-[18px] rotate-45" />
+                                </button>
+                            </header>
+                            <p style={{ ...eyebrow, marginBottom: 16 }}>Managing · {boundaryTarget.peerName}</p>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                <button type="button" className="clay-option" onClick={() => handleBoundaryAction('PAUSE')}>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                                        <Icons.Clock className="w-4 h-4" /> Pause contract (7 days)
+                                    </span>
+                                    <span style={{ fontWeight: 500, fontSize: '0.75rem' }}>Suspend expectations — streak frozen.</span>
+                                </button>
+                                <button type="button" className="clay-option" onClick={() => handleBoundaryAction('RESTRICT', ['NO_ESSAYS'])}>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                                        <Icons.Lock className="w-4 h-4" /> Restrict scope
+                                    </span>
+                                    <span style={{ fontWeight: 500, fontSize: '0.75rem' }}>Limit interactions to MCQs only — no essays.</span>
+                                </button>
+                                <button type="button" className="clay-option" onClick={() => handleBoundaryAction('END')}>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                                        <Icons.Trash2 className="w-4 h-4" /> Conclude contract
+                                    </span>
+                                    <span style={{ fontWeight: 500, fontSize: '0.75rem' }}>Archive this connection cleanly. No notification sent.</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div className="text-[10px] font-black text-slate-300 uppercase tracking-[0.5em]">
-                    ID: {userId?.split('-')[0] || 'Unknown'}
-                </div>
+                )}
             </div>
-        </div>
         </div>
     );
 };

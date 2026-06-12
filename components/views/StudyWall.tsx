@@ -1,7 +1,6 @@
-
-import React, { useState, useEffect, useMemo, Fragment } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Icons } from '../Icons';
-import { Post, UserRole, UserLevel, Comment, ViewState, PostType, User, AlignmentPurpose, AlignmentDuration } from '../../types';
+import { Post, UserRole, Comment, ViewState, PostType, User, AlignmentPurpose, AlignmentDuration } from '../../types';
 import { summarizePost } from '../../services/geminiService';
 import { costudyService } from '../../services/costudyService';
 import { getUserProfile } from '../../services/fetsService';
@@ -15,7 +14,6 @@ interface StudyWallProps {
   mode?: 'PUBLIC' | 'FACULTY';
 }
 
-
 const MIN_CHARS = 30;
 const MAX_CHARS = 600;
 
@@ -26,8 +24,8 @@ const STUDENT_TAGS = [
 ];
 
 const FACULTY_TAGS = [
-    'Exam Updates', 'Pedagogy', 'Student Behavior', 'Curriculum Design',
-    'IMA Standards', 'Resources', 'Career Guidance', 'Classroom Mgmt'
+  'Exam Updates', 'Pedagogy', 'Student Behavior', 'Curriculum Design',
+  'IMA Standards', 'Resources', 'Career Guidance', 'Classroom Mgmt'
 ];
 
 /** Shown when the feed is empty (All Feed + public) so the wall never looks broken in demos. */
@@ -79,17 +77,29 @@ const DEMO_STUDY_WALL_POSTS: Post[] = [
   },
 ];
 
+/** PostType → redesign type-chip class + label */
+const TYPE_CHIP: Record<string, { label: string; cls: string }> = {
+  QUESTION: { label: 'Question', cls: 'type-question' },
+  RESOURCE: { label: 'Resource', cls: 'type-resource' },
+  RESOURCE_DROP: { label: 'Resource', cls: 'type-resource' },
+  MCQ: { label: 'MCQ Drill', cls: 'type-mcq' },
+  MCQ_SHARE: { label: 'MCQ Drill', cls: 'type-mcq' },
+  PEER_AUDIT_REQUEST: { label: 'Peer Audit', cls: 'type-audit' },
+  BOUNTY: { label: 'Bounty', cls: 'type-bounty' },
+  FACULTY_DISCUSS: { label: 'Discussion', cls: 'type-discuss' },
+  EVENT: { label: 'Event', cls: 'type-event' },
+};
+
 export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = false, userId, onAuthRequired, mode = 'PUBLIC' }) => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState(mode === 'FACULTY' ? 'Faculty Lounge' : 'All Feed');
   const [summary, setSummary] = useState<string | null>(null);
   const [activeSummaryId, setActiveSummaryId] = useState<string | null>(null);
   const [openDiscussionId, setOpenDiscussionId] = useState<string | null>(null);
   const [discussions, setDiscussions] = useState<Record<string, Comment[]>>({});
 
-  // Post modal state
+  // Post composer state
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [newPostContent, setNewPostContent] = useState('');
   const [newPostType, setNewPostType] = useState<PostType>(mode === 'FACULTY' ? PostType.FACULTY_DISCUSS : PostType.QUESTION);
@@ -143,28 +153,27 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
   }, [posts, mode, activeCategory]);
 
   useEffect(() => {
-      const loadProfile = async () => {
-          if (userId) {
-              const p = await getUserProfile(userId);
-              setCurrentUserProfile(p);
-          }
-      };
-      loadProfile();
+    const loadProfile = async () => {
+      if (userId) {
+        const p = await getUserProfile(userId);
+        setCurrentUserProfile(p);
+      }
+    };
+    loadProfile();
   }, [userId]);
 
   useEffect(() => {
     const fetchPosts = async () => {
       try {
         setLoading(true);
-        setError(null);
         const data = await costudyService.getPosts(activeCategory);
-        const posts = data || [];
+        const fetched = data || [];
 
-        let filtered = posts;
+        let filtered = fetched;
         if (mode !== 'FACULTY') {
-          if (activeCategory === 'Audit Desk') filtered = posts.filter((p: any) => p.type === PostType.PEER_AUDIT_REQUEST);
-          else if (activeCategory === 'Bounty Board') filtered = posts.filter((p: any) => p.type === PostType.BOUNTY);
-          else if (activeCategory !== 'All Feed') filtered = posts.filter((p: any) => p.type !== PostType.PEER_AUDIT_REQUEST && p.type !== PostType.BOUNTY);
+          if (activeCategory === 'Audit Desk') filtered = fetched.filter((p: any) => p.type === PostType.PEER_AUDIT_REQUEST);
+          else if (activeCategory === 'Bounty Board') filtered = fetched.filter((p: any) => p.type === PostType.BOUNTY);
+          else if (activeCategory !== 'All Feed') filtered = fetched.filter((p: any) => p.type !== PostType.PEER_AUDIT_REQUEST && p.type !== PostType.BOUNTY);
         }
 
         setPosts(filtered as any);
@@ -177,10 +186,15 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
     fetchPosts();
   }, [activeCategory, mode]);
 
+  const toast = (msg: string, ms = 3000) => {
+    setAlignFeedback(msg);
+    setTimeout(() => setAlignFeedback(null), ms);
+  };
+
   const handleCreatePost = async () => {
     if (!userId) {
-        onAuthRequired?.('LOGIN');
-        return;
+      onAuthRequired?.('LOGIN');
+      return;
     }
     const charCount = newPostContent.length;
     if (charCount < MIN_CHARS || charCount > MAX_CHARS) return;
@@ -194,8 +208,7 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
       setTagInput('');
       setIsPostModalOpen(false);
     } catch (err) {
-      setAlignFeedback("Failed to create post. Please try again.");
-      setTimeout(() => setAlignFeedback(null), 3000);
+      toast('Failed to create post. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -214,11 +227,8 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
   };
 
   const toggleTag = (tag: string) => {
-    if (newPostTags.includes(tag)) {
-      handleRemoveTag(tag);
-    } else {
-      setNewPostTags([...newPostTags, tag]);
-    }
+    if (newPostTags.includes(tag)) handleRemoveTag(tag);
+    else setNewPostTags([...newPostTags, tag].slice(0, 5));
   };
 
   const handleTagKeyDown = (e: React.KeyboardEvent) => {
@@ -244,8 +254,8 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
 
   const loadDiscussion = async (postId: string) => {
     if (!isLoggedIn) {
-        onAuthRequired?.('LOGIN');
-        return;
+      onAuthRequired?.('LOGIN');
+      return;
     }
     if (openDiscussionId === postId) {
       setOpenDiscussionId(null);
@@ -254,258 +264,145 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
     try {
       setOpenDiscussionId(postId);
       const data = await costudyService.getPostDiscussion(postId);
-      const threadedData = buildCommentTree(data);
-      setDiscussions(prev => ({ ...prev, [postId]: threadedData }));
-    } catch (err) {}
+      setDiscussions(prev => ({ ...prev, [postId]: buildCommentTree(data) }));
+    } catch (err) { /* view simply shows "no replies" */ }
   };
 
   const handleSummarize = async (postId: string, content: string) => {
     if (!isLoggedIn) {
-        onAuthRequired?.('LOGIN');
-        return;
+      onAuthRequired?.('LOGIN');
+      return;
     }
     if (activeSummaryId === postId && summary) {
       setActiveSummaryId(null);
       return;
     }
     setActiveSummaryId(postId);
+    setSummary(null);
     const result = await summarizePost(content);
     setSummary(result);
   };
 
   // --- ALIGNMENT HANDLERS ---
   const initiateAlignment = (peer: Partial<User>) => {
-      if (!isLoggedIn) {
-          onAuthRequired?.('LOGIN');
-          return;
-      }
-      if (peer.id === userId) return;
+    if (!isLoggedIn) {
+      onAuthRequired?.('LOGIN');
+      return;
+    }
+    if (peer.id === userId) return;
 
-      if (peer.signalLevel === 'SILENT_LEARNER' || peer.signalLevel === 'EXAM_WEEK') {
-          setAlignFeedback(`${peer.name} is in ${peer.signalLevel?.replace('_', ' ')} mode.`);
-          setTimeout(() => setAlignFeedback(null), 3000);
-          return;
-      }
+    if (peer.signalLevel === 'SILENT_LEARNER' || peer.signalLevel === 'EXAM_WEEK') {
+      toast(`${peer.name} is in ${peer.signalLevel?.replace('_', ' ')} mode.`);
+      return;
+    }
 
-      setTargetPeer(peer);
-      setIsAlignModalOpen(true);
-      setSelectedPurpose(null);
-      setSelectedDuration(null);
-      setAlignmentNote('');
+    setTargetPeer(peer);
+    setIsAlignModalOpen(true);
+    setSelectedPurpose(null);
+    setSelectedDuration(null);
+    setAlignmentNote('');
   };
 
   const confirmAlignment = async () => {
-      if (!selectedPurpose || !selectedDuration || !alignmentNote.trim() || !userId || !targetPeer?.id) return;
-      setIsSendingAlign(true);
-      try {
-          await alignmentService.sendRequest(userId, targetPeer.id as string, selectedPurpose, selectedDuration, alignmentNote);
-          setIsAlignModalOpen(false);
-          setAlignFeedback(`Study contract sent to ${targetPeer?.name}. Awaiting acceptance.`);
-          setTimeout(() => setAlignFeedback(null), 4000);
-      } catch (e) {
-          setAlignFeedback('Failed to send contract. Please try again.');
-          setTimeout(() => setAlignFeedback(null), 3000);
-      } finally {
-          setIsSendingAlign(false);
-      }
-  };
-
-  // --- TRACKING HANDLER ---
-  const handleTrackUser = async (peer: Partial<User>) => {
-      if (!isLoggedIn) {
-          onAuthRequired?.('LOGIN');
-          return;
-      }
-      if (!peer.id || peer.id === userId) return;
-      try {
-          await alignmentService.startTracking(userId!, peer.id as string);
-          setAlignFeedback(`Now tracking ${peer.name}.`);
-          setTimeout(() => setAlignFeedback(null), 3000);
-      } catch (e) {}
+    if (!selectedPurpose || !selectedDuration || !alignmentNote.trim() || !userId || !targetPeer?.id) return;
+    setIsSendingAlign(true);
+    try {
+      await alignmentService.sendRequest(userId, targetPeer.id as string, selectedPurpose, selectedDuration, alignmentNote);
+      setIsAlignModalOpen(false);
+      toast(`Study contract sent to ${targetPeer?.name}. Awaiting acceptance.`, 4000);
+    } catch (e) {
+      toast('Failed to send contract. Please try again.');
+    } finally {
+      setIsSendingAlign(false);
+    }
   };
 
   // --- VOUCH HANDLER ---
   const handleVouch = (postId: string) => {
-      if (!isLoggedIn) {
-          onAuthRequired?.('LOGIN');
-          return;
-      }
-      setPosts(prev => prev.map(p => p.id === postId ? { ...p, likes: (p.likes || 0) + 1 } : p));
-      costudyService.likePost(postId);
+    if (!isLoggedIn) {
+      onAuthRequired?.('LOGIN');
+      return;
+    }
+    setPosts(prev => prev.map(p => p.id === postId ? { ...p, likes: (p.likes || 0) + 1 } : p));
+    costudyService.likePost(postId);
   };
 
   // --- BOOKMARK HANDLER ---
   const toggleBookmark = (postId: string) => {
-      if (!isLoggedIn) {
-          onAuthRequired?.('LOGIN');
-          return;
+    if (!isLoggedIn) {
+      onAuthRequired?.('LOGIN');
+      return;
+    }
+    setBookmarkedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(postId)) {
+        next.delete(postId);
+        toast('Removed from saved', 2000);
+      } else {
+        next.add(postId);
+        toast('Saved for exam review', 2000);
       }
-      setBookmarkedIds(prev => {
-          const next = new Set(prev);
-          if (next.has(postId)) {
-              next.delete(postId);
-              setAlignFeedback('Removed from saved');
-          } else {
-              next.add(postId);
-              setAlignFeedback('Saved for exam review');
-          }
-          setTimeout(() => setAlignFeedback(null), 2000);
-          localStorage.setItem('costudy_bookmarks', JSON.stringify([...next]));
-          return next;
-      });
+      localStorage.setItem('costudy_bookmarks', JSON.stringify([...next]));
+      return next;
+    });
   };
 
   // --- AUDIT HANDLERS ---
   const openAuditPanel = (post: Post) => {
-      if (!isLoggedIn) {
-          onAuthRequired?.('LOGIN');
-          return;
-      }
-      if (currentUserProfile && (currentUserProfile.signalLevel === 'SILENT_LEARNER' || currentUserProfile.signalLevel === 'REVISION_FOCUSED')) {
-          setAlignFeedback("You must be in 'Active Solver' mode to perform Peer Audits.");
-          setTimeout(() => setAlignFeedback(null), 3000);
-          return;
-      }
-      setAuditTargetPost(post);
-      setAuditVerdict(null);
-      setAuditNotes('');
+    if (!isLoggedIn) {
+      onAuthRequired?.('LOGIN');
+      return;
+    }
+    if (currentUserProfile && (currentUserProfile.signalLevel === 'SILENT_LEARNER' || currentUserProfile.signalLevel === 'REVISION_FOCUSED')) {
+      toast("You must be in 'Active Solver' mode to perform Peer Audits.");
+      return;
+    }
+    setAuditTargetPost(post);
+    setAuditVerdict(null);
+    setAuditNotes('');
   };
 
   const submitAudit = async () => {
-      if (!auditVerdict || !auditNotes || !auditTargetPost) return;
-      try {
-          await costudyService.updateAuditStatus(auditTargetPost.id, auditVerdict, auditNotes, userId);
-          setPosts(prev => prev.map(p => p.id === auditTargetPost.id ? { ...p, auditStatus: auditVerdict } : p));
-          setAuditTargetPost(null);
-          setAlignFeedback('Audit submitted. Points awarded.');
-          setTimeout(() => setAlignFeedback(null), 3000);
-      } catch (e) {
-          setPosts(prev => prev.map(p => p.id === auditTargetPost.id ? { ...p, auditStatus: auditVerdict } : p));
-          setAuditTargetPost(null);
-      }
+    if (!auditVerdict || !auditNotes || !auditTargetPost) return;
+    try {
+      await costudyService.updateAuditStatus(auditTargetPost.id, auditVerdict, auditNotes, userId);
+      setPosts(prev => prev.map(p => p.id === auditTargetPost.id ? { ...p, auditStatus: auditVerdict } : p));
+      setAuditTargetPost(null);
+      toast('Audit submitted. Points awarded.');
+    } catch (e) {
+      setPosts(prev => prev.map(p => p.id === auditTargetPost.id ? { ...p, auditStatus: auditVerdict } : p));
+      setAuditTargetPost(null);
+    }
   };
 
   const handleClaimBounty = (post: Post) => {
-      if (!isLoggedIn) {
-          onAuthRequired?.('LOGIN');
-          return;
-      }
-      setAlignFeedback(`Bounty claimed! Message ${post.author?.name} to submit your work.`);
-      setTimeout(() => setAlignFeedback(null), 4000);
+    if (!isLoggedIn) {
+      onAuthRequired?.('LOGIN');
+      return;
+    }
+    toast(`Bounty claimed! Message ${post.author?.name} to submit your work.`, 4000);
   };
 
   // --- POLL HANDLER ---
   const handlePollVote = (postId: string, option: string) => {
-      if (!isLoggedIn) {
-          onAuthRequired?.('LOGIN');
-          return;
-      }
-      if (pollVotes[postId]) return; // already voted
-      const next = { ...pollVotes, [postId]: option };
-      setPollVotes(next);
-      localStorage.setItem('costudy_poll_votes', JSON.stringify(next));
-      // Optimistic: update local post poll data
-      setPosts(prev => prev.map(p => {
-          if (p.id !== postId || !p.pollOptions) return p;
-          return {
-              ...p,
-              pollOptions: p.pollOptions.map((opt: any) =>
-                  opt.label === option ? { ...opt, votes: (opt.votes || 0) + 1 } : opt
-              )
-          };
-      }));
+    if (!isLoggedIn) {
+      onAuthRequired?.('LOGIN');
+      return;
+    }
+    if (pollVotes[postId]) return; // already voted
+    const next = { ...pollVotes, [postId]: option };
+    setPollVotes(next);
+    localStorage.setItem('costudy_poll_votes', JSON.stringify(next));
+    setPosts(prev => prev.map(p => {
+      if (p.id !== postId || !(p as any).pollOptions) return p;
+      return {
+        ...p,
+        pollOptions: (p as any).pollOptions.map((opt: any) =>
+          opt.label === option ? { ...opt, votes: (opt.votes || 0) + 1 } : opt
+        )
+      } as Post;
+    }));
   };
-
-  const CommentItem = ({ comment, depth = 0, postId }: any) => {
-    const [showReplyInput, setShowReplyInput] = useState(false);
-    const [replyText, setReplyText] = useState('');
-
-    const submitReply = async () => {
-      if (!replyText.trim() || !userId) return;
-      try {
-        await costudyService.createComment(postId, userId, replyText, comment.id);
-        setReplyText('');
-        setShowReplyInput(false);
-        loadDiscussion(postId);
-      } catch (err: any) {
-        setAlignFeedback("Action restricted. Please sign in.");
-        setTimeout(() => setAlignFeedback(null), 3000);
-      }
-    };
-
-    const wallClassic = mode !== 'FACULTY';
-
-    return (
-      <div className={`mt-4 ${depth > 0 ? (wallClassic ? 'ml-8 border-l-2 border-brand/15 pl-6' : 'ml-8 border-l-2 border-slate-100 pl-6') : ''}`}>
-        <div className="flex gap-3">
-          {comment.author?.avatar ? (
-            <img src={comment.author.avatar} className="w-8 h-8 rounded-lg object-cover ring-1 ring-slate-100 shrink-0" alt="" />
-          ) : (
-            <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs shrink-0">
-              {(comment.author?.name || 'A').charAt(0)}
-            </div>
-          )}
-          <div className="flex-1 min-w-0">
-            <div
-              className={
-                wallClassic
-                  ? 'rounded-2xl border border-[#ebe3df] bg-[#fffdfb] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]'
-                  : 'rounded-2xl border border-slate-100 bg-slate-50 p-4'
-              }
-            >
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs font-bold text-slate-900">{comment.author?.name || 'Anonymous'}</span>
-                <span className="text-[10px] text-slate-400">{comment.created_at ? new Date(comment.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'now'}</span>
-              </div>
-              <p className="text-sm text-slate-600 leading-relaxed">{comment.content}</p>
-            </div>
-            <button type="button" onClick={() => setShowReplyInput(!showReplyInput)} className="ml-2 mt-1.5 text-[10px] font-bold text-slate-400 transition-colors hover:text-brand">Reply</button>
-            {showReplyInput && (
-              <div className="mt-3 flex animate-in gap-2 slide-in-from-top-2 duration-200">
-                <input
-                  type="text"
-                  autoFocus
-                  value={replyText}
-                  onChange={(e) => setReplyText(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && submitReply()}
-                  placeholder="Write a reply..."
-                  className={
-                    wallClassic
-                      ? 'flex-1 rounded-xl border border-[#e5ddd9] bg-white px-4 py-2 text-xs outline-none focus:border-brand/35 focus:ring-2 focus:ring-brand/10'
-                      : 'flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs outline-none focus:border-brand/30 focus:ring-2 focus:ring-brand/10'
-                  }
-                />
-                <button
-                  type="button"
-                  onClick={submitReply}
-                  className={
-                    wallClassic
-                      ? 'rounded-xl bg-gradient-to-b from-brand to-brand-600 px-4 py-2 text-[10px] font-bold text-white shadow-sm hover:opacity-95'
-                      : 'rounded-xl bg-slate-900 px-4 py-2 text-[10px] font-bold text-white transition-colors hover:bg-brand'
-                  }
-                >
-                  Send
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-        {comment.replies && comment.replies.length > 0 && (
-            <div>
-                {comment.replies.map((reply: any) => (
-                    <CommentItem key={reply.id} comment={reply} depth={depth + 1} postId={postId} />
-                ))}
-            </div>
-        )}
-      </div>
-    );
-  };
-
-  const charCount = newPostContent.length;
-  const isOverLimit = charCount > MAX_CHARS;
-  const isUnderLimit = charCount > 0 && charCount < MIN_CHARS;
-
-  const isStudentWall = mode !== 'FACULTY';
 
   const timeAgo = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
@@ -519,845 +416,573 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
     return new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
   };
 
-  const postTypeConfig: Record<string, { label: string; color: string; bg: string; border: string }> = {
-    QUESTION: { label: 'Question', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
-    RESOURCE: { label: 'Resource', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200' },
-    RESOURCE_DROP: { label: 'Resource', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200' },
-    MCQ: { label: 'MCQ', color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-200' },
-    MCQ_SHARE: { label: 'MCQ', color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-200' },
-    PEER_AUDIT_REQUEST: { label: 'Peer Audit', color: 'text-slate-100', bg: 'bg-slate-800', border: 'border-slate-700' },
-    BOUNTY: { label: 'Bounty', color: 'text-white', bg: 'bg-brand', border: 'border-brand' },
-    FACULTY_DISCUSS: { label: 'Faculty', color: 'text-emerald-700', bg: 'bg-emerald-100', border: 'border-emerald-300' },
-    EVENT: { label: 'Event', color: 'text-amber-700', bg: 'bg-amber-100', border: 'border-amber-300' },
+  // ---------- Threaded comment (clay) ----------
+  const CommentItem = ({ comment, depth = 0, postId }: any) => {
+    const [showReplyInput, setShowReplyInput] = useState(false);
+    const [replyText, setReplyText] = useState('');
+
+    const submitReply = async () => {
+      if (!replyText.trim() || !userId) return;
+      try {
+        await costudyService.createComment(postId, userId, replyText, comment.id);
+        setReplyText('');
+        setShowReplyInput(false);
+        loadDiscussion(postId);
+      } catch (err: any) {
+        toast('Action restricted. Please sign in.');
+      }
+    };
+
+    return (
+      <div style={depth > 0 ? { marginLeft: 26, paddingLeft: 14, borderLeft: '2px solid var(--line)' } : undefined}>
+        <div className="comment">
+          {comment.author?.avatar ? (
+            <img src={comment.author.avatar} alt="" style={{ width: 30, height: 30, borderRadius: 10, objectFit: 'cover', flex: 'none' }} />
+          ) : (
+            <div style={{ width: 30, height: 30, borderRadius: 10, flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--accent-soft)', color: 'var(--accent-deep)', fontWeight: 800, fontSize: 12 }}>
+              {(comment.author?.name || 'A').charAt(0)}
+            </div>
+          )}
+          <div className="comment-body">
+            <div className="comment-head">
+              <strong>{comment.author?.name || 'Anonymous'}</strong>
+              {comment.author?.role === UserRole.TEACHER && (
+                <span className="role-chip role-mentor"><Icons.CheckBadge className="w-2.5 h-2.5" /> Mentor</span>
+              )}
+              <span className="comment-time">
+                {comment.created_at ? new Date(comment.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'now'}
+              </span>
+            </div>
+            <p>{comment.content}</p>
+            <button
+              type="button"
+              onClick={() => setShowReplyInput(!showReplyInput)}
+              style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', marginTop: 4 }}
+            >
+              Reply
+            </button>
+            {showReplyInput && (
+              <div className="comment-input" style={{ marginTop: 8 }}>
+                <input
+                  type="text"
+                  autoFocus
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && submitReply()}
+                  placeholder="Write a reply…"
+                />
+                <button type="button" className="comment-send" onClick={submitReply} aria-label="Send">
+                  <Icons.Send className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+        {comment.replies && comment.replies.length > 0 && (
+          <div>
+            {comment.replies.map((reply: any) => (
+              <CommentItem key={reply.id} comment={reply} depth={depth + 1} postId={postId} />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const charCount = newPostContent.length;
+  const trimmedCount = newPostContent.trim().length;
+  const isUnderLimit = charCount > 0 && trimmedCount < MIN_CHARS;
+  const canPublish = !isSubmitting && trimmedCount >= MIN_CHARS && charCount <= MAX_CHARS;
+
+  const isFaculty = mode === 'FACULTY';
+
+  const composerTypes = isFaculty
+    ? [
+        { type: PostType.FACULTY_DISCUSS, label: 'Discussion' },
+        { type: PostType.RESOURCE, label: 'Resource' },
+        { type: PostType.EVENT, label: 'Event' },
+      ]
+    : [
+        { type: PostType.QUESTION, label: 'Question' },
+        { type: PostType.RESOURCE, label: 'Resource' },
+        { type: PostType.MCQ, label: 'MCQ Drill' },
+        { type: PostType.PEER_AUDIT_REQUEST, label: 'Peer Audit' },
+      ];
+
+  const openComposer = () => {
+    if (isLoggedIn) setIsPostModalOpen(true);
+    else onAuthRequired?.('LOGIN');
+  };
+
+  const eyebrow: React.CSSProperties = {
+    fontSize: 11, fontWeight: 700, letterSpacing: '0.08em',
+    textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 8,
   };
 
   return (
-    <div
-      className={
-        isStudentWall
-          ? 'flex min-h-full w-full flex-col bg-gradient-to-b from-[#faf7f5] via-white to-[#f9f5f3] font-sans text-left'
-          : 'flex min-h-full w-full flex-col font-sans text-left'
-      }
-    >
-      <header
-        className={
-          isStudentWall
-            ? 'relative w-full shrink-0 overflow-hidden border-b border-[#e8d4d4]/70 bg-gradient-to-b from-[#fffefc] via-[#fff8f6] to-[#fff4f0] shadow-[inset_0_1px_0_rgba(255,255,255,0.92)]'
-            : 'relative w-full shrink-0 border-b border-slate-200/70 bg-gradient-to-b from-white via-slate-50/40 to-transparent'
-        }
-      >
-        {isStudentWall ? (
-          <div className="mx-auto max-w-3xl px-4 pb-8 pt-6 text-center sm:px-6 sm:pb-10 sm:pt-10">
-            <h1 className="font-display text-4xl font-semibold tracking-tight text-[#1a0a0a] sm:text-[2.5rem] sm:tracking-tight">
-              Study Wall
-            </h1>
-            {/* Hand-drawn pencil line — ties masthead to feed */}
-            <div className="mx-auto mt-4 flex max-w-[min(100%,14rem)] justify-center" aria-hidden>
-              <svg viewBox="0 0 240 14" className="h-3.5 w-full text-brand/[0.42]" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path
-                  d="M4 8c28-4 56-6 84-5s56 4 84 6 56 2 64-1"
-                  stroke="currentColor"
-                  strokeWidth="1.35"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  vectorEffect="non-scaling-stroke"
-                />
-                <path
-                  d="M218 5l6 4-5 4"
-                  stroke="currentColor"
-                  strokeWidth="1.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  opacity="0.85"
-                />
-              </svg>
-            </div>
-            <div className="mx-auto mt-8 w-full max-w-2xl overflow-x-auto px-0.5 no-scrollbar sm:mt-9">
-              <div className="flex min-w-max justify-center gap-1.5 rounded-2xl border border-[#e8d4d4]/90 bg-white/80 p-1.5 shadow-[0_4px_28px_-8px_rgba(137,11,11,0.1)] backdrop-blur-md sm:gap-2 sm:p-2">
-                {categories.map((cat) => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setActiveCategory(cat)}
-                    className={`whitespace-nowrap rounded-full px-3.5 py-2 text-[12px] font-medium transition-all duration-200 sm:px-4 sm:text-[13px] ${
-                      activeCategory === cat
-                        ? 'bg-gradient-to-b from-brand to-brand-600 text-white shadow-[0_8px_22px_-6px_rgba(237,0,0,0.45)] ring-1 ring-white/25'
-                        : 'border border-transparent text-slate-700 hover:border-brand/20 hover:bg-brand/[0.05] hover:text-brand-900'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-            </div>
+    <div className="proto wall-embedded" data-theme={isFaculty ? 'faculty' : undefined}>
+      <div className="wall" data-page="wall">
+        <main className="shell-solo shell-feed">
+          {/* Masthead */}
+          <div className="feed-hello">
+            <h1 className="font-display">{isFaculty ? 'Staff Room' : 'Study Wall'}</h1>
+            <p>{isFaculty ? 'Updates, pedagogy, and shop talk — colleagues only.' : 'Questions, drills, and wins from candidates like you.'}</p>
           </div>
-        ) : (
-          <>
-            <div
-              className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand/25 to-transparent"
-              aria-hidden
-            />
-            <div className="mx-auto max-w-3xl px-4 pb-8 pt-10 text-left sm:px-6">
-              <div className="flex items-start gap-4 text-left sm:gap-5">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand/10 text-brand ring-1 ring-brand/20">
-                  <Icons.MessageSquare className="h-5 w-5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="font-display text-xs font-medium uppercase tracking-[0.22em] text-slate-500">Faculty</p>
-                  <h1 className="font-display mt-2 text-3xl font-semibold tracking-tight text-[#1a0a0a] sm:text-[2.15rem]">Faculty wall</h1>
-                  <p className="mt-3 max-w-[min(100%,40rem)] text-left text-sm leading-[1.7] text-slate-600">
-                    Professional updates, resources, and discussion with your teaching colleagues.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-      </header>
-      <div className="mx-auto flex w-full max-w-3xl flex-col items-stretch overflow-visible px-3 pb-24 pt-4 text-left sm:px-6 sm:pb-12 sm:pt-6">
 
-      {/* TOAST FEEDBACK */}
-      {alignFeedback && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[70] animate-in slide-in-from-top-4 duration-300">
-          <div
-            className={
-              isStudentWall
-                ? 'flex items-center gap-2.5 rounded-2xl border border-white/15 bg-gradient-to-r from-[#5c0a0a] to-[#890b0b] px-6 py-3.5 text-sm font-medium text-[#fff9f4] shadow-[0_20px_50px_-12px_rgba(89,11,11,0.55)] backdrop-blur-sm'
-                : 'flex items-center gap-2.5 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-medium text-white shadow-2xl shadow-slate-900/20 backdrop-blur-xl'
-            }
-          >
-            <Icons.CheckBadge className={`h-4 w-4 shrink-0 ${isStudentWall ? 'text-amber-200/90' : 'text-emerald-400'}`} />
-            {alignFeedback}
+          {/* Category tabs */}
+          <div className="feed-cats" role="tablist">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                role="tab"
+                aria-selected={activeCategory === cat}
+                className={`cat ${activeCategory === cat ? 'on' : ''}`}
+                onClick={() => setActiveCategory(cat)}
+              >
+                {cat}
+              </button>
+            ))}
           </div>
-        </div>
-      )}
 
-      {/* FLOATING ACTION BUTTON */}
-      <div className="fixed bottom-8 right-6 sm:bottom-10 sm:right-10 z-10">
-        <button
-          type="button"
-          onClick={() => {
-              if (isLoggedIn) setIsPostModalOpen(true);
-              else onAuthRequired?.('LOGIN');
-          }}
-          className={
-            isStudentWall
-              ? 'group relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand via-[#e01010] to-brand-900 text-white shadow-[0_16px_44px_-10px_rgba(237,0,0,0.55)] ring-2 ring-white/90 transition-all duration-300 hover:scale-105 hover:shadow-[0_20px_50px_-12px_rgba(237,0,0,0.5)] active:scale-95 sm:h-16 sm:w-16'
-              : 'group relative flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-xl shadow-slate-900/20 transition-all duration-300 hover:scale-105 hover:bg-brand hover:shadow-brand/30 active:scale-95 sm:h-16 sm:w-16'
-          }
-        >
-            <Icons.Plus className="h-6 w-6 transition-transform duration-300 group-hover:rotate-90" />
-        </button>
-      </div>
-
-      {/* --- AUDIT PANEL MODAL --- */}
-      {auditTargetPost && (
-          <div className="fixed inset-0 z-50 bg-slate-900/95 backdrop-blur-xl flex items-center justify-center p-6 animate-in fade-in duration-300">
-              <div className="bg-[#fffdf5] rounded-3xl w-full max-w-4xl h-[90vh] flex flex-col shadow-2xl relative overflow-hidden">
-                  <div className="bg-slate-800 p-6 flex justify-between items-center shrink-0">
-                      <div className="flex items-center gap-4">
-                          <div className="p-3 bg-white/10 rounded-xl"><Icons.Scale className="w-6 h-6 text-white" /></div>
-                          <div>
-                              <h3 className="text-lg font-bold text-white">Peer Audit Desk</h3>
-                              <p className="text-[10px] text-slate-400">Case ID: {auditTargetPost.id}</p>
-                          </div>
-                      </div>
-                      <button onClick={() => setAuditTargetPost(null)} className="text-white/50 hover:text-white transition-colors"><Icons.Plus className="w-6 h-6 rotate-45" /></button>
-                  </div>
-
-                  <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-                      <div className="flex-1 p-8 overflow-y-auto border-r border-slate-200">
-                          <div className="mb-6">
-                              <span className="px-2.5 py-1 bg-slate-200 text-slate-600 rounded-lg text-[10px] font-bold uppercase">Candidate Submission</span>
-                              <h2 className="text-xl font-serif font-bold text-slate-900 mt-4 leading-relaxed">"{auditTargetPost.content}"</h2>
-                          </div>
-
-                          {auditTargetPost.tags && (
-                              <div className="flex flex-wrap gap-2 mb-6">
-                                  {auditTargetPost.tags.map(t => <span key={t} className="px-2 py-1 border border-slate-200 text-slate-500 text-[10px] rounded-md">{t}</span>)}
-                              </div>
-                          )}
-                      </div>
-
-                      <div className="w-full md:w-96 bg-slate-50 p-8 overflow-y-auto flex flex-col gap-6">
-                          <div>
-                              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-3">Verdict</label>
-                              <div className="space-y-2">
-                                  <button
-                                    onClick={() => setAuditVerdict('COMPLIANT')}
-                                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${auditVerdict === 'COMPLIANT' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-500 hover:border-emerald-200'}`}
-                                  >
-                                      <div className="font-bold text-xs flex items-center gap-2"><Icons.CheckCircle className="w-4 h-4" /> Compliant</div>
-                                  </button>
-                                  <button
-                                    onClick={() => setAuditVerdict('NON_COMPLIANT')}
-                                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${auditVerdict === 'NON_COMPLIANT' ? 'border-rose-500 bg-rose-50 text-rose-700' : 'border-slate-200 bg-white text-slate-500 hover:border-rose-200'}`}
-                                  >
-                                      <div className="font-bold text-xs flex items-center gap-2"><Icons.AlertCircle className="w-4 h-4" /> Non-Compliant</div>
-                                  </button>
-                              </div>
-                          </div>
-
-                          <div className="flex-1">
-                              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-3">Notes</label>
-                              <textarea
-                                value={auditNotes}
-                                onChange={(e) => setAuditNotes(e.target.value)}
-                                placeholder="Cite specific concepts..."
-                                className="w-full h-40 bg-white border border-slate-200 rounded-xl p-4 text-sm outline-none focus:border-slate-400 resize-none"
-                              />
-                          </div>
-
-                          <button
-                            onClick={submitAudit}
-                            disabled={!auditVerdict || !auditNotes}
-                            className="w-full py-4 bg-slate-900 text-white rounded-xl text-xs font-bold shadow-lg hover:bg-black transition-all disabled:opacity-40"
-                          >
-                              Submit Audit
-                          </button>
-                      </div>
-                  </div>
-              </div>
-          </div>
-      )}
-
-      {/* --- ALIGNMENT (CAN) MODAL --- */}
-      {isAlignModalOpen && targetPeer && (
-          <div className="fixed inset-0 z-50 bg-violet-950/80 backdrop-blur-xl flex items-center justify-center p-6 animate-in fade-in duration-300">
-              <div className="bg-white rounded-3xl w-full max-w-3xl p-8 md:p-10 shadow-2xl relative animate-in zoom-in-95 duration-500 overflow-hidden max-h-[90vh] overflow-y-auto no-scrollbar">
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 via-indigo-500 to-violet-500"></div>
-
-                  <button onClick={() => setIsAlignModalOpen(false)} className="absolute top-5 right-5 p-2 hover:bg-slate-100 rounded-xl transition-all text-slate-400 hover:text-slate-900">
-                      <Icons.Plus className="w-5 h-5 rotate-45" />
-                  </button>
-
-                  <div className="flex flex-col md:flex-row gap-6 mb-8">
-                      <div className="shrink-0 flex flex-col items-center">
-                          {targetPeer.avatar ? (
-                            <img src={targetPeer.avatar} className="w-16 h-16 rounded-2xl object-cover ring-2 ring-violet-100 shadow-lg mb-3" />
-                          ) : (
-                            <div className="w-16 h-16 rounded-2xl bg-violet-100 flex items-center justify-center text-violet-600 font-bold text-xl mb-3">
-                              {(targetPeer.name || 'P').charAt(0)}
-                            </div>
-                          )}
-                          <h3 className="text-base font-bold text-slate-900">{targetPeer.name}</h3>
-                          <span className="text-[10px] text-violet-500 font-medium">Study Partner</span>
-                      </div>
-
-                      <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                              <Icons.Link className="w-4 h-4 text-violet-500" />
-                              <h2 className="text-xl font-bold text-slate-900">Alignment Protocol</h2>
-                          </div>
-                          <p className="text-slate-500 text-sm leading-relaxed">
-                              Initiate a formal study connection. Define the purpose and duration.
-                          </p>
-                      </div>
-                  </div>
-
-                  <div className="mb-6">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3 block">Contract Type</label>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                          {Object.values(AlignmentPurpose).map((purpose) => (
-                              <button
-                                  key={purpose}
-                                  onClick={() => setSelectedPurpose(purpose)}
-                                  className={`p-3 rounded-xl border-2 text-left transition-all ${selectedPurpose === purpose ? 'border-violet-500 bg-violet-50 text-violet-900' : 'border-slate-100 bg-slate-50 text-slate-500 hover:border-violet-200'}`}
-                              >
-                                  <div className="text-xs font-bold leading-tight">{purpose}</div>
-                              </button>
-                          ))}
-                      </div>
-                  </div>
-
-                  <div className="mb-6">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3 block">Duration</label>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                          {[
-                              { label: 'Sprint', val: '7 Days' },
-                              { label: 'Module', val: '14 Days' },
-                              { label: 'Campaign', val: '30 Days' },
-                              { label: 'Marathon', val: 'Until Exam' }
-                          ].map((d) => (
-                              <button
-                                  key={d.val}
-                                  onClick={() => setSelectedDuration(d.val as AlignmentDuration)}
-                                  className={`p-3 rounded-xl border-2 text-center transition-all ${selectedDuration === d.val ? 'border-violet-500 bg-violet-900 text-white' : 'border-slate-100 bg-white text-slate-500 hover:border-violet-200'}`}
-                              >
-                                  <div className="text-[10px] text-opacity-70 mb-0.5">{d.label}</div>
-                                  <div className="text-sm font-bold">{d.val}</div>
-                              </button>
-                          ))}
-                      </div>
-                  </div>
-
-                  <div className="mb-8">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3 block">Mission Goal</label>
-                      <textarea
-                          value={alignmentNote}
-                          onChange={(e) => setAlignmentNote(e.target.value)}
-                          placeholder="E.g., Complete Section A MCQs with 80% accuracy..."
-                          className="w-full h-20 bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm outline-none focus:ring-2 focus:ring-violet-500/10 focus:border-violet-500/50 transition-all resize-none"
-                      />
-                  </div>
-
-                  <button
-                      onClick={confirmAlignment}
-                      disabled={!selectedPurpose || !selectedDuration || !alignmentNote.trim() || isSendingAlign}
-                      className="w-full py-4 bg-violet-900 text-white rounded-xl text-sm font-bold shadow-lg shadow-violet-900/20 hover:bg-violet-800 transition-all active:scale-[0.98] disabled:opacity-40 flex items-center justify-center gap-2"
-                  >
-                      {isSendingAlign ? (
-                          <><Icons.CloudSync className="w-4 h-4 animate-spin" /> Connecting...</>
-                      ) : (
-                          <>Send Contract <Icons.Send className="w-4 h-4" /></>
-                      )}
-                  </button>
-              </div>
-          </div>
-      )}
-
-      {/* New Post Modal */}
-      {isPostModalOpen && (
-        <div className="fixed inset-0 z-30 flex animate-in items-center justify-center bg-slate-900/80 p-4 backdrop-blur-xl fade-in duration-300">
-          <div
-            className={
-              isStudentWall
-                ? 'no-scrollbar relative max-h-[90vh] w-full max-w-2xl animate-in zoom-in-95 overflow-y-auto rounded-[1.75rem] border border-[#e8d4d4]/80 bg-gradient-to-b from-[#fffefc] to-white p-6 shadow-[0_24px_64px_-16px_rgba(137,11,11,0.18)] duration-500 md:p-8'
-                : 'no-scrollbar relative max-h-[90vh] w-full max-w-2xl animate-in zoom-in-95 overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl duration-500 md:p-8'
-            }
-          >
-            {isStudentWall && (
-              <div
-                className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-brand/30 to-transparent md:inset-x-10"
-                aria-hidden
-              />
+          {/* Composer prompt */}
+          <button type="button" className="feed-prompt" onClick={openComposer}>
+            {currentUserProfile?.avatar ? (
+              <img src={currentUserProfile.avatar} alt="" style={{ width: 36, height: 36, borderRadius: 12, objectFit: 'cover' }} />
+            ) : (
+              <span style={{ width: 36, height: 36, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--accent-soft)', color: 'var(--accent-deep)' }}>
+                <Icons.PenLine className="w-4 h-4" />
+              </span>
             )}
-            <button
-              type="button"
-              onClick={() => setIsPostModalOpen(false)}
-              className="absolute right-5 top-5 z-10 rounded-xl p-2 text-slate-400 transition-all hover:bg-black/[0.04] hover:text-slate-900"
-            >
-              <Icons.Plus className="h-5 w-5 rotate-45" />
-            </button>
+            <span>{isFaculty ? 'Share an update with colleagues…' : 'Ask the wall anything…'}</span>
+            <span className="feed-prompt-ic"><Icons.Plus className="w-4 h-4" /></span>
+          </button>
 
-            {mode === 'FACULTY' && (
-            <div className="mb-6">
-                <h3 className="font-display mb-1 text-xl font-semibold text-[#1a0a0a]">Faculty Insight</h3>
-                <p className="text-sm text-slate-600">Share updates or strategies with colleagues.</p>
-            </div>
-            )}
-            {isStudentWall && <h2 className="sr-only">New post</h2>}
-
-            <div
-              className={
-                isStudentWall
-                  ? 'mb-6 grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3'
-                  : 'mb-6 flex flex-wrap gap-2'
-              }
-            >
-              {mode === 'FACULTY' ? (
-                  [
-                    { type: PostType.FACULTY_DISCUSS, label: 'Discussion', icon: <Icons.MessageCircle className="w-3.5 h-3.5" /> },
-                    { type: PostType.RESOURCE, label: 'Resource', icon: <Icons.BookOpen className="w-3.5 h-3.5" /> },
-                    { type: PostType.EVENT, label: 'Event', icon: <Icons.Calendar className="w-3.5 h-3.5" /> }
-                  ].map(item => (
-                    <button
-                      key={item.type}
-                      type="button"
-                      onClick={() => setNewPostType(item.type)}
-                      className={`flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-semibold transition-all ${newPostType === item.type ? 'bg-slate-900 text-white shadow-md' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
-                    >
-                      {item.icon}
-                      {item.label}
-                    </button>
-                  ))
-              ) : (
-                  [
-                    { type: PostType.QUESTION, label: 'Question', icon: <Icons.HelpCircle className="w-3.5 h-3.5" /> },
-                    { type: PostType.RESOURCE, label: 'Resource', icon: <Icons.BookOpen className="w-3.5 h-3.5" /> },
-                    { type: PostType.MCQ, label: 'MCQ', icon: <Icons.ClipboardList className="w-3.5 h-3.5" /> },
-                    { type: PostType.PEER_AUDIT_REQUEST, label: 'Peer Audit', icon: <Icons.Scale className="w-3.5 h-3.5" /> }
-                  ].map(item => (
-                    <button
-                      key={item.type}
-                      type="button"
-                      onClick={() => setNewPostType(item.type)}
-                      className={`flex flex-col items-center justify-center gap-1.5 rounded-2xl border px-3 py-3 text-center text-xs font-semibold transition-all sm:py-3.5 ${
-                        newPostType === item.type
-                          ? 'border-brand/30 bg-gradient-to-b from-brand to-brand-600 text-white shadow-[0_8px_22px_-6px_rgba(237,0,0,0.4)] ring-1 ring-white/25'
-                          : 'border-[#e8e4e2] bg-white text-slate-600 shadow-sm hover:border-brand/25 hover:bg-brand/[0.04] hover:text-brand-900'
-                      }`}
-                    >
-                      <span className="opacity-90">{item.icon}</span>
-                      <span className="leading-tight">{item.label}</span>
-                    </button>
-                  ))
-              )}
-            </div>
-
-            <div className="relative mb-5">
-                <textarea
-                  autoFocus
-                  value={newPostContent}
-                  onChange={(e) => setNewPostContent(e.target.value)}
-                  placeholder={
-                      mode === 'FACULTY' ? "Share a professional update..." :
-                      newPostType === PostType.PEER_AUDIT_REQUEST ? "Paste your essay scenario and argument." :
-                      "What did you learn today?"
-                  }
-                  className={`h-36 w-full resize-none rounded-2xl border-2 p-5 text-sm font-medium leading-relaxed outline-none transition-all ${
-                    isOverLimit
-                      ? 'border-rose-200 bg-rose-50 text-rose-500'
-                      : isStudentWall
-                        ? 'border-[#ebe3e0] bg-white text-slate-800 focus:border-brand/35 focus:bg-[#fffdfb] focus:ring-2 focus:ring-brand/10'
-                        : 'border-transparent bg-slate-50 text-slate-800 focus:border-brand/20 focus:bg-white'
-                  }`}
-                />
-                <div className={`absolute bottom-4 right-5 text-[10px] font-medium transition-colors ${isOverLimit ? 'text-rose-500' : isUnderLimit ? 'text-amber-500' : 'text-slate-400'}`}>
-                    {charCount}/{MAX_CHARS}
-                </div>
-            </div>
-
-            {/* TAGS SECTION */}
-            <div className="mb-6">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 block">Tags</label>
-
-                <div className="relative mb-3">
-                  <input
-                    type="text"
-                    value={tagInput}
-                    onChange={(e) => setTagInput(e.target.value)}
-                    onKeyDown={handleTagKeyDown}
-                    onBlur={handleAddTag}
-                    placeholder="Add tags (press Enter)"
-                    className={
-                      isStudentWall
-                        ? 'w-full rounded-xl border border-[#e5ddd9] bg-[#fffdfb] px-4 py-3 text-sm text-slate-800 outline-none transition-all focus:border-brand/30 focus:ring-2 focus:ring-brand/10'
-                        : 'w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition-all focus:border-brand/20 focus:ring-2 focus:ring-brand/10'
-                    }
-                  />
-                </div>
-
-                {newPostTags.length > 0 && (
-                   <div className="flex flex-wrap gap-1.5 mb-3">
-                      {newPostTags.map(tag => (
-                        <div
-                          key={tag}
-                          className={
-                            isStudentWall
-                              ? 'flex items-center gap-1.5 rounded-lg border border-brand-900/10 bg-gradient-to-r from-brand-900 to-[#5c0a0a] px-3 py-1.5 text-[10px] font-semibold text-[#fff9f4]'
-                              : 'flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-1.5 text-[10px] font-medium text-white'
-                          }
-                        >
-                           <span>{tag}</span>
-                           <button
-                             type="button"
-                             onMouseDown={(e) => e.preventDefault()}
-                             onClick={() => handleRemoveTag(tag)}
-                             className="rounded p-0.5 hover:bg-white/15 hover:text-white"
-                             aria-label={`Remove tag ${tag}`}
-                           >
-                             <Icons.Plus className="w-3 h-3 rotate-45" />
-                           </button>
-                        </div>
-                      ))}
-                   </div>
-                )}
-
-                <div className="flex flex-wrap gap-1.5">
-                   {tagsList.map(tag => (
-                      <button
-                        key={tag}
-                        type="button"
-                        onClick={() => toggleTag(tag)}
-                        className={`rounded-lg border px-2.5 py-1 text-[10px] font-semibold transition-all ${
-                          newPostTags.includes(tag)
-                            ? isStudentWall
-                              ? 'border-brand-900/20 bg-brand/[0.12] text-brand-900'
-                              : 'border-slate-900 bg-slate-900 text-white'
-                            : isStudentWall
-                              ? 'border-[#e8e0dd] bg-white text-slate-500 hover:border-brand/30 hover:text-brand-900'
-                              : 'border-slate-100 bg-white text-slate-400 hover:border-slate-300 hover:text-slate-600'
-                        }`}
-                      >
-                         {tag}
-                      </button>
-                   ))}
-                </div>
-            </div>
-
-            {isUnderLimit && (
-                <div className="mb-4 flex items-center gap-2 text-amber-500 text-xs">
-                    <Icons.HelpCircle className="w-3.5 h-3.5" />
-                    <span>Minimum {MIN_CHARS} characters required.</span>
-                </div>
-            )}
-
-            {isOverLimit && (
-                <div className="mb-4 flex items-center gap-2 text-rose-500 text-xs">
-                    <Icons.AlertCircle className="w-3.5 h-3.5" />
-                    <span>Reduce by {charCount - MAX_CHARS} characters.</span>
-                </div>
-            )}
-
-            <button
-              type="button"
-              onClick={handleCreatePost}
-              disabled={isSubmitting || isOverLimit || isUnderLimit}
-              className={`flex w-full items-center justify-center gap-2 rounded-xl py-4 text-sm font-bold text-white shadow-lg transition-all ${
-                isSubmitting || isOverLimit || isUnderLimit
-                  ? 'cursor-not-allowed bg-slate-200 text-slate-400'
-                  : isStudentWall
-                    ? 'bg-gradient-to-r from-brand to-brand-900 shadow-[0_12px_32px_-10px_rgba(237,0,0,0.45)] hover:opacity-95 active:scale-[0.98]'
-                    : 'bg-slate-900 hover:bg-brand active:scale-[0.98]'
-              }`}
-            >
-              {isSubmitting ? (
-                  <><Icons.CloudSync className="w-4 h-4 animate-spin" /> Publishing...</>
-              ) : (
-                  newPostType === PostType.PEER_AUDIT_REQUEST ? 'Submit for Audit' : 'Publish'
-              )}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Category filters — student rail lives in header; faculty only here */}
-      {!isStudentWall && (
-      <div className="mb-6 w-full overflow-x-auto text-left no-scrollbar">
-        <div className="flex min-w-max justify-start gap-2">
-          {categories.map(cat => (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => setActiveCategory(cat)}
-              className={`whitespace-nowrap rounded-full px-4 py-2 text-[13px] font-medium transition-all duration-200 ${
-                activeCategory === cat
-                  ? 'bg-brand text-white shadow-md shadow-brand/25 ring-1 ring-brand/30'
-                  : 'border border-slate-200/90 bg-white/95 text-slate-700 hover:border-brand/35 hover:bg-brand/[0.07] hover:text-brand'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-      </div>
-      )}
-
-      {/* FEED */}
-      <div className="w-full">
+          {/* Feed */}
           {loading ? (
-            <div className="flex items-center justify-center py-24">
-               <div
-                 className={
-                   isStudentWall
-                     ? 'h-9 w-9 animate-spin rounded-full border-[3px] border-[#e8d4d4] border-t-brand shadow-sm'
-                     : 'h-8 w-8 animate-spin rounded-full border-[3px] border-slate-200 border-t-brand'
-                 }
-               />
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0' }}>
+              <div
+                style={{
+                  width: 36, height: 36, borderRadius: '50%',
+                  border: '3px solid var(--line)', borderTopColor: 'var(--accent)',
+                  animation: 'spin 0.8s linear infinite',
+                }}
+              />
             </div>
           ) : displayPosts.length === 0 ? (
-            <div className="flex flex-col items-center gap-5 py-20 text-center">
-              <div
-                className={
-                  isStudentWall
-                    ? 'flex h-14 w-14 items-center justify-center rounded-2xl border border-[#e8d4d4]/80 bg-gradient-to-br from-white to-[#fff5f2] shadow-[0_8px_28px_-8px_rgba(137,11,11,0.1)]'
-                    : 'flex h-12 w-12 items-center justify-center rounded-full bg-slate-100'
-                }
-              >
-                <Icons.PenLine className={isStudentWall ? 'h-6 w-6 text-brand/70' : 'h-5 w-5 text-slate-400'} />
+            <article className="post" style={{ textAlign: 'center', padding: '48px 28px' }}>
+              <div style={{ margin: '0 auto 16px', width: 56, height: 56, borderRadius: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--accent-soft)', color: 'var(--accent-deep)', boxShadow: 'var(--nm-xs)' }}>
+                <Icons.PenLine className="w-6 h-6" />
               </div>
-              <div>
-                <p className="font-display mb-1.5 text-lg font-semibold text-[#1a0a0a]">
-                  {activeCategory === 'All Feed' ? 'No posts yet' : `Nothing in ${activeCategory}`}
-                </p>
-                <p className="mx-auto max-w-xs text-sm leading-relaxed text-slate-500">
-                  Start a conversation—ask a question, share a resource, or help a peer along the way.
-                </p>
-              </div>
+              <h3 className="font-display" style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--ink)' }}>
+                {activeCategory === 'All Feed' ? 'No posts yet' : `Nothing in ${activeCategory}`}
+              </h3>
+              <p style={{ color: 'var(--muted)', fontSize: '0.88rem', maxWidth: 320, margin: '8px auto 18px' }}>
+                Start a conversation — ask a question, share a resource, or help a peer along the way.
+              </p>
               <button
                 type="button"
+                className="clay-cta"
+                style={{ maxWidth: 220, margin: '0 auto' }}
                 onClick={() => isLoggedIn ? setIsPostModalOpen(true) : onAuthRequired?.('SIGNUP')}
-                className={
-                  isStudentWall
-                    ? 'mt-1 rounded-xl bg-gradient-to-r from-brand to-brand-900 px-6 py-2.5 text-sm font-semibold text-white shadow-[0_10px_28px_-8px_rgba(237,0,0,0.4)] transition hover:opacity-95'
-                    : 'mt-1 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand'
-                }
               >
                 {isLoggedIn ? 'Write a post' : 'Sign up to post'}
               </button>
-            </div>
+            </article>
           ) : (
-            <div
-              className={
-                isStudentWall
-                  ? 'space-y-0 overflow-hidden rounded-2xl border border-[#e5d4d0]/90 bg-[#fffdfb] text-left shadow-[0_16px_48px_-16px_rgba(137,11,11,0.09),inset_0_1px_0_rgba(255,255,255,0.95)]'
-                  : 'space-y-px overflow-hidden rounded-2xl border border-slate-200/90 bg-white text-left shadow-[0_1px_0_rgba(15,23,42,0.04),0_12px_40px_-12px_rgba(15,23,42,0.08)]'
-              }
-            >
-              {displayPosts.map((post, idx) => {
+            <div className="feed-posts">
+              {displayPosts.map((post) => {
                 const isAuditRequest = post.type === PostType.PEER_AUDIT_REQUEST;
                 const isBounty = post.type === PostType.BOUNTY;
-                const typeConf = postTypeConfig[post.type] || { label: post.type, color: 'text-slate-500', bg: 'bg-slate-100', border: 'border-slate-200' };
+                const chip = TYPE_CHIP[post.type] || { label: String(post.type), cls: '' };
                 const isBookmarked = bookmarkedIds.has(post.id);
-                const isPoll = !!(post as any).pollOptions?.length;
+                const pollOptions = (post as any).pollOptions as { label: string; votes?: number }[] | undefined;
                 const myVote = pollVotes[post.id];
-                const isLast = idx === displayPosts.length - 1;
+                const discussOpen = openDiscussionId === post.id;
+                const summaryOpen = activeSummaryId === post.id;
 
                 return (
-                <Fragment key={post.id}>
-                {isStudentWall && idx > 0 && (
-                  <div
-                    className="flex items-center justify-center gap-2.5 bg-[#fffdfb] px-4 py-2"
-                    aria-hidden
-                  >
-                    <div className="h-px min-w-[2rem] flex-1 bg-gradient-to-r from-transparent to-brand/30" />
-                    <div className="flex items-center gap-1 text-brand/45">
-                      <Icons.PenLine className="h-3.5 w-3.5" />
-                    </div>
-                    <div className="h-px min-w-[2rem] flex-1 bg-gradient-to-l from-transparent to-brand/30" />
-                  </div>
-                )}
-                <article
-                  className={`relative transition-colors ${
-                    isStudentWall
-                      ? 'hover:bg-[#fffbf9]/90'
-                      : `hover:bg-slate-50/50 ${!isLast ? 'border-b border-slate-100' : ''}`
-                  }`}
-                >
-                  <div className="px-5 py-4 sm:px-6 sm:py-5">
-                    {/* Author row */}
-                    <div className="flex gap-3">
-                      <div className="shrink-0 cursor-pointer mt-0.5" onClick={() => initiateAlignment(post.author || {})}>
+                  <article key={post.id} className="post">
+                    {/* Header */}
+                    <header className="post-head">
+                      <button type="button" onClick={() => initiateAlignment(post.author || {})} style={{ flex: 'none' }} aria-label={`Connect with ${post.author?.name || 'author'}`}>
                         {post.author?.avatar ? (
-                          <img src={post.author.avatar} className="w-10 h-10 rounded-full object-cover" alt="" />
+                          <img src={post.author.avatar} alt="" style={{ width: 44, height: 44, borderRadius: 14, objectFit: 'cover' }} />
                         ) : (
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand/20 to-blue-400/20 flex items-center justify-center text-slate-700 font-semibold text-sm">
+                          <span style={{ width: 44, height: 44, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--accent-soft)', color: 'var(--accent-deep)', fontWeight: 800 }}>
                             {(post.author?.name || 'A').charAt(0)}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        {/* Name line */}
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <span className="font-semibold text-slate-900 text-[14px] truncate">{post.author?.name || 'Anonymous'}</span>
-                          {post.author?.role === UserRole.TEACHER && (
-                            <Icons.CheckBadge className="w-4 h-4 text-emerald-500 shrink-0" />
-                          )}
-                          <span className={`px-1.5 py-px rounded text-[10px] font-medium ${typeConf.bg} ${typeConf.color}`}>
-                            {typeConf.label}
                           </span>
-                          <span className="text-xs text-slate-400 ml-auto shrink-0">{post.created_at ? timeAgo(post.created_at) : 'now'}</span>
-                        </div>
-
-                        {/* Content */}
-                        <div className={`mt-1 text-left text-[15px] leading-[1.65] text-slate-800 ${isAuditRequest ? 'mt-2 rounded-lg border border-slate-200 bg-slate-100 p-3 font-mono text-xs' : ''}`}>
-                          {post.content}
-                        </div>
-
-                        {/* Poll Options */}
-                        {isPoll && (
-                          <div className="mt-3 space-y-1.5">
-                            {(post as any).pollOptions.map((opt: any) => {
-                              const totalVotes = (post as any).pollOptions.reduce((s: number, o: any) => s + (o.votes || 0), 0);
-                              const pct = totalVotes > 0 ? Math.round(((opt.votes || 0) / totalVotes) * 100) : 0;
-                              const voted = myVote === opt.label;
-                              return (
-                                <button
-                                  key={opt.label}
-                                  onClick={() => handlePollVote(post.id, opt.label)}
-                                  disabled={!!myVote}
-                                  className={`w-full text-left px-3 py-2.5 rounded-lg border transition-all relative overflow-hidden ${
-                                    voted ? 'border-brand bg-brand/5 font-semibold' :
-                                    myVote ? 'border-slate-100 bg-slate-50' :
-                                    'border-slate-200 hover:border-brand/40 bg-white'
-                                  }`}
-                                >
-                                  {myVote && <div className="absolute inset-y-0 left-0 bg-brand/8 transition-all duration-500" style={{ width: `${pct}%` }} />}
-                                  <div className="relative flex items-center justify-between">
-                                    <span className="text-sm text-slate-700">{opt.label}</span>
-                                    {myVote && <span className="text-xs font-semibold text-slate-500">{pct}%</span>}
-                                  </div>
-                                </button>
-                              );
-                            })}
-                            {myVote && (
-                              <p className="text-[11px] text-slate-400 pl-1">
-                                {(post as any).pollOptions.reduce((s: number, o: any) => s + (o.votes || 0), 0)} votes
-                              </p>
-                            )}
-                          </div>
                         )}
-
-                        {/* Bounty Reward */}
-                        {isBounty && post.bountyDetails && (
-                          <div className="mt-3 flex items-center gap-3 p-3 bg-slate-900 rounded-lg text-white">
-                            <Icons.Award className="w-4 h-4 text-brand shrink-0" />
-                            <span className="text-sm font-semibold flex-1">{post.bountyDetails.rewardAmount} Credits</span>
-                            <button
-                              onClick={() => handleClaimBounty(post)}
-                              className="px-3 py-1.5 bg-brand rounded-md text-xs font-semibold hover:bg-brand/90 active:scale-95 transition-all"
-                            >
-                              Claim
-                            </button>
-                          </div>
-                        )}
-
-                        {/* AI Summary */}
-                        {activeSummaryId === post.id && (
-                          <div className="mt-3">
-                            {summary ? (
-                              <div
-                                className={
-                                  isStudentWall
-                                    ? 'rounded-xl border border-[#e8d4d4]/80 bg-gradient-to-br from-[#fffefb] to-[#fff5f2] p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]'
-                                    : 'rounded-lg border border-violet-100 bg-violet-50 p-3'
-                                }
-                              >
-                                <div className="mb-1.5 flex items-center gap-1.5">
-                                  <Icons.Sparkles className={`h-3 w-3 ${isStudentWall ? 'text-brand' : 'text-violet-500'}`} />
-                                  <span className={`text-[10px] font-semibold uppercase tracking-wide ${isStudentWall ? 'text-brand-900/80' : 'text-violet-500'}`}>AI Summary</span>
-                                </div>
-                                <p className="text-sm leading-relaxed text-slate-600">{summary}</p>
-                              </div>
-                            ) : (
-                              <div className="p-3 bg-slate-50 rounded-lg flex items-center gap-2">
-                                <div className="w-4 h-4 border-2 border-slate-200 border-t-violet-500 rounded-full animate-spin" />
-                                <span className="text-xs text-slate-400">Summarizing...</span>
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Tags */}
-                        {post.tags && post.tags.length > 0 && (
-                          <div className="mt-3 flex flex-wrap gap-1">
-                            {post.tags.map(tag => (
-                              <span
-                                key={tag}
-                                className={
-                                  isStudentWall
-                                    ? 'cursor-pointer text-xs font-medium text-brand-900/70 hover:text-brand hover:underline'
-                                    : 'cursor-pointer text-xs text-blue-500 hover:underline'
-                                }
-                              >
-                                #{tag.replace(/\s+/g, '')}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* Action Bar — Twitter-style row */}
-                        <div className="flex items-center mt-3 -ml-2">
-                          {isAuditRequest ? (
-                            <button
-                              type="button"
-                              onClick={() => openAuditPanel(post)}
-                              disabled={post.auditStatus !== 'OPEN'}
-                              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs transition-colors ${
-                                post.auditStatus !== 'OPEN'
-                                  ? 'cursor-not-allowed text-slate-300'
-                                  : isStudentWall
-                                    ? 'text-slate-500 hover:bg-brand/[0.07] hover:text-brand-900'
-                                    : 'text-slate-500 hover:bg-blue-50 hover:text-blue-500'
-                              }`}
-                            >
-                              <Icons.Scale className="w-4 h-4" />
-                              <span>Audit</span>
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => handleVouch(post.id)}
-                              className="group flex items-center gap-1 rounded-full px-3 py-1.5 text-xs text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-600"
-                            >
-                              <Icons.Heart className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                              {(post.likes || 0) > 0 && <span>{post.likes}</span>}
-                            </button>
+                      </button>
+                      <div className="post-meta">
+                        <div className="post-author-row">
+                          <strong className="post-author">{post.author?.name || 'Anonymous'}</strong>
+                          {post.author?.role === UserRole.TEACHER && (
+                            <span className="role-chip role-mentor"><Icons.CheckBadge className="w-2.5 h-2.5" /> Mentor</span>
                           )}
-
-                          <button
-                            type="button"
-                            onClick={() => loadDiscussion(post.id)}
-                            className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-xs transition-colors ${
-                              openDiscussionId === post.id
-                                ? isStudentWall
-                                  ? 'bg-brand/10 text-brand-900'
-                                  : 'bg-blue-50 text-blue-500'
-                                : isStudentWall
-                                  ? 'text-slate-500 hover:bg-brand/[0.06] hover:text-brand-900'
-                                  : 'text-slate-500 hover:bg-blue-50 hover:text-blue-500'
-                            }`}
-                          >
-                            <Icons.MessageCircle className="w-4 h-4" />
-                            <span className="hidden sm:inline">Reply</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => handleSummarize(post.id, post.content)}
-                            className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-xs transition-colors ${
-                              activeSummaryId === post.id && summary
-                                ? isStudentWall
-                                  ? 'bg-[#faf5f5] text-brand-900 ring-1 ring-brand/15'
-                                  : 'bg-violet-50 text-violet-500'
-                                : isStudentWall
-                                  ? 'text-slate-500 hover:bg-brand/[0.05] hover:text-brand-900'
-                                  : 'text-slate-500 hover:bg-violet-50 hover:text-violet-500'
-                            }`}
-                          >
-                            <Icons.Sparkles className="w-4 h-4" />
-                            <span className="hidden sm:inline">AI</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => toggleBookmark(post.id)}
-                            className={`ml-auto flex items-center rounded-full px-3 py-1.5 text-xs transition-colors ${
-                              isBookmarked
-                                ? isStudentWall
-                                  ? 'text-brand'
-                                  : 'text-amber-500'
-                                : isStudentWall
-                                  ? 'text-slate-400 hover:bg-brand/[0.06] hover:text-brand'
-                                  : 'text-slate-400 hover:bg-amber-50 hover:text-amber-500'
-                            }`}
-                          >
-                            <Icons.Flag className="w-4 h-4" />
-                          </button>
+                        </div>
+                        <div className="post-sub">
+                          <span className={`type-chip ${chip.cls}`}>{chip.label}</span>
+                          <span className="post-time">{post.created_at ? timeAgo(post.created_at) : 'now'}</span>
                         </div>
                       </div>
-                    </div>
-                  </div>
+                    </header>
 
-                  {/* Discussion thread */}
-                  {openDiscussionId === post.id && (
-                    <div
-                      className={
-                        isStudentWall
-                          ? 'border-t border-[#f0e6e3] bg-gradient-to-b from-[#fff9f7]/90 to-[#faf7f5]/80 px-5 pb-4 sm:px-6'
-                          : 'border-t border-slate-100 bg-slate-50/30 px-5 pb-4 sm:px-6'
-                      }
-                    >
-                      <h4 className="mb-2 mt-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Replies</h4>
-                      {discussions[post.id]?.length === 0 && (
-                        <p className="text-xs text-slate-400 py-2">No replies yet.</p>
+                    {/* Body */}
+                    <p className="post-body" style={isAuditRequest ? { fontFamily: 'Geist Mono, ui-monospace, monospace', fontSize: '0.82rem', background: 'var(--inset-bg)', borderRadius: 14, padding: '12px 14px', boxShadow: 'var(--nm-inset-sm)' } : undefined}>
+                      {post.content}
+                    </p>
+
+                    {/* Poll */}
+                    {pollOptions && pollOptions.length > 0 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 7, margin: '4px 0 8px' }}>
+                        {pollOptions.map((opt) => {
+                          const totalVotes = pollOptions.reduce((s, o) => s + (o.votes || 0), 0);
+                          const pct = totalVotes > 0 ? Math.round(((opt.votes || 0) / totalVotes) * 100) : 0;
+                          const voted = myVote === opt.label;
+                          return (
+                            <button
+                              key={opt.label}
+                              type="button"
+                              className={`poll-opt ${voted ? 'voted' : ''}`}
+                              disabled={!!myVote}
+                              onClick={() => handlePollVote(post.id, opt.label)}
+                            >
+                              {myVote && <span className="poll-fill" style={{ width: `${pct}%` }} />}
+                              <span style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'var(--ink)' }}>
+                                <span>{opt.label}</span>
+                                {myVote && <span style={{ fontWeight: 700, color: 'var(--muted)' }}>{pct}%</span>}
+                              </span>
+                            </button>
+                          );
+                        })}
+                        {myVote && (
+                          <p style={{ fontSize: 11, color: 'var(--muted)', paddingLeft: 4 }}>
+                            {pollOptions.reduce((s, o) => s + (o.votes || 0), 0)} votes
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Bounty */}
+                    {isBounty && post.bountyDetails && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 16, background: 'var(--accent-soft)', boxShadow: 'var(--nm-xs)', margin: '4px 0 8px' }}>
+                        <Icons.Award className="w-4 h-4" style={{ color: 'var(--accent-deep)' }} />
+                        <span style={{ flex: 1, fontWeight: 800, fontSize: '0.9rem', color: 'var(--accent-deep)' }}>{post.bountyDetails.rewardAmount} Credits</span>
+                        <button type="button" className="clay-cta" style={{ width: 'auto', padding: '8px 18px', fontSize: '0.75rem' }} onClick={() => handleClaimBounty(post)}>
+                          Claim
+                        </button>
+                      </div>
+                    )}
+
+                    {/* AI summary */}
+                    {summaryOpen && (
+                      <div className="ai-summary">
+                        <span className="ai-chip"><Icons.Sparkles className="w-3 h-3" /> AI recap</span>
+                        {summary ? <p>{summary}</p> : <p style={{ color: 'var(--muted)' }}>Summarizing…</p>}
+                      </div>
+                    )}
+
+                    {/* Tags */}
+                    {post.tags && post.tags.length > 0 && (
+                      <div className="post-tags">
+                        {post.tags.map(tag => <span key={tag} className="tag">{tag}</span>)}
+                      </div>
+                    )}
+
+                    {/* Actions */}
+                    <footer className="post-actions">
+                      {isAuditRequest ? (
+                        <button
+                          type="button"
+                          className="act"
+                          disabled={post.auditStatus !== 'OPEN'}
+                          style={post.auditStatus !== 'OPEN' ? { opacity: 0.4, cursor: 'not-allowed' } : undefined}
+                          onClick={() => openAuditPanel(post)}
+                        >
+                          <span className="act-ic"><Icons.Scale className="w-[18px] h-[18px]" /></span>
+                          <span className="act-label">Audit</span>
+                        </button>
+                      ) : (
+                        <button type="button" className="act act-vouch" onClick={() => handleVouch(post.id)}>
+                          <span className="act-ic"><Icons.Heart className="w-[18px] h-[18px]" /></span>
+                          <span className="act-label">Vouch</span>
+                          {(post.likes || 0) > 0 && <span className="act-count">{post.likes}</span>}
+                        </button>
                       )}
-                      <div>
+
+                      <button type="button" className={`act ${discussOpen ? 'act-on' : ''}`} onClick={() => loadDiscussion(post.id)}>
+                        <span className="act-ic"><Icons.MessageCircle className="w-[18px] h-[18px]" /></span>
+                        <span className="act-label">Discuss</span>
+                        {(discussions[post.id]?.length || 0) > 0 && <span className="act-count">{discussions[post.id].length}</span>}
+                      </button>
+
+                      <span className="act-spacer"></span>
+
+                      <button
+                        type="button"
+                        className={`act act-icon-only ${summaryOpen && summary ? 'act-on' : ''}`}
+                        onClick={() => handleSummarize(post.id, post.content)}
+                        aria-label="AI summary"
+                      >
+                        <span className="act-ic"><Icons.Sparkles className="w-[18px] h-[18px]" /></span>
+                      </button>
+                      <button
+                        type="button"
+                        className={`act act-icon-only ${isBookmarked ? 'act-on' : ''}`}
+                        onClick={() => toggleBookmark(post.id)}
+                        aria-label="Bookmark"
+                      >
+                        <span className="act-ic"><Icons.Flag className="w-[18px] h-[18px]" /></span>
+                      </button>
+                    </footer>
+
+                    {/* Discussion thread */}
+                    {discussOpen && (
+                      <div className="discuss">
+                        {(discussions[post.id]?.length || 0) === 0 && (
+                          <p style={{ fontSize: '0.78rem', color: 'var(--muted)', padding: '4px 0' }}>No replies yet.</p>
+                        )}
                         {discussions[post.id]?.map((comment: any) => (
                           <CommentItem key={comment.id} comment={comment} postId={post.id} />
                         ))}
                       </div>
-                    </div>
-                  )}
-                </article>
-                </Fragment>
-              );
+                    )}
+                  </article>
+                );
               })}
+              <div className="feed-end">You're all caught up</div>
             </div>
           )}
-      </div>
+        </main>
+
+        {/* Toast */}
+        {alignFeedback && (
+          <div className="wall-toast" role="status">
+            <Icons.CheckBadge className="w-4 h-4" />
+            {alignFeedback}
+          </div>
+        )}
+
+        {/* Floating compose button */}
+        <button type="button" className="wall-fab" onClick={openComposer} aria-label="New post">
+          <Icons.Plus className="w-6 h-6" />
+        </button>
+
+        {/* ---------- Composer modal ---------- */}
+        {isPostModalOpen && (
+          <div className="modal-veil" onClick={(e) => { if (e.target === e.currentTarget) setIsPostModalOpen(false); }}>
+            <div className="composer" role="dialog" aria-modal="true" aria-label="New post">
+              <div className="composer-grip" aria-hidden="true"></div>
+              <header className="composer-head">
+                <h3>{isFaculty ? 'Faculty insight' : 'New post'}</h3>
+                <button type="button" className="composer-x" onClick={() => setIsPostModalOpen(false)} aria-label="Close">
+                  <Icons.Plus className="w-[18px] h-[18px] rotate-45" />
+                </button>
+              </header>
+
+              <div className="composer-types">
+                {composerTypes.map((item) => (
+                  <button
+                    key={item.type}
+                    type="button"
+                    className={`seg ${newPostType === item.type ? 'seg-on' : ''}`}
+                    onClick={() => setNewPostType(item.type)}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+
+              <textarea
+                className="composer-text"
+                autoFocus
+                value={newPostContent}
+                maxLength={MAX_CHARS}
+                placeholder={
+                  isFaculty ? 'Share an update or open a discussion with colleagues…' :
+                  newPostType === PostType.PEER_AUDIT_REQUEST ? 'Paste your essay scenario and argument for peer review…' :
+                  'Ask the wall — be specific, cite the concept you’re stuck on…'
+                }
+                onChange={(e) => setNewPostContent(e.target.value)}
+              ></textarea>
+
+              <div className="composer-tags">
+                {tagsList.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    className={`tag tag-pick ${newPostTags.includes(tag) ? 'tag-on' : ''}`}
+                    onClick={() => toggleTag(tag)}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+
+              {/* Custom tag input + picked custom tags */}
+              <div className="comment-input" style={{ marginTop: 10 }}>
+                <input
+                  type="text"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={handleTagKeyDown}
+                  onBlur={handleAddTag}
+                  placeholder="Add your own tag (press Enter)"
+                />
+              </div>
+              {newPostTags.filter(t => !tagsList.includes(t)).length > 0 && (
+                <div className="composer-tags" style={{ marginTop: 8 }}>
+                  {newPostTags.filter(t => !tagsList.includes(t)).map(tag => (
+                    <button key={tag} type="button" className="tag tag-pick tag-on" onClick={() => handleRemoveTag(tag)}>
+                      {tag} ✕
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <footer className="composer-foot">
+                <span className={`charcount ${isUnderLimit ? 'charcount-low' : ''}`}>
+                  {trimmedCount < MIN_CHARS ? `${Math.max(0, MIN_CHARS - trimmedCount)} more chars` : `${charCount}/${MAX_CHARS}`}
+                </span>
+                <button type="button" className="btn-post" disabled={!canPublish} onClick={handleCreatePost}>
+                  {isSubmitting ? 'Publishing…' : newPostType === PostType.PEER_AUDIT_REQUEST ? 'Submit for audit' : 'Post to wall'}
+                </button>
+              </footer>
+            </div>
+          </div>
+        )}
+
+        {/* ---------- Peer Audit modal ---------- */}
+        {auditTargetPost && (
+          <div className="modal-veil" onClick={(e) => { if (e.target === e.currentTarget) setAuditTargetPost(null); }}>
+            <div className="clay-modal" role="dialog" aria-modal="true" aria-label="Peer audit desk">
+              <header className="composer-head" style={{ marginBottom: 14 }}>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Icons.Scale className="w-5 h-5" style={{ color: 'var(--accent-deep)' }} /> Peer Audit Desk
+                </h3>
+                <button type="button" className="composer-x" onClick={() => setAuditTargetPost(null)} aria-label="Close">
+                  <Icons.Plus className="w-[18px] h-[18px] rotate-45" />
+                </button>
+              </header>
+
+              <p style={eyebrow}>Candidate submission · Case {auditTargetPost.id.slice(0, 8)}</p>
+              <p className="post-body" style={{ background: 'var(--inset-bg)', borderRadius: 14, padding: '14px 16px', boxShadow: 'var(--nm-inset-sm)', marginBottom: 14 }}>
+                “{auditTargetPost.content}”
+              </p>
+              {auditTargetPost.tags && auditTargetPost.tags.length > 0 && (
+                <div className="post-tags" style={{ marginBottom: 16 }}>
+                  {auditTargetPost.tags.map(t => <span key={t} className="tag">{t}</span>)}
+                </div>
+              )}
+
+              <p style={eyebrow}>Verdict</p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+                <button type="button" className={`clay-option ${auditVerdict === 'COMPLIANT' ? 'on' : ''}`} onClick={() => setAuditVerdict('COMPLIANT')}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icons.CheckCircle className="w-4 h-4" /> Compliant</span>
+                </button>
+                <button type="button" className={`clay-option ${auditVerdict === 'NON_COMPLIANT' ? 'on' : ''}`} onClick={() => setAuditVerdict('NON_COMPLIANT')}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Icons.AlertCircle className="w-4 h-4" /> Non-Compliant</span>
+                </button>
+              </div>
+
+              <p style={eyebrow}>Notes</p>
+              <textarea
+                className="clay-textarea"
+                style={{ height: 120, marginBottom: 16 }}
+                value={auditNotes}
+                onChange={(e) => setAuditNotes(e.target.value)}
+                placeholder="Cite specific concepts…"
+              />
+
+              <button type="button" className="clay-cta" disabled={!auditVerdict || !auditNotes} onClick={submitAudit}>
+                Submit audit
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ---------- Alignment (study contract) modal ---------- */}
+        {isAlignModalOpen && targetPeer && (
+          <div className="modal-veil" onClick={(e) => { if (e.target === e.currentTarget) setIsAlignModalOpen(false); }}>
+            <div className="clay-modal" role="dialog" aria-modal="true" aria-label="Alignment protocol">
+              <header className="composer-head" style={{ marginBottom: 16 }}>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Icons.Link className="w-5 h-5" style={{ color: 'var(--accent-deep)' }} /> Study contract
+                </h3>
+                <button type="button" className="composer-x" onClick={() => setIsAlignModalOpen(false)} aria-label="Close">
+                  <Icons.Plus className="w-[18px] h-[18px] rotate-45" />
+                </button>
+              </header>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18 }}>
+                {targetPeer.avatar ? (
+                  <img src={targetPeer.avatar} alt="" style={{ width: 56, height: 56, borderRadius: 18, objectFit: 'cover', boxShadow: 'var(--nm-xs)' }} />
+                ) : (
+                  <span style={{ width: 56, height: 56, borderRadius: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--accent-soft)', color: 'var(--accent-deep)', fontWeight: 800, fontSize: 20 }}>
+                    {(targetPeer.name || 'P').charAt(0)}
+                  </span>
+                )}
+                <div>
+                  <strong className="font-display" style={{ fontSize: '1.1rem', color: 'var(--ink)' }}>{targetPeer.name}</strong>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Initiate a formal study connection — define the purpose and duration.</p>
+                </div>
+              </div>
+
+              <p style={eyebrow}>Contract type</p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 10, marginBottom: 16 }}>
+                {Object.values(AlignmentPurpose).map((purpose) => (
+                  <button
+                    key={purpose}
+                    type="button"
+                    className={`clay-option ${selectedPurpose === purpose ? 'on' : ''}`}
+                    onClick={() => setSelectedPurpose(purpose)}
+                  >
+                    {purpose}
+                  </button>
+                ))}
+              </div>
+
+              <p style={eyebrow}>Duration</p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10, marginBottom: 16 }}>
+                {[
+                  { label: 'Sprint', val: '7 Days' },
+                  { label: 'Module', val: '14 Days' },
+                  { label: 'Campaign', val: '30 Days' },
+                  { label: 'Marathon', val: 'Until Exam' },
+                ].map((d) => (
+                  <button
+                    key={d.val}
+                    type="button"
+                    className={`clay-option ${selectedDuration === d.val ? 'on' : ''}`}
+                    onClick={() => setSelectedDuration(d.val as AlignmentDuration)}
+                  >
+                    <span style={{ display: 'block', fontSize: 10, opacity: 0.7 }}>{d.label}</span>
+                    {d.val}
+                  </button>
+                ))}
+              </div>
+
+              <p style={eyebrow}>Mission goal</p>
+              <textarea
+                className="clay-textarea"
+                style={{ height: 80, marginBottom: 18 }}
+                value={alignmentNote}
+                onChange={(e) => setAlignmentNote(e.target.value)}
+                placeholder="E.g., Complete Section A MCQs with 80% accuracy…"
+              />
+
+              <button
+                type="button"
+                className="clay-cta"
+                disabled={!selectedPurpose || !selectedDuration || !alignmentNote.trim() || isSendingAlign}
+                onClick={confirmAlignment}
+              >
+                {isSendingAlign ? 'Connecting…' : <>Send contract <Icons.Send className="w-4 h-4" /></>}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

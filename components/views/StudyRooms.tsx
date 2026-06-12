@@ -3,14 +3,12 @@ import { Icons } from '../Icons';
 import { StudyRoom, User } from '../../types';
 import { costudyService } from '../../services/costudyService';
 import { getUserProfile } from '../../services/fetsService';
-import { supabase } from '../../services/supabaseClient';
-import { STUDENT_PAGE_BG, StudentPageChrome } from '../student/StudentPageChrome';
 
 // ============================================
 // TYPES
 // ============================================
 
-type RoomTab = 'Mission' | 'Focus' | 'Resources' | 'Discussion' | 'Quiz' | 'Calendar' | 'Mentors';
+type RoomTab = 'Missions' | 'Focus' | 'Resources' | 'Discussion' | 'Quiz' | 'Calendar' | 'Mentors';
 
 interface Mission {
     id: string;
@@ -92,6 +90,40 @@ interface StudyRoomsProps {
 }
 
 // ============================================
+// HELPERS
+// ============================================
+
+/** Deterministic pastel tile from the room name (redesign RoomTile) */
+const TILE_PAIRS: [string, string][] = [
+    ['#fff1f1', '#b91c1c'], ['#fff7ed', '#9a3412'], ['#ecfdf5', '#047857'],
+    ['#eef2ff', '#4338ca'], ['#fdf2f8', '#be185d'], ['#f0f9ff', '#0369a1'],
+];
+
+const RoomTile: React.FC<{ name: string; size?: number; round?: boolean }> = ({ name, size = 46, round }) => {
+    const h = name.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+    const pair = TILE_PAIRS[h % TILE_PAIRS.length];
+    const initials = name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+    return (
+        <span
+            className="room-tile"
+            style={{
+                width: size, height: size, background: pair[0], color: pair[1],
+                borderRadius: round ? '50%' : Math.round(size * 0.3), fontSize: Math.round(size * 0.33),
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                fontWeight: 800, flex: 'none',
+            }}
+        >
+            {initials}
+        </span>
+    );
+};
+
+const eyebrow: React.CSSProperties = {
+    fontSize: 11, fontWeight: 700, letterSpacing: '0.08em',
+    textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 8,
+};
+
+// ============================================
 // MAIN COMPONENT
 // ============================================
 
@@ -100,11 +132,11 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [selectedRoom, setSelectedRoom] = useState<StudyRoom | null>(null);
-    const [activeTab, setActiveTab] = useState<RoomTab>('Mission');
-    
+    const [activeTab, setActiveTab] = useState<RoomTab>('Missions');
+
     // Online presence
     const [onlineMembers, setOnlineMembers] = useState<string[]>([]);
-    
+
     // Feature states
     const [missions, setMissions] = useState<Mission[]>([]);
     const [focusSession, setFocusSession] = useState<FocusSession | null>(null);
@@ -112,10 +144,10 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
     const [discussions, setDiscussions] = useState<Discussion[]>([]);
     const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
     const [mentors, setMentors] = useState<Mentor[]>([]);
-    
+
     // Timer state
     const [timerSeconds, setTimerSeconds] = useState(0);
-    const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     useEffect(() => {
         const load = async () => {
@@ -186,67 +218,75 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
         setTimerSeconds(0);
     };
 
+    // Focus ring geometry (redesign FocusTimer)
+    const RING_DASH = 327;
+    const focusTotal = (focusSession?.duration || 25) * 60;
+    const focusRemaining = Math.max(0, focusTotal - timerSeconds);
+    const focusFrac = focusSession ? focusRemaining / focusTotal : 1;
+
+    const emptyState = (icon: React.ReactNode, title: string, hint: string) => (
+        <div className="post" style={{ textAlign: 'center', padding: '40px 24px' }}>
+            <div style={{ margin: '0 auto 12px', width: 48, height: 48, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--accent-soft)', color: 'var(--accent-deep)', boxShadow: 'var(--nm-xs)' }}>
+                {icon}
+            </div>
+            <strong className="font-display" style={{ display: 'block', color: 'var(--ink)', fontSize: '1.05rem' }}>{title}</strong>
+            <p style={{ color: 'var(--muted)', fontSize: '0.84rem', marginTop: 6 }}>{hint}</p>
+        </div>
+    );
+
     // ============================================
-    // ROOM LIST VIEW
+    // ROOM LIST VIEW (browse grid)
     // ============================================
-    
+
     if (!selectedRoom) {
         return (
-            <div className={`${STUDENT_PAGE_BG} font-sans text-left`}>
-                <StudentPageChrome
-                    eyebrow="Collaboration"
-                    title="Study rooms"
-                    description="Join a cluster, align on missions, run focus sessions, and share resources—built for CMA US study groups."
-                    icon={<Icons.Users className="h-6 w-6" />}
-                    maxWidthClassName="max-w-6xl"
-                />
-                <div className="relative mx-auto max-w-6xl px-4 pb-12 pt-6 sm:px-6 sm:pb-14">
-                    <div className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-brand/[0.08] to-transparent" aria-hidden />
-
-                    {/* Room Grid */}
-                    {loading ? (
-                        <div className="flex items-center justify-center py-20">
-                            <Icons.CloudSync className="h-12 w-12 animate-spin text-slate-300" />
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
-                            {rooms.map(room => (
-                                <div 
-                                    key={room.id}
-                                    onClick={() => setSelectedRoom(room)}
-                                    className="group cursor-pointer rounded-2xl border border-brand/15 bg-white/90 p-6 shadow-clay-red-raised backdrop-blur-xl transition-all hover:border-brand/25 hover:bg-white hover:shadow-md"
-                                >
-                                    <div className="mb-4 flex items-start justify-between gap-3">
-                                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-brand/90 to-brand-600 text-lg font-bold text-white shadow-md shadow-brand/20">
-                                            {room.name.charAt(0)}
-                                        </div>
-                                        <span className="shrink-0 rounded-full bg-emerald-400/15 px-2.5 py-1 text-xs font-semibold text-emerald-900 ring-1 ring-emerald-500/25 backdrop-blur-sm">
-                                            {room.memberCount || 0} online
-                                        </span>
-                                    </div>
-                                    <h3 className="mb-2 text-lg font-semibold text-slate-900 transition-colors group-hover:text-brand">
-                                        {room.name}
-                                    </h3>
-                                    <p className="mb-4 line-clamp-2 text-left text-sm leading-[1.6] text-slate-700">
-                                        {room.description || 'A focused study group for CMA aspirants'}
-                                    </p>
-                                    <div className="flex items-center gap-2 text-left text-xs font-medium text-slate-600">
-                                        <Icons.Target className="h-4 w-4 shrink-0 text-slate-400" />
-                                        <span className="truncate">{room.activeSession || 'No active session'}</span>
-                                    </div>
-                                </div>
-                            ))}
-                            
-                            {/* Create Room Card */}
-                            <div className="flex min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-brand/25 bg-white/60 p-6 text-center shadow-sm backdrop-blur-xl transition-all hover:border-brand/40 hover:bg-white/90">
-                                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-brand/90 text-white shadow-neomorph-sm">
-                                    <Icons.Plus className="h-6 w-6" />
-                                </div>
-                                <h3 className="mb-1 text-lg font-semibold text-slate-900">Create room</h3>
-                                <p className="max-w-[14rem] text-sm leading-snug text-slate-600">Start a new study cluster</p>
+            <div className="proto wall-embedded">
+                <div className="wall" data-page="rooms">
+                    <main className="shell-solo shell-rooms">
+                        <div className="feed-hello rooms-hello">
+                            <div>
+                                <h1 className="font-display">Study Rooms</h1>
+                                <p>Join a room across timezones — missions, synced focus, shared resources.</p>
                             </div>
+                            <button type="button" className="rooms-create">
+                                <Icons.Plus className="w-[15px] h-[15px]" /> Create room
+                            </button>
                         </div>
-                    )}
+
+                        {loading ? (
+                            <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0' }}>
+                                <div style={{ width: 36, height: 36, borderRadius: '50%', border: '3px solid var(--line)', borderTopColor: 'var(--accent)', animation: 'spin 0.8s linear infinite' }} />
+                            </div>
+                        ) : rooms.length === 0 ? (
+                            emptyState(<Icons.Users className="w-5 h-5" />, 'No rooms yet', 'Create the first study room and invite your cohort.')
+                        ) : (
+                            <div className="rooms-grid">
+                                {rooms.map(room => (
+                                    <button key={room.id} type="button" className="post room-card" onClick={() => setSelectedRoom(room)}>
+                                        <div className="room-card-top">
+                                            <RoomTile name={room.name} size={46} />
+                                            <div className="room-card-name">
+                                                <strong>{room.name}</strong>
+                                                <span>{(room as any).timezone || 'Open to all timezones'}</span>
+                                            </div>
+                                            {(room.memberCount || 0) > 0 && (
+                                                <span className="live-chip"><span className="room-dot on"></span>{room.memberCount} in</span>
+                                            )}
+                                        </div>
+                                        <p className="room-card-desc">{room.description || 'A focused study group for CMA aspirants.'}</p>
+                                        <div className="room-card-foot">
+                                            <span className={`room-focus ${room.activeSession ? 'on' : ''}`}>
+                                                {room.activeSession || 'No active session'}
+                                            </span>
+                                            <span className="room-card-people">
+                                                <span className="room-members">{room.memberCount || 0}</span>
+                                            </span>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </main>
                 </div>
             </div>
         );
@@ -256,466 +296,273 @@ export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
     // ROOM DETAIL VIEW
     // ============================================
 
-    const tabs: { key: RoomTab; label: string; icon: React.ReactNode }[] = [
-        { key: 'Mission', label: 'Missions', icon: <Icons.Target className="w-5 h-5" /> },
-        { key: 'Focus', label: 'Focus Timer', icon: <Icons.Clock className="w-5 h-5" /> },
-        { key: 'Resources', label: 'Resources', icon: <Icons.BookOpen className="w-5 h-5" /> },
-        { key: 'Discussion', label: 'Discussion', icon: <Icons.MessageCircle className="w-5 h-5" /> },
-        { key: 'Quiz', label: 'Quiz Arena', icon: <Icons.Zap className="w-5 h-5" /> },
-        { key: 'Calendar', label: 'Calendar', icon: <Icons.Calendar className="w-5 h-5" /> },
-        { key: 'Mentors', label: 'Hire Mentor', icon: <Icons.GraduationCap className="w-5 h-5" /> },
-    ];
+    const tabs: RoomTab[] = ['Missions', 'Focus', 'Resources', 'Discussion', 'Quiz', 'Calendar', 'Mentors'];
 
     return (
-        <div className={`flex min-h-full ${STUDENT_PAGE_BG}`}>
-            {/* Sidebar */}
-            <div className="flex w-72 flex-col border-r border-slate-200/90 bg-white/95 backdrop-blur-sm">
-                {/* Room Header */}
-                <div className="border-b border-slate-200/90 p-6">
-                    <button 
-                        type="button"
-                        onClick={() => setSelectedRoom(null)}
-                        className="mb-4 flex items-center gap-1.5 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900"
-                    >
-                        <Icons.ChevronLeft className="h-4 w-4 shrink-0" /> Back to rooms
-                    </button>
-                    <h2 className="text-xl font-bold tracking-tight text-slate-900">{selectedRoom.name}</h2>
-                    <p className="mt-1 text-sm text-slate-600">{onlineMembers.length} members online</p>
-                </div>
-
-                {/* Tab Navigation */}
-                <nav className="flex-1 space-y-1 p-4">
-                    {tabs.map(tab => (
-                        <button
-                            type="button"
-                            key={tab.key}
-                            onClick={() => setActiveTab(tab.key)}
-                            className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium transition-all ${
-                                activeTab === tab.key 
-                                    ? 'bg-brand/10 text-slate-900 ring-1 ring-brand/20' 
-                                    : 'text-slate-600 hover:bg-slate-50'
-                            }`}
-                        >
-                            <span className={activeTab === tab.key ? 'text-brand' : 'text-slate-400'}>{tab.icon}</span>
-                            <span>{tab.label}</span>
+        <div className="proto wall-embedded">
+            <div className="wall" data-page="rooms">
+                <main className="shell-solo shell-rooms">
+                    {/* Room header */}
+                    <div className="room-head">
+                        <button type="button" className="room-back" onClick={() => setSelectedRoom(null)} aria-label="Back to rooms">
+                            <Icons.ChevronLeft className="w-[18px] h-[18px]" />
                         </button>
-                    ))}
-                </nav>
+                        <RoomTile name={selectedRoom.name} size={48} />
+                        <div className="room-head-info">
+                            <div className="room-head-row">
+                                <h1 className="font-display">{selectedRoom.name}</h1>
+                                {(selectedRoom.memberCount || 0) > 0 && (
+                                    <span className="live-chip"><span className="room-dot on"></span>Live</span>
+                                )}
+                            </div>
+                            <p>{(selectedRoom as any).timezone || 'Open room'} · {selectedRoom.memberCount || onlineMembers.length || 0} members</p>
+                        </div>
+                    </div>
 
-                {/* Online Members */}
-                <div className="p-4 border-t border-slate-200">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Online Now</p>
-                    <div className="flex -space-x-2">
-                        {onlineMembers.slice(0, 5).map((_, i) => (
-                            <div 
-                                key={i}
-                                className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-indigo-500 border-2 border-white flex items-center justify-center text-white text-xs font-bold"
+                    {/* Tabs */}
+                    <div className="feed-cats" role="tablist">
+                        {tabs.map((t) => (
+                            <button
+                                key={t}
+                                type="button"
+                                role="tab"
+                                aria-selected={activeTab === t}
+                                className={`cat ${activeTab === t ? 'on' : ''}`}
+                                onClick={() => setActiveTab(t)}
                             >
-                                {String.fromCharCode(65 + i)}
-                            </div>
+                                {t}
+                            </button>
                         ))}
-                        {onlineMembers.length > 5 && (
-                            <div className="w-8 h-8 rounded-full bg-slate-300 border-2 border-white flex items-center justify-center text-slate-600 text-xs font-bold">
-                                +{onlineMembers.length - 5}
-                            </div>
-                        )}
                     </div>
-                </div>
-            </div>
 
-            {/* Main Content */}
-            <div className="flex-1 p-8 overflow-y-auto">
-                {/* MISSIONS TAB */}
-                {activeTab === 'Mission' && (
-                    <div>
-                        <div className="flex justify-between items-center mb-8">
-                            <div>
-                                <h1 className="text-3xl font-black text-slate-900">Mission Board</h1>
-                                <p className="text-slate-500">Track group goals and deadlines</p>
-                            </div>
-                            <button className="px-6 py-3 bg-purple-500 text-white rounded-xl font-bold hover:bg-purple-600 flex items-center gap-2">
-                                <Icons.Plus className="w-5 h-5" /> New Mission
-                            </button>
-                        </div>
-                        
-                        <div className="grid gap-6">
-                            {missions.length === 0 ? (
-                                <div className="flex flex-col items-center py-16 gap-2 text-slate-400">
-                                    <Icons.Target className="w-8 h-8 text-slate-300" />
-                                    <span className="text-sm font-bold">No missions yet</span>
-                                    <span className="text-xs">Create a mission to track group goals</span>
-                                </div>
-                            ) : missions.map(mission => (
-                                <div key={mission.id} className="bg-white rounded-2xl p-6 border border-slate-200">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div>
-                                            <h3 className="text-xl font-bold text-slate-900">{mission.title}</h3>
-                                            <p className="text-slate-500 mt-1">{mission.description}</p>
-                                        </div>
-                                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                                            mission.status === 'completed' ? 'bg-emerald-100 text-emerald-700' :
-                                            mission.status === 'overdue' ? 'bg-red-100 text-red-700' :
-                                            'bg-amber-100 text-amber-700'
-                                        }`}>
-                                            {mission.status.toUpperCase()}
-                                        </span>
-                                    </div>
-                                    <div className="mb-4">
-                                        <div className="flex justify-between text-sm mb-2">
-                                            <span className="text-slate-500">Progress</span>
-                                            <span className="font-bold text-slate-700">{mission.progress}%</span>
-                                        </div>
-                                        <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all"
-                                                style={{ width: `${mission.progress}%` }}
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-4 text-sm text-slate-500">
-                                        <span className="flex items-center gap-1">
-                                            <Icons.Calendar className="w-4 h-4" />
-                                            Due: {new Date(mission.deadline).toLocaleDateString()}
-                                        </span>
-                                        <span className="flex items-center gap-1">
-                                            <Icons.Users className="w-4 h-4" />
-                                            All members
-                                        </span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {/* FOCUS TIMER TAB */}
-                {activeTab === 'Focus' && (
-                    <div className="max-w-2xl mx-auto text-center">
-                        <h1 className="text-3xl font-black text-slate-900 mb-2">Focus Timer</h1>
-                        <p className="text-slate-500 mb-12">Study together in sync. When one focuses, all focus.</p>
-                        
-                        {focusSession ? (
-                            <div className="bg-white rounded-3xl p-12 border border-slate-200 shadow-xl">
-                                <div className="text-8xl font-mono font-black text-slate-900 mb-4">
-                                    {formatTime(timerSeconds)}
-                                </div>
-                                <p className="text-slate-500 mb-8">
-                                    {focusSession.status === 'active' ? '🔥 Focus Mode Active' : '☕ Break Time'}
-                                </p>
-                                <div className="flex justify-center gap-4 mb-8">
-                                    {focusSession.participants.slice(0, 5).map((_, i) => (
-                                        <div key={i} className="w-10 h-10 rounded-full bg-emerald-500 border-3 border-white shadow-lg flex items-center justify-center text-white text-xs font-bold">
-                                            ✓
-                                        </div>
-                                    ))}
-                                </div>
-                                <button 
-                                    onClick={endFocusSession}
-                                    className="px-8 py-4 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600"
-                                >
-                                    End Session
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="bg-white rounded-3xl p-12 border border-slate-200">
-                                <p className="text-slate-500 mb-8">Choose a focus duration</p>
-                                <div className="grid grid-cols-3 gap-4 mb-8">
-                                    {[25, 45, 60].map(mins => (
-                                        <button
-                                            key={mins}
-                                            onClick={() => startFocusSession(mins)}
-                                            className="p-6 bg-slate-50 rounded-2xl hover:bg-purple-50 hover:border-purple-300 border-2 border-transparent transition-all"
-                                        >
-                                            <div className="text-4xl font-black text-slate-900">{mins}</div>
-                                            <div className="text-sm text-slate-500">minutes</div>
-                                        </button>
-                                    ))}
-                                </div>
-                                <p className="text-sm text-slate-400">
-                                    Starting a session notifies all online members
-                                </p>
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {/* RESOURCES TAB */}
-                {activeTab === 'Resources' && (
-                    <div>
-                        <div className="flex justify-between items-center mb-8">
-                            <div>
-                                <h1 className="text-3xl font-black text-slate-900">Resource Vault</h1>
-                                <p className="text-slate-500">Shared notes, links, and study materials</p>
-                            </div>
-                            <button className="px-6 py-3 bg-purple-500 text-white rounded-xl font-bold hover:bg-purple-600 flex items-center gap-2">
-                                <Icons.Plus className="w-5 h-5" /> Add Resource
-                            </button>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {resources.length === 0 ? (
-                                <div className="col-span-2 flex flex-col items-center py-16 gap-2 text-slate-400">
-                                    <Icons.BookOpen className="w-8 h-8 text-slate-300" />
-                                    <span className="text-sm font-bold">No resources yet</span>
-                                    <span className="text-xs">Add the first resource to share with your room</span>
-                                </div>
-                            ) : resources.map(resource => (
-                                <div key={resource.id} className="bg-white rounded-xl p-5 border border-slate-200 hover:shadow-md transition-all">
-                                    <div className="flex items-start gap-4">
-                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                                            resource.type === 'note' ? 'bg-blue-100 text-blue-600' :
-                                            resource.type === 'link' ? 'bg-emerald-100 text-emerald-600' :
-                                            'bg-purple-100 text-purple-600'
-                                        }`}>
-                                            {resource.type === 'note' ? <Icons.FileText className="w-5 h-5" /> :
-                                             resource.type === 'link' ? <Icons.Link className="w-5 h-5" /> :
-                                             <Icons.BookOpen className="w-5 h-5" />}
-                                        </div>
-                                        <div className="flex-1">
-                                            <h3 className="font-bold text-slate-900">{resource.title}</h3>
-                                            <div className="flex gap-2 mt-2">
-                                                {resource.tags.map(tag => (
-                                                    <span key={tag} className="px-2 py-0.5 bg-slate-100 text-slate-500 text-xs rounded-full">
-                                                        {tag}
-                                                    </span>
-                                                ))}
+                    {/* MISSIONS */}
+                    {activeTab === 'Missions' && (
+                        <div className="missions">
+                            {missions.length === 0
+                                ? emptyState(<Icons.Target className="w-5 h-5" />, 'No missions yet', 'Create a mission to track group goals together.')
+                                : missions.map(mission => (
+                                    <div key={mission.id} className="post mission-card">
+                                        <div className="mission-card-top">
+                                            <div>
+                                                <h3>{mission.title}</h3>
+                                                <p>{mission.description}</p>
                                             </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {/* DISCUSSION TAB */}
-                {activeTab === 'Discussion' && (
-                    <div>
-                        <div className="flex justify-between items-center mb-8">
-                            <div>
-                                <h1 className="text-3xl font-black text-slate-900">Discussion</h1>
-                                <p className="text-slate-500">Ask questions, share insights</p>
-                            </div>
-                            <button className="px-6 py-3 bg-purple-500 text-white rounded-xl font-bold hover:bg-purple-600 flex items-center gap-2">
-                                <Icons.Plus className="w-5 h-5" /> New Topic
-                            </button>
-                        </div>
-                        
-                        <div className="space-y-4">
-                            {discussions.length === 0 ? (
-                                <div className="flex flex-col items-center py-16 gap-2 text-slate-400">
-                                    <Icons.MessageCircle className="w-8 h-8 text-slate-300" />
-                                    <span className="text-sm font-bold">No discussions yet</span>
-                                    <span className="text-xs">Start a topic to kick off the conversation</span>
-                                </div>
-                            ) : discussions.map(discussion => (
-                                <div key={discussion.id} className="bg-white rounded-xl p-6 border border-slate-200">
-                                    {discussion.pinned && (
-                                        <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded mb-2 inline-block">
-                                            📌 Pinned
-                                        </span>
-                                    )}
-                                    <h3 className="text-xl font-bold text-slate-900 mb-2">{discussion.topic}</h3>
-                                    <p className="text-slate-600 mb-4">{discussion.content}</p>
-                                    <div className="flex items-center gap-4 text-sm text-slate-400 mb-4">
-                                        <span>by {discussion.author_name}</span>
-                                        <span>•</span>
-                                        <span>{new Date(discussion.created_at).toLocaleString()}</span>
-                                    </div>
-
-                                    {discussion.replies.length > 0 && (
-                                        <div className="border-t border-slate-100 pt-4 mt-4 space-y-3">
-                                            {discussion.replies.map(reply => (
-                                                <div key={reply.id} className="bg-slate-50 rounded-lg p-4">
-                                                    <p className="text-slate-700">{reply.content}</p>
-                                                    <p className="text-xs text-slate-400 mt-2">— {reply.author_name}</p>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-
-                                    <div className="mt-4 flex gap-2">
-                                        <input
-                                            type="text"
-                                            placeholder="Write a reply..."
-                                            className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-purple-400"
-                                        />
-                                        <button className="px-4 py-2 bg-purple-500 text-white rounded-lg font-bold text-sm hover:bg-purple-600">
-                                            Reply
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {/* QUIZ ARENA TAB */}
-                {activeTab === 'Quiz' && (
-                    <div className="max-w-3xl mx-auto text-center">
-                        <h1 className="text-3xl font-black text-slate-900 mb-2">Quiz Arena</h1>
-                        <p className="text-slate-500 mb-12">Challenge your roommates to MCQ battles</p>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                            <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl p-8 text-white text-left">
-                                <div className="text-4xl mb-4">⚔️</div>
-                                <h3 className="text-xl font-bold mb-2">Quick Duel</h3>
-                                <p className="text-purple-100 mb-6">10 MCQs, 1v1 battle, fastest wins</p>
-                                <button className="w-full py-3 bg-white text-purple-600 rounded-xl font-bold hover:bg-purple-50">
-                                    Start Duel
-                                </button>
-                            </div>
-                            
-                            <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-8 text-white text-left">
-                                <div className="text-4xl mb-4">🏆</div>
-                                <h3 className="text-xl font-bold mb-2">Room Battle</h3>
-                                <p className="text-amber-100 mb-6">25 MCQs, all members compete</p>
-                                <button className="w-full py-3 bg-white text-amber-600 rounded-xl font-bold hover:bg-amber-50">
-                                    Start Battle
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="bg-white rounded-2xl p-6 border border-slate-200">
-                            <h3 className="font-bold text-slate-900 mb-4">🏅 Room Leaderboard</h3>
-                            <div className="flex flex-col items-center py-8 gap-2 text-slate-400">
-                                <span className="text-sm font-bold">No scores yet</span>
-                                <span className="text-xs">Start a quiz to see rankings</span>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* CALENDAR TAB */}
-                {activeTab === 'Calendar' && (
-                    <div>
-                        <div className="flex justify-between items-center mb-8">
-                            <div>
-                                <h1 className="text-3xl font-black text-slate-900">Group Calendar</h1>
-                                <p className="text-slate-500">Schedule study sessions and deadlines</p>
-                            </div>
-                            <button className="px-6 py-3 bg-purple-500 text-white rounded-xl font-bold hover:bg-purple-600 flex items-center gap-2">
-                                <Icons.Plus className="w-5 h-5" /> Add Event
-                            </button>
-                        </div>
-                        
-                        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-                            {/* Calendar Header */}
-                            <div className="bg-slate-50 p-4 border-b border-slate-200 flex justify-between items-center">
-                                <button className="p-2 hover:bg-slate-200 rounded-lg">
-                                    <Icons.ChevronLeft className="w-5 h-5" />
-                                </button>
-                                <h3 className="font-bold text-slate-900">{new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</h3>
-                                <button className="p-2 hover:bg-slate-200 rounded-lg">
-                                    <Icons.ChevronRight className="w-5 h-5" />
-                                </button>
-                            </div>
-                            
-                            {/* Upcoming Events */}
-                            <div className="p-6">
-                                <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Upcoming Events</h4>
-                                <div className="space-y-4">
-                                    {calendarEvents.length === 0 ? (
-                                        <div className="flex flex-col items-center py-12 gap-2 text-slate-400">
-                                            <Icons.Calendar className="w-8 h-8 text-slate-300" />
-                                            <span className="text-sm font-bold">No events scheduled</span>
-                                            <span className="text-xs">Add an event to coordinate with your room</span>
-                                        </div>
-                                    ) : calendarEvents.map(event => (
-                                        <div key={event.id} className="flex gap-4 p-4 bg-slate-50 rounded-xl">
-                                            <div
-                                                className="w-1 rounded-full"
-                                                style={{ backgroundColor: event.color }}
-                                            />
-                                            <div className="flex-1">
-                                                <h4 className="font-bold text-slate-900">{event.title}</h4>
-                                                <p className="text-sm text-slate-500">{event.description}</p>
-                                                <div className="flex items-center gap-4 mt-2 text-xs text-slate-400">
-                                                    <span className="flex items-center gap-1">
-                                                        <Icons.Calendar className="w-3 h-3" />
-                                                        {new Date(event.start_time).toLocaleDateString()}
-                                                    </span>
-                                                    <span className="flex items-center gap-1">
-                                                        <Icons.Clock className="w-3 h-3" />
-                                                        {new Date(event.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <span className={`px-3 py-1 h-fit rounded-full text-xs font-bold ${
-                                                event.event_type === 'study' ? 'bg-emerald-100 text-emerald-700' :
-                                                event.event_type === 'mock_test' ? 'bg-red-100 text-red-700' :
-                                                event.event_type === 'mentor_session' ? 'bg-purple-100 text-purple-700' :
-                                                'bg-slate-100 text-slate-600'
-                                            }`}>
-                                                {event.event_type.replace('_', ' ')}
+                                            <span className={`status-chip ${mission.status === 'overdue' ? 'status-bad' : ''}`}>
+                                                {mission.status === 'overdue' ? 'Overdue' : mission.status === 'completed' ? 'Done' : 'On track'}
                                             </span>
                                         </div>
-                                    ))}
+                                        <div className="mission-row">
+                                            <span>Progress</span>
+                                            <strong>{mission.progress}%</strong>
+                                        </div>
+                                        <div className="mission-bar"><i style={{ width: `${mission.progress}%` }}></i></div>
+                                        <div className="mission-card-foot">
+                                            <span className="mission-due">
+                                                <Icons.Clock className="w-[13px] h-[13px]" /> Due {new Date(mission.deadline).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            <button type="button" className="feed-prompt mission-new">
+                                <span className="feed-prompt-ic"><Icons.Plus className="w-4 h-4" /></span>
+                                <span>New mission for the room…</span>
+                            </button>
+                        </div>
+                    )}
+
+                    {/* FOCUS */}
+                    {activeTab === 'Focus' && (
+                        <div className="post focus-card">
+                            <div className="focus-wrap">
+                                <p className="focus-tag">Study together in sync — when one focuses, all focus.</p>
+                                <div className="focus-ring-wrap">
+                                    <svg className="focus-ring" viewBox="0 0 120 120">
+                                        <circle className="focus-ring-bg" cx="60" cy="60" r="52"></circle>
+                                        <circle
+                                            className="focus-ring-fg" cx="60" cy="60" r="52"
+                                            style={{ strokeDasharray: RING_DASH, strokeDashoffset: RING_DASH * (1 - focusFrac) }}
+                                        ></circle>
+                                    </svg>
+                                    <div className="focus-ring-label">
+                                        <strong className="font-display">{formatTime(focusSession ? focusRemaining : focusTotal)}</strong>
+                                        <span>{focusSession ? 'focus' : 'ready'}</span>
+                                    </div>
+                                </div>
+
+                                {!focusSession ? (
+                                    <>
+                                        <div className="focus-presets">
+                                            {[25, 45, 60].map((m) => (
+                                                <button key={m} type="button" className="seg" onClick={() => startFocusSession(m)}>
+                                                    {m} min
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <p style={{ fontSize: '0.76rem', color: 'var(--muted)', marginTop: 10 }}>
+                                            Starting a session notifies all online members
+                                        </p>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="focus-people">
+                                            <span>{focusSession.participants.length} in this session</span>
+                                        </div>
+                                        <button type="button" className="focus-end" onClick={endFocusSession}>End session</button>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* RESOURCES */}
+                    {activeTab === 'Resources' && (
+                        <div className="missions">
+                            {resources.length === 0
+                                ? emptyState(<Icons.BookOpen className="w-5 h-5" />, 'No resources yet', 'Add the first resource to share with your room.')
+                                : resources.map(resource => (
+                                    <div key={resource.id} className="post res-row">
+                                        <span className="res-ic">
+                                            {resource.type === 'note' ? <Icons.FileText className="w-[19px] h-[19px]" /> :
+                                             resource.type === 'link' ? <Icons.Link className="w-[19px] h-[19px]" /> :
+                                             <Icons.BookOpen className="w-[19px] h-[19px]" />}
+                                        </span>
+                                        <div className="res-info">
+                                            <strong>{resource.title}</strong>
+                                            <span>shared by {resource.uploaded_by}</span>
+                                        </div>
+                                        {resource.tags.length > 0 && <span className="res-meta">{resource.tags[0]}</span>}
+                                    </div>
+                                ))}
+                            <button type="button" className="feed-prompt mission-new">
+                                <span className="feed-prompt-ic"><Icons.Plus className="w-4 h-4" /></span>
+                                <span>Add a resource…</span>
+                            </button>
+                        </div>
+                    )}
+
+                    {/* DISCUSSION */}
+                    {activeTab === 'Discussion' && (
+                        <div className="post">
+                            <div className="discuss room-discuss">
+                                {discussions.length === 0 && (
+                                    <p style={{ fontSize: '0.8rem', color: 'var(--muted)', padding: '6px 0' }}>
+                                        No messages yet — say hello to the room.
+                                    </p>
+                                )}
+                                {discussions.map((d) => (
+                                    <div key={d.id} className="comment">
+                                        <div style={{ width: 30, height: 30, borderRadius: 10, flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--accent-soft)', color: 'var(--accent-deep)', fontWeight: 800, fontSize: 12 }}>
+                                            {(d.author_name || 'A').charAt(0)}
+                                        </div>
+                                        <div className="comment-body">
+                                            <div className="comment-head">
+                                                <strong>{d.author_name}</strong>
+                                                <span className="comment-time">{new Date(d.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                            </div>
+                                            <p>{d.content}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                                <div className="comment-input">
+                                    <input type="text" placeholder="Message the room…" />
+                                    <button type="button" className="comment-send" aria-label="Send">
+                                        <Icons.Send className="w-[15px] h-[15px]" />
+                                    </button>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                )}
+                    )}
 
-                {/* MENTORS TAB */}
-                {activeTab === 'Mentors' && (
-                    <div>
-                        <div className="mb-8">
-                            <h1 className="text-3xl font-black text-slate-900">Hire a Mentor</h1>
-                            <p className="text-slate-500">Book expert CMA instructors for your group</p>
-                        </div>
-                        
-                        <div className="grid gap-6">
-                            {mentors.length === 0 ? (
-                                <div className="flex flex-col items-center py-16 gap-2 text-slate-400">
-                                    <Icons.GraduationCap className="w-8 h-8 text-slate-300" />
-                                    <span className="text-sm font-bold">No mentors available</span>
-                                    <span className="text-xs">Mentors will appear here once assigned to this room</span>
+                    {/* QUIZ ARENA */}
+                    {activeTab === 'Quiz' && (
+                        <div className="missions">
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
+                                <div className="post mission-card">
+                                    <h3 className="font-display" style={{ color: 'var(--ink)' }}>⚔️ Quick Duel</h3>
+                                    <p style={{ color: 'var(--muted)', fontSize: '0.86rem', margin: '6px 0 14px' }}>10 MCQs, 1v1 battle, fastest wins.</p>
+                                    <button type="button" className="clay-cta">Start duel</button>
                                 </div>
-                            ) : mentors.map(mentor => (
-                                <div key={mentor.id} className="bg-white rounded-2xl p-6 border border-slate-200 flex gap-6">
-                                    <img
-                                        src={mentor.avatar}
-                                        alt={mentor.name}
-                                        className="w-24 h-24 rounded-2xl object-cover"
-                                    />
-                                    <div className="flex-1">
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <h3 className="text-xl font-bold text-slate-900">{mentor.name}</h3>
-                                                <div className="flex items-center gap-2 mt-1">
-                                                    <span className="text-amber-500">★</span>
-                                                    <span className="font-bold text-slate-700">{mentor.rating}</span>
-                                                    <span className="text-slate-400">• {mentor.sessions_completed} sessions</span>
+                                <div className="post mission-card">
+                                    <h3 className="font-display" style={{ color: 'var(--ink)' }}>🏆 Room Battle</h3>
+                                    <p style={{ color: 'var(--muted)', fontSize: '0.86rem', margin: '6px 0 14px' }}>25 MCQs, all members compete.</p>
+                                    <button type="button" className="clay-cta">Start battle</button>
+                                </div>
+                            </div>
+                            <div className="post" style={{ marginTop: 16 }}>
+                                <p style={eyebrow}>Room leaderboard</p>
+                                <p style={{ color: 'var(--muted)', fontSize: '0.84rem' }}>No scores yet — start a quiz to see rankings.</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* CALENDAR */}
+                    {activeTab === 'Calendar' && (
+                        <div className="missions">
+                            <div className="post">
+                                <p style={eyebrow}>
+                                    {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} · Upcoming events
+                                </p>
+                                {calendarEvents.length === 0 ? (
+                                    <p style={{ color: 'var(--muted)', fontSize: '0.84rem' }}>
+                                        No events scheduled — add one to coordinate with your room.
+                                    </p>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                        {calendarEvents.map(event => (
+                                            <div key={event.id} style={{ display: 'flex', gap: 12, padding: '12px 14px', borderRadius: 14, background: 'var(--inset-bg)', boxShadow: 'var(--nm-inset-sm)' }}>
+                                                <div style={{ width: 4, borderRadius: 4, background: event.color || 'var(--accent)' }} />
+                                                <div style={{ flex: 1 }}>
+                                                    <strong style={{ color: 'var(--ink)', fontSize: '0.9rem' }}>{event.title}</strong>
+                                                    <p style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>{event.description}</p>
+                                                    <p style={{ color: 'var(--muted)', fontSize: '0.72rem', marginTop: 4 }}>
+                                                        {new Date(event.start_time).toLocaleDateString()} · {new Date(event.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    </p>
+                                                </div>
+                                                <span className="status-chip">{event.event_type.replace('_', ' ')}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                            <button type="button" className="feed-prompt mission-new">
+                                <span className="feed-prompt-ic"><Icons.Plus className="w-4 h-4" /></span>
+                                <span>Add an event…</span>
+                            </button>
+                        </div>
+                    )}
+
+                    {/* MENTORS */}
+                    {activeTab === 'Mentors' && (
+                        <div className="missions">
+                            {mentors.length === 0
+                                ? emptyState(<Icons.GraduationCap className="w-5 h-5" />, 'No mentors available', 'Mentors will appear here once assigned to this room.')
+                                : mentors.map(mentor => (
+                                    <div key={mentor.id} className="post mentor-card" style={{ display: 'flex', gap: 16 }}>
+                                        <img src={mentor.avatar} alt={mentor.name} style={{ width: 72, height: 72, borderRadius: 20, objectFit: 'cover', boxShadow: 'var(--nm-xs)' }} />
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
+                                                <div>
+                                                    <strong className="font-display" style={{ fontSize: '1.05rem', color: 'var(--ink)' }}>{mentor.name}</strong>
+                                                    <p style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>★ {mentor.rating} · {mentor.sessions_completed} sessions</p>
+                                                </div>
+                                                <div style={{ textAlign: 'right' }}>
+                                                    <strong style={{ fontSize: '1.2rem', color: 'var(--ink)' }}>${mentor.hourly_rate}</strong>
+                                                    <p style={{ fontSize: '0.68rem', color: 'var(--muted)' }}>per hour</p>
                                                 </div>
                                             </div>
-                                            <div className="text-right">
-                                                <div className="text-2xl font-black text-slate-900">${mentor.hourly_rate}</div>
-                                                <div className="text-xs text-slate-400">per hour</div>
+                                            <p style={{ fontSize: '0.84rem', color: 'var(--muted)', margin: '8px 0' }}>{mentor.bio}</p>
+                                            <div className="post-tags" style={{ marginBottom: 10 }}>
+                                                {mentor.specialties.map(spec => <span key={spec} className="tag">{spec}</span>)}
                                             </div>
-                                        </div>
-                                        <p className="text-slate-600 mt-3">{mentor.bio}</p>
-                                        <div className="flex flex-wrap gap-2 mt-3">
-                                            {mentor.specialties.map(spec => (
-                                                <span key={spec} className="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-bold rounded-full">
-                                                    {spec}
-                                                </span>
-                                            ))}
-                                        </div>
-                                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-100">
-                                            <div className="text-sm text-slate-500">
-                                                <span className="font-bold">Available:</span> {mentor.available_slots.join(', ')}
-                                            </div>
-                                            <button className="px-6 py-2 bg-purple-500 text-white rounded-xl font-bold hover:bg-purple-600">
-                                                Book Session
+                                            <button type="button" className="clay-cta" style={{ width: 'auto', padding: '10px 22px' }}>
+                                                Book session
                                             </button>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))}
                         </div>
-                    </div>
-                )}
+                    )}
+                </main>
             </div>
         </div>
     );

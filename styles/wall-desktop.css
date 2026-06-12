@@ -1,0 +1,145 @@
+/* ============================================================
+   CoStudy — DESKTOP AIR + TYPE POLISH
+   Loaded after clay.css. Three jobs:
+   1 · Content spans the same width as the top menu bar (1240px)
+   2 · Typography system: Bricolage Grotesque display + refined chips
+   3 · Generous spacing between cards / boxes
+   ============================================================ */
+
+/* ===== 1 · Containers match the topbar ===== */
+.topbar-inner { padding: 0 32px; }
+.shell-solo { max-width: 1240px; padding: 104px 32px 72px; }
+.shell-wide { max-width: 1240px; }
+
+/* Wall pages: one neat centered feed — just posts */
+.shell-feed { max-width: 824px; }
+
+/* Grids breathe and use the full width */
+.rooms-grid { grid-template-columns: repeat(auto-fill, minmax(min(330px, 100%), 1fr)); gap: 22px; margin-top: 12px; }
+.missions { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(430px, 100%), 1fr)); gap: 18px; }
+.mission-new { grid-column: 1 / -1; }
+.mock-grid-2, .mock-grid-3 { gap: 20px; }
+.deck-wrap { grid-template-columns: 300px minmax(0, 1fr); gap: 24px; }
+.deck-panel { padding: 22px; }
+.deck-msgs { max-height: 520px; }
+.dm-wrap { grid-template-columns: 360px minmax(0, 1fr); gap: 20px; }
+.dm-thread { min-height: 540px; }
+.cc-stats, .prof-stats { gap: 14px; }
+.focus-card { max-width: 660px; margin: 0 auto; width: 100%; }
+
+/* ===== 2 · Typography ===== */
+.font-display,
+.mentor-match,
+.mentor-rate strong {
+  font-family: 'Bricolage Grotesque', 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
+.topbar-logo {
+  font-family: 'Bricolage Grotesque', 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-weight: 800; font-size: 1.22rem; letter-spacing: -0.015em;
+}
+
+/* Brand wordmark — highlighter swipe over “co”, coral full stop */
+.co-wordmark {
+  font-family: 'Bricolage Grotesque', 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-weight: 800; letter-spacing: -0.04em; line-height: 1.15;
+  white-space: nowrap; color: var(--ink); display: inline-block; position: relative;
+}
+.co-wordmark .co-hl { position: relative; display: inline-block; }
+.co-wordmark .co-hl > span { position: relative; z-index: 1; }
+.co-wordmark .co-swipe {
+  position: absolute; left: -0.14em; top: 0.13em;
+  width: calc(100% + 0.60em); height: 0.84em;
+  pointer-events: none; z-index: 2;
+  transform: rotate(-1.8deg);
+}
+.co-wordmark .co-dot { color: var(--accent); }
+.login-logo { font-family: 'Bricolage Grotesque', 'Plus Jakarta Sans', system-ui, sans-serif; font-weight: 800; }
+
+/* Page headers — confident, tight, large */
+.feed-hello { margin-bottom: 24px; }
+.feed-hello h1 { font-size: 2.4rem; font-weight: 700; letter-spacing: -0.035em; line-height: 1.05; }
+.feed-hello p { font-size: 0.97rem; margin-top: 6px; max-width: 60ch; }
+
+.room-head-row h1 { font-size: 1.9rem; font-weight: 700; letter-spacing: -0.03em; }
+.login-headline { font-weight: 700; letter-spacing: -0.03em; }
+.login-form-title { font-size: 1.8rem; font-weight: 700; letter-spacing: -0.025em; }
+.prof-id-tx > strong { font-size: 1.7rem; font-weight: 700; letter-spacing: -0.03em; }
+
+/* Card titles share the display face */
+.room-card-name strong,
+.mission-card h3,
+.mock-card h3,
+.mentor-id strong,
+.res-info strong,
+.dm-empty p,
+.cc-table-title,
+.composer-head h3,
+.room-row-info strong {
+  font-family: 'Bricolage Grotesque', 'Plus Jakarta Sans', system-ui, sans-serif;
+  letter-spacing: -0.015em;
+}
+.room-card-name strong { font-size: 1.12rem; font-weight: 700; }
+.room-card-name span { margin-top: 1px; }
+.mission-card h3 { font-size: 1.06rem; font-weight: 700; }
+.mock-card h3 { font-size: 1.3rem; font-weight: 700; margin-top: 12px; }
+.mentor-id strong { font-size: 1.08rem; font-weight: 700; }
+.res-info strong { font-size: 0.92rem; font-weight: 700; }
+.cc-table-title { font-size: 1.05rem; }
+.composer-head h3 { font-size: 1.15rem; }
+
+/* Section eyebrows — wider tracking, calmer */
+.mock-h2 { font-size: 0.68rem; letter-spacing: 0.2em; margin: 34px 0 16px; }
+.rail-title { font-size: 0.68rem; letter-spacing: 0.16em; }
+.prof-sec-head { margin: 34px 0 16px; }
+
+/* Tags & chips — quieter, better set */
+.tag { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.005em; padding: 5px 13px; }
+.type-chip { font-weight: 700; letter-spacing: 0.07em; }
+.role-chip { font-weight: 700; }
+.live-chip { font-weight: 700; }
+.status-chip { font-weight: 700; }
+.mock-badge { font-weight: 700; }
+
+/* Messages unread badge (was unstyled) */
+.sidenav-badge {
+  min-width: 19px; height: 19px; padding: 0 6px; flex: none;
+  border-radius: 999px; background: var(--accent); color: #fff;
+  font-size: 0.62rem; font-weight: 800;
+  display: inline-flex; align-items: center; justify-content: center;
+  box-shadow: var(--clay-chip);
+}
+
+/* ===== 3 · Spacing between boxes ===== */
+.feed-posts { gap: 20px; }
+.feed-cats { padding: 6px 4px 16px; }
+
+.post { padding: 20px 22px 14px; border-radius: 26px; }
+.pin-strip { margin: -20px -22px 16px; padding: 9px 22px; }
+.discuss { margin: 8px -22px -14px; padding: 16px 22px 18px; }
+
+.room-card { padding: 22px; gap: 12px; }
+.room-card-desc { font-size: 0.86rem; }
+.mission-card { padding-bottom: 18px; }
+.res-row { padding: 18px 22px; }
+.mock-card { padding: 24px; }
+.mentor-card { padding: 22px; gap: 13px; }
+.prof-card { padding: 26px; }
+.prof-stats { margin-top: 22px; }
+.mock-hybrid { margin-top: 30px; padding: 22px 24px; }
+
+/* Compact density keeps its tighter feel */
+.proto.dens-compact .post { padding: 15px 17px 10px; }
+.proto.dens-compact .pin-strip { margin: -15px -17px 12px; padding: 8px 17px; }
+.proto.dens-compact .discuss { margin: 6px -17px -10px; padding: 14px 17px 16px; }
+.proto.dens-compact .feed-posts { gap: 13px; }
+
+/* ===== Mobile guards ===== */
+@media (max-width: 880px) {
+  .topbar-inner { padding: 0 16px; }
+  .shell-solo { padding: 84px 16px 130px; }
+  .feed-hello h1 { font-size: 1.65rem; }
+  .room-head-row h1 { font-size: 1.35rem; }
+  .prof-id-tx > strong { font-size: 1.4rem; }
+  .mock-card h3 { font-size: 1.15rem; }
+}

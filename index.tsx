@@ -1,4 +1,10 @@
 import './main.css';
+// CoStudy wall redesign — clay design system (order matters: base → pages → clay → desktop → app patches)
+import './styles/wall-base.css';
+import './styles/wall-pages.css';
+import './styles/wall-clay.css';
+import './styles/wall-desktop.css';
+import './styles/wall-app.css';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';

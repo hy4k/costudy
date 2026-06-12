@@ -1,0 +1,251 @@
+/* ============================================================
+   CoStudy — app integration patches for the wall redesign
+   Loaded last. Bridges the prototype CSS into the live app.
+   ============================================================ */
+
+/* Logo fallbacks — the 10A wordmark is used outside .proto scope
+   (Layout header, auth screens, landing). Coral accent + warm ink
+   defaults; inside .proto these inherit the page palette instead. */
+.co-wordmark {
+  --ink: #46271e;
+  --accent: #e15549;
+}
+.proto .co-wordmark,
+.login .co-wordmark {
+  --ink: inherit;
+  --accent: inherit;
+}
+.co-wordmark.co-dark { --ink: #fdf6f2; }
+
+/* Soft clay capsule for the nav/elevated logo variant */
+.co-capsule {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px 7px;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #fbeee7, #f6e3da);
+  box-shadow:
+    -4px -4px 9px rgba(255, 252, 248, 0.9),
+    5px 6px 12px rgba(190, 131, 106, 0.35);
+}
+
+/* Embedded mode — the wall view renders inside the app Layout,
+   which provides its own header, so cancel the fixed-topbar offset. */
+.proto.wall-embedded .shell-solo {
+  padding-top: 28px;
+  min-height: auto;
+}
+.proto.wall-embedded {
+  min-height: 100%;
+  background: var(--paper);
+}
+
+/* Toast (app-level feedback, clay style) */
+.wall-toast {
+  position: fixed;
+  top: 84px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 22px;
+  border-radius: 18px;
+  background: linear-gradient(150deg, var(--accent-deep, #9c2a20), var(--accent, #e15549));
+  color: #fff8f4;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 20px 50px -12px rgba(89, 11, 11, 0.45);
+  animation: wall-toast-in 0.25s ease-out;
+}
+@keyframes wall-toast-in {
+  from { opacity: 0; transform: translate(-50%, -10px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* Floating compose button (mobile reach, clay) */
+.wall-fab {
+  position: fixed;
+  bottom: 30px;
+  right: 24px;
+  z-index: 30;
+  width: 56px;
+  height: 56px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: var(--clay-bg, linear-gradient(150deg, #ef8276, #e15549 42%, #b73a2e));
+  box-shadow: var(--nm-sm, 0 14px 34px -10px rgba(156, 42, 32, 0.5)), 0 14px 34px -10px rgba(156, 42, 32, 0.45);
+  transition: transform 0.2s;
+}
+.wall-fab:hover { transform: scale(1.06); }
+.wall-fab:active { transform: scale(0.95); }
+@media (min-width: 881px) { .wall-fab { bottom: 40px; right: 40px; } }
+
+/* Clay-styled secondary modals (audit / alignment) reuse composer chrome */
+.clay-modal {
+  background: var(--raised-bg, linear-gradient(145deg, #fbeee7, #f3e0d6));
+  border-radius: 26px;
+  box-shadow: var(--shadow-pop, 0 30px 60px -24px rgba(120, 60, 40, 0.45));
+  width: 100%;
+  max-width: 720px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 26px 28px;
+}
+.clay-modal::-webkit-scrollbar { width: 5px; }
+
+.clay-option {
+  width: 100%;
+  text-align: left;
+  padding: 13px 15px;
+  border-radius: 16px;
+  border: 1.5px solid var(--line, #e9d3c6);
+  background: var(--card, #fbeee7);
+  color: var(--muted, #a17f6f);
+  font-size: 0.8rem;
+  font-weight: 700;
+  transition: all 0.15s;
+}
+.clay-option:hover { border-color: var(--accent-line, #f0c6b7); color: var(--ink, #46271e); }
+.clay-option.on {
+  border-color: var(--accent, #e15549);
+  background: var(--accent-soft, #f8dcd2);
+  color: var(--accent-deep, #9c2a20);
+  box-shadow: var(--nm-xs, none);
+}
+
+.clay-textarea {
+  width: 100%;
+  border: 1.5px solid var(--line, #e9d3c6);
+  border-radius: 16px;
+  background: var(--inset-bg, #f7ece5);
+  box-shadow: var(--nm-inset-sm, inset 2px 2px 5px rgba(190, 131, 106, 0.25));
+  padding: 14px 16px;
+  font-size: 0.88rem;
+  color: var(--ink, #46271e);
+  outline: none;
+  resize: none;
+}
+.clay-textarea:focus { border-color: var(--accent-line, #f0c6b7); }
+
+.clay-cta {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 16px;
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: #fff;
+  background: var(--clay-bg, linear-gradient(150deg, #ef8276, #e15549 42%, #b73a2e));
+  box-shadow: var(--clay-chip, 0 10px 26px -8px rgba(156, 42, 32, 0.45));
+  transition: opacity 0.15s, transform 0.1s;
+}
+.clay-cta:hover { opacity: 0.94; }
+.clay-cta:active { transform: scale(0.985); }
+.clay-cta:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ===== App chrome (Layout) ===== */
+/* The topbar participates in the Layout flex column instead of fixed overlay */
+.proto.app-chrome { background: var(--paper); }
+.proto.app-chrome .topbar { position: relative; }
+.proto.app-chrome .topnav-item { white-space: nowrap; }
+
+/* Notification dropdown — clay panel */
+.notif-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 120;
+  width: 320px;
+  max-width: calc(100vw - 24px);
+  border-radius: 22px;
+  background: var(--raised-bg, linear-gradient(145deg, #fbeee7, #f3e0d6));
+  box-shadow: var(--shadow-pop, 0 30px 60px -24px rgba(120, 60, 40, 0.45));
+  overflow: hidden;
+}
+.notif-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line, #e9d3c6);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted, #a17f6f);
+}
+.notif-head button { font-size: 0.68rem; font-weight: 800; color: var(--accent-deep, #9c2a20); }
+.notif-list { max-height: 320px; overflow-y: auto; }
+.notif-list::-webkit-scrollbar { width: 4px; }
+.notif-item {
+  display: flex;
+  gap: 12px;
+  padding: 14px 18px;
+  cursor: pointer;
+  border-bottom: 1px solid color-mix(in srgb, var(--line, #e9d3c6) 50%, transparent);
+  transition: background 0.15s;
+}
+.notif-item:hover { background: var(--card, #fbeee7); }
+.notif-item.unread { background: color-mix(in srgb, var(--accent-soft, #f8dcd2) 45%, transparent); }
+.notif-ic {
+  width: 34px; height: 34px; flex: none;
+  border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--accent-soft, #f8dcd2);
+  color: var(--accent-deep, #9c2a20);
+}
+.notif-tx { flex: 1; min-width: 0; font-size: 0.82rem; color: var(--ink, #46271e); line-height: 1.45; }
+.notif-tx time { display: block; font-size: 0.66rem; font-weight: 700; color: var(--muted, #a17f6f); margin-top: 3px; text-transform: uppercase; }
+.notif-dot { width: 8px; height: 8px; flex: none; margin-top: 6px; border-radius: 50%; background: var(--accent, #e15549); }
+.notif-empty { padding: 36px 20px; text-align: center; color: var(--muted, #a17f6f); font-size: 0.8rem; font-weight: 600; }
+
+/* Login button in topbar */
+.topbar-login {
+  padding: 9px 22px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #fff;
+  background: var(--clay-bg, linear-gradient(150deg, #ef8276, #e15549 42%, #b73a2e));
+  box-shadow: var(--clay-chip, 0 8px 20px -6px rgba(156, 42, 32, 0.4));
+  white-space: nowrap;
+  transition: transform 0.15s;
+}
+.topbar-login:hover { transform: translateY(-1px); }
+
+/* Extra type chips not in the prototype set */
+.type-audit { background: var(--c-teal, #c4e6e7); color: var(--c-teal-d, #0d5f66); }
+.type-bounty { background: var(--c-amber, #f5dfb4); color: var(--c-amber-d, #8f5a08); }
+.type-event { background: var(--c-sky, #c8dff2); color: var(--c-sky-d, #1d5d92); }
+
+/* Spinner keyframe (independent of Tailwind utility emission) */
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Poll bars in clay */
+.poll-opt {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  text-align: left;
+  padding: 11px 14px;
+  border-radius: 14px;
+  border: 1.5px solid var(--line, #e9d3c6);
+  background: var(--card, #fbeee7);
+  transition: all 0.15s;
+}
+.poll-opt:not(:disabled):hover { border-color: var(--accent-line, #f0c6b7); }
+.poll-opt.voted { border-color: var(--accent, #e15549); font-weight: 700; }
+.poll-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: color-mix(in srgb, var(--accent, #e15549) 14%, transparent);
+  transition: width 0.5s;
+}

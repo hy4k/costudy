@@ -1,0 +1,218 @@
+1. Which of the following is not a purpose of systems development life cycle (SDLC) controls?
+
+A. Preventing processing errors in a new system.
+B. Providing for the security of the new system.
+C. Ensuring that all changes are properly authorized.
+D. Enabling programmers to test program changes using live data.
+
+2. Benefits of having and following a documented record retention or records management policy include all of the following with the exception of:
+
+A. The organization's compliance with all federal, state, and local regulations regarding document and data retention and destruction will be ensured.
+B. Records that are no longer of value will be destroyed at the appropriate time.
+C. Accessibility of records will be maintained.
+D. Records will be protected.
+
+3. The purpose of internal control is to
+
+A. preserve the tone at the top.
+B. provide a guarantee that fraud will not occur.
+C. help the company achieve its objectives.
+D. prevent errors and omissions.
+
+4. The primary responsibility for maintaining a system of internal controls rests with the company's
+
+A. Management
+B. Accountants.
+C. internal auditors.
+D. Lawyers.
+
+5. Which of the following is not a preventive control?
+
+A. Customer numbers are verified by the computer before a sales order is accepted to ensure the sales order is from an established company.
+B. Following payment, all invoices are marked "Paid" to prevent duplicate payment.
+C. The accounts receivable subsidiary ledger is reconciled against the general ledger accounts receivable control total.
+D. Duties are segregated to make it difficult for an employee to both perpetrate and conceal a fraud.
+
+6. To avoid potential errors and irregularities, a well-designed system of internal accounting control in the accounts payable area should include segregation of which of the following functions from each other?
+
+A. Check signing and cancellation of payment documentation.
+B. Vendor invoice verification and merchandise ordering
+C. Physical handling of merchandise received and preparation of receiving reports.
+D. Cash disbursements and vendor invoice verification.
+
+7. Which of the following control procedures may prevent the failure to bill customers for some shipments?
+
+A. Each shipment should be supported by a pre-numbered sales invoice that is accounted for.
+B. Each sales invoice should be supported by a shipping document.
+C. Each sales order should be approved by authorized personnel.
+D. Sales journal entries should be reconciled to daily sales summaries.
+
+8. Which of the following is not a part of the control environment of a publicly traded company?
+
+A. The structure of the organization and its reporting process.
+B. The manner in which authority and responsibility are assigned.
+C. The vacation policy and scheduling of vacations in the delivery department.
+D. The policies regarding the employment and retention of staff.
+
+9. The control objective that reduces the probability of a fictitious transaction being recorded in the accounting records is:
+
+A. Validity.
+B. Accuracy.
+C. Authorization.
+D. Completeness.
+
+10. When remediating a material weakness in internal controls, which of the following procedures is the most critical to ensure the effectiveness of the remediation project?
+
+A. Perform re-performance testing on all financial transactions to verify accuracy.
+B. Increase the frequency of internal audits to monthly to ensure continuous oversight of controls.
+C. Replace the existing internal control software with a more advanced system to prevent future weaknesses.
+D. Create and execute a detailed remediation plan that includes root cause analysis, tasks, responsible persons, deadlines, and monitoring of progress in implementing the plan.
+
+11. Which of the following statements about the Foreign Corrupt Practices Act (FCPA) is not correct?
+
+A. The FCPA contains provisions concerning anti-bribery and accounting issues
+B. The FCPA prohibits U.S. companies from making payments (or giving anything of value) to officers of foreign companies in order to obtain or retain business
+C. A bribe does not actually have to be paid for a violation to occur under the FCPA
+D. "Grease payments" are allowed under the FCPA
+
+12. What is the best definition of "tone at the top" as it pertains to internal auditing, corporate governance, and management philosophy?
+
+A. Tone at the top represents the actions undertaken by management to establish ethics and the importance of operating in an ethical manner.
+B. Tone at the top means that the management team has established an ethics hotline and reporting policy to report possible unethical behavior
+C. Tone at the top is under the purview of external auditors and consultants recommending actions and policies; therefore, it is not the responsibility of management.
+D. Tone at the top is fulfilled and demonstrated by the implementation of training led by external experts and consultants.
+
+13. Which of the following situations would indicate strong corporate governance?
+
+I. The company has a Code of Ethics and it provides periodic ethics training to its employees.
+II. The positions of Board Chair and CEO are held by the same person.
+III. A majority of the non-executive directors are former employees.
+IV. The Chair of the audit committee is the former CFO, who retired 6 months ago.
+V. A majority of the board members are outside directors not employed by the company.
+
+A. I only
+B. I, II, III and IV only.
+C. I and V only
+D. All of the above
+
+14. It is management's responsibility to make sure risk management and control processes are established and operating as intended. The purpose of these two processes is so people in the organization are better able to manage risks and so they understand what the objectives of the organization are. Control processes should provide reasonable assurance that objectives of the company relating to which of the following will be achieved?
+
+I. Resources are used effectively and efficiently, the company's business objectives are being achieved, and assets are safeguarded.
+II. Reporting is reliable and timely and meets all requirements both internal and external.
+III. The actions and decisions of the organization are in compliance with laws, regulations, and contracts.
+IV. Management's plans have not been circumvented by worker collusion.
+
+A. I and II only.
+B. I, II, III and IV.
+C. II, III and IV only.
+D. I, II, and III only.
+
+15. Regularly performed reconciliations are an example of what type of internal control?
+
+A. A detective control.
+B. A preventive control.
+C. A corrective control.
+D. A feedforward control.
+
+16. The segregation of duties is an important control objective. Which of the following does not violate that objective?
+
+A. Signing of checks and custody of signature stamp.
+B. Purchase requisition request and purchase order authorization.
+C. Credit approval and write-off of credit losses.
+D. All of the above violate the segregation of duties.
+
+17. The warehouse department receives notice from a sales clerk that an item in stock was sold. The sales clerk indicates to the warehouse which item was sold and verifies the quantity. The warehouse pulls the item from inventory and sends it to the shipping department. The shipping department prepares the packing slip and prepares the item for shipment. The shipping clerk enters data on the item shipped. The shipping documentation is sent to general accounting after shipping so the shipment can be invoiced. Which of the following areas is a control weakness of the organization?
+
+I. Notice of sale to the warehouse by the sales clerk.
+II. Verification by the sales clerk to the warehouse of the quantity.
+III. Preparation of packing slip by the shipping department.
+IV. Sending the shipping documentation to accounting after the shipping takes place.
+
+A. I, II, and III only.
+B. I only.
+C. II and III only.
+D. All of the above.
+
+18. The purpose of the internal controls provision of the Foreign Corrupt Practices Act is to
+
+A. Deter management from making payments that are prohibited by the Act
+B. Prevent collusion between and among employees
+C. Guarantee accurate financial reporting
+D. Protect investors
+
+19. The internal controls provisions of the Foreign Corrupt Practices Act apply to companies that are publicly traded only. The anti-bribery provisions of the FCPA apply to
+
+A. All companies, regardless of whether they are privately held or publicly held.
+B. Publicly held firms that report to the U.S. SEC only.
+C. All firms that report to the U.S. SEC, whether they are privately held or publicly held.
+D. Publicly held firms with $75 million or more in public float (the value of shares held by the public) only.
+
+20. The effectiveness of an internal control system depends on
+
+A. whether or not the controls have been tested.
+B. the ethics of the people performing the controls.
+C. the design of the system and whether the controls are operating as designed.
+D. the support of management.
+
+21. Which of the following is the correct order for prioritizing the remediation of internal control deficiencies identified during testing the adequacy of internal controls?
+
+A. Control deficiencies, material weaknesses, significant deficiencies
+B. Material weaknesses, significant deficiencies, control deficiencies
+C. Material weaknesses, control deficiencies, significant deficiencies
+D. Significant deficiencies, control deficiencies, material weaknesses
+
+22. Can internal controls pose a risk to organizational efficiency, even if they are developed and tested internally by management and the internal audit function
+
+A. No, if the internal controls are developed and tested by the internal audit function there is no risk of them causing efficiency issues.
+B. Yes, controls developed internally will almost always negatively impact efficiency, because even though internal controls can help organizations, they make the processes more time consuming which negatively impacts organizational efficiency
+C. Yes, there is always a risk that internal controls could negatively impact operational efficiency, even if they are developed by management and the internal audit function
+D. No, controls do not hinder operational efficiency because being efficient is the most important aspect for organizations in the current environment
+
+23. Which of the following statements concerning firewalls is not correct?
+
+A. A firewall can consist of software, hardware, or both.
+B. A firewall performs the same basic tasks as antivirus software
+C. Firewalls help protect an organization's network from external threats such as hackers and viruses
+D. Firewalls help protect an organization by preventing employees from accessing certain websites while at work
+
+24. Which one of the following is not an example of data encryption?
+
+A. Using a password to protect documents before sending out
+B. Asking for a digital signature when signing contracts over the internet
+C. An internet browser enabling secure certificates when communicating with websites.
+D. Masking input characters in the password fields automatically
+
+25. Which of the following statements concerning disaster recovery planning is not correct?
+
+A. A "hot site" is more expensive to set up and maintain than is a "cold site."
+B. A company would take longer to continue operations after a natural disaster if it had a "warm site" than if it had a hot site
+C. The main difference between a warm site and a cold site is that the computers in a warm site are fully configured while the computers in a cold site are not yet configured.
+D. A company would be able to continue operations after a natural disaster sooner if it had a warm site than if it had a cold site
+
+26. Which of the following risks can be minimized by requiring all employees accessing the information systems to use passwords
+
+A. Collusion
+B. Data entry errors
+C. Failure of server duplicating function
+D. Firewall vulnerability
+
+27. Which of the following statements is the most accurate definition of phishing?
+
+A. The acts that an organization takes to mitigate the risk of social engineering attacks such as establishing various system controls and training employees
+B. Links or attachments to general emails that inadvertently allow malicious software into the organization.
+C. Links or attachments to highly customized emails that inadvertently allow malicious software into the organization
+D. Outside individuals posing as employees to obtain confidential and organizational information via deceptive actions
+
+28. A bank has identified that its critical business processes, including account management, trade, and remittance, cannot be disrupted in case of a disaster. Hence, it wanted an alternative site that syncs with the production environment to ensure negligible impact and to reduce downtime to the minimum. Which of the disaster recovery facilities is best suited for this situation?
+
+A. Hot site
+B. Warm site
+C. Cold site
+D. Backup site
+
+29. Which of the following is not an example of an input control in an accounting information system?
+
+A. Requiring that certain data fields contain only numerical values
+B. Automating as much processing in an accounting information system as possible
+C. A manager confirming order details before they are entered into an accounting information system
+D. Redesigning a credit application form to make it easier to understand.

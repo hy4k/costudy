@@ -26,3 +26,8 @@ dist-ssr
 
 # Data/migration input files (large PDFs, CSVs, DB dumps)
 migration-input/
+
+# Never commit env files
+.env
+.env.production
+.env.local

@@ -264,8 +264,10 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
       </header>
 
       {/* ---------- Main content ---------- */}
-      <main style={{ position: 'relative', flex: 1, overflowY: 'auto' }} className="no-scrollbar">
-        <div style={{ position: 'relative', zIndex: 10, margin: '0 auto', height: '100%', width: '100%', maxWidth: '90rem', textAlign: 'left' }}>
+      {/* overflowX: hidden prevents the main scroll area from widening due to
+          feed-cats negative-margin trick; overflowY: auto gives the scroll. */}
+      <main style={{ position: 'relative', flex: 1, overflowY: 'auto', overflowX: 'hidden' }} className="no-scrollbar">
+        <div style={{ position: 'relative', zIndex: 10, margin: '0 auto', minHeight: '100%', width: '100%', maxWidth: '90rem', textAlign: 'left' }}>
           {children}
         </div>
       </main>

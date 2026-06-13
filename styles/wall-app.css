@@ -34,10 +34,63 @@
 .proto.wall-embedded .shell-solo {
   padding-top: 28px;
   min-height: auto;
+  /* Clear the mobile bottom tab-bar (56px) + breathing room */
+  padding-bottom: 120px;
 }
 .proto.wall-embedded {
   min-height: 100%;
   background: var(--paper);
+}
+
+/* ===== Category chip scroll — layout fixes ===== */
+/* Negative-margin trick: let .feed-cats extend to the padding edge so the
+   last chip doesn't get hard-clipped. The inner padding-right restores
+   the scrollable end-cap so chips fully come into view on scroll. */
+.proto.wall-embedded .feed-cats {
+  margin-left: -20px;
+  margin-right: -20px;
+  padding-left: 20px;
+  padding-right: 36px; /* extra right end-cap so last chip scrolls fully in */
+  width: calc(100% + 40px);
+}
+@media (max-width: 880px) {
+  .proto.wall-embedded .feed-cats {
+    margin-left: -14px;
+    margin-right: -14px;
+    padding-left: 14px;
+    padding-right: 30px;
+    width: calc(100% + 28px);
+  }
+  /* Ensure shell-solo leaves room for bottom tab bar on phones */
+  .proto.wall-embedded .shell-solo {
+    padding-bottom: 140px;
+  }
+}
+/* Subtle right-fade gradient so users can see there are more chips.
+   The ::after sits on .wall (full-width), absolutely positioned to
+   overlay only the chip-row height (≈ 42px from top of content). */
+.proto.wall-embedded .wall::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 28px;          /* aligns with shell-solo padding-top */
+  width: 52px;
+  height: 46px;       /* feed-cats row height */
+  background: linear-gradient(to right, transparent, var(--paper));
+  pointer-events: none;
+  z-index: 5;
+}
+/* Remove gradient on pages where there's no chip row (rooms, profile, etc.)
+   — only StudyWall / AIDeck actually use feed-cats */
+.proto.wall-embedded .wall[data-page="rooms"]::after,
+.proto.wall-embedded .wall[data-page="profile"]::after,
+.proto.wall-embedded .wall[data-page="mentors"]::after { display: none; }
+
+/* ===== Inner page shell height — prevent 100% height locking layout ===== */
+/* The Layout's inner wrapper should not lock height; content should grow freely */
+.proto.app-chrome > main > div {
+  height: auto !important;
+  min-height: 100%;
 }
 
 /* Toast (app-level feedback, clay style) */

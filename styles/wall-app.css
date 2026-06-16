@@ -168,137 +168,136 @@
   border-color: var(--accent, #e15549);
   background: var(--accent-soft, #f8dcd2);
   color: var(--accent-deep, #9c2a20);
-  box-shadow: var(--nm-xs, none);
+}
+/* ============================================================
+   STUDY ROOMS — Arena, Battles, Chat, Board
+   ============================================================ */
+
+/* Grid for room cards */
+.rooms-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
 }
 
-.clay-textarea {
+/* Room card */
+.room-card {
   width: 100%;
-  border: 1.5px solid var(--line, #e9d3c6);
-  border-radius: 16px;
-  background: var(--inset-bg, #f7ece5);
-  box-shadow: var(--nm-inset-sm, inset 2px 2px 5px rgba(190, 131, 106, 0.25));
-  padding: 14px 16px;
-  font-size: 0.88rem;
-  color: var(--ink, #46271e);
-  outline: none;
-  resize: none;
+  border: 1.5px solid var(--line);
+  border-radius: 20px;
+  background: var(--card);
+  padding: 18px 18px 16px;
+  transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+  cursor: pointer;
+  box-shadow: var(--nm-xs, 0 4px 12px -4px rgba(90,30,10,0.12));
 }
-.clay-textarea:focus { border-color: var(--accent-line, #f0c6b7); }
-
-.clay-cta {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 14px;
-  border-radius: 16px;
-  font-size: 0.86rem;
-  font-weight: 800;
-  color: #fff;
-  background: var(--clay-bg, linear-gradient(150deg, #ef8276, #e15549 42%, #b73a2e));
-  box-shadow: var(--clay-chip, 0 10px 26px -8px rgba(156, 42, 32, 0.45));
-  transition: opacity 0.15s, transform 0.1s;
+.room-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-line);
+  box-shadow: 0 10px 28px -8px rgba(90,30,10,0.2);
 }
-.clay-cta:hover { opacity: 0.94; }
-.clay-cta:active { transform: scale(0.985); }
-.clay-cta:disabled { opacity: 0.4; cursor: not-allowed; }
+.room-card:active { transform: translateY(0); }
+.room-card-top { display: flex; align-items: flex-start; gap: 12px; }
+.room-card-name { flex: 1; min-width: 0; }
+.room-card-name strong { display: block; font-size: 0.95rem; color: var(--ink); margin-bottom: 2px; }
+.room-card-name span { font-size: 0.68rem; }
+.room-card-desc { font-size: 0.8rem; color: var(--muted); }
 
-/* ===== App chrome (Layout) ===== */
-/* The topbar participates in the Layout flex column instead of fixed overlay */
-.proto.app-chrome { background: var(--paper); }
-.proto.app-chrome .topbar { position: relative; }
-.proto.app-chrome .topnav-item { white-space: nowrap; }
-
-/* Notification dropdown — clay panel */
-.notif-panel {
-  position: absolute;
-  top: calc(100% + 10px);
-  right: 0;
-  z-index: 120;
-  width: 320px;
-  max-width: calc(100vw - 24px);
-  border-radius: 22px;
-  background: var(--raised-bg, linear-gradient(145deg, #fbeee7, #f3e0d6));
-  box-shadow: var(--shadow-pop, 0 30px 60px -24px rgba(120, 60, 40, 0.45));
-  overflow: hidden;
+/* Back button in room detail */
+.room-back {
+  width: 36px; height: 36px; border-radius: 12px; flex: none;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--card); border: 1.5px solid var(--line);
+  color: var(--muted); transition: all 0.15s;
 }
-.notif-head {
+.room-back:hover { border-color: var(--accent-line); color: var(--ink); }
+
+/* Live chip */
+.live-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 999px;
+  background: var(--card); border: 1.5px solid var(--line);
+  font-size: 0.7rem; font-weight: 800; color: var(--muted);
+}
+
+/* Presence dot */
+.room-dot {
+  width: 7px; height: 7px; border-radius: 50%; flex: none;
+  background: var(--line);
+}
+.room-dot.on {
+  background: #22c55e;
+  box-shadow: 0 0 0 2px #dcfce7;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 2px #dcfce7; }
+  50% { box-shadow: 0 0 0 5px #bbf7d0; }
+}
+
+/* Room list header */
+.rooms-hello {
+  margin-bottom: 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 18px;
-  border-bottom: 1px solid var(--line, #e9d3c6);
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--muted, #a17f6f);
 }
-.notif-head button { font-size: 0.68rem; font-weight: 800; color: var(--accent-deep, #9c2a20); }
-.notif-list { max-height: 320px; overflow-y: auto; }
-.notif-list::-webkit-scrollbar { width: 4px; }
-.notif-item {
+
+/* Comment / chat input */
+.comment-input {
   display: flex;
-  gap: 12px;
-  padding: 14px 18px;
-  cursor: pointer;
-  border-bottom: 1px solid color-mix(in srgb, var(--line, #e9d3c6) 50%, transparent);
-  transition: background 0.15s;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg);
+  border: 1.5px solid var(--line);
+  border-radius: 16px;
+  padding: 6px 8px 6px 14px;
+  transition: border-color 0.15s;
 }
-.notif-item:hover { background: var(--card, #fbeee7); }
-.notif-item.unread { background: color-mix(in srgb, var(--accent-soft, #f8dcd2) 45%, transparent); }
-.notif-ic {
-  width: 34px; height: 34px; flex: none;
-  border-radius: 11px;
+.comment-input:focus-within { border-color: var(--accent-line); }
+.comment-input input {
+  flex: 1; background: none; border: none; outline: none;
+  font-size: 0.88rem; color: var(--ink);
+  font-family: inherit;
+}
+.comment-input input::placeholder { color: var(--muted); }
+.comment-send {
+  width: 34px; height: 34px; border-radius: 10px; flex: none;
   display: flex; align-items: center; justify-content: center;
-  background: var(--accent-soft, #f8dcd2);
-  color: var(--accent-deep, #9c2a20);
-}
-.notif-tx { flex: 1; min-width: 0; font-size: 0.82rem; color: var(--ink, #46271e); line-height: 1.45; }
-.notif-tx time { display: block; font-size: 0.66rem; font-weight: 700; color: var(--muted, #a17f6f); margin-top: 3px; text-transform: uppercase; }
-.notif-dot { width: 8px; height: 8px; flex: none; margin-top: 6px; border-radius: 50%; background: var(--accent, #e15549); }
-.notif-empty { padding: 36px 20px; text-align: center; color: var(--muted, #a17f6f); font-size: 0.8rem; font-weight: 600; }
-
-/* Login button in topbar */
-.topbar-login {
-  padding: 9px 22px;
-  border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 800;
-  color: #fff;
-  background: var(--clay-bg, linear-gradient(150deg, #ef8276, #e15549 42%, #b73a2e));
-  box-shadow: var(--clay-chip, 0 8px 20px -6px rgba(156, 42, 32, 0.4));
-  white-space: nowrap;
-  transition: transform 0.15s;
-}
-.topbar-login:hover { transform: translateY(-1px); }
-
-/* Extra type chips not in the prototype set */
-.type-audit { background: var(--c-teal, #c4e6e7); color: var(--c-teal-d, #0d5f66); }
-.type-bounty { background: var(--c-amber, #f5dfb4); color: var(--c-amber-d, #8f5a08); }
-.type-event { background: var(--c-sky, #c8dff2); color: var(--c-sky-d, #1d5d92); }
-
-/* Spinner keyframe (independent of Tailwind utility emission) */
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* Poll bars in clay */
-.poll-opt {
-  position: relative;
-  width: 100%;
-  overflow: hidden;
-  text-align: left;
-  padding: 11px 14px;
-  border-radius: 14px;
-  border: 1.5px solid var(--line, #e9d3c6);
-  background: var(--card, #fbeee7);
+  background: var(--accent); color: #fff;
   transition: all 0.15s;
 }
-.poll-opt:not(:disabled):hover { border-color: var(--accent-line, #f0c6b7); }
-.poll-opt.voted { border-color: var(--accent, #e15549); font-weight: 700; }
-.poll-fill {
-  position: absolute;
-  inset: 0 auto 0 0;
-  background: color-mix(in srgb, var(--accent, #e15549) 14%, transparent);
-  transition: width 0.5s;
+.comment-send:hover { filter: brightness(1.08); }
+.comment-send:disabled { opacity: 0.45; cursor: default; }
+
+/* Tag chip */
+.tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: var(--accent-soft);
+  color: var(--accent-deep);
 }
+
+/* Clay CTA (battle start) */
+.clay-cta {
+  width: 100%;
+  padding: 14px 20px;
+  border-radius: 18px;
+  background: var(--clay-bg, linear-gradient(150deg, #ef8276, #e15549 42%, #b73a2e));
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  box-shadow: 0 8px 22px -8px rgba(180,50,30,0.5);
+  transition: all 0.18s;
+}
+.clay-cta:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.clay-cta:active { transform: translateY(0); filter: brightness(0.96); }
+.clay-cta:disabled { opacity: 0.5; cursor: default; transform: none; }
+
+/* Shell for rooms page — same as shell-solo but wider grid */
+.shell-rooms { max-width: 880px; margin: 0 auto; }
+

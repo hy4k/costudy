@@ -9,13 +9,13 @@ const ROOMS = [
   { id: 5, name: 'General Knowledge', subject: 'GK', members: 15, maxMembers: 25, active: true }
 ]
 
-export default function StudyRooms({ user }) {
+export default function StudyRooms({ user: _user }) {
   const navigate = useNavigate()
   const [filter, setFilter] = useState('all')
 
-  const filteredRooms = filter === 'all' 
-    ? ROOMS 
-    : filter === 'active' 
+  const filteredRooms = filter === 'all'
+    ? ROOMS
+    : filter === 'active'
       ? ROOMS.filter(r => r.active)
       : ROOMS.filter(r => !r.active)
 
@@ -28,13 +28,13 @@ export default function StudyRooms({ user }) {
           <span className="text-xl font-bold gradient-text">CoStudy</span>
         </div>
         <div className="flex gap-4">
-          <button 
+          <button
             onClick={() => navigate('/chat')}
             className="px-4 py-2 text-sm text-gray-400 hover:text-white transition"
           >
             AI Chat
           </button>
-          <button 
+          <button
             onClick={() => navigate('/dashboard')}
             className="px-4 py-2 text-sm text-gray-400 hover:text-white transition"
           >
@@ -58,8 +58,8 @@ export default function StudyRooms({ user }) {
               key={f}
               onClick={() => setFilter(f)}
               className={`px-4 py-2 rounded-lg capitalize transition
-                ${filter === f 
-                  ? 'bg-fets-yellow/20 text-fets-yellow' 
+                ${filter === f
+                  ? 'bg-fets-yellow/20 text-fets-yellow'
                   : 'text-gray-400 hover:text-white'}`}
             >
               {f}
@@ -79,7 +79,7 @@ export default function StudyRooms({ user }) {
                   {room.active ? 'Active' : 'Inactive'}
                 </span>
               </div>
-              
+
               <div className="flex gap-4 text-sm text-gray-400 mb-4">
                 <span>📚 {room.subject}</span>
                 <span>👥 {room.members}/{room.maxMembers}</span>
@@ -88,7 +88,7 @@ export default function StudyRooms({ user }) {
               {/* Member avatars */}
               <div className="flex -space-x-2 mb-4">
                 {[...Array(Math.min(room.members, 5))].map((_, i) => (
-                  <div 
+                  <div
                     key={i}
                     className="w-8 h-8 rounded-full bg-gradient-to-br from-fets-yellow to-orange-400 border-2 border-[#0a0a0f]"
                   />
@@ -100,7 +100,7 @@ export default function StudyRooms({ user }) {
                 )}
               </div>
 
-              <button 
+              <button
                 disabled={!room.active || room.members >= room.maxMembers}
                 className="w-full py-2 rounded-lg font-medium transition
                   disabled:opacity-50 disabled:cursor-not-allowed

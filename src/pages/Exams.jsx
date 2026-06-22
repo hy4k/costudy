@@ -26,7 +26,7 @@ const SAMPLE_QUESTIONS = {
   ]
 }
 
-export default function Exams({ user }) {
+export default function Exams({ user: _user }) {
   const navigate = useNavigate()
   const [selectedExam, setSelectedExam] = useState(null)
   const [selectedSubject, setSelectedSubject] = useState(null)
@@ -40,7 +40,7 @@ export default function Exams({ user }) {
   const handleAnswer = (index) => {
     if (selectedAnswer !== null) return
     setSelectedAnswer(index)
-    
+
     if (index === questions[currentQuestion].answer) {
       setScore(score + 1)
     }
@@ -111,17 +111,17 @@ export default function Exams({ user }) {
           <div className="text-6xl mb-4">{percentage >= 70 ? '🎉' : percentage >= 50 ? '👍' : '💪'}</div>
           <h2 className="text-2xl font-bold mb-2">Quiz Complete!</h2>
           <p className="text-gray-400 mb-6">You scored {score} out of {questions.length}</p>
-          
+
           <div className="text-5xl font-bold gradient-text mb-8">{percentage}%</div>
-          
+
           <div className="flex gap-4">
-            <button 
+            <button
               onClick={resetQuiz}
               className="flex-1 py-3 bg-fets-yellow text-black font-semibold rounded-lg"
             >
               Try Again
             </button>
-            <button 
+            <button
               onClick={() => { setSelectedExam(null); setSelectedSubject(null) }}
               className="flex-1 py-3 border border-[#2a2a3a] rounded-lg hover:border-fets-yellow"
             >
@@ -145,7 +145,7 @@ export default function Exams({ user }) {
       <main className="max-w-2xl mx-auto p-6">
         {!selectedSubject ? (
           <div>
-            <button 
+            <button
               onClick={() => setSelectedExam(null)}
               className="text-gray-400 hover:text-white mb-6"
             >
@@ -170,7 +170,7 @@ export default function Exams({ user }) {
         ) : (
           <div>
             <div className="flex justify-between items-center mb-6">
-              <button 
+              <button
                 onClick={() => setSelectedSubject(null)}
                 className="text-gray-400 hover:text-white"
               >
@@ -182,7 +182,7 @@ export default function Exams({ user }) {
             </div>
 
             <div className="h-2 bg-[#1e1e2a] rounded-full mb-8">
-              <div 
+              <div
                 className="h-full bg-fets-yellow transition-all"
                 style={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }}
               />
@@ -199,9 +199,9 @@ export default function Exams({ user }) {
                     onClick={() => handleAnswer(i)}
                     disabled={selectedAnswer !== null}
                     className={`w-full p-4 rounded-lg text-left transition
-                      ${selectedAnswer === i 
-                        ? i === questions[currentQuestion].answer 
-                          ? 'bg-green-500/20 border-green-500' 
+                      ${selectedAnswer === i
+                        ? i === questions[currentQuestion].answer
+                          ? 'bg-green-500/20 border-green-500'
                           : 'bg-red-500/20 border-red-500'
                         : selectedAnswer !== null
                           ? 'opacity-50'

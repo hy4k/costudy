@@ -48,9 +48,9 @@ export default function Chat({ user }) {
 
     // Simulate AI response - replace with actual API call
     setTimeout(() => {
-      const aiMsg = { 
-        role: 'assistant', 
-        content: SAMPLE_RESPONSES[subject?.id] || "That's a great question! Let me think about that and get back to you with a detailed explanation." 
+      const aiMsg = {
+        role: 'assistant',
+        content: SAMPLE_RESPONSES[subject?.id] || "That's a great question! Let me think about that and get back to you with a detailed explanation."
       }
       setMessages(prev => [...prev, aiMsg])
       setLoading(false)
@@ -59,7 +59,7 @@ export default function Chat({ user }) {
 
   const selectSubject = (s) => {
     setSubject(s)
-    setMessages(prev => [...prev, 
+    setMessages(prev => [...prev,
       { role: 'user', content: `I want to study ${s.name}` },
       { role: 'assistant', content: `Perfect! Let's learn ${s.name} together. What would you like to explore first?` }
     ])
@@ -77,13 +77,13 @@ export default function Chat({ user }) {
           </div>
         </div>
         <div className="flex gap-3">
-          <button 
+          <button
             onClick={() => navigate('/dashboard')}
             className="px-4 py-2 text-sm text-gray-400 hover:text-white transition"
           >
             Dashboard
           </button>
-          <button 
+          <button
             onClick={() => navigate('/study-rooms')}
             className="px-4 py-2 text-sm text-gray-400 hover:text-white transition"
           >
@@ -102,8 +102,8 @@ export default function Chat({ user }) {
                 key={s.id}
                 onClick={() => selectSubject(s)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition
-                  ${subject?.id === s.id 
-                    ? 'bg-fets-yellow/20 text-fets-yellow' 
+                  ${subject?.id === s.id
+                    ? 'bg-fets-yellow/20 text-fets-yellow'
                     : 'hover:bg-[#12121a] text-gray-300'}`}
               >
                 <span>{s.emoji}</span>
@@ -118,13 +118,13 @@ export default function Chat({ user }) {
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
             {messages.map((msg, i) => (
-              <div 
-                key={i} 
+              <div
+                key={i}
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div className={`max-w-[70%] px-5 py-3 rounded-2xl animate-fadeIn
-                  ${msg.role === 'user' 
-                    ? 'bg-fets-yellow text-black' 
+                  ${msg.role === 'user'
+                    ? 'bg-fets-yellow text-black'
                     : 'bg-[#12121a] border border-[#1e1e2a]'}`}
                 >
                   {msg.content}
@@ -153,13 +153,13 @@ export default function Chat({ user }) {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask me anything..."
-                className="flex-1 px-5 py-3 rounded-xl bg-[#12121a] border border-[#2a2a3a] 
+                className="flex-1 px-5 py-3 rounded-xl bg-[#12121a] border border-[#2a2a3a]
                          focus:border-fets-yellow focus:outline-none transition"
               />
               <button
                 type="submit"
                 disabled={loading || !input.trim()}
-                className="px-6 py-3 bg-fets-yellow text-black font-semibold rounded-xl 
+                className="px-6 py-3 bg-fets-yellow text-black font-semibold rounded-xl
                          hover:bg-fets-yellow-dark transition disabled:opacity-50"
               >
                 Send

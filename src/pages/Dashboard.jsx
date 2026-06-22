@@ -1,9 +1,8 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 export default function Dashboard({ user }) {
   const navigate = useNavigate()
-  
+
   const stats = [
     { label: 'Total Sessions', value: '24', icon: '📚' },
     { label: 'Hours Learned', value: '48', icon: '⏱️' },
@@ -33,7 +32,7 @@ export default function Dashboard({ user }) {
         </div>
         <div className="flex gap-4 items-center">
           <span className="text-gray-400">{user?.name || 'Student'}</span>
-          <button 
+          <button
             onClick={() => navigate('/chat')}
             className="px-4 py-2 bg-fets-yellow text-black font-semibold rounded-lg"
           >
@@ -87,7 +86,7 @@ export default function Dashboard({ user }) {
                     <span className="text-sm text-gray-500">{goal.deadline}</span>
                   </div>
                   <div className="h-2 bg-[#1e1e2a] rounded-full overflow-hidden">
-                    <div 
+                    <div
                       className="h-full bg-fets-yellow transition-all"
                       style={{ width: `${goal.progress}%` }}
                     />

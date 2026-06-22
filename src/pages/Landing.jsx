@@ -62,10 +62,10 @@ export default function Landing({ onLogin }) {
             Learn Smarter with <span className="gradient-text">AI</span>
           </h1>
           <p className="text-xl text-gray-400 mb-10 max-w-2xl mx-auto">
-            Your personal AI tutor combined with collaborative learning. 
+            Your personal AI tutor combined with collaborative learning.
             Ace your exams with personalized guidance.
           </p>
-          
+
           {/* CTA Form */}
           <form onSubmit={handleStart} className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
             <input
@@ -73,14 +73,14 @@ export default function Landing({ onLogin }) {
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="flex-1 px-5 py-3 rounded-lg bg-[#12121a] border border-[#2a2a3a] 
+              className="flex-1 px-5 py-3 rounded-lg bg-[#12121a] border border-[#2a2a3a]
                        focus:border-fets-yellow focus:outline-none transition"
               required
             />
             <button
               type="submit"
               disabled={loading}
-              className="px-8 py-3 bg-fets-yellow text-black font-semibold rounded-lg 
+              className="px-8 py-3 bg-fets-yellow text-black font-semibold rounded-lg
                        hover:bg-fets-yellow-dark transition disabled:opacity-50"
             >
               {loading ? 'Starting...' : 'Start Learning'}
@@ -97,7 +97,7 @@ export default function Landing({ onLogin }) {
           </h2>
           <div className="grid md:grid-cols-3 gap-8">
             {features.map((feature, i) => (
-              <div 
+              <div
                 key={i}
                 className="glass p-8 rounded-xl hover:border-fets-yellow/30 transition animate-fadeIn"
                 style={{ animationDelay: `${i * 100}ms` }}

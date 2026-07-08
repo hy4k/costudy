@@ -144,9 +144,29 @@ export async function checkAPIHealth(): Promise<{ ok: boolean; env?: string }> {
   }
 }
 
+/**
+ * Practice MCQs (bank or RAG). Prefer this over client-side parsing.
+ */
+export async function practiceMcq(
+  topic: string,
+  count = 5
+): Promise<{ ok: boolean; questions?: any[]; answers?: any[]; source?: string; error?: string }> {
+  try {
+    const response = await fetch(`${API_BASE}/api/mcq/practice`, {
+      method: 'POST',
+      headers: await getAuthHeaders(),
+      body: JSON.stringify({ topic, count }),
+    });
+    return await response.json();
+  } catch (e) {
+    return { ok: false, error: String(e) };
+  }
+}
+
 export const costudyAPI = {
   search: ragSearch,
   askCMA,
   summarize: summarizeText,
   health: checkAPIHealth,
+  practiceMcq,
 };

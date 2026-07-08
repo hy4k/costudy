@@ -36,8 +36,8 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
     const [bountyType, setBountyType] = useState<'CREDITS' | 'BADGE'>('CREDITS');
     const [bounties, setBounties] = useState<any[]>([]); // Mock list
 
-    // "Subdomain" Simulation State
-    const [isRedirecting, setIsRedirecting] = useState(true);
+    // Legacy splash flag — kept off; study OS loads Command Center immediately
+    const [isRedirecting, setIsRedirecting] = useState(false);
 
     useEffect(() => {
         setActiveTab(defaultTab);

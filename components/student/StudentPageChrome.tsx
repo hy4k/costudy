@@ -1,15 +1,14 @@
 import React from 'react';
-import { PageHeader } from '../ui/PageHeader';
 
-/** Full-page study-OS background for student routes. */
-export const STUDENT_PAGE_BG = 'min-h-full bg-transparent';
+/** Full-page warm clay background for student routes. */
+export const STUDENT_PAGE_BG =
+  'min-h-full bg-gradient-to-b from-[#faf6f3] via-[#fffaf7] to-[#f4ebe4]';
 
 export interface StudentPageChromeProps {
   title: string;
   eyebrow?: string;
   description?: string;
   icon?: React.ReactNode;
-  /** Tighter header for tool pages (e.g. AI Deck below a full-width toolbar). */
   compact?: boolean;
   maxWidthClassName?: string;
   badge?: string;
@@ -17,7 +16,7 @@ export interface StudentPageChromeProps {
 }
 
 /**
- * Shared header for student app pages — dark mission / study OS.
+ * Shared header for student pages — warm clay aesthetic (soft, readable).
  */
 export const StudentPageChrome: React.FC<StudentPageChromeProps> = ({
   title,
@@ -29,35 +28,45 @@ export const StudentPageChrome: React.FC<StudentPageChromeProps> = ({
   badge,
   actions,
 }) => {
-  const py = compact ? 'py-4 sm:py-5' : 'py-5 sm:py-7';
+  const py = compact ? 'py-5 sm:py-6' : 'py-6 sm:py-8';
 
   return (
-    <header className="w-full shrink-0 border-b border-white/[0.06] bg-[rgba(11,16,32,0.55)] backdrop-blur-xl">
+    <header className="w-full shrink-0 border-b border-[#ead9cf]/80 bg-gradient-to-b from-[#fffefc] via-[#fff9f6] to-[#faf2ed]">
       <div className={`mx-auto px-4 sm:px-6 ${py} ${maxWidthClassName}`}>
-        {icon ? (
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--clay-bg,linear-gradient(135deg,#ff4d4d,#890b0b))] text-white shadow-[0_0_30px_-8px_rgba(255,59,59,0.55)] ring-1 ring-white/10">
-              {icon}
-            </div>
-            <div className="min-w-0 flex-1">
-              <PageHeader
-                kicker={eyebrow}
-                title={title}
-                subtitle={description}
-                badge={badge}
-                actions={actions}
-              />
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex min-w-0 items-start gap-4">
+            {icon && (
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#db7a6d] via-[#d45a4c] to-[#a13c32] text-white shadow-[0_10px_24px_-12px_rgba(161,60,50,0.45)] ring-2 ring-white/90">
+                {icon}
+              </div>
+            )}
+            <div className="min-w-0">
+              {(eyebrow || badge) && (
+                <div className="mb-2 flex flex-wrap items-center gap-2">
+                  {eyebrow && (
+                    <p className="font-display text-[11px] font-semibold uppercase tracking-[0.2em] text-[#a13c32]/80">
+                      {eyebrow}
+                    </p>
+                  )}
+                  {badge && (
+                    <span className="rounded-full border border-[#ebc4bc] bg-[#f7e0db] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#a13c32]">
+                      {badge}
+                    </span>
+                  )}
+                </div>
+              )}
+              <h1 className="font-display text-2xl font-semibold tracking-tight text-[#3d2a24] sm:text-[2.05rem]">
+                {title}
+              </h1>
+              {description && (
+                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#8b7268] sm:text-base">
+                  {description}
+                </p>
+              )}
             </div>
           </div>
-        ) : (
-          <PageHeader
-            kicker={eyebrow}
-            title={title}
-            subtitle={description}
-            badge={badge}
-            actions={actions}
-          />
-        )}
+          {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+        </div>
       </div>
     </header>
   );

@@ -162,9 +162,9 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
     }
 
     if (loading) return (
-        <div className="flex flex-col items-center justify-center min-h-[50vh] gap-5">
-            <div className="h-12 w-12 animate-spin rounded-full border-2 border-white/10 border-t-brand" />
-            <span className="os-kicker">Command Center · Loading</span>
+        <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
+            <div className="h-11 w-11 animate-spin rounded-full border-2 border-[#d2e3da] border-t-[#2f9b6f]" />
+            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-[#6f877b]">Loading dashboard…</span>
         </div>
     );
 
@@ -270,23 +270,21 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
 
     // --- MAIN DASHBOARD VIEW ---
     return (
-        <div className="proto study-os max-w-7xl mx-auto px-6 lg:px-12 py-12 sm:py-16 animate-in fade-in duration-700 specialist-mode" data-theme="faculty">
+        <div className="proto max-w-7xl mx-auto px-6 lg:px-12 py-12 sm:py-16 animate-in fade-in duration-700 specialist-mode" data-theme="faculty">
             <header className="mb-10">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
                         <div className="flex items-center gap-3 mb-3">
-                            <span className="os-badge">
-                                {userProfile?.specialistSlug ? `${userProfile.specialistSlug}.costudy.cloud` : 'Faculty command'}
+                            <span className="rounded-full border border-[#b8dfcb] bg-[#d9eee4] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#1b6b4c]">
+                                {userProfile?.specialistSlug ? `${userProfile.specialistSlug}.costudy.cloud` : 'Teacher dashboard'}
                             </span>
-                            <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.8)]"></div>
-                            <span className="os-kicker">Online</span>
+                            <div className="w-2 h-2 rounded-full bg-[#2f9b6f]"></div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#6f877b]">Online</span>
                         </div>
-                        <p className="os-kicker mb-2">Study OS · Mentor</p>
-                        <h1 className="os-title text-4xl sm:text-5xl md:text-6xl uppercase leading-[0.9] mb-2">
-                            Command Center
+                        <h1 className="font-display text-4xl sm:text-5xl font-bold tracking-tight text-[#1e3329] leading-[1.05] mb-2">
+                            Dashboard
                         </h1>
-                        <p className="text-[var(--muted)] font-semibold text-xs uppercase tracking-[0.28em]">Students · rooms · revenue</p>
-                        <div className="os-hud-line mt-5" />
+                        <p className="text-[#6f877b] font-medium text-sm">Manage students, rooms, and revenue</p>
                     </div>
 
                     <div className="flex gap-4">

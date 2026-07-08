@@ -354,8 +354,6 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId, testCenter }) => {
                 <div className="wall" data-page="mocks">
                     <main className="shell-solo">
                         <div className="feed-hello">
-                            <p className="os-kicker" style={{ marginBottom: 8 }}>Study OS · Exam bay</p>
-                            <div className="os-hud-line" style={{ marginTop: 12, marginBottom: 4 }} />
                             <h1 className="font-display">Mock Exam Portal</h1>
                             <p>Demo access is password-protected. Ask your admin for the unlock code.</p>
                         </div>
@@ -413,10 +411,8 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId, testCenter }) => {
                 <main className="shell-solo shell-wide">
                     {/* Masthead */}
                     <div className="feed-hello">
-                        <p className="os-kicker" style={{ marginBottom: 8 }}>Study OS · Exam bay</p>
                         <h1 className="font-display">Mock Exam Portal</h1>
                         <p>Prometric-style simulations. Your performance refines your study recommendations.</p>
-                        <div className="os-hud-line" style={{ marginTop: 16 }} />
                     </div>
 
                     {loading ? (

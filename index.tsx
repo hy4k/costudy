@@ -5,7 +5,7 @@ import './styles/wall-pages.css';
 import './styles/wall-clay.css';
 import './styles/wall-desktop.css';
 import './styles/wall-app.css';
-import './styles/wall-dark-os.css';
+import './styles/wall-aesthetic-refine.css';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';

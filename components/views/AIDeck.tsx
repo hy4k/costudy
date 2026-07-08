@@ -158,10 +158,8 @@ export const AIDeck: React.FC = () => {
                 <main className="shell-solo shell-wide">
                     {/* Masthead */}
                     <div className="feed-hello">
-                        <p className="os-kicker" style={{ marginBottom: 8 }}>Study OS · AI Deck</p>
                         <h1 className="font-display">CMA Mastermind</h1>
                         <p>IMA-aligned tools for chat, notes, and drills — grounded in your materials.</p>
-                        <div className="os-hud-line" style={{ marginTop: 16 }} />
                     </div>
 
                     <div className="deck-wrap">

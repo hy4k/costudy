@@ -33,9 +33,9 @@ import { localAuthService } from './services/localAuthService';
 // Loading fallback component
 const LoadingFallback = () => (
   <div className="flex min-h-[400px] h-full items-center justify-center bg-transparent">
-    <div className="flex flex-col items-center gap-5">
-      <div className="h-12 w-12 animate-spin rounded-full border-2 border-white/10 border-t-brand shadow-[0_0_30px_-6px_rgba(255,59,59,0.55)]" />
-      <span className="os-kicker">Study OS · Loading</span>
+    <div className="flex flex-col items-center gap-4">
+      <div className="h-11 w-11 animate-spin rounded-full border-2 border-[#ead9cf] border-t-brand" />
+      <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8b7268]">Loading…</span>
     </div>
   </div>
 );

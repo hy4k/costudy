@@ -9,7 +9,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Geist+Mono:wght@400;500&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
   </head>
   <script>
-    (function(){var d=localStorage.getItem('costudy-dark-mode');if(d==='true')document.documentElement.classList.add('dark');})();
+    (function(){
+      var d=localStorage.getItem('costudy-dark-mode');
+      // Dark mission / study OS is the default product shell
+      if(d!=='false'){
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.add('study-os');
+      }
+    })();
     // Force unregister stale service workers in dev
     if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(function(r){r.forEach(function(sw){sw.unregister();console.log('Unregistered stale SW');})});}
   </script>

@@ -525,8 +525,12 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
         <main className="shell-solo shell-feed">
           {/* Masthead */}
           <div className="feed-hello">
+            <p className="os-kicker" style={{ marginBottom: 8 }}>
+              {isFaculty ? 'Faculty mission' : 'Study OS · Live feed'}
+            </p>
             <h1 className="font-display">{isFaculty ? 'Staff Room' : 'Study Wall'}</h1>
             <p>{isFaculty ? 'Updates, pedagogy, and shop talk — colleagues only.' : 'Questions, drills, and wins from candidates like you.'}</p>
+            <div className="os-hud-line" style={{ marginTop: 16 }} />
           </div>
 
           {/* Category tabs */}

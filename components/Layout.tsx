@@ -26,27 +26,31 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
   const isTeacher = userRole === UserRole.TEACHER;
 
   // -- THEME SWITCHER --
-  // Brand decision (June 2026): faculty green #199a6c everywhere; student coral/red brand.
+  // Dark mission / study OS shell. Faculty = green mission; student = red mission.
   useEffect(() => {
     const root = document.documentElement;
+    root.classList.add('dark', 'study-os');
+    if (localStorage.getItem('costudy-dark-mode') !== 'false') {
+      localStorage.setItem('costudy-dark-mode', 'true');
+    }
     if (isTeacher) {
-        root.style.setProperty('--color-brand-50', '#e9f7f0');
-        root.style.setProperty('--color-brand-100', '#d3ecde');
-        root.style.setProperty('--color-brand-200', '#b5dfc9');
-        root.style.setProperty('--color-brand-300', '#7cc9a8');
-        root.style.setProperty('--color-brand-400', '#3eae85');
-        root.style.setProperty('--color-brand-500', '#199a6c');
-        root.style.setProperty('--color-brand-600', '#0f7d58');
-        root.style.setProperty('--color-brand-700', '#07614a');
-        root.style.setProperty('--color-brand-800', '#084d3c');
-        root.style.setProperty('--color-brand-900', '#063d30');
+        root.style.setProperty('--color-brand-50', '#052e1c');
+        root.style.setProperty('--color-brand-100', '#064e3b');
+        root.style.setProperty('--color-brand-200', '#065f46');
+        root.style.setProperty('--color-brand-300', '#047857');
+        root.style.setProperty('--color-brand-400', '#10b981');
+        root.style.setProperty('--color-brand-500', '#22c55e');
+        root.style.setProperty('--color-brand-600', '#16a34a');
+        root.style.setProperty('--color-brand-700', '#15803d');
+        root.style.setProperty('--color-brand-800', '#166534');
+        root.style.setProperty('--color-brand-900', '#14532d');
     } else {
-        root.style.setProperty('--color-brand-50', '#fff1f1');
-        root.style.setProperty('--color-brand-100', '#ffdfdf');
-        root.style.setProperty('--color-brand-200', '#ffc5c5');
-        root.style.setProperty('--color-brand-300', '#ff9d9d');
-        root.style.setProperty('--color-brand-400', '#ff6464');
-        root.style.setProperty('--color-brand-500', '#ff1a1a');
+        root.style.setProperty('--color-brand-50', '#2a0a0a');
+        root.style.setProperty('--color-brand-100', '#450a0a');
+        root.style.setProperty('--color-brand-200', '#7f1d1d');
+        root.style.setProperty('--color-brand-300', '#b91c1c');
+        root.style.setProperty('--color-brand-400', '#ef4444');
+        root.style.setProperty('--color-brand-500', '#ff3b3b');
         root.style.setProperty('--color-brand-600', '#ed0000');
         root.style.setProperty('--color-brand-700', '#c80000');
         root.style.setProperty('--color-brand-800', '#a50404');
@@ -156,7 +160,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
       ];
 
   return (
-    <div className="proto app-chrome" data-theme={isTeacher ? 'faculty' : undefined} style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+    <div className="proto app-chrome study-os" data-theme={isTeacher ? 'faculty' : undefined} style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
       {/* ---------- Top bar (redesign TopBar) ---------- */}
       <header className="topbar">
         <div className="topbar-inner">

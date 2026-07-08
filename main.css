@@ -17,15 +17,27 @@
 }
 
 body {
-  background: linear-gradient(180deg, #fafbfc 0%, #f1f5f9 55%, #eef2f7 100%);
-  color: #0f172a;
+  /* Dark mission / study OS is the product default */
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(255, 26, 26, 0.12), transparent 55%),
+    radial-gradient(900px 500px at 90% 0%, rgba(56, 189, 248, 0.06), transparent 50%),
+    linear-gradient(180deg, #07090f 0%, #0b1020 45%, #0a0d16 100%);
+  color: #e8edf7;
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-feature-settings: 'kern' 1, 'liga' 1;
   text-rendering: optimizeLegibility;
 }
-html.dark body {
-  background-color: #0f172a;
-  color: #f8fafc;
+html:not(.dark):not(.study-os) body {
+  background: linear-gradient(180deg, #fafbfc 0%, #f1f5f9 55%, #eef2f7 100%);
+  color: #0f172a;
+}
+html.dark body,
+html.study-os body {
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(255, 26, 26, 0.12), transparent 55%),
+    radial-gradient(900px 500px at 90% 0%, rgba(56, 189, 248, 0.06), transparent 50%),
+    linear-gradient(180deg, #07090f 0%, #0b1020 45%, #0a0d16 100%);
+  color: #e8edf7;
 }
 
 ::-webkit-scrollbar {

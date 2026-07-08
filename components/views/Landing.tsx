@@ -24,8 +24,9 @@ const MENTOR_FEATURES = ['Everything in Pro', 'Verified badge', 'Student dashboa
 export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
   const [billingCycle, setBillingCycle] = useState<'MONTHLY' | 'YEARLY'>('MONTHLY');
   const [isDark, setIsDark] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return localStorage.getItem(DARK_STORAGE_KEY) === 'true';
+    if (typeof window === 'undefined') return true;
+    // Dark mission is default; only light when user explicitly opted out
+    return localStorage.getItem(DARK_STORAGE_KEY) !== 'false';
   });
   const [showStickyCTA, setShowStickyCTA] = useState(false);
   const heroRef = useRef<HTMLElement>(null);

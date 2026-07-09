@@ -25,7 +25,6 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
   const [billingCycle, setBillingCycle] = useState<'MONTHLY' | 'YEARLY'>('MONTHLY');
   const [isDark, setIsDark] = useState(() => {
     if (typeof window === 'undefined') return false;
-    // Warm light clay is default; dark only when user opted in
     return localStorage.getItem(DARK_STORAGE_KEY) === 'true';
   });
   const [showStickyCTA, setShowStickyCTA] = useState(false);
@@ -92,7 +91,7 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
             animation: 'scaleIn 0.8s ease-out',
           }}
         >
-          <span style={{ color: '#d45a4c' }}>CO</span>
+          <span style={{ color: '#ff1a1a' }}>CO</span>
           <span className="text-[#0a0a0a] dark:text-white">STUDY</span>
         </h1>
 
@@ -109,13 +108,13 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
         >
           <button
             onClick={onGetStarted}
-            className="relative overflow-hidden rounded-2xl bg-[linear-gradient(135deg,_#d45a4c_0%,_#c04a3d_100%)] px-10 py-[1.125rem] text-sm font-bold uppercase tracking-[0.1em] text-white shadow-[0_6px_20px_-4px_rgba(212,90,76,0.35),_inset_0_1px_0_rgba(255,255,255,0.25),_0_2px_4px_rgba(0,0,0,0.1)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_60px_-10px_rgba(212,90,76,0.4),_0_0_40px_rgba(212,90,76,0.22)]"
+            className="relative overflow-hidden rounded-2xl bg-[linear-gradient(135deg,_#ff1a1a_0%,_#ed0000_100%)] px-10 py-[1.125rem] text-sm font-bold uppercase tracking-[0.1em] text-white shadow-[0_6px_20px_-4px_rgba(239,68,68,0.5),_inset_0_1px_0_rgba(255,255,255,0.25),_0_2px_4px_rgba(0,0,0,0.1)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_60px_-10px_rgba(239,68,68,0.6),_0_0_40px_rgba(239,68,68,0.3)]"
           >
             Join the Beta →
           </button>
           <button
             onClick={onLogin}
-            className="rounded-2xl border border-white/60 bg-white/80 px-10 py-[1.125rem] text-sm font-bold uppercase tracking-[0.1em] text-slate-900 transition-all duration-300 hover:-translate-y-0.5 hover:border-brand hover:shadow-[0_10px_40px_-10px_rgba(212,90,76,0.22)] dark:border-white/5 dark:bg-slate-800/80 dark:text-white"
+            className="rounded-2xl border border-white/60 bg-white/80 px-10 py-[1.125rem] text-sm font-bold uppercase tracking-[0.1em] text-slate-900 transition-all duration-300 hover:-translate-y-0.5 hover:border-brand hover:shadow-[0_10px_40px_-10px_rgba(239,68,68,0.3)] dark:border-white/5 dark:bg-slate-800/80 dark:text-white"
             style={{ boxShadow: '4px 4px 16px rgba(15,23,42,0.06), -2px -2px 10px rgba(255,255,255,0.9), inset 0 1px 0 rgba(255,255,255,0.8)' }}
           >
             Sign In
@@ -316,7 +315,7 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
             {/* Pro — featured */}
             <div
               className="anim-pricing pricing-card-3d featured relative flex flex-col rounded-3xl border-2 border-brand bg-white/85 p-12 dark:bg-slate-800 lg:-mt-6 lg:mb-6"
-              style={{ boxShadow: '0 20px 60px -20px rgba(212,90,76,0.22)' }}
+              style={{ boxShadow: '0 20px 60px -20px rgba(239,68,68,0.3)' }}
             >
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-brand px-4 py-1 text-xs font-extrabold uppercase tracking-[0.1em] text-white">
                 Popular
@@ -337,7 +336,7 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
               <button
                 onClick={onGetStarted}
                 className="w-full rounded-2xl py-4 text-sm font-bold uppercase tracking-[0.1em] text-white transition-all hover:shadow-neon-red"
-                style={{ background: 'linear-gradient(135deg, #d45a4c 0%, #c04a3d 100%)', boxShadow: '0 6px 20px -4px rgba(212,90,76,0.35)' }}
+                style={{ background: 'linear-gradient(135deg, #ff1a1a 0%, #ed0000 100%)', boxShadow: '0 6px 20px -4px rgba(239,68,68,0.5)' }}
               >
                 Upgrade to Pro
               </button>
@@ -389,8 +388,8 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
             onClick={onGetStarted}
             className="rounded-2xl px-10 py-4 text-sm font-bold uppercase tracking-[0.1em] text-white transition-all hover:-translate-y-0.5"
             style={{
-              background: 'linear-gradient(135deg, #d45a4c 0%, #c04a3d 100%)',
-              boxShadow: '0 6px 20px -4px rgba(212,90,76,0.35), 0 0 40px rgba(212,90,76,0.22)',
+              background: 'linear-gradient(135deg, #ff1a1a 0%, #ed0000 100%)',
+              boxShadow: '0 6px 20px -4px rgba(239,68,68,0.5), 0 0 40px rgba(239,68,68,0.3)',
             }}
           >
             Get Started Free →
@@ -430,8 +429,8 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin }) => {
           onClick={onGetStarted}
           className="w-full rounded-2xl px-8 py-4 text-sm font-bold uppercase tracking-[0.1em] text-white transition-all hover:-translate-y-0.5 sm:w-auto"
           style={{
-            background: 'linear-gradient(135deg, #d45a4c 0%, #c04a3d 100%)',
-            boxShadow: '0 20px 60px -10px rgba(212,90,76,0.4), 0 0 40px rgba(239,68,68,0.4)',
+            background: 'linear-gradient(135deg, #ff1a1a 0%, #ed0000 100%)',
+            boxShadow: '0 20px 60px -10px rgba(239,68,68,0.6), 0 0 40px rgba(239,68,68,0.4)',
           }}
         >
           Join the Beta →

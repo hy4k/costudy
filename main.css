@@ -2,35 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
-/* CoStudy design tokens — warm terracotta coral (long-session friendly) */
+/* CoStudy design tokens & custom styles (moved from index.html) */
 :root {
-  --color-brand-50: #fdf4f2;
-  --color-brand-100: #f9e4df;
-  --color-brand-200: #f2c9c1;
-  --color-brand-300: #e8a399;
-  --color-brand-400: #db7a6d;
-  --color-brand-500: #d45a4c;
-  --color-brand-600: #c04a3d;
-  --color-brand-700: #a13c32;
-  --color-brand-800: #85342c;
-  --color-brand-900: #6e2e28;
+  --color-brand-50: #fff1f1;
+  --color-brand-100: #ffdfdf;
+  --color-brand-200: #ffc5c5;
+  --color-brand-300: #ff9d9d;
+  --color-brand-400: #ff6464;
+  --color-brand-500: #ff1a1a;
+  --color-brand-600: #ed0000;
+  --color-brand-700: #c80000;
+  --color-brand-800: #a50404;
+  --color-brand-900: #890b0b;
 }
 
 body {
-  background:
-    radial-gradient(900px 420px at 8% -8%, rgba(212, 90, 76, 0.06), transparent 55%),
-    radial-gradient(700px 380px at 92% 0%, rgba(196, 159, 120, 0.08), transparent 50%),
-    linear-gradient(180deg, #faf6f3 0%, #f4ebe4 48%, #f0e6df 100%);
-  color: #3d2a24;
+  background: linear-gradient(180deg, #fafbfc 0%, #f1f5f9 55%, #eef2f7 100%);
+  color: #0f172a;
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-feature-settings: 'kern' 1, 'liga' 1;
   text-rendering: optimizeLegibility;
 }
 html.dark body {
-  background:
-    radial-gradient(900px 420px at 10% -10%, rgba(212, 90, 76, 0.1), transparent 55%),
-    linear-gradient(180deg, #1c1614 0%, #231c19 50%, #1a1513 100%);
-  color: #f3eae4;
+  background-color: #0f172a;
+  color: #f8fafc;
 }
 
 ::-webkit-scrollbar {
@@ -77,19 +72,19 @@ html.dark body {
 
 .bt-1:hover ~ .tilt-btn {
   transform: rotateX(15deg) rotateY(-15deg);
-  box-shadow: -2px -2px #d45a4c22;
+  box-shadow: -2px -2px #ff1a1a22;
 }
 .bt-3:hover ~ .tilt-btn {
   transform: rotateX(15deg) rotateY(15deg);
-  box-shadow: 2px -2px #d45a4c22;
+  box-shadow: 2px -2px #ff1a1a22;
 }
 .bt-4:hover ~ .tilt-btn {
   transform: rotateX(-15deg) rotateY(-15deg);
-  box-shadow: -2px 2px #d45a4c22;
+  box-shadow: -2px 2px #ff1a1a22;
 }
 .bt-6:hover ~ .tilt-btn {
   transform: rotateX(-15deg) rotateY(15deg);
-  box-shadow: 2px 2px #d45a4c22;
+  box-shadow: 2px 2px #ff1a1a22;
 }
 
 .tilt-btn {
@@ -163,12 +158,12 @@ html.dark body {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(212,90,76,0.15), transparent 70%);
+  background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(239,68,68,0.15), transparent 70%);
   opacity: 0.6;
   pointer-events: none;
 }
 html.dark .hero-enhanced::before {
-  background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(212,90,76,0.25), transparent 70%);
+  background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(239,68,68,0.25), transparent 70%);
 }
 
 /* Timeline vertical line */
@@ -179,7 +174,7 @@ html.dark .hero-enhanced::before {
   top: 0;
   bottom: 0;
   width: 2px;
-  background: linear-gradient(180deg, transparent 0%, #d45a4c 50%, transparent 100%);
+  background: linear-gradient(180deg, transparent 0%, #ff1a1a 50%, transparent 100%);
   transform: translateX(-50%);
 }
 @media (max-width: 768px) {
@@ -201,12 +196,12 @@ html.dark .hero-enhanced::before {
   font-size: 1.5rem;
   font-weight: 900;
   color: white;
-  background: linear-gradient(135deg, #d45a4c 0%, #c04a3d 100%);
-  box-shadow: 0 0 0 8px rgba(255,255,255,1), 0 10px 40px -10px rgba(212,90,76,0.5);
+  background: linear-gradient(135deg, #ff1a1a 0%, #ed0000 100%);
+  box-shadow: 0 0 0 8px rgba(255,255,255,1), 0 10px 40px -10px rgba(239,68,68,0.5);
   z-index: 10;
 }
 html.dark .timeline-number {
-  box-shadow: 0 0 0 8px #0f172a, 0 10px 40px -10px rgba(212,90,76,0.5);
+  box-shadow: 0 0 0 8px #0f172a, 0 10px 40px -10px rgba(239,68,68,0.5);
 }
 @media (max-width: 768px) {
   .timeline-number { left: 2rem; width: 3rem; height: 3rem; font-size: 1.25rem; }
@@ -235,10 +230,10 @@ html.dark .timeline-number {
 }
 .timeline-card:hover {
   transform: translateY(-8px) rotateX(2deg);
-  box-shadow: 0 30px 80px -20px rgba(15,23,42,0.25), 0 0 40px rgba(212,90,76,0.15) !important;
+  box-shadow: 0 30px 80px -20px rgba(15,23,42,0.25), 0 0 40px rgba(239,68,68,0.15) !important;
 }
 html.dark .timeline-card:hover {
-  box-shadow: 0 30px 80px -20px rgba(0,0,0,0.7), 0 0 40px rgba(212,90,76,0.25) !important;
+  box-shadow: 0 30px 80px -20px rgba(0,0,0,0.7), 0 0 40px rgba(239,68,68,0.25) !important;
 }
 
 .pricing-card-3d {
@@ -247,7 +242,7 @@ html.dark .timeline-card:hover {
 }
 .pricing-card-3d:not(.featured):hover {
   transform: translateY(-12px) rotateY(2deg) scale(1.02);
-  box-shadow: 0 40px 100px -30px rgba(212,90,76,0.4) !important;
+  box-shadow: 0 40px 100px -30px rgba(239,68,68,0.4) !important;
   border-color: var(--color-brand-500) !important;
 }
 .pricing-card-3d.featured {

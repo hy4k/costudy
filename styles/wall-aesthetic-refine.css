@@ -1,0 +1,364 @@
+/* ============================================================
+   CoStudy — AESTHETIC REFINE (warm clay, long-session friendly)
+   Loaded last. Preserves the clay / soft-surface identity.
+   Softens pure-red brand, improves readable contrast, calms
+   per-page palette jumps so the UI is easy to look at for hours.
+   ============================================================ */
+
+/* ---------- Global canvas: warm ivory, not slate, not navy ---------- */
+body {
+  background:
+    radial-gradient(900px 420px at 8% -8%, rgba(225, 85, 73, 0.06), transparent 55%),
+    radial-gradient(700px 380px at 92% 0%, rgba(196, 159, 120, 0.08), transparent 50%),
+    linear-gradient(180deg, #faf6f3 0%, #f4ebe4 48%, #f0e6df 100%);
+  color: #3d2a24;
+}
+
+html.dark body {
+  /* Optional soft dusk — never pure black, never neon */
+  background:
+    radial-gradient(900px 420px at 10% -10%, rgba(225, 85, 73, 0.1), transparent 55%),
+    linear-gradient(180deg, #1c1614 0%, #231c19 50%, #1a1513 100%);
+  color: #f3eae4;
+}
+
+/* ---------- Brand tokens: terracotta coral (not traffic-light red) ---------- */
+:root {
+  --color-brand-50: #fdf4f2;
+  --color-brand-100: #f9e4df;
+  --color-brand-200: #f2c9c1;
+  --color-brand-300: #e8a399;
+  --color-brand-400: #db7a6d;
+  --color-brand-500: #d45a4c; /* primary — softer than #ff1a1a */
+  --color-brand-600: #c04a3d;
+  --color-brand-700: #a13c32;
+  --color-brand-800: #85342c;
+  --color-brand-900: #6e2e28;
+}
+
+/* ---------- Student clay base — refined for readability ---------- */
+.proto {
+  --paper: #f5ebe4;
+  --card: #fffaf7;
+  --ink: #3d2a24;
+  --muted: #8b7268;
+  --line: #ead9cf;
+  --accent: #d45a4c;
+  --accent-deep: #a13c32;
+  --accent-soft: #f7e0db;
+  --accent-line: #ebc4bc;
+  --hi: rgba(255, 253, 250, 0.95);
+  --lo: rgba(160, 120, 100, 0.28);
+  --gold: #a87830;
+  --gold-soft: #f5ead0;
+  color: var(--ink);
+  background: var(--paper);
+}
+
+/* Faculty — soft sage, not neon emerald */
+.proto[data-theme="faculty"] {
+  --paper: #eaf2ed;
+  --card: #f7fbf8;
+  --ink: #1e3329;
+  --muted: #6f877b;
+  --line: #d2e3da;
+  --accent: #2f9b6f;
+  --accent-deep: #1b6b4c;
+  --accent-soft: #d9eee4;
+  --accent-line: #b8dfcb;
+  --hi: rgba(255, 255, 255, 0.95);
+  --lo: rgba(100, 140, 120, 0.28);
+}
+
+/* Per-page: subtle tints of the same warm family (less rainbow shock) */
+.proto:not(.mono) .wall[data-page="ai"],
+.proto:not(.mono) .wall[data-page="deck"] {
+  --paper: #f2edf6;
+  --card: #fbf9fd;
+  --ink: #322a42;
+  --muted: #7f7694;
+  --line: #e2dbeb;
+  --accent: #7b6bc4;
+  --accent-deep: #5648a0;
+  --accent-soft: #ebe6f7;
+  --accent-line: #d5cdec;
+  --hi: rgba(255, 255, 255, 0.96);
+  --lo: rgba(130, 120, 170, 0.26);
+}
+
+.proto:not(.mono) .wall[data-page="mocks"] {
+  --paper: #edf1f6;
+  --card: #f8fafc;
+  --ink: #243140;
+  --muted: #6f8094;
+  --line: #d7e0ea;
+  --accent: #4a86b8;
+  --accent-deep: #2f5f88;
+  --accent-soft: #e2eef7;
+  --accent-line: #c5d9eb;
+  --hi: rgba(255, 255, 255, 0.96);
+  --lo: rgba(110, 140, 170, 0.26);
+}
+
+.proto:not(.mono) .wall[data-page="rooms"] {
+  --paper: #ecf3ef;
+  --card: #f7fbf8;
+  --ink: #22362c;
+  --muted: #6f877b;
+  --line: #d2e4da;
+  --accent: #3a9a72;
+  --accent-deep: #1f6b4d;
+  --accent-soft: #dcefe6;
+  --accent-line: #b9dfcb;
+  --hi: rgba(255, 255, 255, 0.95);
+  --lo: rgba(100, 145, 125, 0.26);
+}
+
+.proto:not(.mono) .wall[data-page="mentors"] {
+  --paper: #f5efe4;
+  --card: #fcf8f0;
+  --ink: #3c3018;
+  --muted: #8f7d5a;
+  --line: #e8dcc4;
+  --accent: #c4892a;
+  --accent-deep: #8a5c14;
+  --accent-soft: #f5e8cf;
+  --accent-line: #e8d4a8;
+  --hi: rgba(255, 253, 248, 0.96);
+  --lo: rgba(170, 140, 90, 0.26);
+}
+
+.proto:not(.mono) .wall[data-page="messages"] {
+  --paper: #eef3f3;
+  --card: #f7fbfb;
+  --ink: #243536;
+  --muted: #6d8486;
+  --line: #d5e3e4;
+  --accent: #3a9a9c;
+  --accent-deep: #21686a;
+  --accent-soft: #dff0f0;
+  --accent-line: #b9dede;
+  --hi: rgba(255, 255, 255, 0.96);
+  --lo: rgba(100, 140, 145, 0.26);
+}
+
+.proto:not(.mono) .wall[data-page="profile"] {
+  --paper: #f5ebe4;
+  --card: #fffaf7;
+  --ink: #3d2a24;
+  --muted: #8b7268;
+  --line: #ead9cf;
+  --accent: #d45a4c;
+  --accent-deep: #a13c32;
+  --accent-soft: #f7e0db;
+  --accent-line: #ebc4bc;
+}
+
+/* Softer clay extrusion — less eye fatigue than deep neumorphism */
+.proto, .proto *, .login, .login * {
+  --d: 0.72;
+  --lo: color-mix(in srgb, var(--lo) 75%, transparent);
+}
+
+/* ---------- Top bar: frosted warm glass ---------- */
+.topbar {
+  background: color-mix(in srgb, var(--paper) 78%, #ffffff);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
+  box-shadow: 0 8px 24px -18px rgba(90, 50, 35, 0.18);
+}
+
+.topnav-item {
+  color: var(--muted);
+  font-weight: 600;
+}
+.topnav-item:hover {
+  background: color-mix(in srgb, var(--card) 90%, white);
+  border-color: var(--line);
+  color: var(--ink);
+}
+.topnav-item.on {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fffaf7;
+  box-shadow: 0 8px 18px -10px color-mix(in srgb, var(--ink) 45%, transparent);
+}
+
+/* Tab bar */
+.tabbar {
+  background: color-mix(in srgb, var(--paper) 88%, #ffffff);
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -8px 24px -18px rgba(90, 50, 35, 0.14);
+}
+.tab.on {
+  color: var(--accent-deep);
+}
+
+/* Cards & posts: soft raise, no harsh glow */
+.post,
+.rail-card,
+.feed-prompt,
+.room-card,
+.mock-card,
+.mentor-card,
+.deck-panel,
+.profile-card {
+  background: var(--raised-bg, var(--card));
+  border: 1px solid color-mix(in srgb, var(--line) 85%, transparent);
+  box-shadow: var(--nm-sm, 0 10px 28px -16px rgba(90, 50, 35, 0.2));
+}
+
+/* Chips */
+.cat {
+  background: color-mix(in srgb, var(--card) 92%, white);
+  border-color: var(--line);
+  color: var(--muted);
+}
+.cat:hover,
+.cat.on {
+  color: var(--accent-deep);
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+}
+
+/* Masthead typography comfort */
+.feed-hello h1 {
+  color: var(--ink);
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+.feed-hello p {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* Soft accent bar under mastheads (replaces harsh neon HUD line) */
+.os-hud-line {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--accent-line) 70%, transparent),
+    transparent
+  );
+  opacity: 0.9;
+}
+
+.os-kicker {
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.os-title {
+  font-family: 'Bricolage Grotesque', 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.os-panel {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: var(--nm-sm, 0 12px 30px -18px rgba(90, 50, 35, 0.22));
+}
+
+.os-panel-soft {
+  background: color-mix(in srgb, var(--paper) 55%, var(--card));
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+.os-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.84rem;
+  padding: 0.65rem 1.15rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+.os-btn:active { transform: scale(0.98); }
+
+.os-btn-primary {
+  color: #fffaf7;
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--accent) 88%, white),
+    var(--accent) 42%,
+    var(--accent-deep)
+  );
+  box-shadow: 0 10px 22px -12px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+.os-btn-primary:hover { filter: brightness(1.03); }
+
+.os-btn-ghost {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--card) 90%, white);
+  border: 1px solid var(--line);
+}
+.os-btn-ghost:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+}
+
+.os-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+  border: 1px solid var(--accent-line);
+}
+
+/* Logo capsule stays soft clay */
+.co-capsule {
+  background: linear-gradient(145deg, #fff8f4, #f6e8e0);
+  box-shadow:
+    -3px -3px 8px rgba(255, 252, 250, 0.9),
+    4px 5px 12px rgba(170, 120, 100, 0.22);
+}
+
+.co-wordmark {
+  --ink: #3d2a24;
+  --accent: #d45a4c;
+}
+
+/* Inputs: soft inset, not dark wells */
+.proto input,
+.proto textarea,
+.login input,
+.login textarea {
+  background: color-mix(in srgb, var(--paper) 70%, white);
+  border-color: var(--line);
+  color: var(--ink);
+}
+.proto input::placeholder,
+.proto textarea::placeholder {
+  color: color-mix(in srgb, var(--muted) 88%, transparent);
+}
+
+/* Scrollbar matches warm palette */
+::-webkit-scrollbar-track { background: #f0e8e2; }
+::-webkit-scrollbar-thumb { background: #d4c0b4; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-brand-500); }
+
+/* Undo any leftover “force dark surfaces” from earlier experiment */
+html.dark .bg-slate-50 { background-color: transparent !important; }
+html.dark .bg-white { background-color: var(--card, #1f1917) !important; }
+
+/* Light mode: never force slate-white overrides on clay pages */
+.proto .bg-slate-50,
+.proto .bg-white {
+  background-color: transparent;
+}

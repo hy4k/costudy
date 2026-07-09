@@ -26,31 +26,36 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
   const isTeacher = userRole === UserRole.TEACHER;
 
   // -- THEME SWITCHER --
-  // Brand decision (June 2026): faculty green #199a6c everywhere; student coral/red brand.
+  // Warm clay aesthetic: student terracotta coral, faculty soft sage.
+  // Never force dark mode — light clay is the product look.
   useEffect(() => {
     const root = document.documentElement;
+    root.classList.remove('study-os');
+    if (localStorage.getItem('costudy-dark-mode') !== 'true') {
+      root.classList.remove('dark');
+    }
     if (isTeacher) {
-        root.style.setProperty('--color-brand-50', '#e9f7f0');
-        root.style.setProperty('--color-brand-100', '#d3ecde');
+        root.style.setProperty('--color-brand-50', '#eaf6f0');
+        root.style.setProperty('--color-brand-100', '#d4ecdf');
         root.style.setProperty('--color-brand-200', '#b5dfc9');
         root.style.setProperty('--color-brand-300', '#7cc9a8');
-        root.style.setProperty('--color-brand-400', '#3eae85');
-        root.style.setProperty('--color-brand-500', '#199a6c');
-        root.style.setProperty('--color-brand-600', '#0f7d58');
-        root.style.setProperty('--color-brand-700', '#07614a');
-        root.style.setProperty('--color-brand-800', '#084d3c');
-        root.style.setProperty('--color-brand-900', '#063d30');
+        root.style.setProperty('--color-brand-400', '#4aaf86');
+        root.style.setProperty('--color-brand-500', '#2f9b6f');
+        root.style.setProperty('--color-brand-600', '#1f7d58');
+        root.style.setProperty('--color-brand-700', '#1b6b4c');
+        root.style.setProperty('--color-brand-800', '#17563e');
+        root.style.setProperty('--color-brand-900', '#124633');
     } else {
-        root.style.setProperty('--color-brand-50', '#fff1f1');
-        root.style.setProperty('--color-brand-100', '#ffdfdf');
-        root.style.setProperty('--color-brand-200', '#ffc5c5');
-        root.style.setProperty('--color-brand-300', '#ff9d9d');
-        root.style.setProperty('--color-brand-400', '#ff6464');
-        root.style.setProperty('--color-brand-500', '#ff1a1a');
-        root.style.setProperty('--color-brand-600', '#ed0000');
-        root.style.setProperty('--color-brand-700', '#c80000');
-        root.style.setProperty('--color-brand-800', '#a50404');
-        root.style.setProperty('--color-brand-900', '#890b0b');
+        root.style.setProperty('--color-brand-50', '#fdf4f2');
+        root.style.setProperty('--color-brand-100', '#f9e4df');
+        root.style.setProperty('--color-brand-200', '#f2c9c1');
+        root.style.setProperty('--color-brand-300', '#e8a399');
+        root.style.setProperty('--color-brand-400', '#db7a6d');
+        root.style.setProperty('--color-brand-500', '#d45a4c');
+        root.style.setProperty('--color-brand-600', '#c04a3d');
+        root.style.setProperty('--color-brand-700', '#a13c32');
+        root.style.setProperty('--color-brand-800', '#85342c');
+        root.style.setProperty('--color-brand-900', '#6e2e28');
     }
   }, [isTeacher]);
 

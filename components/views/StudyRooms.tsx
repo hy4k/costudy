@@ -1,1015 +1,583 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Icons } from '../Icons';
+import { StudyRoom, User, RoomMessage, RoomResource, MentorInvitation } from '../../types';
+import { costudyService } from '../../services/costudyService';
+import { getUserProfile } from '../../services/fetsService';
 import { supabase } from '../../services/supabaseClient';
+import { generateStudyContent, getMapsGroundedResponse } from '../../services/geminiService';
+import Markdown from 'react-markdown';
 
-// ─────────────────────────────────────────────
-// TYPES
-// ─────────────────────────────────────────────
+type RoomTab = 'Chat' | 'Live Audio' | 'Whiteboard' | 'Resources' | 'Schedule' | 'Faculty Hive' | 'Study Spots' | 'Settings';
 
-interface StudyRoom {
-  id: string;
-  name: string;
-  category: string;
-  topic: string;
-  description: string;
-  target_topics: string[];
-  color_theme: string;
-  is_live: boolean;
-  members_count: number;
-  active_count: number;
+interface StudyRoomsProps {
+  userId?: string;
 }
 
-interface ChatMsg {
-  id: string;
-  author_id: string;
-  is_ai: boolean;
-  content: string;
-  created_at: string;
-  author?: { display_name: string; avatar_url: string | null };
-}
-
-interface Battle {
-  id: string;
-  topic: string;
-  question_count: number;
-  status: string;
-  created_at: string;
-  created_by: string;
-  participants?: { user_id: string; score: number; questions_answered: number }[];
-}
-
-interface LeaderEntry {
-  user_id: string;
-  display_name: string;
-  avatar_url: string | null;
-  questions_solved: number;
-  streak_days: number;
-  total_score: number;
-}
-
-interface MCQ {
-  id: string;
-  stem: string;
-  choices: Record<string, string>;  // {A: '...', B: '...', ...}
-  correct_key: string;
-  explanation: string;
-  topic: string;
-}
-
-interface PresenceMember {
-  user_id: string;
-  display_name: string;
-  avatar_url: string | null;
-}
-
-// ─────────────────────────────────────────────
-// CMA SYLLABUS CONFIG
-// ─────────────────────────────────────────────
-
-const ROOM_META: Record<string, { emoji: string; weight: string; part: string; color: string }> = {
-  'External Financial Reporting Decisions': { emoji: '📑', weight: '15%', part: 'Part 1', color: '#0ea5e9' },
-  'Planning, Budgeting and Forecasting':    { emoji: '📊', weight: '20%', part: 'Part 1', color: '#8b5cf6' },
-  'Performance Management':                  { emoji: '🎯', weight: '20%', part: 'Part 1', color: '#ec4899' },
-  'Cost Management':                         { emoji: '🧮', weight: '15%', part: 'Part 1', color: '#f59e0b' },
-  'Internal Controls':                       { emoji: '🔒', weight: '15%', part: 'Part 1', color: '#14b8a6' },
-  'Technology and Analytics':                { emoji: '⚡', weight: '15%', part: 'Part 1', color: '#6366f1' },
-  'Financial Statement Analysis':            { emoji: '🔬', weight: '20%', part: 'Part 2', color: '#f43f5e' },
-  'Corporate Finance':                       { emoji: '🏦', weight: '25%', part: 'Part 2', color: '#22c55e' },
-  'Decision Analysis':                       { emoji: '⚖️', weight: '25%', part: 'Part 2', color: '#f97316' },
-  'Risk Management':                         { emoji: '🛡️', weight: '10%', part: 'Part 2', color: '#ef4444' },
-  'Investment Decisions':                    { emoji: '💹', weight: '10%', part: 'Part 2', color: '#3b82f6' },
-  'Professional Ethics':                     { emoji: '⚖️', weight: '10%', part: 'Part 2', color: '#10b981' },
-  'General':                                 { emoji: '🌐', weight: '',    part: 'General', color: '#a855f7' },
-};
-
-function getRoomMeta(topic: string) {
-  return ROOM_META[topic] || { emoji: '📚', weight: '', part: '', color: '#e15549' };
-}
-
-function dayOfYear() {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), 0, 0);
-  return Math.floor((now.getTime() - start.getTime()) / 86400000);
-}
-
-// ─────────────────────────────────────────────
-// SMALL COMPONENTS
-// ─────────────────────────────────────────────
-
-const Avatar: React.FC<{ name: string; url?: string | null; size?: number }> = ({ name, url, size = 32 }) => {
-  const letter = (name || 'U').charAt(0).toUpperCase();
-  return url ? (
-    <img src={url} alt={name} style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flex: 'none' }} />
-  ) : (
-    <span style={{
-      width: size, height: size, borderRadius: '50%', flex: 'none',
-      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-      background: 'var(--accent-soft)', color: 'var(--accent-deep)',
-      fontWeight: 800, fontSize: Math.round(size * 0.38),
-    }}>{letter}</span>
-  );
-};
-
-const Spinner: React.FC = () => (
-  <div style={{ display: 'flex', justifyContent: 'center', padding: '60px 0' }}>
-    <div style={{ width: 32, height: 32, borderRadius: '50%', border: '3px solid var(--line)', borderTopColor: 'var(--accent)', animation: 'spin 0.8s linear infinite' }} />
-  </div>
-);
-
-// ─────────────────────────────────────────────
-// MAIN COMPONENT
-// ─────────────────────────────────────────────
-
-interface Props { userId?: string; userProfile?: { display_name: string; avatar_url: string | null } | null }
-
-export const StudyRooms: React.FC<Props> = ({ userId, userProfile }) => {
+export const StudyRooms: React.FC<StudyRoomsProps> = ({ userId }) => {
   const [rooms, setRooms] = useState<StudyRoom[]>([]);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState<StudyRoom | null>(null);
-  const [tab, setTab] = useState<'arena' | 'battles' | 'chat' | 'board'>('arena');
-
-  // Arena
-  const [dailyQ, setDailyQ] = useState<MCQ | null>(null);
-  const [pickedKey, setPickedKey] = useState<string | null>(null);
-  const [revealed, setRevealed] = useState(false);
-
-  // Chat
-  const [messages, setMessages] = useState<ChatMsg[]>([]);
+  const [selectedRoom, setSelectedRoom] = useState<StudyRoom | null>(null);
+  const [activeTab, setActiveTab] = useState<RoomTab>('Chat');
+  
+  const [presenceCounts, setPresenceCounts] = useState<Record<string, number>>({});
+  
+  const [messages, setMessages] = useState<RoomMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
-  const [sendingMsg, setSendingMsg] = useState(false);
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const [resources, setResources] = useState<RoomResource[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isCompiling, setIsCompiling] = useState(false);
+  const [notebookStructure, setNotebookStructure] = useState<any>(null);
 
-  // Battles
-  const [battles, setBattles] = useState<Battle[]>([]);
-  const [activeBattle, setActiveBattle] = useState<{
-    sessionId: string; questions: MCQ[]; idx: number; score: number;
-    picked: string | null; timeLeft: number; done: boolean;
-  } | null>(null);
-  const battleTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // -- NEW: Faculty Hiring State --
+  const [availableMentors, setAvailableMentors] = useState<User[]>([]);
+  const [invitations, setInvitations] = useState<MentorInvitation[]>([]);
+  const [isHiring, setIsHiring] = useState(false);
+  const [hireFee, setHireFee] = useState(2500);
 
-  // Leaderboard
-  const [leaders, setLeaders] = useState<LeaderEntry[]>([]);
+  const [editingResource, setEditingResource] = useState<RoomResource | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editSummary, setEditSummary] = useState('');
+  
+  const [schedules, setSchedules] = useState<any[]>([]);
+  const [isScheduling, setIsScheduling] = useState(false);
+  const [newEvent, setNewEvent] = useState({
+    title: '',
+    description: '',
+    date: new Date().toISOString().split('T')[0],
+    startTime: '10:00',
+    duration: '60',
+    type: 'PEER_STUDY' as any
+  });
 
-  // Presence
-  const [onlineCount, setOnlineCount] = useState(0);
-  const [onlineAvatars, setOnlineAvatars] = useState<PresenceMember[]>([]);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const [isAiListening, setIsAiListening] = useState(false);
+  const sessionRef = useRef<any>(null);
 
-  const presenceChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
-  const msgChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
-  const battleChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const [spotsQuery, setSpotsQuery] = useState('');
+  const [spotsResult, setSpotsResult] = useState<{text: string, places: any[]}>({ text: '', places: [] });
+  const [isSearchingSpots, setIsSearchingSpots] = useState(false);
 
-  // ── Load rooms ──
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // -- NEW: Room Settings Persistence --
+  const [roomSettings, setRoomSettings] = useState<Record<string, Partial<StudyRoom>>>({});
+
   useEffect(() => {
-    supabase.from('study_rooms')
-      .select('id,name,category,topic,description,target_topics,color_theme,is_live,members_count,active_count')
-      .order('category').order('name')
-      .then(({ data }) => { setRooms(data || []); setLoading(false); });
+    const saved = localStorage.getItem('costudy_room_settings');
+    if (saved) {
+      try {
+        setRoomSettings(JSON.parse(saved));
+      } catch (e) {
+        console.error("Failed to parse room settings", e);
+      }
+    }
   }, []);
 
-  // ── Enter/leave room ──
-  const enterRoom = useCallback(async (room: StudyRoom) => {
-    setSelected(room);
-    setTab('arena');
-    setMessages([]);
-    setBattles([]);
-    setLeaders([]);
-    setDailyQ(null);
-    setPickedKey(null);
-    setRevealed(false);
-    setActiveBattle(null);
-    loadRoomData(room);
-  }, [userId, userProfile]);
-
-  const leaveRoom = useCallback(() => {
-    // Cleanup presence & realtime
-    presenceChannelRef.current?.untrack();
-    if (presenceChannelRef.current) supabase.removeChannel(presenceChannelRef.current);
-    if (msgChannelRef.current) supabase.removeChannel(msgChannelRef.current);
-    if (battleChannelRef.current) supabase.removeChannel(battleChannelRef.current);
-    if (battleTimerRef.current) clearInterval(battleTimerRef.current);
-    setSelected(null);
-    setActiveBattle(null);
-  }, []);
-
-  const loadRoomData = async (room: StudyRoom) => {
-    // Parallel loads
-    await Promise.all([
-      loadDailyQ(room.topic),
-      loadMessages(room.id),
-      loadBattles(room.id),
-      loadLeaderboard(room.id),
-      setupPresence(room.id),
-      setupRealtimeChat(room.id),
-      setupRealtimeBattles(room.id),
-    ]);
-  };
-
-  // ── Daily challenge question ──
-  const loadDailyQ = async (topic: string) => {
-    const { data: count } = await supabase
-      .from('mcq_questions')
-      .select('id', { count: 'exact', head: true })
-      .eq('topic', topic);
-    const total = (count as any)?.count || 0;
-    if (!total) return;
-    const offset = dayOfYear() % total;
-    const { data } = await supabase
-      .from('mcq_questions')
-      .select('id,stem,choices,correct_key,explanation,topic')
-      .eq('topic', topic)
-      .range(offset, offset);
-    if (data?.[0]) setDailyQ(data[0]);
-  };
-
-  // ── Chat ──
-  const loadMessages = async (roomId: string) => {
-    const { data } = await supabase
-      .from('room_messages')
-      .select('id,author_id,is_ai,content,created_at,author:user_profiles(display_name,avatar_url)')
-      .eq('room_id', roomId)
-      .order('created_at', { ascending: false })
-      .limit(40);
-    setMessages((data || []).reverse() as ChatMsg[]);
-  };
-
-  const setupRealtimeChat = (roomId: string) => {
-    if (msgChannelRef.current) supabase.removeChannel(msgChannelRef.current);
-    msgChannelRef.current = supabase.channel(`room-chat-${roomId}`)
-      .on('postgres_changes', {
-        event: 'INSERT', schema: 'public', table: 'room_messages',
-        filter: `room_id=eq.${roomId}`
-      }, async (payload) => {
-        const msg = payload.new as ChatMsg;
-        // Fetch author name
-        const { data: profile } = await supabase
-          .from('user_profiles').select('display_name,avatar_url').eq('id', msg.author_id).single();
-        setMessages(prev => [...prev, { ...msg, author: profile || undefined }]);
-      })
-      .subscribe();
+  const saveRoomSettings = (roomId: string, settings: Partial<StudyRoom>) => {
+    const newSettings = { ...roomSettings, [roomId]: { ...roomSettings[roomId], ...settings } };
+    setRoomSettings(newSettings);
+    localStorage.setItem('costudy_room_settings', JSON.stringify(newSettings));
   };
 
   const sendMessage = async () => {
-    if (!chatInput.trim() || !selected || !userId) return;
-    setSendingMsg(true);
-    const text = chatInput.trim();
-    setChatInput('');
-    await supabase.from('room_messages').insert({
-      room_id: selected.id, author_id: userId, content: text, is_ai: false
-    });
-    setSendingMsg(false);
+    if (!chatInput.trim() || !userId || !selectedRoom) return;
+    const { error } = await supabase.from('study_room_messages').insert([{
+      room_id: selectedRoom.id,
+      user_id: userId,
+      content: chatInput,
+      type: 'text'
+    }]);
+    if (!error) setChatInput('');
   };
 
-  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
-
-  // ── Battles ──
-  const loadBattles = async (roomId: string) => {
-    const { data } = await supabase
-      .from('mcq_war_sessions')
-      .select('id,topic,question_count,status,created_at,created_by,participants:mcq_war_participants(user_id,score,questions_answered)')
-      .eq('room_id', roomId)
-      .in('status', ['active', 'waiting'])
-      .order('created_at', { ascending: false })
-      .limit(10);
-    setBattles(data || []);
+  const handleFindSpots = async () => {
+    if (!spotsQuery.trim()) return;
+    setIsSearchingSpots(true);
+    try {
+      const result = await getMapsGroundedResponse(`Find good study spots or libraries near: ${spotsQuery}`);
+      setSpotsResult(result);
+    } catch (error) {
+      console.error("Spots Error", error);
+    } finally {
+      setIsSearchingSpots(false);
+    }
   };
 
-  const setupRealtimeBattles = (roomId: string) => {
-    if (battleChannelRef.current) supabase.removeChannel(battleChannelRef.current);
-    battleChannelRef.current = supabase.channel(`room-battles-${roomId}`)
-      .on('postgres_changes', {
-        event: '*', schema: 'public', table: 'mcq_war_sessions',
-        filter: `room_id=eq.${roomId}`
-      }, () => loadBattles(roomId))
-      .subscribe();
-  };
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      const [roomData, userData] = await Promise.all([
+        costudyService.getRooms(),
+        userId ? getUserProfile(userId) : Promise.resolve(null)
+      ]);
+      setRooms(roomData);
+      setCurrentUser(userData);
+      setLoading(false);
+    };
+    load();
+  }, [userId]);
 
-  const startBattle = async () => {
-    if (!selected || !userId) return;
-    const topic = selected.topic;
-    // Create session
-    const { data: session } = await supabase
-      .from('mcq_war_sessions')
-      .insert({ room_id: selected.id, topic, question_count: 10, time_limit_seconds: 30, status: 'active', created_by: userId })
-      .select().single();
-    if (!session) return;
-    // Join as participant
-    await supabase.from('mcq_war_participants').insert({ session_id: session.id, user_id: userId, score: 0, questions_answered: 0 });
-    // Fetch random questions
-    const { data: qs } = await supabase
-      .from('mcq_questions')
-      .select('id,stem,choices,correct_key,explanation,topic')
-      .eq('topic', topic)
-      .limit(100);
-    if (!qs?.length) return;
-    const shuffled = [...qs].sort(() => Math.random() - 0.5).slice(0, 10);
-    setActiveBattle({ sessionId: session.id, questions: shuffled, idx: 0, score: 0, picked: null, timeLeft: 30, done: false });
-    startBattleTimer(session.id, shuffled, 0, 30);
-  };
+  useEffect(() => {
+      if (selectedRoom && activeTab === 'Faculty Hive') {
+          const fetchMentorsAndInvs = async () => {
+              const { data: mentors } = await supabase.from('user_profiles').select('*').eq('role', 'TEACHER');
+              if (mentors) setAvailableMentors(mentors as any);
 
-  const startBattleTimer = (sessionId: string, questions: MCQ[], idx: number, timeLeft: number) => {
-    if (battleTimerRef.current) clearInterval(battleTimerRef.current);
-    battleTimerRef.current = setInterval(() => {
-      setActiveBattle(prev => {
-        if (!prev) return null;
-        if (prev.timeLeft <= 1) {
-          // Time's up — auto-advance
-          clearInterval(battleTimerRef.current!);
-          const nextIdx = prev.idx + 1;
-          if (nextIdx >= prev.questions.length) {
-            endBattle(sessionId, prev.score);
-            return { ...prev, timeLeft: 0, done: true };
-          }
-          setTimeout(() => startBattleTimer(sessionId, prev.questions, nextIdx, 30), 500);
-          return { ...prev, idx: nextIdx, picked: null, timeLeft: 30 };
-        }
-        return { ...prev, timeLeft: prev.timeLeft - 1 };
-      });
-    }, 1000);
-  };
-
-  const answerBattle = (key: string) => {
-    if (!activeBattle || activeBattle.picked) return;
-    clearInterval(battleTimerRef.current!);
-    const correct = activeBattle.questions[activeBattle.idx].correct_key === key;
-    const newScore = activeBattle.score + (correct ? 1 : 0);
-    const nextIdx = activeBattle.idx + 1;
-    setActiveBattle(prev => prev ? { ...prev, picked: key, score: newScore } : null);
-    setTimeout(() => {
-      if (nextIdx >= activeBattle.questions.length) {
-        endBattle(activeBattle.sessionId, newScore);
-        setActiveBattle(prev => prev ? { ...prev, done: true } : null);
-      } else {
-        setActiveBattle(prev => prev ? { ...prev, idx: nextIdx, picked: null, timeLeft: 30 } : null);
-        startBattleTimer(activeBattle.sessionId, activeBattle.questions, nextIdx, 30);
+              const { data: invs } = await supabase
+                .from('mentor_invitations')
+                .select('*, mentor:user_profiles(*)')
+                .eq('room_id', selectedRoom.id);
+              if (invs) setInvitations(invs as any);
+          };
+          fetchMentorsAndInvs();
       }
-    }, 1200);
+  }, [selectedRoom, activeTab]);
+
+  const handleInviteMentor = async (mentor: User) => {
+      if (!userId || !selectedRoom) return;
+      setIsHiring(true);
+      
+      const { error } = await supabase.from('mentor_invitations').insert([{
+          room_id: selectedRoom.id,
+          mentor_id: mentor.id,
+          inviter_id: userId,
+          agreed_fee: hireFee,
+          costudy_fee: Math.round(hireFee * 0.15), 
+          status: 'PENDING'
+      }]);
+
+      if (!error) {
+          alert(`Strategic Invitation dispatched to ${mentor.name}. Upon acceptance, cluster members can contribute to the session fee.`);
+          const { data } = await supabase
+                .from('mentor_invitations')
+                .select('*, mentor:user_profiles(*)')
+                .eq('room_id', selectedRoom.id);
+          if (data) setInvitations(data as any);
+      }
+      setIsHiring(false);
   };
 
-  const endBattle = async (sessionId: string, score: number) => {
-    if (battleTimerRef.current) clearInterval(battleTimerRef.current);
-    await Promise.all([
-      supabase.from('mcq_war_sessions').update({ status: 'completed', ended_at: new Date().toISOString() }).eq('id', sessionId),
-      userId && supabase.from('mcq_war_participants').update({ score, questions_answered: activeBattle?.questions.length || 10, accuracy: score / (activeBattle?.questions.length || 10) }).eq('session_id', sessionId).eq('user_id', userId),
-      // Update weekly leaderboard
-      selected && userId && upsertLeaderboard(selected.id, userId, score),
-    ]);
-  };
-
-  const upsertLeaderboard = async (roomId: string, uid: string, score: number) => {
-    const weekStart = new Date();
-    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-    const weekStr = weekStart.toISOString().split('T')[0];
-    const { data: existing } = await supabase
-      .from('room_leaderboard')
-      .select('id,questions_solved,total_score')
-      .eq('room_id', roomId).eq('user_id', uid).eq('week_start', weekStr).single();
-    if (existing) {
-      await supabase.from('room_leaderboard').update({
-        questions_solved: (existing.questions_solved || 0) + score,
-        total_score: (existing.total_score || 0) + score * 10,
-      }).eq('id', existing.id);
-    } else {
-      await supabase.from('room_leaderboard').insert({
-        room_id: roomId, user_id: uid, week_start: weekStr,
-        questions_solved: score, total_score: score * 10, streak_days: 1,
-        display_name: userProfile?.display_name || 'Anonymous',
-        avatar_url: userProfile?.avatar_url || null,
-      });
-    }
-    loadLeaderboard(roomId);
-  };
-
-  // ── Leaderboard ──
-  const loadLeaderboard = async (roomId: string) => {
-    const weekStart = new Date();
-    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-    const weekStr = weekStart.toISOString().split('T')[0];
-    const { data } = await supabase
-      .from('room_leaderboard')
-      .select('user_id,display_name,avatar_url,questions_solved,streak_days,total_score')
-      .eq('room_id', roomId).eq('week_start', weekStr)
-      .order('total_score', { ascending: false })
-      .limit(20);
-    setLeaders(data || []);
-  };
-
-  // ── Presence ──
-  const setupPresence = async (roomId: string) => {
-    // Clean up old
-    if (presenceChannelRef.current) supabase.removeChannel(presenceChannelRef.current);
-    // Upsert into room_presence
-    if (userId) {
-      await supabase.from('room_presence').upsert({
-        room_id: roomId, user_id: userId,
-        display_name: userProfile?.display_name || 'Anonymous',
-        avatar_url: userProfile?.avatar_url || null,
-        last_seen: new Date().toISOString(),
-      }, { onConflict: 'room_id,user_id' });
-    }
-    // Fetch current online (last 5 min)
-    const cutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-    const { data } = await supabase
-      .from('room_presence')
-      .select('user_id,display_name,avatar_url')
-      .eq('room_id', roomId)
-      .gte('last_seen', cutoff);
-    setOnlineCount(data?.length || 0);
-    setOnlineAvatars((data || []).slice(0, 6) as PresenceMember[]);
-
-    // Supabase presence channel for live tracking
-    presenceChannelRef.current = supabase.channel(`presence-${roomId}`, {
-      config: { presence: { key: userId || 'anon' } }
-    });
-    presenceChannelRef.current
+  useEffect(() => {
+    const channel = supabase.channel('room_presence');
+    channel
       .on('presence', { event: 'sync' }, () => {
-        const state = presenceChannelRef.current!.presenceState();
-        const members = Object.values(state).flat() as PresenceMember[];
-        setOnlineCount(members.length);
-        setOnlineAvatars(members.slice(0, 6));
+        const newState = channel.presenceState();
+        const counts: Record<string, number> = {};
+        Object.values(newState).forEach((presences: any) => {
+          presences.forEach((p: any) => {
+            if (p.roomId) counts[p.roomId] = (counts[p.roomId] || 0) + 1;
+          });
+        });
+        setPresenceCounts(counts);
       })
       .subscribe(async (status) => {
-        if (status === 'SUBSCRIBED' && userId) {
-          await presenceChannelRef.current!.track({
-            user_id: userId,
-            display_name: userProfile?.display_name || 'Anonymous',
-            avatar_url: userProfile?.avatar_url || null,
+        if (status === 'SUBSCRIBED') {
+          await channel.track({
+            user_id: userId || 'anon-' + Math.floor(Math.random() * 1000),
+            online_at: new Date().toISOString(),
+            roomId: null
           });
         }
       });
-  };
+    return () => { supabase.removeChannel(channel); };
+  }, [userId]);
 
-  // Heartbeat to keep presence fresh
   useEffect(() => {
-    if (!selected || !userId) return;
-    const iv = setInterval(async () => {
-      await supabase.from('room_presence').upsert({
-        room_id: selected.id, user_id: userId, last_seen: new Date().toISOString()
-      }, { onConflict: 'room_id,user_id' });
-    }, 60000);
-    return () => clearInterval(iv);
-  }, [selected?.id, userId]);
-
-  // Cleanup on unmount
-  useEffect(() => () => {
-    if (presenceChannelRef.current) supabase.removeChannel(presenceChannelRef.current);
-    if (msgChannelRef.current) supabase.removeChannel(msgChannelRef.current);
-    if (battleChannelRef.current) supabase.removeChannel(battleChannelRef.current);
-    if (battleTimerRef.current) clearInterval(battleTimerRef.current);
-    if (selected && userId) {
-      supabase.from('room_presence').delete().eq('room_id', selected.id).eq('user_id', userId);
+    const channel = supabase.getChannels().find(c => c.topic === 'room_presence');
+    if (channel) {
+      channel.track({
+        user_id: userId || 'anon-' + Math.floor(Math.random() * 1000),
+        online_at: new Date().toISOString(),
+        roomId: selectedRoom?.id || null
+      });
     }
-  }, []);
+  }, [selectedRoom, userId]);
 
-  // ─────────────────────────────────────────
-  // ROOM LIST VIEW
-  // ─────────────────────────────────────────
+  const liveRooms = useMemo(() => {
+    return rooms.map(room => {
+        const settings = roomSettings[room.id] || {};
+        return {
+            ...room,
+            name: settings.name || room.name,
+            color: settings.color || room.color,
+            targetTopics: settings.targetTopics || room.targetTopics,
+            activeOnline: room.activeOnline + (presenceCounts[room.id] || 0)
+        };
+    });
+  }, [rooms, presenceCounts, roomSettings]);
 
-  if (!selected) {
-    const part1 = rooms.filter(r => r.category === 'CMA US Part 1');
-    const part2 = rooms.filter(r => r.category === 'CMA US Part 2');
-    const general = rooms.filter(r => !['CMA US Part 1', 'CMA US Part 2'].includes(r.category));
-
-    return (
-      <div className="proto wall-embedded">
-        <div className="wall" data-page="rooms">
-          <main className="shell-solo shell-rooms">
-
-            {/* Header */}
-            <div className="feed-hello rooms-hello">
-              <div>
-                <h1 className="font-display" style={{ fontSize: 'clamp(1.5rem,4vw,2rem)', marginBottom: 4 }}>
-                  Study Arenas
-                </h1>
-                <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>
-                  Choose your CMA topic — questions, battles & live chat inside.
-                </p>
-              </div>
-            </div>
-
-            {loading ? <Spinner /> : (
-              <>
-                <RoomSection title="Part 1 · Financial Planning, Performance & Analytics" rooms={part1} onEnter={enterRoom} />
-                <RoomSection title="Part 2 · Strategic Financial Management" rooms={part2} onEnter={enterRoom} />
-                {general.length > 0 && <RoomSection title="Open Lounge" rooms={general} onEnter={enterRoom} />}
-              </>
-            )}
-          </main>
-        </div>
-      </div>
+  const filteredRooms = useMemo(() => {
+    if (!searchQuery.trim()) return liveRooms;
+    const q = searchQuery.toLowerCase();
+    return liveRooms.filter(room => 
+      room.name.toLowerCase().includes(q) || 
+      room.category.toLowerCase().includes(q) ||
+      room.targetTopics?.some(t => t.toLowerCase().includes(q))
     );
-  }
+  }, [liveRooms, searchQuery]);
 
-  // ─────────────────────────────────────────
-  // ROOM DETAIL VIEW
-  // ─────────────────────────────────────────
+  const selectedRoomLiveCount = selectedRoom 
+    ? (selectedRoom.activeOnline + (presenceCounts[selectedRoom.id] || 0))
+    : 0;
 
-  const meta = getRoomMeta(selected.topic);
+  const currentRoom = useMemo(() => {
+    if (!selectedRoom) return null;
+    return liveRooms.find(r => r.id === selectedRoom.id) || selectedRoom;
+  }, [selectedRoom, liveRooms]);
 
-  // Battle in progress overlay
-  if (activeBattle && !activeBattle.done) {
-    return <BattleOverlay battle={activeBattle} onAnswer={answerBattle} />;
-  }
-
-  // Battle results
-  if (activeBattle?.done) {
-    const pct = Math.round((activeBattle.score / activeBattle.questions.length) * 100);
-    return (
-      <div className="proto wall-embedded">
-        <div className="wall" data-page="rooms">
-          <main className="shell-solo" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
-            <div className="post" style={{ textAlign: 'center', maxWidth: 420, padding: '40px 32px' }}>
-              <div style={{ fontSize: '3.5rem', marginBottom: 12 }}>
-                {pct >= 80 ? '🏆' : pct >= 60 ? '⚡' : '📚'}
-              </div>
-              <h2 className="font-display" style={{ fontSize: '1.8rem', marginBottom: 6 }}>
-                {activeBattle.score}/{activeBattle.questions.length} Correct
-              </h2>
-              <p style={{ color: 'var(--muted)', marginBottom: 24 }}>
-                {pct >= 80 ? 'Excellent! You\'re crushing this topic.' : pct >= 60 ? 'Solid — review the ones you missed.' : 'Keep practising. Every attempt builds mastery.'}
-              </p>
-              <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-                <button className="clay-cta" style={{ width: 'auto', padding: '12px 24px' }}
-                  onClick={() => { setActiveBattle(null); startBattle(); }}>
-                  Rematch ⚔️
-                </button>
-                <button className="clay-option" style={{ padding: '12px 24px' }}
-                  onClick={() => setActiveBattle(null)}>
-                  Back to room
-                </button>
-              </div>
-            </div>
-          </main>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center h-screen gap-8 opacity-40">
+       <Icons.Sparkles className="w-16 h-16 animate-spin text-brand" />
+       <span className="font-black uppercase tracking-[0.4em] text-sm animate-pulse text-slate-900">Establishing Cluster Sync...</span>
+    </div>
+  );
 
   return (
-    <div className="proto wall-embedded">
-      <div className="wall" data-page="rooms">
-        <main className="shell-solo shell-rooms">
-
-          {/* Room header */}
-          <div className="room-head" style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
-            <button type="button" className="room-back" onClick={leaveRoom} aria-label="Back">
-              <Icons.ChevronLeft className="w-[18px] h-[18px]" />
-            </button>
-            <span style={{ fontSize: 28 }}>{meta.emoji}</span>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                <h1 className="font-display" style={{ fontSize: '1.2rem', margin: 0 }}>{selected.name}</h1>
-                {meta.weight && (
-                  <span style={{ fontSize: '0.65rem', fontWeight: 800, padding: '3px 9px', borderRadius: 999, background: meta.color + '22', color: meta.color, letterSpacing: '0.08em' }}>
-                    {meta.part} · {meta.weight}
-                  </span>
-                )}
-                <span className="live-chip">
-                  <span className="room-dot on" />
-                  {onlineCount} here now
-                </span>
-              </div>
-              <p style={{ fontSize: '0.78rem', color: 'var(--muted)', margin: 0, marginTop: 2 }}>{selected.description}</p>
-            </div>
-            {/* Online avatars */}
-            <div style={{ display: 'flex', gap: -8, flexShrink: 0 }}>
-              {onlineAvatars.slice(0, 4).map((m, i) => (
-                <span key={m.user_id} style={{ marginLeft: i === 0 ? 0 : -10, zIndex: 10 - i, position: 'relative' }}>
-                  <Avatar name={m.display_name} url={m.avatar_url} size={28} />
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Tab bar */}
-          <div className="feed-cats" role="tablist" style={{ marginBottom: 20 }}>
-            {(['arena', 'battles', 'chat', 'board'] as const).map(t => (
-              <button key={t} type="button" role="tab"
-                className={`cat ${tab === t ? 'on' : ''}`}
-                onClick={() => setTab(t)}
-              >
-                {t === 'arena' ? '🔥 Arena' : t === 'battles' ? '⚔️ Battles' : t === 'chat' ? '💬 Chat' : '🏆 Board'}
+    <div className="max-w-7xl mx-auto px-6 sm:px-12 py-10 sm:py-20 relative min-h-screen">
+      
+      {currentRoom ? (
+        <div className="fixed inset-0 top-20 z-20 bg-slate-50 overflow-hidden flex flex-col lg:flex-row animate-in slide-in-from-right duration-500">
+          
+          <aside className="w-full lg:w-80 glass-card lg:m-6 lg:rounded-[3.5rem] p-6 lg:p-10 flex flex-col shadow-2xl border-b lg:border border-white/50 bg-white/60 shrink-0">
+            <div className="flex justify-between items-start lg:block">
+              <button onClick={() => setSelectedRoom(null)} className="flex items-center gap-2 text-slate-400 hover:text-brand font-black text-[10px] uppercase tracking-widest mb-4 lg:mb-12 transition-colors">
+                <Icons.Plus className="rotate-45 w-4 h-4" /> Exit Cluster
               </button>
-            ))}
-          </div>
-
-          {/* ── ARENA TAB ── */}
-          {tab === 'arena' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-              {/* Daily Challenge */}
-              <div className="post" style={{ padding: '24px 24px 20px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-                  <span style={{ fontSize: 20 }}>🎯</span>
-                  <div>
-                    <p style={{ fontSize: '0.65rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', margin: 0 }}>
-                      Today's Challenge
-                    </p>
-                    <p style={{ fontSize: '0.78rem', color: 'var(--muted)', margin: 0 }}>
-                      {selected.topic} · Refreshes daily
-                    </p>
-                  </div>
-                </div>
-
-                {!dailyQ ? (
-                  <p style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>
-                    No challenge question for this topic yet — check back soon.
-                  </p>
-                ) : (
-                  <>
-                    <p style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--ink)', lineHeight: 1.55, marginBottom: 16 }}>
-                      {dailyQ.stem}
-                    </p>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {Object.entries(dailyQ.choices).map(([key, text]) => {
-                        const isCorrect = key === dailyQ.correct_key;
-                        const isPicked = key === pickedKey;
-                        let bg = 'var(--card)';
-                        let border = 'var(--line)';
-                        let color = 'var(--ink)';
-                        if (revealed) {
-                          if (isCorrect) { bg = '#ecfdf5'; border = '#22c55e'; color = '#15803d'; }
-                          else if (isPicked && !isCorrect) { bg = '#fff1f1'; border = '#ef4444'; color = '#b91c1c'; }
-                        } else if (isPicked) {
-                          bg = 'var(--accent-soft)'; border = 'var(--accent)'; color = 'var(--accent-deep)';
-                        }
-                        return (
-                          <button key={key} type="button"
-                            disabled={revealed}
-                            onClick={() => { setPickedKey(key); setRevealed(true); }}
-                            style={{ textAlign: 'left', padding: '11px 15px', borderRadius: 14, border: `1.5px solid ${border}`, background: bg, color, fontSize: '0.86rem', fontWeight: 600, transition: 'all 0.2s', cursor: revealed ? 'default' : 'pointer' }}>
-                            <span style={{ fontWeight: 800, marginRight: 10 }}>{key}.</span>{text}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    {revealed && dailyQ.explanation && (
-                      <div style={{ marginTop: 14, padding: '12px 16px', borderRadius: 14, background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
-                        <p style={{ fontSize: '0.8rem', fontWeight: 700, color: '#166534', margin: '0 0 4px' }}>📖 Explanation</p>
-                        <p style={{ fontSize: '0.84rem', color: '#15803d', margin: 0, lineHeight: 1.55 }}>{dailyQ.explanation}</p>
-                      </div>
-                    )}
-                    {!revealed && (
-                      <p style={{ fontSize: '0.72rem', color: 'var(--muted)', marginTop: 10, textAlign: 'center' }}>
-                        Pick an answer to reveal the explanation
-                      </p>
-                    )}
-                  </>
-                )}
-              </div>
-
-              {/* Quick chat preview */}
-              <div className="post" style={{ padding: '20px 20px 14px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <p style={{ fontSize: '0.7rem', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', margin: 0 }}>
-                    Room Chat
-                  </p>
-                  <button style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--accent-deep)' }} onClick={() => setTab('chat')}>
-                    See all →
-                  </button>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {messages.length === 0 ? (
-                    <p style={{ color: 'var(--muted)', fontSize: '0.82rem' }}>No messages yet — start the conversation!</p>
-                  ) : messages.slice(-3).map(m => (
-                    <div key={m.id} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                      <Avatar name={m.author?.display_name || '?'} url={m.author?.avatar_url} size={24} />
-                      <div>
-                        <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--muted)' }}>{m.author?.display_name || 'Anonymous'} </span>
-                        <span style={{ fontSize: '0.82rem', color: 'var(--ink)' }}>{m.content}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                {/* Quick chat input */}
-                <div className="comment-input" style={{ marginTop: 12 }}>
-                  <input type="text" placeholder={userId ? 'Say something…' : 'Log in to chat…'}
-                    value={chatInput} onChange={e => setChatInput(e.target.value)}
-                    disabled={!userId}
-                    onKeyDown={e => e.key === 'Enter' && sendMessage()}
-                  />
-                  <button type="button" className="comment-send" onClick={sendMessage} disabled={!userId || sendingMsg}>
-                    <Icons.Send className="w-[15px] h-[15px]" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Topic targets */}
-              <div className="post" style={{ padding: '18px 20px' }}>
-                <p style={{ fontSize: '0.68rem', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 10 }}>
-                  Key Areas in this Room
-                </p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  {selected.target_topics?.map(t => (
-                    <span key={t} className="tag" style={{ background: meta.color + '18', color: meta.color, fontWeight: 700 }}>{t}</span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ── BATTLES TAB ── */}
-          {tab === 'battles' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {/* Start battle CTA */}
-              <div className="post" style={{ padding: '28px 24px', textAlign: 'center', background: `linear-gradient(145deg, ${meta.color}12, var(--card))` }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: 10 }}>⚔️</div>
-                <h2 className="font-display" style={{ fontSize: '1.3rem', marginBottom: 6 }}>Start a Battle</h2>
-                <p style={{ color: 'var(--muted)', fontSize: '0.86rem', marginBottom: 20, maxWidth: 300, margin: '0 auto 20px' }}>
-                  10 MCQs from {selected.topic}. 30 seconds per question. How fast can you go?
-                </p>
-                {userId ? (
-                  <button className="clay-cta" style={{ width: 'auto', padding: '14px 32px', fontSize: '0.95rem' }} onClick={startBattle}>
-                    Enter the Arena
-                  </button>
-                ) : (
-                  <p style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>Log in to start a battle</p>
-                )}
-              </div>
-
-              {/* Active battles */}
-              {battles.length > 0 && (
+              
+              <div className="mb-4 lg:mb-12 flex lg:block items-center gap-4">
+                <div className={`w-12 h-12 lg:w-20 lg:h-20 rounded-2xl lg:rounded-[2rem] ${currentRoom.color} mb-0 lg:mb-6 shadow-2xl flex items-center justify-center text-white shrink-0`}><Icons.Logo className="w-6 h-6 lg:w-12 lg:h-12" /></div>
                 <div>
-                  <p style={{ fontSize: '0.68rem', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 12 }}>
-                    Recent Battles
-                  </p>
-                  {battles.map(b => (
-                    <div key={b.id} className="post" style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 10, padding: '16px 20px' }}>
-                      <div style={{ width: 42, height: 42, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', background: meta.color + '20', fontSize: 20 }}>
-                        ⚔️
+                   <h2 className="text-xl lg:text-3xl font-black text-slate-900 uppercase leading-[0.85] mb-1 lg:mb-3 tracking-tighter truncate max-w-[200px] lg:max-w-none">{currentRoom.name}</h2>
+                   <div className="flex flex-col gap-1 lg:gap-2">
+                      <div className="flex items-center gap-2 text-[8px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">
+                          <Icons.Users className="w-3 h-3 lg:w-4 lg:h-4" /> {currentRoom.members} Scholars
                       </div>
-                      <div style={{ flex: 1 }}>
-                        <strong style={{ color: 'var(--ink)', fontSize: '0.9rem' }}>{b.topic}</strong>
-                        <p style={{ color: 'var(--muted)', fontSize: '0.76rem', margin: '2px 0 0' }}>
-                          {b.question_count} questions · {b.participants?.length || 0} fighter{(b.participants?.length || 0) !== 1 ? 's' : ''}
-                        </p>
+                      <div className="flex items-center gap-2 text-[8px] lg:text-[10px] font-black text-brand uppercase tracking-[0.2em] animate-pulse">
+                          <div className="w-1.5 h-1.5 lg:w-2 lg:h-2 rounded-full bg-brand"></div>
+                          {selectedRoomLiveCount} Active
                       </div>
-                      <span style={{
-                        fontSize: '0.68rem', fontWeight: 800, padding: '4px 10px', borderRadius: 999,
-                        background: b.status === 'active' ? '#fef3c7' : '#f3f4f6',
-                        color: b.status === 'active' ? '#b45309' : 'var(--muted)',
-                        letterSpacing: '0.06em', textTransform: 'uppercase'
-                      }}>
-                        {b.status}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {battles.length === 0 && (
-                <div className="post" style={{ textAlign: 'center', padding: '32px 20px' }}>
-                  <p style={{ color: 'var(--muted)', fontSize: '0.86rem' }}>No battles yet today. Start the first one!</p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ── CHAT TAB ── */}
-          {tab === 'chat' && (
-            <div className="post" style={{ padding: 0, overflow: 'hidden' }}>
-              <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--line)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span className="room-dot on" />
-                  <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--muted)' }}>
-                    {onlineCount} online in this room
-                  </span>
+                   </div>
                 </div>
               </div>
-
-              {/* Messages */}
-              <div style={{ maxHeight: 400, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {messages.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                    <p style={{ fontSize: '2rem', marginBottom: 8 }}>👋</p>
-                    <p style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>No messages yet. Be the first to say hello!</p>
-                  </div>
-                ) : messages.map(m => (
-                  <div key={m.id} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                    <Avatar name={m.author?.display_name || '?'} url={m.author?.avatar_url} size={32} />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 3 }}>
-                        <strong style={{ fontSize: '0.82rem', color: 'var(--ink)' }}>{m.author?.display_name || 'Anonymous'}</strong>
-                        <span style={{ fontSize: '0.66rem', color: 'var(--muted)' }}>
-                          {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      </div>
-                      <p style={{ fontSize: '0.88rem', color: 'var(--ink)', margin: 0, lineHeight: 1.5 }}>{m.content}</p>
-                    </div>
-                  </div>
-                ))}
-                <div ref={chatEndRef} />
-              </div>
-
-              {/* Input */}
-              <div style={{ borderTop: '1px solid var(--line)', padding: '12px 16px' }}>
-                {userId ? (
-                  <div className="comment-input">
-                    <input type="text" placeholder="Message the room…"
-                      value={chatInput} onChange={e => setChatInput(e.target.value)}
-                      onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()} />
-                    <button type="button" className="comment-send" onClick={sendMessage} disabled={sendingMsg}>
-                      <Icons.Send className="w-[15px] h-[15px]" />
-                    </button>
-                  </div>
-                ) : (
-                  <p style={{ textAlign: 'center', color: 'var(--muted)', fontSize: '0.82rem', margin: 0 }}>
-                    Log in to join the conversation
-                  </p>
-                )}
-              </div>
             </div>
-          )}
 
-          {/* ── BOARD TAB ── */}
-          {tab === 'board' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div className="post" style={{ padding: '20px 20px 16px' }}>
-                <p style={{ fontSize: '0.68rem', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 16 }}>
-                  This Week's Leaderboard
-                </p>
-                {leaders.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '32px 0' }}>
-                    <p style={{ fontSize: '1.8rem', marginBottom: 8 }}>🏆</p>
-                    <p style={{ color: 'var(--muted)', fontSize: '0.86rem' }}>
-                      No scores yet this week. Start a battle to get on the board!
-                    </p>
-                  </div>
-                ) : leaders.map((l, i) => (
-                  <div key={l.user_id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderBottom: i < leaders.length - 1 ? '1px solid var(--line)' : 'none' }}>
-                    <span style={{
-                      width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontWeight: 800, fontSize: '0.8rem', flex: 'none',
-                      background: i === 0 ? '#fef3c7' : i === 1 ? '#f3f4f6' : i === 2 ? '#fef9ec' : 'transparent',
-                      color: i === 0 ? '#b45309' : i === 1 ? '#6b7280' : i === 2 ? '#a16207' : 'var(--muted)'
-                    }}>
-                      {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}
-                    </span>
-                    <Avatar name={l.display_name} url={l.avatar_url} size={34} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <strong style={{ fontSize: '0.88rem', color: 'var(--ink)', display: 'block' }}>{l.display_name}</strong>
-                      <span style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>{l.questions_solved} questions · {l.streak_days}d streak</span>
-                    </div>
-                    <strong style={{ fontSize: '1.05rem', color: 'var(--accent-deep)' }}>{l.total_score}</strong>
-                  </div>
-                ))}
-              </div>
-              <div className="post" style={{ padding: '16px 20px', background: `linear-gradient(145deg, ${meta.color}10, var(--card))` }}>
-                <p style={{ fontSize: '0.78rem', color: 'var(--muted)', textAlign: 'center', margin: 0 }}>
-                  Points reset every Monday. Complete battles and daily challenges to climb the board.
-                </p>
-              </div>
-            </div>
-          )}
-
-        </main>
-      </div>
-    </div>
-  );
-};
-
-// ─────────────────────────────────────────────
-// ROOM SECTION (list grouping)
-// ─────────────────────────────────────────────
-
-const RoomSection: React.FC<{ title: string; rooms: StudyRoom[]; onEnter: (r: StudyRoom) => void }> = ({ title, rooms, onEnter }) => {
-  if (!rooms.length) return null;
-  return (
-    <div style={{ marginBottom: 32 }}>
-      <p style={{ fontSize: '0.68rem', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 14 }}>
-        {title}
-      </p>
-      <div className="rooms-grid">
-        {rooms.map(room => <RoomCard key={room.id} room={room} onEnter={onEnter} />)}
-      </div>
-    </div>
-  );
-};
-
-// ─────────────────────────────────────────────
-// ROOM CARD
-// ─────────────────────────────────────────────
-
-const RoomCard: React.FC<{ room: StudyRoom; onEnter: (r: StudyRoom) => void }> = ({ room, onEnter }) => {
-  const meta = getRoomMeta(room.topic);
-  return (
-    <button type="button" className="post room-card" onClick={() => onEnter(room)}
-      style={{ textAlign: 'left', position: 'relative', overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: meta.color, borderRadius: '16px 16px 0 0' }} />
-
-      <div className="room-card-top" style={{ marginTop: 8 }}>
-        <span style={{ fontSize: 26 }}>{meta.emoji}</span>
-        <div className="room-card-name">
-          <strong>{room.name}</strong>
-          {meta.weight && <span style={{ color: meta.color, fontWeight: 700 }}>{meta.part} · {meta.weight}</span>}
-        </div>
-        {room.is_live && (
-          <span className="live-chip" style={{ flexShrink: 0 }}>
-            <span className="room-dot on" />Live
-          </span>
-        )}
-      </div>
-
-      <p className="room-card-desc" style={{ margin: '10px 0 12px', lineHeight: 1.5 }}>{room.description}</p>
-
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
-        {room.target_topics?.slice(0, 3).map(t => (
-          <span key={t} style={{ fontSize: '0.68rem', fontWeight: 700, padding: '3px 9px', borderRadius: 999, background: meta.color + '15', color: meta.color }}>
-            {t}
-          </span>
-        ))}
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: '0.78rem', color: 'var(--muted)', fontWeight: 600 }}>
-          Enter Arena →
-        </span>
-      </div>
-    </button>
-  );
-};
-
-// ─────────────────────────────────────────────
-// BATTLE OVERLAY
-// ─────────────────────────────────────────────
-
-const BattleOverlay: React.FC<{
-  battle: { questions: MCQ[]; idx: number; score: number; picked: string | null; timeLeft: number };
-  onAnswer: (key: string) => void;
-}> = ({ battle, onAnswer }) => {
-  const q = battle.questions[battle.idx];
-  const progress = ((battle.idx) / battle.questions.length) * 100;
-  const timeWarn = battle.timeLeft <= 10;
-
-  return (
-    <div className="proto wall-embedded">
-      <div className="wall" data-page="rooms">
-        <main className="shell-solo" style={{ maxWidth: 600, margin: '0 auto' }}>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
-            <div style={{ flex: 1, height: 6, borderRadius: 999, background: 'var(--line)' }}>
-              <div style={{ height: '100%', borderRadius: 999, background: 'var(--accent)', width: `${progress}%`, transition: 'width 0.4s' }} />
-            </div>
-            <span style={{ fontSize: '0.75rem', color: 'var(--muted)', fontWeight: 700, whiteSpace: 'nowrap' }}>
-              {battle.idx + 1}/{battle.questions.length}
-            </span>
-            <span style={{
-              fontWeight: 800, fontSize: '1.1rem', minWidth: 38, textAlign: 'center',
-              color: timeWarn ? '#ef4444' : 'var(--ink)',
-            }}>
-              {battle.timeLeft}s
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
-            <span style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--accent-deep)', padding: '4px 12px', borderRadius: 999, background: 'var(--accent-soft)' }}>
-              ⚡ {battle.score} pts
-            </span>
-          </div>
-
-          <div className="post" style={{ marginBottom: 16, padding: '24px 22px' }}>
-            <p style={{ fontSize: '0.65rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 12 }}>
-              Question {battle.idx + 1}
-            </p>
-            <p style={{ fontSize: '0.98rem', fontWeight: 600, color: 'var(--ink)', lineHeight: 1.6, margin: 0 }}>
-              {q.stem}
-            </p>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {Object.entries(q.choices).map(([key, text]) => {
-              const isCorrect = key === q.correct_key;
-              const isPicked = key === battle.picked;
-              let bg = 'var(--card)';
-              let border = 'var(--line)';
-              let color = 'var(--ink)';
-              if (battle.picked) {
-                if (isCorrect) { bg = '#ecfdf5'; border = '#22c55e'; color = '#15803d'; }
-                else if (isPicked) { bg = '#fff1f1'; border = '#ef4444'; color = '#b91c1c'; }
-              }
-              return (
-                <button key={key} type="button"
-                  disabled={!!battle.picked}
-                  onClick={() => onAnswer(key)}
-                  style={{
-                    textAlign: 'left', padding: '14px 18px', borderRadius: 16,
-                    border: `2px solid ${border}`, background: bg, color,
-                    fontSize: '0.88rem', fontWeight: 600,
-                    transition: 'all 0.18s', cursor: battle.picked ? 'default' : 'pointer',
-                  }}>
-                  <span style={{ fontWeight: 800, marginRight: 12 }}>{key}.</span>{text}
+            <nav className="flex-1 space-y-2 lg:space-y-4 overflow-x-auto lg:overflow-visible flex lg:block pb-2 lg:pb-0 gap-2 lg:gap-0 no-scrollbar">
+              {(['Chat', 'Live Audio', 'Whiteboard', 'Resources', 'Schedule', 'Faculty Hive', 'Study Spots', 'Settings'] as RoomTab[]).map(tab => (
+                <button 
+                  key={tab} 
+                  onClick={() => setActiveTab(tab)}
+                  className={`flex-none lg:w-full flex items-center gap-3 lg:gap-5 px-6 lg:px-8 py-3 lg:py-5 rounded-2xl lg:rounded-3xl text-left font-black text-[10px] lg:text-[11px] uppercase tracking-[0.2em] transition-all group ${activeTab === tab ? 'bg-slate-900 text-white shadow-xl scale-105' : 'text-slate-400 hover:bg-slate-100 hover:text-slate-900'}`}
+                >
+                  <span className={`w-1.5 h-1.5 lg:w-2 lg:h-2 rounded-full ${activeTab === tab ? 'bg-brand' : 'bg-slate-200 group-hover:bg-brand'} transition-colors hidden lg:block`}></span>
+                  {tab}
                 </button>
-              );
-            })}
-          </div>
+              ))}
+            </nav>
+          </aside>
 
-          {battle.picked && q.explanation && (
-            <div style={{ marginTop: 14, padding: '14px 18px', borderRadius: 16, background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
-              <p style={{ fontSize: '0.78rem', fontWeight: 700, color: '#166534', marginBottom: 4 }}>📖 Explanation</p>
-              <p style={{ fontSize: '0.84rem', color: '#15803d', margin: 0, lineHeight: 1.55 }}>{q.explanation}</p>
-            </div>
-          )}
-        </main>
-      </div>
+          <main className="flex-1 relative flex flex-col p-4 lg:p-12 overflow-hidden h-full">
+             <div className="flex-1 bg-white/90 backdrop-blur-3xl rounded-[2.5rem] lg:rounded-[4.5rem] border border-white shadow-[0_50px_100px_-20px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col relative h-full">
+                
+                {activeTab === 'Faculty Hive' && (
+                  <div className="flex-1 flex flex-col p-6 lg:p-16 overflow-y-auto no-scrollbar bg-white">
+                      <div className="mb-16">
+                        <h4 className="text-emerald-500 font-black text-[10px] uppercase tracking-[0.4em] mb-4">Strategic Mentorship</h4>
+                        <h2 className="text-4xl lg:text-7xl font-black text-slate-900 uppercase tracking-tighter leading-none mb-4">The Faculty Hive</h2>
+                        <p className="text-slate-400 font-medium italic text-lg max-w-2xl">"Enlist a registered CMA specialist to lead your cluster session. Split the fees among members for professional-grade mastery."</p>
+                      </div>
+
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                          <div className="lg:col-span-2">
+                             <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.5em] mb-8 flex items-center gap-4">
+                                <Icons.GraduationCap className="w-5 h-5" /> Registered Specialists
+                             </h3>
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {availableMentors.map(mentor => (
+                                    <div key={mentor.id} className="p-8 bg-slate-50 rounded-[3rem] border border-slate-100 hover:bg-white hover:shadow-2xl transition-all group">
+                                        <div className="flex items-center gap-4 mb-8">
+                                            <img src={mentor.avatar} className="w-16 h-16 rounded-[1.5rem] object-cover" />
+                                            <div>
+                                                <div className="text-lg font-black text-slate-900 uppercase tracking-tight">{mentor.name}</div>
+                                                <div className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest">Verified Faculty</div>
+                                            </div>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2 mb-8">
+                                            {mentor.specialties?.map(s => <span key={s} className="px-3 py-1 bg-white text-slate-400 rounded-lg text-[8px] font-black uppercase tracking-widest border border-slate-200">{s}</span>)}
+                                        </div>
+                                        <div className="flex justify-between items-center mb-6 pt-6 border-t border-slate-100">
+                                            <span className="text-[9px] font-black text-slate-400 uppercase">Hourly Session</span>
+                                            <span className="text-xl font-black text-slate-900">₹{mentor.hourlyRate || '2500'}</span>
+                                        </div>
+                                        <button 
+                                            onClick={() => handleInviteMentor(mentor)}
+                                            className="w-full py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all shadow-lg active:scale-95"
+                                        >
+                                            Enlist for Session
+                                        </button>
+                                    </div>
+                                ))}
+                             </div>
+                          </div>
+
+                          <div className="space-y-10">
+                             <div className="bg-slate-900 text-white p-10 rounded-[3rem] shadow-2xl relative overflow-hidden">
+                                <div className="absolute top-0 right-0 p-8 opacity-10"><Icons.DollarSign className="w-24 h-24 text-emerald-400" /></div>
+                                <h3 className="text-xl font-black uppercase tracking-widest mb-8 relative z-10">Cluster Ledger</h3>
+                                <div className="space-y-6 relative z-10">
+                                   {invitations.length === 0 ? (
+                                       <div className="text-center py-10 opacity-30">
+                                           <p className="text-xs font-bold uppercase tracking-widest italic">No pending enlistments</p>
+                                       </div>
+                                   ) : invitations.map(inv => (
+                                       <div key={inv.id} className="p-5 bg-white/5 border border-white/5 rounded-2xl">
+                                           <div className="flex justify-between items-start mb-2">
+                                               <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase ${inv.status === 'ACCEPTED' ? 'bg-emerald-500' : 'bg-slate-700'}`}>{inv.status}</span>
+                                               <span className="text-[10px] font-black text-emerald-400">₹{inv.agreed_fee}</span>
+                                           </div>
+                                           <div className="text-sm font-black uppercase tracking-tight text-white mb-2">{inv.mentor?.name}</div>
+                                           {inv.status === 'ACCEPTED' && (
+                                               <button className="w-full py-2 bg-brand text-white rounded-lg text-[9px] font-black uppercase tracking-widest mt-2 hover:bg-emerald-600 transition-all">Contribute Fee</button>
+                                           )}
+                                       </div>
+                                   ))}
+                                </div>
+                                <div className="mt-8 pt-8 border-t border-white/10 text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] leading-relaxed">
+                                    * Fees are shared. CoStudy retains 15% for secure vault facilitation.
+                                </div>
+                             </div>
+
+                             <div className="p-8 bg-emerald-50 border border-emerald-100 rounded-[3rem] flex flex-col items-center text-center">
+                                <Icons.CheckBadge className="w-12 h-12 text-emerald-600 mb-6" />
+                                <h4 className="text-lg font-black text-slate-900 uppercase tracking-tight mb-2">Faculty Guarantee</h4>
+                                <p className="text-xs text-slate-500 font-medium italic leading-relaxed">
+                                    "All faculty members on the Hive are manually verified CMA professionals. Your cluster's investment is protected until the session concludes."
+                                </p>
+                             </div>
+                          </div>
+                      </div>
+                  </div>
+                )}
+
+                 {activeTab === 'Chat' && (
+                  <div className="flex-1 flex flex-col overflow-hidden">
+                    <div className="flex-1 overflow-y-auto p-6 lg:p-12 space-y-6 lg:space-y-10 no-scrollbar">
+                       {messages.map((m, i) => (
+                         <div key={m.id || i} className={`flex items-start gap-3 lg:gap-5 ${m.user_id === userId ? 'flex-row-reverse' : ''}`}>
+                            <img src={m.author?.avatar || 'https://i.pravatar.cc/100'} className="w-10 h-10 lg:w-12 lg:h-12 rounded-2xl object-cover ring-4 ring-white shadow-xl" />
+                            <div className={`max-w-[85%] lg:max-w-[75%] p-5 lg:p-7 rounded-[2rem] lg:rounded-[2.5rem] text-sm lg:text-[15px] font-medium leading-relaxed ${m.user_id === userId ? 'bg-brand text-white shadow-2xl shadow-brand/20' : 'bg-slate-50 text-slate-800 border border-slate-100 shadow-sm'}`}>
+                               <div className="text-[9px] lg:text-[10px] font-black uppercase tracking-[0.2em] mb-2 opacity-60">{m.author?.name || 'Aspirant'}</div>
+                               {m.content}
+                            </div>
+                         </div>
+                       ))}
+                    </div>
+                    <div className="p-4 lg:p-10 bg-slate-50/50 border-t border-slate-100">
+                       <div className="relative max-w-4xl mx-auto">
+                          <input 
+                            value={chatInput}
+                            onChange={(e) => setChatInput(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+                            className="w-full bg-white border border-slate-200 rounded-[2rem] px-8 lg:px-10 py-5 lg:py-6 pr-20 lg:pr-24 text-sm lg:text-[15px] font-medium outline-none focus:ring-8 lg:focus:ring-[12px] focus:ring-brand/5 focus:border-brand/30 transition-all shadow-sm" 
+                            placeholder="Message the knowledge cluster..." 
+                          />
+                          <button onClick={sendMessage} className="absolute right-3 lg:right-4 top-3 lg:top-4 bottom-3 lg:bottom-4 px-6 lg:px-8 bg-brand text-white rounded-2xl shadow-2xl shadow-brand/30 active:scale-90 transition-all flex items-center justify-center">
+                             <Icons.Send className="w-5 h-5 lg:w-6 lg:h-6" />
+                          </button>
+                       </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'Study Spots' && (
+                  <div className="flex-1 flex flex-col p-6 lg:p-16 overflow-y-auto no-scrollbar bg-white">
+                    <div className="mb-12">
+                      <h4 className="text-brand font-black text-[10px] uppercase tracking-[0.4em] mb-4">Physical Grounding</h4>
+                      <h2 className="text-4xl lg:text-7xl font-black text-slate-900 uppercase tracking-tighter leading-none mb-4">Study Spots</h2>
+                      <p className="text-slate-400 font-medium italic text-lg max-w-2xl">"Find the best local libraries, cafes, and quiet zones to sync with your cluster in person."</p>
+                    </div>
+
+                    <div className="max-w-3xl mb-12">
+                      <div className="relative">
+                        <input 
+                          value={spotsQuery}
+                          onChange={(e) => setSpotsQuery(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && handleFindSpots()}
+                          placeholder="Enter city or area (e.g., Bangalore, HSR Layout)..."
+                          className="w-full bg-slate-50 border border-slate-200 rounded-[2rem] px-8 py-6 pr-20 text-lg font-bold text-slate-900 shadow-inner outline-none focus:ring-8 focus:ring-brand/5 focus:border-brand/30 transition-all"
+                        />
+                        <button 
+                          onClick={handleFindSpots}
+                          disabled={isSearchingSpots}
+                          className="absolute right-3 top-3 bottom-3 px-8 bg-slate-900 text-white rounded-2xl shadow-xl hover:bg-brand transition-all disabled:opacity-50"
+                        >
+                          {isSearchingSpots ? <Icons.CloudSync className="w-6 h-6 animate-spin" /> : <Icons.Search className="w-6 h-6" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {spotsResult.text && (
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="bg-slate-50 p-10 rounded-[3rem] border border-slate-100 prose prose-slate max-w-none">
+                          <Markdown>{spotsResult.text}</Markdown>
+                        </div>
+                        <div className="space-y-6">
+                          <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.5em] mb-6">Verified Locations</h3>
+                          {spotsResult.places.map((place: any, idx: number) => (
+                            <a 
+                              key={idx}
+                              href={place.uri}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="block p-6 bg-white border border-slate-200 rounded-3xl hover:border-brand/30 hover:shadow-xl transition-all group"
+                            >
+                              <div className="flex justify-between items-center">
+                                <div className="text-lg font-black text-slate-900 uppercase tracking-tight group-hover:text-brand transition-colors">{place.title || 'Study Spot'}</div>
+                                <Icons.ExternalLink className="w-5 h-5 text-slate-300 group-hover:text-brand" />
+                              </div>
+                              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">View on Google Maps</div>
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {activeTab === 'Settings' && selectedRoom && (
+                  <div className="flex-1 flex flex-col p-6 lg:p-16 overflow-y-auto no-scrollbar bg-white">
+                    <div className="mb-12">
+                      <h4 className="text-brand font-black text-[10px] uppercase tracking-[0.4em] mb-4">Cluster Management</h4>
+                      <h2 className="text-4xl lg:text-7xl font-black text-slate-900 uppercase tracking-tighter leading-none mb-4">Room Settings</h2>
+                      <p className="text-slate-400 font-medium italic text-lg max-w-2xl">"Customize your cluster's identity and focus. These settings are persisted locally for your session."</p>
+                    </div>
+
+                    <div className="max-w-3xl space-y-12">
+                      <section>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Cluster Name</label>
+                        <input 
+                          type="text"
+                          value={roomSettings[selectedRoom.id]?.name || selectedRoom.name}
+                          onChange={(e) => saveRoomSettings(selectedRoom.id, { name: e.target.value })}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-8 py-4 text-lg font-bold text-slate-900 outline-none focus:ring-4 focus:ring-brand/5 focus:border-brand/30 transition-all"
+                        />
+                      </section>
+
+                      <section>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Color Theme</label>
+                        <div className="flex flex-wrap gap-4">
+                          {['bg-brand', 'bg-emerald-500', 'bg-rose-500', 'bg-amber-500', 'bg-indigo-500', 'bg-slate-900'].map(color => (
+                            <button 
+                              key={color}
+                              onClick={() => saveRoomSettings(selectedRoom.id, { color })}
+                              className={`w-12 h-12 rounded-xl ${color} transition-all ${ (roomSettings[selectedRoom.id]?.color || selectedRoom.color) === color ? 'ring-4 ring-offset-2 ring-brand scale-110' : 'opacity-60 hover:opacity-100'}`}
+                            />
+                          ))}
+                        </div>
+                      </section>
+
+                      <section>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Target Topics</label>
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {(roomSettings[selectedRoom.id]?.targetTopics || selectedRoom.targetTopics).map((topic, i) => (
+                            <div key={i} className="flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-xl text-[10px] font-black text-slate-600 uppercase tracking-widest group">
+                              {topic}
+                              <button 
+                                onClick={() => {
+                                  const current = roomSettings[selectedRoom.id]?.targetTopics || selectedRoom.targetTopics;
+                                  saveRoomSettings(selectedRoom.id, { targetTopics: current.filter((_, idx) => idx !== i) });
+                                }}
+                                className="hover:text-rose-500 transition-colors"
+                              >
+                                <Icons.Plus className="rotate-45 w-3 h-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="flex gap-2">
+                          <input 
+                            type="text"
+                            placeholder="Add new topic..."
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                const val = (e.target as HTMLInputElement).value.trim();
+                                if (val) {
+                                  const current = roomSettings[selectedRoom.id]?.targetTopics || selectedRoom.targetTopics;
+                                  saveRoomSettings(selectedRoom.id, { targetTopics: [...current, val] });
+                                  (e.target as HTMLInputElement).value = '';
+                                }
+                              }
+                            }}
+                            className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-6 py-3 text-sm font-bold text-slate-900 outline-none focus:ring-4 focus:ring-brand/5 transition-all"
+                          />
+                        </div>
+                      </section>
+
+                      <div className="p-8 bg-brand/5 border border-brand/10 rounded-[3rem] flex items-center gap-6">
+                        <div className="p-4 bg-white rounded-2xl shadow-sm">
+                          <Icons.CloudSync className="w-8 h-8 text-brand" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight mb-1">Local Persistence Active</h4>
+                          <p className="text-[10px] text-slate-500 font-medium italic leading-relaxed">
+                            "Your customizations are saved to your browser's local storage. They will persist even if you refresh the page."
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+             </div>
+          </main>
+        </div>
+      ) : (
+        <div className="animate-in fade-in duration-700">
+            <header className="mb-12 text-center relative">
+             <h2 className="text-5xl sm:text-6xl lg:text-8xl font-black text-slate-900 tracking-tighter mb-6 uppercase scale-y-110">CMA Clusters</h2>
+             <p className="text-lg sm:text-2xl text-slate-500 font-medium max-w-2xl mx-auto italic opacity-60">"Collaborative strategy for elite certification aspirants."</p>
+           </header>
+           
+           <div className="max-w-2xl mx-auto mb-20 relative z-20">
+              <div className="relative group">
+                  <input 
+                      type="text" 
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search active clusters..."
+                      className="w-full bg-white/80 backdrop-blur-xl border border-slate-200 rounded-[2.5rem] px-8 sm:px-10 py-5 sm:py-6 pl-12 sm:pl-16 text-base sm:text-lg font-bold text-slate-900 shadow-xl outline-none focus:ring-4 focus:ring-brand/5 focus:border-brand/30 transition-all placeholder:text-slate-400"
+                  />
+                  <Icons.Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 sm:w-6 sm:h-6 text-slate-400 group-focus-within:text-brand transition-colors" />
+              </div>
+           </div>
+           
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
+              {filteredRooms.map(room => (
+                <div key={room.id} onClick={() => setSelectedRoom(room)} className="bg-white border border-slate-200 p-10 lg:p-14 rounded-[3rem] lg:rounded-[5rem] shadow-xl hover:-translate-y-3 transition-all duration-500 cursor-pointer group hover:shadow-2xl hover:border-brand/30">
+                  <div className="flex justify-between items-start mb-10">
+                    <span className="text-[9px] lg:text-[11px] font-black text-brand uppercase tracking-[0.4em] bg-brand/5 px-4 lg:px-6 py-2 rounded-full">{room.category}</span>
+                    <div className="flex items-center gap-3">
+                       <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                       <span className="text-[9px] lg:text-[10px] font-black text-slate-400 uppercase tracking-widest">{room.activeOnline} Online</span>
+                    </div>
+                  </div>
+                  <h3 className="text-3xl lg:text-5xl font-black text-slate-900 tracking-tighter mb-6 uppercase leading-[0.85] group-hover:text-brand transition-colors">{room.name}</h3>
+                  <p className="text-slate-500 font-medium text-lg lg:text-xl leading-relaxed italic opacity-80">"{room.description}"</p>
+                  <div className="mt-12 pt-10 border-t border-slate-100 flex justify-between items-center">
+                     <div className="flex -space-x-3">
+                        {[1,2,3,4].map(i => <img key={i} src={`https://i.pravatar.cc/100?u=${i}-${room.id}`} className="w-10 h-10 lg:w-12 lg:h-12 rounded-2xl border-[4px] border-white shadow-xl" />)}
+                     </div>
+                     <div className="w-12 h-12 lg:w-16 lg:h-16 bg-slate-900 text-white rounded-[1.5rem] group-hover:bg-brand group-hover:scale-110 transition-all flex items-center justify-center shadow-xl">
+                        <Icons.Plus className="w-6 h-6 lg:w-8 lg:h-8" />
+                     </div>
+                  </div>
+                </div>
+              ))}
+           </div>
+        </div>
+      )}
     </div>
   );
 };

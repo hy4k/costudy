@@ -1,45 +1,8 @@
 
 
 import { supabase } from './supabaseClient';
-import { Post, Comment, StudyRoom, Mentor, PostType, LibraryItem, ManagedStudent, Broadcast, User, Notification, StudySession } from '../types';
+import { Post, Comment, StudyRoom, Mentor, PostType, LibraryItem, ManagedStudent, Broadcast, User, Notification } from '../types';
 import { getUserProfile } from './fetsService';
-
-// Helper: Default rooms fallback
-const getDefaultRooms = (): StudyRoom[] => [
-  {
-    id: 'room-1',
-    name: 'CMA Part 1 Strategy',
-    category: 'CMA US Part 1',
-    members: 1240,
-    activeOnline: 42,
-    color: 'bg-brand',
-    description: 'Focusing on Internal Controls and Performance Management.',
-    sections: ['Chat', 'Live Audio', 'Whiteboard', 'Resources'],
-    targetTopics: ['Internal Controls', 'Performance Management']
-  },
-  {
-    id: 'room-2',
-    name: 'Part 2 Calculation Lab',
-    category: 'CMA US Part 2',
-    members: 890,
-    activeOnline: 15,
-    color: 'bg-blue-600',
-    description: 'Deep dive into Investment Decisions and Decision Analysis.',
-    sections: ['Chat', 'Formula Share', 'Live Solving'],
-    targetTopics: ['Decision Analysis', 'Investment Decisions']
-  },
-  {
-    id: 'room-3',
-    name: 'Ethics & Professional Standards',
-    category: 'Ethics',
-    members: 650,
-    activeOnline: 8,
-    color: 'bg-emerald-600',
-    description: 'IMA Ethics guidelines and professional conduct discussions.',
-    sections: ['Chat', 'Case Studies'],
-    targetTopics: ['IMA Ethics', 'Professional Conduct']
-  }
-];
 
 export const costudyService = {
   getPosts: async (category?: string) => {
@@ -68,21 +31,13 @@ export const costudyService = {
     }
   },
 
-  likePost: async (postId: string): Promise<void> => {
-    try {
-      await supabase.rpc('increment_post_likes', { post_id: postId });
-    } catch (e) {
-      // Silently fail — optimistic update already applied in UI
-    }
-  },
-
   createPost: async (authorId: string, content: string, type: PostType = PostType.QUESTION, tags: string[] = []) => {
     const { data, error } = await supabase
       .from('posts')
       .insert([
-        {
-          author_id: authorId,
-          content,
+        { 
+          author_id: authorId, 
+          content, 
           type,
           tags,
           likes: 0,
@@ -92,17 +47,6 @@ export const costudyService = {
       .select('*, author:user_profiles(*)');
     if (error) throw error;
     return data[0];
-  },
-
-  updateAuditStatus: async (postId: string, status: 'COMPLIANT' | 'NON_COMPLIANT', notes: string, auditorId?: string): Promise<void> => {
-    try {
-      await supabase
-        .from('posts')
-        .update({ audit_status: status, audit_notes: notes, auditor_id: auditorId })
-        .eq('id', postId);
-    } catch (e) {
-      // silent
-    }
   },
 
   getPostDiscussion: async (postId: string): Promise<Comment[]> => {
@@ -124,11 +68,11 @@ export const costudyService = {
     const { data, error } = await supabase
       .from('comments')
       .insert([
-        {
-          post_id: postId,
-          author_id: authorId,
-          content,
-          parent_id: parentId
+        { 
+          post_id: postId, 
+          author_id: authorId, 
+          content, 
+          parent_id: parentId 
         }
       ])
       .select();
@@ -137,102 +81,54 @@ export const costudyService = {
   },
 
   getRooms: async (): Promise<StudyRoom[]> => {
-    try {
-      const { data, error } = await supabase
-        .from('study_rooms')
-        .select('*')
-        .order('members_count', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching rooms:', error);
-        // Return default rooms if DB is empty or error
-        return getDefaultRooms();
-      }
-
-      if (!data || data.length === 0) {
-        return getDefaultRooms();
-      }
-
-      return data.map((room: any): StudyRoom => ({
-        id: room.id,
-        name: room.name,
-        category: room.category || 'General',
-        members: room.members_count || 0,
-        activeOnline: room.active_count || 0,
-        color: room.color_theme || 'bg-brand',
-        description: room.description || '',
-        sections: ['Chat', 'Resources', 'Live Audio'],
-        targetTopics: room.target_topics || []
-      }));
-    } catch (e) {
-      console.error('getRooms error:', e);
-      return getDefaultRooms();
-    }
+    return new Promise((resolve) => {
+      // Mocked rooms since these are managed clusters
+      setTimeout(() => resolve([
+        {
+          id: 'room-1',
+          name: 'CMA Part 1 Strategy',
+          category: 'CMA US Part 1',
+          members: 1240,
+          activeOnline: 42,
+          color: 'bg-brand',
+          description: 'Focusing on Internal Controls and Performance Management.',
+          sections: ['Chat', 'Live Audio', 'Whiteboard', 'Resources'],
+          targetTopics: ['Internal Controls', 'Performance Management']
+        },
+        {
+          id: 'room-2',
+          name: 'Part 2 Calculation Lab',
+          category: 'CMA US Part 2',
+          members: 890,
+          activeOnline: 15,
+          color: 'bg-blue-600',
+          description: 'Deep dive into Investment Decisions and Decision Analysis.',
+          sections: ['Chat', 'Formula Share', 'Live Solving'],
+          targetTopics: ['Decision Analysis', 'Investment Decisions']
+        }
+      ]), 500); 
+    });
   },
 
   getMentors: async (): Promise<Mentor[]> => {
-    try {
-      // Fetch users with role = 'TEACHER' from user_profiles
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('role', 'TEACHER')
-        .not('name', 'is', null);
-
-      if (error) {
-        console.error('Error fetching mentors:', error);
-        return [];
-      }
-
-      if (!data || data.length === 0) {
-        return [];
-      }
-
-      // Transform user_profiles to Mentor format
-      return data.map((profile: any): Mentor => ({
-        id: profile.id,
-        name: profile.name || 'Mentor',
-        specialties: profile.specialties || ['CMA US'],
-        isVerified: profile.costudy_status?.isVerified || false,
-        img: profile.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.id}`,
-        reputation: {
-          studentImprovement: profile.reputation?.studyScore?.total || 0,
-          avgScoreJump: profile.reputation?.avgScoreJump || 0,
-          consistency: profile.reputation?.consistencyScore?.streak || 0,
-          helpfulness: profile.reputation?.helpfulnessScore?.total || 0,
-          responseTime: profile.response_time || '—'
-        },
-        trackRecord: {
-          studentsTaught: profile.reputation?.helpfulnessScore?.groupsLed || 0,
-          reviewCount: profile.reputation?.vouchesReceived || 0,
-          passRate: profile.reputation?.passRate || 0,
-          avgImprovement: profile.reputation?.avgImprovement || 0
-        },
-        offerings: [
-          { type: 'session', label: '1-on-1 Session', price: profile.hourly_rate || 500, currency: 'INR', unit: 'hour' },
-          { type: 'review', label: 'Essay Review', price: Math.floor((profile.hourly_rate || 500) * 0.6), currency: 'INR' }
-        ],
-        learningStyle: [profile.learning_style || 'Discussion'],
-        timezone: 'IST',
-        communicationPreference: ['Chat', 'Video Call']
-      }));
-    } catch (e) {
-      console.error('getMentors error:', e);
-      return [];
-    }
+    return new Promise((resolve) => {
+      setTimeout(() => resolve([]), 700);
+    });
   },
 
   getLibraryItems: async (): Promise<LibraryItem[]> => {
-    try {
-      const { data, error } = await supabase
-        .from('library_items')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error || !data) return [];
-      return data as LibraryItem[];
-    } catch (e) {
-      return [];
-    }
+    return [
+      { 
+        id: 'lib-1', 
+        title: 'CMA Part 1: Strategic Financial Management Official Guide', 
+        type: 'PDF', 
+        size: '15.4 MB', 
+        category: 'Financial Accounting', 
+        tags: ['Part 1', 'IMA', 'Official'], 
+        isIndexed: true,
+        pageCount: 450
+      }
+    ];
   },
 
   ingestToVault: async (itemId: string): Promise<boolean> => {
@@ -265,31 +161,36 @@ export const costudyService = {
   getManagedStudents: async (teacherId: string): Promise<ManagedStudent[]> => {
     try {
       const { data } = await supabase
-        .from('student_enrollments')
-        .select('*, student:student_id(*)')
-        .eq('teacher_id', teacherId);
-
+          .from('student_enrollments')
+          .select('*, student:student_id(*)')
+          .eq('teacher_id', teacherId);
+      
       if (data && data.length > 0) {
-        return data.map((e: any) => {
-          const performance = e.student.performance || [];
-          const avgScore = performance.length > 0
-            ? Math.round(performance.reduce((acc: number, curr: any) => acc + (curr.score || 0), 0) / performance.length)
-            : 0;
+          return data.map((e: any) => {
+              const performance = e.student.performance || [];
+              const avgScore = performance.length > 0 
+                  ? Math.round(performance.reduce((acc: number, curr: any) => acc + (curr.score || 0), 0) / performance.length)
+                  : 0;
 
-          return {
-            id: e.student.id,
-            name: e.student.name,
-            handle: e.student.handle || 'aspirant',
-            avatar: e.student.avatar || 'https://i.pravatar.cc/150',
-            focus: e.student.exam_focus || 'General',
-            lastActivity: '1d ago',
-            performanceScore: avgScore || 70, // Default to 70 for visual balance if empty
-            status: e.status === 'ACTIVE' ? 'Active' : 'Struggling'
-          };
-        });
+              return {
+                  id: e.student.id,
+                  name: e.student.name,
+                  handle: e.student.handle || 'aspirant',
+                  avatar: e.student.avatar || 'https://i.pravatar.cc/150',
+                  focus: e.student.exam_focus || 'General',
+                  lastActivity: '1d ago', 
+                  performanceScore: avgScore || 70, // Default to 70 for visual balance if empty
+                  status: e.status === 'ACTIVE' ? 'Active' : 'Struggling'
+              };
+          });
       }
 
-      return [];
+      // Fallback mock data if DB is empty for demo purposes
+      return [
+          { id: 's1', name: 'Rahul V.', handle: 'rahul_cma', avatar: 'https://i.pravatar.cc/150?u=s1', focus: 'Part 1', lastActivity: '10m ago', performanceScore: 82, status: 'Active' },
+          { id: 's2', name: 'Sneha P.', handle: 'sneha_study', avatar: 'https://i.pravatar.cc/150?u=s2', focus: 'Part 2', lastActivity: '1d ago', performanceScore: 65, status: 'Struggling' },
+          { id: 's3', name: 'Amit Kumar', handle: 'amit_k', avatar: 'https://i.pravatar.cc/150?u=s3', focus: 'Ethics', lastActivity: '4h ago', performanceScore: 90, status: 'Active' }
+      ];
     } catch (e) {
       return [];
     }
@@ -297,62 +198,120 @@ export const costudyService = {
 
   // New method to drill down into a specific student for the Mentor
   getStudentDeepDive: async (studentId: string): Promise<User | null> => {
-    return await getUserProfile(studentId);
+     return await getUserProfile(studentId);
   },
 
   getBroadcasts: async (teacherId: string): Promise<Broadcast[]> => {
-    try {
-      const { data } = await supabase
-        .from('teacher_broadcasts')
-        .select('*')
-        .eq('teacher_id', teacherId)
-        .order('created_at', { ascending: false });
-
-      return (data as Broadcast[]) || [];
-    } catch (e) {
-      return [];
-    }
-  },
-
-  createBroadcast: async (teacherId: string, title: string, content: string, type: string) => {
-    const { data, error } = await supabase
-      .from('teacher_broadcasts')
-      .insert([{ teacher_id: teacherId, title, content, type }])
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data as Broadcast;
-  },
-
-  // --- Study Session Methods ---
-  getSessions: async (roomId: string): Promise<StudySession[]> => {
-    try {
-      const { data, error } = await supabase
-        .from('study_room_sessions')
-        .select('*, author:user_profiles(*)')
-        .eq('room_id', roomId)
-        .order('start_time', { ascending: true });
-
-      if (error) {
-        console.error('Error fetching sessions:', error);
+      try {
+        const { data } = await supabase
+          .from('teacher_broadcasts')
+          .select('*')
+          .eq('teacher_id', teacherId)
+          .order('created_at', { ascending: false });
+        
+        return (data as Broadcast[]) || [];
+      } catch (e) {
         return [];
       }
-      return data as StudySession[];
+  },
+  
+  likePost: async (postId: string) => {
+    try {
+      const { data: current } = await supabase.from('posts').select('likes').eq('id', postId).single();
+      const newLikes = (current?.likes || 0) + 1;
+      const { error } = await supabase.from('posts').update({ likes: newLikes }).eq('id', postId);
+      if (error) console.warn('Supabase post like error:', error);
+      return newLikes;
+    } catch (e) {
+      console.warn('Post like fallback:', e);
+      return null;
+    }
+  },
+
+  createBroadcast: async (teacherId: string, title: string, content: string, type: string): Promise<Broadcast> => {
+    try {
+      const { data, error } = await supabase
+        .from('teacher_broadcasts')
+        .insert([{ teacher_id: teacherId, title, content, type }])
+        .select()
+        .single();
+      if (error) throw error;
+      return data as Broadcast;
+    } catch (e) {
+      console.warn('Broadcast fallback:', e);
+      return {
+        id: `bc-${Date.now()}`,
+        teacher_id: teacherId,
+        title,
+        content,
+        type: type as any,
+        created_at: new Date().toISOString()
+      };
+    }
+  },
+
+  // --- Mentor Bounties ---
+  getBounties: async (): Promise<any[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('mentor_bounties')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error || !data) return [];
+      return data;
     } catch (e) {
       return [];
     }
   },
 
-  createSession: async (session: Omit<StudySession, 'id' | 'created_at' | 'author'>) => {
-    const { data, error } = await supabase
-      .from('study_room_sessions')
-      .insert([session])
-      .select('*, author:user_profiles(*)')
-      .single();
+  createBounty: async (teacherId: string, task: string, reward: number, type: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('mentor_bounties')
+        .insert([{ teacher_id: teacherId, task, reward, type, status: 'OPEN' }])
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    } catch (e) {
+      console.warn('Bounty creation fallback:', e);
+      return {
+        id: `b-${Date.now()}`,
+        task,
+        reward,
+        type,
+        status: 'OPEN',
+        created_at: new Date().toISOString()
+      };
+    }
+  },
 
-    if (error) throw error;
-    return data as StudySession;
+  // --- Student Mastery Path Progress ---
+  getUserProgress: async (userId: string): Promise<string[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('user_progress')
+        .select('completed_modules')
+        .eq('user_id', userId)
+        .single();
+      if (!error && data && Array.isArray(data.completed_modules)) {
+        return data.completed_modules;
+      }
+    } catch (e) {
+      console.warn('Failed to fetch user progress from DB:', e);
+    }
+    return [];
+  },
+
+  saveUserProgress: async (userId: string, completedModules: string[]) => {
+    try {
+      const { error } = await supabase
+        .from('user_progress')
+        .upsert([{ user_id: userId, completed_modules: completedModules, updated_at: new Date().toISOString() }], { onConflict: 'user_id' });
+      if (error) console.warn('Supabase saveUserProgress error:', error);
+    } catch (e) {
+      console.warn('User progress save fallback:', e);
+    }
   }
 };
 

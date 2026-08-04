@@ -4,13 +4,42 @@ import { Icons } from '../Icons';
 import { User, ChatConversation, ChatMessage, ThreadContextType, SignalLevel, SignalConfig } from '../../types';
 import { chatService } from '../../services/chatService';
 import { supabase } from '../../services/supabaseClient';
-import { STUDENT_PAGE_BG, StudentPageChrome } from '../student/StudentPageChrome';
 
-interface DirectMessagesProps {
+const CMA_TOPICS: Record<ThreadContextType, { title: string; subtitle: string; icon: string }> = {
+  QUESTION: { title: 'MCQ Solver', subtitle: 'Step-by-step numerical/formula help', icon: 'HelpCircle' },
+  ESSAY: { title: 'Essay Audit', subtitle: 'Detailed review of descriptive essays', icon: 'FileText' },
+  MOCK_EXAM: { title: 'Mock Diagnostic', subtitle: 'Analyze paper scores & percentiles', icon: 'Award' },
+  CONCEPT: { title: 'Core Theory', subtitle: 'Clarify CMA syllabus fundamentals', icon: 'BookOpen' }
+};
+
+const CMA_QUICK_TEMPLATES = [
+  {
+    label: "Variance Analysis",
+    text: "Hi Mentor, I am struggling with Variance Analysis under CMA Part 1 Section B. Specifically, how do we distinguish Sales Volume Variance from Sales Price Variance in MCQs?"
+  },
+  {
+    label: "After-Tax Cost of Debt",
+    text: "Respected Mentor, in calculating WACC (Corporate Finance), could you please clarify why we always use the after-tax Cost of Debt? What's the simple formula?"
+  },
+  {
+    label: "Internal Controls",
+    text: "Hello Faculty, can you help me distinguish between Preventive and Detective controls under CMA Part 1 Section E? I keep getting confused on MCQs."
+  },
+  {
+    label: "Ethics Conflict Resolution",
+    text: "Hi Mentor, regarding Section F (Professional Ethics), when resolving ethical conflicts under IMA guidelines, what are the exact escalation steps if the supervisor is involved?"
+  },
+  {
+    label: "Conservative Working Capital",
+    text: "Respected Faculty, how does a conservative working capital policy impact the current ratio and overall profitability under Part 2 Section C?"
+  }
+];
+
+interface DoubtDeskProps {
   userId?: string;
 }
 
-export const DirectMessages: React.FC<DirectMessagesProps> = ({ userId }) => {
+export const DoubtDesk: React.FC<DoubtDeskProps> = ({ userId }) => {
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
   const [activeConvoId, setActiveConvoId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -151,18 +180,8 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({ userId }) => {
   const activeConversation = conversations.find(c => c.id === activeConvoId);
   const isThreadLocked = activeConversation?.status === 'LOCKED'; 
   const otherParticipant = activeConversation ? getOtherParticipant(activeConversation) : null;
-  const signalConfig = otherParticipant?.signalLevel ? SignalConfig[otherParticipant.signalLevel as SignalLevel] : SignalConfig['ACTIVE_SOLVER'];
-
-  return (
-    <div className={`${STUDENT_PAGE_BG} flex min-h-0 flex-col`}>
-      <StudentPageChrome
-        eyebrow="Inbox"
-        title="Messages"
-        description="Direct conversations with scholars and mentors."
-        icon={<Icons.MessageCircle className="h-6 w-6" />}
-        compact
-      />
-    <div className="mx-auto flex h-[min(100vh-12rem,900px)] min-h-0 max-w-[1600px] flex-1 flex-col gap-6 p-4 sm:p-6 md:flex-row">
+  const signalConfig = otherParticipant?.signalLevel ? SignalConfig[otherParticipant.signalLevel as SignalLevel] : SignalConfig['ACTIVE_SOLVER'];  return (
+    <div className="max-w-[1600px] mx-auto p-4 sm:p-6 h-[calc(100vh-80px)] flex flex-col md:flex-row gap-6">
       
       {/* SIDEBAR: ROSTER & MISSIONS */}
       <div className={`w-full md:w-[400px] flex flex-col bg-[#0f172a] text-white rounded-[2.5rem] border border-slate-800 shadow-2xl overflow-hidden shrink-0 ${activeConvoId ? 'hidden md:flex' : 'flex'}`}>
@@ -171,12 +190,13 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({ userId }) => {
         <div className="p-8 border-b border-slate-800 bg-slate-900/50">
           <div className="flex justify-between items-center mb-6">
              <div>
-                 <h2 className="text-xl font-black text-white uppercase tracking-tight leading-none">Inbox</h2>
-                 <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Your Conversations</div>
+                 <h2 className="text-xl font-black text-white uppercase tracking-tight leading-none">Doubt Desk</h2>
+                 <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Active Doubt Tickets</div>
              </div>
              <button 
                 onClick={() => setIsCreatingThread(!isCreatingThread)} 
                 className={`w-12 h-12 rounded-2xl shadow-lg transition-all flex items-center justify-center ${isCreatingThread ? 'bg-slate-800 text-slate-400 rotate-90' : 'bg-brand text-white hover:bg-brand-600 hover:scale-105 active:scale-95'}`}
+                title="Create a Doubt Ticket"
              >
                 <Icons.Plus className="w-5 h-5" />
              </button>
@@ -184,16 +204,16 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({ userId }) => {
           
           {/* Thread Creation Interface */}
           {isCreatingThread && (
-             <div className="animate-in slide-in-from-top-4 bg-slate-800 border border-slate-700 rounded-[2rem] p-6 shadow-xl mb-6 relative overflow-hidden">
+              <div className="animate-in slide-in-from-top-4 bg-slate-800 border border-slate-700 rounded-[2rem] p-6 shadow-xl mb-6 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-1 h-full bg-brand"></div>
                 {!selectedPeer ? (
                     <>
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">1. Select Target Scholar</p>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">1. Select Faculty or Scholar</p>
                         <div className="relative">
                             <Icons.Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                             <input 
                               autoFocus
-                              placeholder="Search handle..." 
+                              placeholder="Search faculty name or handle..." 
                               className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-4 py-3 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-brand/50 mb-2 transition-all"
                               value={searchQuery}
                               onChange={e => handleSearchUsers(e.target.value)}
@@ -205,7 +225,7 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({ userId }) => {
                                 <img src={u.avatar} className="w-8 h-8 rounded-lg bg-slate-800 object-cover" />
                                 <div>
                                     <div className="text-xs font-black text-white leading-none">{u.name}</div>
-                                    <div className="text-[9px] font-bold text-slate-500 uppercase">@{u.handle || 'user'}</div>
+                                    <div className="text-[9px] font-bold text-slate-500 uppercase">@{u.handle || 'user'} • {u.role === 'TEACHER' ? 'Faculty' : 'Scholar'}</div>
                                 </div>
                              </div>
                            ))}
@@ -222,25 +242,29 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({ userId }) => {
                         </div>
 
                         <div>
-                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">2. Establish Context</p>
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">2. Select CMA US Core Topic</p>
                             <div className="grid grid-cols-2 gap-2">
-                                {(['QUESTION', 'ESSAY', 'MOCK_EXAM', 'CONCEPT'] as ThreadContextType[]).map(type => (
-                                    <button 
-                                        key={type}
-                                        onClick={() => setContextType(type)}
-                                        className={`px-3 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${contextType === type ? 'bg-white text-slate-900 border-white shadow-md transform scale-105' : 'bg-slate-900 text-slate-400 border-slate-700 hover:border-brand/50'}`}
-                                    >
-                                        {type.replace('_', ' ')}
-                                    </button>
-                                ))}
+                                {(['QUESTION', 'ESSAY', 'MOCK_EXAM', 'CONCEPT'] as ThreadContextType[]).map(type => {
+                                    const details = CMA_TOPICS[type];
+                                    return (
+                                        <button 
+                                            key={type}
+                                            onClick={() => setContextType(type)}
+                                            className={`p-3 rounded-xl border text-left transition-all flex flex-col gap-1 ${contextType === type ? 'bg-brand text-white border-brand shadow-md transform scale-102' : 'bg-slate-900 text-slate-400 border-slate-800 hover:border-slate-700'}`}
+                                        >
+                                            <span className="text-[10px] font-black uppercase tracking-wider">{details.title}</span>
+                                            <span className="text-[8px] opacity-60 leading-tight font-medium">{details.subtitle}</span>
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
 
                         {contextType && (
                             <div className="animate-in fade-in slide-in-from-bottom-2">
-                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">3. Mission Objective</p>
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">3. Specific doubt / Question ID</p>
                                 <input 
-                                    placeholder="e.g. Audit Essay #214..."
+                                    placeholder="e.g. Part 1 Sec B - Variance Calculation error..."
                                     value={contextTitle}
                                     onChange={(e) => setContextTitle(e.target.value)}
                                     className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-brand/50 transition-all"
@@ -253,16 +277,16 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({ userId }) => {
                             disabled={!contextTitle.trim()}
                             className="w-full py-4 bg-brand text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] disabled:opacity-50 hover:bg-brand-600 transition-all shadow-xl active:scale-95"
                         >
-                            Initialize Link
+                            Open Doubt Ticket
                         </button>
                     </div>
                 )}
-             </div>
+              </div>
           )}
           
           <div className="relative group">
-             <Icons.Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-brand transition-colors" />
-             <input placeholder="Filter conversations..." className="w-full bg-slate-900 border border-slate-800 rounded-2xl pl-12 pr-4 py-4 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-slate-700 transition-all shadow-sm placeholder:text-slate-600" />
+              <Icons.Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-brand transition-colors" />
+              <input placeholder="Filter active doubt tickets..." className="w-full bg-slate-900 border border-slate-800 rounded-2xl pl-12 pr-4 py-4 text-xs font-bold text-white outline-none focus:ring-2 focus:ring-slate-700 transition-all shadow-sm placeholder:text-slate-600" />
           </div>
         </div>
 
@@ -271,7 +295,7 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({ userId }) => {
            {conversations.length === 0 && !loading && (
              <div className="text-center py-20 opacity-30 flex flex-col items-center">
                <Icons.MessageCircle className="w-12 h-12 text-slate-600 mb-4" />
-               <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">No Active Conversations</p>
+               <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">No Active Doubt Tickets</p>
              </div>
            )}
            
@@ -280,6 +304,7 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({ userId }) => {
              const isActive = convo.id === activeConvoId;
              // Mock signal level for list view items if data missing
              const signalColor = other?.signalLevel ? SignalConfig[other.signalLevel as SignalLevel].color : 'bg-emerald-500';
+             const topicDetails = convo.contextType ? CMA_TOPICS[convo.contextType as ThreadContextType] : null;
 
              return (
                <div 
@@ -302,12 +327,12 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({ userId }) => {
                        
                        <div className="flex items-center gap-2 mb-2">
                            <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${isActive ? 'bg-brand text-white' : 'bg-slate-800 text-slate-500'}`}>
-                               {convo.contextType || 'GENERAL'}
+                               {topicDetails ? topicDetails.title : (convo.contextType || 'GENERAL')}
                            </span>
                        </div>
 
                        <p className={`text-[11px] font-medium truncate leading-relaxed ${isActive ? 'text-slate-400' : 'text-slate-600'}`}>
-                          {convo.last_message ? convo.last_message.content : <span className="italic opacity-30">Conversation started.</span>}
+                          {convo.last_message ? convo.last_message.content : <span className="italic opacity-30">Ticket created. Ready to solve.</span>}
                        </p>
                     </div>
                  </div>
@@ -325,7 +350,7 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({ userId }) => {
 
         {activeConvoId && activeConversation ? (
           <>
-            {/* Header: Mission Brief */}
+            {/* Header: Doubt Ticket Brief */}
             <div className="px-8 py-6 bg-white/90 backdrop-blur-xl border-b border-slate-100 relative z-20 flex flex-col gap-4">
                
                {/* Top Row: User Info & Controls */}
@@ -469,11 +494,24 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({ userId }) => {
                    </div>
                ) : (
                    <div className="relative max-w-4xl mx-auto">
+                       {/* Quick Doubts selection row */}
+                       <div className="flex flex-wrap gap-2 mb-4 justify-start items-center">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mr-1 font-mono">Quick doubt templates:</span>
+                          {CMA_QUICK_TEMPLATES.map((tmpl, idx) => (
+                             <button
+                               key={idx}
+                               onClick={() => setInputText(tmpl.text)}
+                               className="px-3 py-1.5 bg-slate-50 hover:bg-brand hover:text-white border border-slate-200 hover:border-brand rounded-xl text-[10px] font-bold text-slate-600 transition-all shadow-sm cursor-pointer"
+                             >
+                               {tmpl.label}
+                             </button>
+                          ))}
+                       </div>
                       <input 
                         value={inputText}
                         onChange={e => setInputText(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
-                        placeholder={`Transmit message to ${otherParticipant?.name}...`}
+                        placeholder={`Describe your doubt to ${otherParticipant?.name}...`}
                         className="w-full bg-slate-50 border border-slate-200 rounded-[2rem] pl-8 pr-24 py-6 text-sm text-slate-900 font-medium outline-none focus:bg-white focus:ring-4 focus:ring-brand/5 focus:border-brand/30 transition-all placeholder:text-slate-400"
                       />
                       <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
@@ -505,6 +543,6 @@ export const DirectMessages: React.FC<DirectMessagesProps> = ({ userId }) => {
         )}
       </div>
     </div>
-    </div>
   );
 };
+    

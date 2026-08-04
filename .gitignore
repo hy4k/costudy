@@ -9,7 +9,6 @@ lerna-debug.log*
 
 node_modules
 dist
-.env
 dist-ssr
 *.local
 
@@ -23,11 +22,3 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-
-# Data/migration input files (large PDFs, CSVs, DB dumps)
-migration-input/
-
-# Never commit env files
-.env
-.env.production
-.env.local

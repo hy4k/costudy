@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Icons } from '../Icons';
 import { Mentor, User } from '../../types';
@@ -9,68 +10,22 @@ interface TeachersLoungeProps {
   userId?: string;
 }
 
-const MentorCard: React.FC<{ mentor: Mentor; matchReasons?: string[]; matchScore?: number }> = ({ mentor, matchReasons, matchScore }) => {
-  const [hired, setHired] = useState(false);
-  const rating = (mentor as any).rating;
-  const sessions = (mentor as any).sessionsCompleted ?? (mentor as any).sessions_completed;
-  const rate = (mentor as any).hourlyRate ?? (mentor as any).hourly_rate;
-
+const MentorCard: React.FC<{ mentor: Mentor; matchReasons?: string[] }> = ({ mentor, matchReasons }) => {
   return (
-    <div className="post mentor-card">
-      <div className="mentor-top">
-        {mentor.img ? (
-          <img src={mentor.img} alt={mentor.name} style={{ width: 52, height: 52, borderRadius: 16, objectFit: 'cover', flex: 'none', boxShadow: 'var(--nm-xs)' }} />
-        ) : (
-          <span style={{ width: 52, height: 52, borderRadius: 16, flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--accent-soft)', color: 'var(--accent-deep)', fontWeight: 800, fontSize: 20 }}>
-            {(mentor.name || 'M').charAt(0)}
-          </span>
-        )}
-        <div className="mentor-id">
-          <strong>
-            {mentor.name}{' '}
-            {mentor.isVerified && (
-              <span className="mentor-verified"><Icons.CheckBadge className="w-[14px] h-[14px]" /></span>
-            )}
-          </strong>
-          <span className="mentor-creds">
-            {[rating ? `★ ${rating}` : null, sessions ? `${sessions} sessions` : null].filter(Boolean).join(' · ') || 'Verified specialist'}
-          </span>
+    <div className={`bg-white/70 backdrop-blur-3xl border ${matchReasons ? 'border-brand/40 ring-1 ring-brand/10 shadow-2xl scale-[1.02]' : 'border-slate-200 shadow-xl'} p-8 rounded-[4rem] transition-all duration-500 group flex flex-col gap-8`}>
+      <div className="flex justify-between items-start">
+        <div className="flex gap-4 items-center">
+          <div className="relative">
+            <img src={mentor.img} className="w-20 h-20 rounded-[2rem] object-cover ring-4 ring-white shadow-lg" alt={mentor.name} />
+            {mentor.isVerified && <div className="absolute -bottom-1 -right-1 bg-brand text-white p-1 rounded-lg shadow-xl border-2 border-white"><Icons.CheckBadge className="w-4 h-4" /></div>}
+          </div>
+          <div>
+            <h3 className="text-2xl font-black text-slate-900 tracking-tight">{mentor.name}</h3>
+            <div className="flex flex-wrap gap-1 mt-1">{mentor.specialties.map(s => <span key={s} className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{s} •</span>)}</div>
+          </div>
         </div>
-        {typeof matchScore === 'number' && <span className="mentor-match">{matchScore}%</span>}
       </div>
-
-      {mentor.specialties && mentor.specialties.length > 0 && (
-        <div className="post-tags">
-          {mentor.specialties.map(s => <span key={s} className="tag">{s}</span>)}
-        </div>
-      )}
-
-      {matchReasons && matchReasons.length > 0 && (
-        <ul className="mentor-reasons">
-          {matchReasons.map((r) => (
-            <li key={r}><Icons.CheckCircle className="w-3 h-3" /> {r}</li>
-          ))}
-        </ul>
-      )}
-
-      <div className="mentor-foot">
-        <div className="mentor-rate">
-          {rate ? (
-            <>
-              <strong>₹{rate}</strong><span>/session · split with your room</span>
-            </>
-          ) : (
-            <span>Rate on request</span>
-          )}
-        </div>
-        <button
-          type="button"
-          className={hired ? 'rooms-create' : 'btn-post mentor-hire'}
-          onClick={() => setHired(!hired)}
-        >
-          {hired ? 'Request sent ✓' : 'Hire mentor'}
-        </button>
-      </div>
+      <button className="w-full py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-brand transition-all shadow-xl">Hire Specialist</button>
     </div>
   );
 };
@@ -98,49 +53,30 @@ export const TeachersLounge: React.FC<TeachersLoungeProps> = ({ userId }) => {
   const matchResults = currentUser ? matchMentorForStudent(currentUser, mentors) : [];
 
   return (
-    <div className="proto wall-embedded">
-      <div className="wall" data-page="mentors">
-        <main className="shell-solo shell-wide">
-          {/* Masthead with mode toggle */}
-          <div className="rooms-hello feed-hello">
-            <div>
-              <h1 className="font-display">Mentors</h1>
-              <p>Verified specialists. Hire solo, or split the fee with your study room.</p>
-            </div>
-            <div className="focus-presets">
-              <button type="button" className={`seg ${!matchingMode ? 'seg-on' : ''}`} onClick={() => setMatchingMode(false)}>Explore all</button>
-              <button type="button" className={`seg ${matchingMode ? 'seg-on' : ''}`} onClick={() => setMatchingMode(true)}>Smart match</button>
-            </div>
-          </div>
+    <div className="max-w-7xl mx-auto px-6 py-20 flex flex-col items-center">
+      <header className="w-full text-center mb-24 relative">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-brand/5 blur-[120px] pointer-events-none"></div>
+        <h2 className="text-7xl font-black text-slate-900 tracking-tighter leading-[0.7] mb-8 scale-y-110 uppercase">Hiring Built On Trust</h2>
+        <div className="mt-16 flex justify-center gap-6">
+          <button onClick={() => setMatchingMode(false)} className={`px-10 py-5 rounded-3xl text-xs font-black uppercase tracking-widest border transition-all ${!matchingMode ? 'bg-slate-900 text-white shadow-2xl' : 'bg-white text-slate-400 border-slate-200'}`}>Explore All</button>
+          <button onClick={() => setMatchingMode(true)} className={`px-10 py-5 rounded-3xl text-xs font-black uppercase tracking-widest border transition-all flex items-center gap-3 ${matchingMode ? 'bg-brand text-white shadow-brand/30 shadow-2xl' : 'bg-white text-slate-400 border-slate-200'}`}><Icons.Sparkles className="w-4 h-4" /> Smart Match</button>
+        </div>
+      </header>
 
-          {loading ? (
-            <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0' }}>
-              <div style={{ width: 36, height: 36, borderRadius: '50%', border: '3px solid var(--line)', borderTopColor: 'var(--accent)', animation: 'spin 0.8s linear infinite' }} />
-            </div>
-          ) : mentors.length === 0 ? (
-            <div className="post dm-empty prof-empty">
-              <Icons.GraduationCap className="w-[30px] h-[30px]" />
-              <p>No mentors yet</p>
-              <span>Verified specialists will appear here as they join CoStudy.</span>
-            </div>
-          ) : (
-            <div className="rooms-grid">
-              {matchingMode ? (
-                matchResults.map(res => (
-                  <MentorCard
-                    key={res.item.id}
-                    mentor={res.item}
-                    matchReasons={res.reasons}
-                    matchScore={(res as any).score}
-                  />
-                ))
-              ) : (
-                mentors.map(m => <MentorCard key={m.id} mentor={m} />)
-              )}
-            </div>
-          )}
-        </main>
-      </div>
+      {loading ? (
+        <div className="flex flex-col items-center gap-6 text-slate-300 py-20">
+            <Icons.CloudSync className="w-20 h-20 animate-spin text-brand" />
+            <span className="font-black uppercase tracking-widest text-sm animate-pulse">Syncing Reputations...</span>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 w-full max-w-6xl">
+            {matchingMode ? (
+            matchResults.map(res => <MentorCard key={res.item.id} mentor={res.item} matchReasons={res.reasons} />)
+            ) : (
+            mentors.map(m => <MentorCard key={m.id} mentor={m} />)
+            )}
+        </div>
+      )}
     </div>
   );
 };

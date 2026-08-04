@@ -1,8 +1,9 @@
 {
   "name": "CoStudy.in",
-  "description": "A modern, AI-powered educational social network where students learn together, hire teachers, and grow.",
+  "description": "A high-performance CMA US study ecosystem powered by Gemini 3.1 Deep Reasoning, Grounded Research, and Visual Intelligence.",
   "requestFramePermissions": [
     "microphone",
-    "camera"
+    "camera",
+    "geolocation"
   ]
 }

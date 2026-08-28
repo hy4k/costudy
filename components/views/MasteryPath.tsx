@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { costudyService } from '../../services/costudyService';
 import { supabase } from '../../services/supabaseClient';
 import { motion, AnimatePresence } from 'motion/react';
+import { triggerGoalAchievementConfetti, triggerStarConfetti } from '../../utils/confetti';
 import { 
   BookOpen, 
   TrendingUp, 
@@ -597,10 +598,12 @@ export const MasteryPath: React.FC = () => {
 
   const handleToggleModuleComplete = async (moduleId: string) => {
     let updated: string[];
+    const isNewCompletion = !completedModules.includes(moduleId);
     if (completedModules.includes(moduleId)) {
       updated = completedModules.filter(id => id !== moduleId);
     } else {
       updated = [...completedModules, moduleId];
+      triggerGoalAchievementConfetti();
     }
     setCompletedModules(updated);
     localStorage.setItem('cs_mastered_modules', JSON.stringify(updated));
@@ -611,7 +614,7 @@ export const MasteryPath: React.FC = () => {
     }
     
     // Add custom credit reward if completed
-    if (!completedModules.includes(moduleId)) {
+    if (isNewCompletion) {
       const sessionStr = localStorage.getItem('cs_auth_session');
       if (sessionStr) {
         try {
@@ -711,10 +714,15 @@ export const MasteryPath: React.FC = () => {
       setAnswerSubmitted(false);
     } else {
       setQuizFinished(true);
-      // Automatically mark as completed if passed (all correct or majority)
-      const passed = correctCount + (selectedAnswer === selectedModule.questions[currentQuizIdx].correct ? 1 : 0) >= selectedModule.questions.length - 1;
-      if (passed && !completedModules.includes(selectedModule.id)) {
-        handleToggleModuleComplete(selectedModule.id);
+      const totalCorrect = correctCount + (selectedAnswer === selectedModule.questions[currentQuizIdx].correct ? 1 : 0);
+      const passed = totalCorrect >= selectedModule.questions.length - 1;
+      if (passed) {
+        triggerGoalAchievementConfetti();
+        if (!completedModules.includes(selectedModule.id)) {
+          handleToggleModuleComplete(selectedModule.id);
+        }
+      } else {
+        triggerStarConfetti();
       }
     }
   };

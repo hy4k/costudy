@@ -832,6 +832,34 @@ export const StudyWall: React.FC<StudyWallProps> = ({ setView, isLoggedIn = fals
               {mode === 'FACULTY' ? 'ROOM & NETWORK' : 'CMA SUCCESS UNIVERSE'}
             </h2>
 
+            {mode !== 'FACULTY' && (
+              <div 
+                onClick={() => setView?.(ViewState.LAUNCH_MOMENTUM as any)}
+                className="cursor-pointer mt-8 w-full max-w-4xl px-6 py-5 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border border-amber-500/40 rounded-3xl hover:scale-[1.01] active:scale-[0.99] transition-all flex flex-col md:flex-row items-center justify-between gap-4 text-xs font-bold text-white shadow-2xl relative overflow-hidden group"
+              >
+                <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-[80px] pointer-events-none"></div>
+                <div className="flex items-center gap-4 relative z-10 text-left">
+                  <span className="p-3 bg-amber-400/20 text-amber-300 rounded-2xl border border-amber-400/30 shrink-0 shadow-inner">
+                    <Icons.Sparkles className="w-6 h-6 text-amber-400" />
+                  </span>
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-400">Launch Momentum Program</span>
+                      <span className="px-2 py-0.5 bg-white/10 text-slate-300 text-[8px] font-mono rounded">Founder Circle</span>
+                    </div>
+                    <div className="text-base sm:text-lg font-black text-white uppercase tracking-tight">
+                      Claim Your Founder Status & Perks
+                    </div>
+                  </div>
+                </div>
+
+                <span className="px-5 py-3 bg-gradient-to-r from-amber-400 via-amber-500 to-orange-500 text-slate-950 font-black text-xs uppercase tracking-wider rounded-2xl shadow-xl hover:shadow-amber-500/20 flex items-center gap-2 relative z-10 shrink-0 border border-amber-300/40">
+                  <Icons.Trophy className="w-4 h-4 text-slate-950" />
+                  Claim Founder Status →
+                </span>
+              </div>
+            )}
+
             <div className="mt-12 sm:mt-16 w-full flex flex-col items-center gap-8">
               <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
                 {categories.map(cat => (

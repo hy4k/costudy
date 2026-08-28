@@ -14,6 +14,7 @@ import { LibraryVault } from './components/views/LibraryVault';
 import { MentorDashboard } from './components/views/MentorDashboard';
 import { DoubtDesk } from './components/views/DoubtDesk';
 import { MasteryPath } from './components/views/MasteryPath';
+import { LaunchMomentum } from './components/views/LaunchMomentum';
 import { Login } from './components/auth/Login';
 import { SignUp } from './components/auth/SignUp';
 import { authService, getUserProfile, createUserProfile } from './services/fetsService';
@@ -27,6 +28,7 @@ function App() {
   const [authView, setAuthView] = useState<'LOGIN' | 'SIGNUP'>('LOGIN');
   const [currentView, setCurrentView] = useState<keyof typeof ViewState>(ViewState.LANDING);
   const [user, setUser] = useState<any>(null);
+  const [isLaunchModalOpen, setIsLaunchModalOpen] = useState(false);
 
   const syncUserIdentity = async (supabaseUser: any) => {
     if (!supabaseUser) return;
@@ -165,6 +167,8 @@ function App() {
         return <MasteryPath />;
       case ViewState.DASHBOARD:
         return <MentorDashboard defaultTab="IMPACT" />;
+      case ViewState.LAUNCH_MOMENTUM:
+        return <LaunchMomentum userId={user?.id} userName={user?.name} userAvatar={user?.avatar} />;
       default:
         if (user?.role === UserRole.TEACHER) return <StudyWall setView={(v) => setCurrentView(v as any)} isLoggedIn={isLoggedIn} userId={user?.id} onAuthRequired={handleAuthRequired} mode="FACULTY" />;
         return <StudyWall setView={(v) => setCurrentView(v as any)} isLoggedIn={isLoggedIn} userId={user?.id} onAuthRequired={handleAuthRequired} mode="PUBLIC" />;
@@ -175,6 +179,10 @@ function App() {
     <Layout 
       currentView={currentView as any} 
       setView={(v) => {
+        if (v === ViewState.LAUNCH_MOMENTUM) {
+          setIsLaunchModalOpen(true);
+          return;
+        }
         if (!isLoggedIn && v !== ViewState.LANDING && v !== ViewState.WALL && v !== ViewState.FACULTY_ROOM) {
           handleAuthRequired('LOGIN');
         } else {
@@ -185,6 +193,9 @@ function App() {
       userName={user?.name}
       userRole={user?.role}
       userAvatar={user?.avatar}
+      userId={user?.id}
+      isLaunchModalOpen={isLaunchModalOpen}
+      setIsLaunchModalOpen={setIsLaunchModalOpen}
       onLoginClick={() => handleAuthRequired('LOGIN')}
     >
       {renderView()}

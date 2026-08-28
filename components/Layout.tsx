@@ -1,10 +1,12 @@
 
 import React, { useState, useEffect, useRef } from 'react';
+import { AnimatePresence } from 'motion/react';
 import { ViewState, CoStudyCloudStatus, UserRole, Notification } from '../types';
 import { Icons } from './Icons';
 import { getCoStudyCloudStatus } from '../services/fetsService';
 import { notificationService } from '../services/costudyService';
 import { supabase } from '../services/supabaseClient';
+import { LaunchMomentum } from './views/LaunchMomentum';
 
 interface LayoutProps {
   currentView: keyof ViewState;
@@ -15,21 +17,34 @@ interface LayoutProps {
   userName?: string;
   userRole?: UserRole;
   userAvatar?: string;
+  userId?: string;
+  isLaunchModalOpen?: boolean;
+  setIsLaunchModalOpen?: (open: boolean) => void;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, isLoggedIn, onLoginClick, userName, userRole, userAvatar }) => {
+export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, isLoggedIn, onLoginClick, userName, userRole, userAvatar, userId, isLaunchModalOpen, setIsLaunchModalOpen }) => {
   const [cloudStatus, setCloudStatus] = useState<CoStudyCloudStatus>(getCoStudyCloudStatus());
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
+  const [internalLaunchModalOpen, setInternalLaunchModalOpen] = useState(false);
+  const isModalOpen = isLaunchModalOpen !== undefined ? isLaunchModalOpen : internalLaunchModalOpen;
+  const setModalOpen = (open: boolean) => {
+    if (setIsLaunchModalOpen) {
+      setIsLaunchModalOpen(open);
+    } else {
+      setInternalLaunchModalOpen(open);
+    }
+  };
+  
   // Global Theme Toggle State
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     try {
-      return (localStorage.getItem('theme') as 'light' | 'dark') || 'light';
+      return (localStorage.getItem('theme') as 'light' | 'dark') || 'dark';
     } catch {
-      return 'light';
+      return 'dark';
     }
   });
 
@@ -192,14 +207,14 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
         );
     }
     return (
-        <div className="container-button" style={{ width: '130px' }} onClick={() => setView(view)}>
+        <div className="container-button w-[100px] xl:w-[120px] shrink-0" onClick={() => setView(view)}>
           <div className="hover-area bt-1"></div>
           <div className="hover-area bt-2"></div>
           <div className="hover-area bt-3"></div>
           <div className="hover-area bt-4"></div>
           <div className="hover-area bt-5"></div>
           <div className="hover-area bt-6"></div>
-          <button className={`tilt-btn ${currentView === view ? 'active' : ''} whitespace-nowrap text-[10px] px-2`}>
+          <button className={`tilt-btn ${currentView === view ? 'active' : ''} whitespace-nowrap text-[9px] xl:text-[10px] px-1.5`}>
             {label}
           </button>
         </div>
@@ -234,76 +249,20 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-slate-50 dark:bg-[#0b0f19] text-slate-900 dark:text-slate-100 selection:bg-brand selection:text-white relative">
-      {/* PANIC BUTTON (Exam Week Simulation) */}
-      {isLoggedIn && userRole === UserRole.STUDENT && (
-          <>
-            <div className="fixed bottom-10 left-8 z-50">
-                <button 
-                    onClick={() => setShowPanicModal(true)}
-                    className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(220,38,38,0.5)] animate-pulse hover:scale-110 transition-transform active:scale-95 group border-4 border-white"
-                    title="Exam Panic Button"
-                >
-                    <Icons.AlertCircle className="w-8 h-8 text-white" />
-                    <span className="absolute left-full ml-4 bg-slate-900 text-white text-[10px] font-black px-3 py-1 rounded-lg uppercase tracking-widest whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-                        Exam SOS
-                    </span>
-                </button>
-            </div>
-
-            {showPanicModal && (
-                <div className="fixed inset-0 z-[60] bg-red-950/90 backdrop-blur-xl flex items-center justify-center p-6 animate-in fade-in duration-300">
-                    <div className="bg-white rounded-[3rem] p-12 max-w-lg w-full text-center shadow-2xl relative overflow-hidden">
-                        <div className="absolute top-0 left-0 right-0 h-4 bg-red-600 animate-pulse"></div>
-                        <Icons.AlertCircle className="w-24 h-24 text-red-600 mx-auto mb-6" />
-                        <h2 className="text-4xl font-black text-slate-900 uppercase tracking-tighter mb-4">Panic Protocol</h2>
-                        <p className="text-slate-500 font-bold text-sm uppercase tracking-widest mb-8">
-                            Initiating emergency connection to a Rapid Response Mentor.
-                        </p>
-                        
-                        <div className="bg-slate-100 rounded-2xl p-6 mb-8 border border-slate-200">
-                            <div className="flex justify-between items-center mb-2">
-                                <span className="text-xs font-black text-slate-500 uppercase tracking-widest">Est. Wait</span>
-                                <span className="text-sm font-black text-slate-900">&lt; 30 Seconds</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <span className="text-xs font-black text-slate-500 uppercase tracking-widest">Cost</span>
-                                <span className="text-sm font-black text-slate-900">500 Credits</span>
-                            </div>
-                        </div>
-
-                        <div className="space-y-4">
-                            <button 
-                                onClick={handlePanicConnect}
-                                disabled={isPanicConnecting}
-                                className="w-full py-5 bg-red-600 text-white rounded-2xl text-xs font-black uppercase tracking-[0.2em] shadow-xl hover:bg-red-700 transition-all flex items-center justify-center gap-3"
-                            >
-                                {isPanicConnecting ? <><Icons.CloudSync className="w-4 h-4 animate-spin" /> DISPATCHING...</> : 'CONFIRM SOS REQUEST'}
-                            </button>
-                            <button 
-                                onClick={() => setShowPanicModal(false)}
-                                className="w-full py-4 text-slate-400 font-black text-xs uppercase tracking-widest hover:text-slate-900"
-                            >
-                                Cancel Alert
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-          </>
-      )}
-
       {/* Lowered z-index from 30 to 10 to ensure system icons are clickable */}
       <nav className="h-20 flex items-center justify-between px-6 sm:px-8 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl border-b border-slate-200 dark:border-slate-800 z-40 relative">
         <div className="flex items-center gap-4 sm:gap-6">
-            {/* Mobile Menu Toggle */}
-            <button 
-                className="lg:hidden p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-                {isMobileMenuOpen ? <Icons.Plus className="w-6 h-6 rotate-45" /> : <Icons.Grid className="w-6 h-6" />}
-            </button>
+            {/* Mobile Menu Toggle - only shown when logged in */}
+            {isLoggedIn && currentView !== ViewState.LANDING && (
+              <button 
+                  className="lg:hidden p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
+                  {isMobileMenuOpen ? <Icons.Plus className="w-6 h-6 rotate-45" /> : <Icons.Grid className="w-6 h-6" />}
+              </button>
+            )}
 
-            <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setView(userRole === UserRole.TEACHER ? ViewState.FACULTY_ROOM : ViewState.WALL)}>
+            <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setView(isLoggedIn ? (userRole === UserRole.TEACHER ? ViewState.FACULTY_ROOM : ViewState.WALL) : ViewState.LANDING)}>
                 <div className="group-hover:rotate-12 transition-transform duration-500">
                     <Icons.Logo className="w-8 h-8 sm:w-10 sm:h-10" />
                 </div>
@@ -311,11 +270,14 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
             </div>
         </div>
 
-        <div className="hidden lg:flex flex-1 justify-center gap-2 px-4">
-          {renderNavItems()}
-        </div>
+        {/* Top Navigation Menu - only shown after login */}
+        {isLoggedIn && currentView !== ViewState.LANDING && (
+          <div className="hidden lg:flex flex-1 justify-center gap-2 px-4">
+            {renderNavItems()}
+          </div>
+        )}
 
-        <div className="flex gap-3 items-center">
+        <div className="flex gap-3 items-center ml-auto">
           {/* THEME TOGGLE BUTTON */}
           <button 
             onClick={toggleTheme}
@@ -417,9 +379,9 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
         </div>
       </nav>
 
-      {/* Mobile Menu Overlay */}
-      {isMobileMenuOpen && (
-          <div className="fixed inset-0 top-20 z-40 bg-white/95 backdrop-blur-xl lg:hidden animate-in slide-in-from-top-10 duration-300 flex flex-col p-6 overflow-y-auto">
+      {/* Mobile Menu Overlay - only when logged in */}
+      {isLoggedIn && currentView !== ViewState.LANDING && isMobileMenuOpen && (
+          <div className="fixed inset-0 top-20 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl lg:hidden animate-in slide-in-from-top-10 duration-300 flex flex-col p-6 overflow-y-auto">
               <div className="space-y-2">
                   {renderNavItems(true)}
               </div>
@@ -435,6 +397,46 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
           {children}
         </div>
       </main>
+
+      {/* LAUNCH MOMENTUM FOUNDER CIRCLE POPUP MODAL */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-hidden animate-in fade-in duration-200">
+            <div 
+              className="fixed inset-0" 
+              onClick={() => setModalOpen(false)}
+            ></div>
+            <div className="relative z-10 w-full max-w-5xl bg-slate-900 text-white border border-amber-500/30 rounded-[2.5rem] shadow-[0_25px_80px_rgba(0,0,0,0.8)] overflow-hidden my-auto max-h-[92vh] flex flex-col animate-in zoom-in-95 duration-200">
+              
+              {/* Modal Top Header Bar */}
+              <div className="px-6 py-4 bg-slate-900/95 border-b border-slate-800 flex justify-between items-center shrink-0">
+                <div className="flex items-center gap-3">
+                  <span className="p-2 bg-amber-400/10 text-amber-400 rounded-xl border border-amber-400/20">
+                    <Icons.Sparkles className="w-5 h-5" />
+                  </span>
+                  <div>
+                    <div className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-400">Launch Momentum Program</div>
+                    <h3 className="text-xs sm:text-sm font-black text-white uppercase tracking-tight">Founder Circle • Claim Founder Status</h3>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => setModalOpen(false)}
+                  className="p-2.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-all flex items-center justify-center cursor-pointer"
+                  title="Close Modal"
+                >
+                  <Icons.Plus className="w-5 h-5 rotate-45" />
+                </button>
+              </div>
+
+              {/* Modal Scrollable Body */}
+              <div className="flex-1 overflow-y-auto no-scrollbar">
+                <LaunchMomentum userId={userId} userName={userName} userAvatar={userAvatar} />
+              </div>
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Icons } from '../Icons';
 import { User, UserRole, AlignmentPurpose, ActiveAlignment, AlignmentRequest, AlignmentDuration, TrackingRecord, ObserverRecord, SignalLevel, SignalConfig } from '../../types';
 import { getUserProfile, updateUserProfile } from '../../services/fetsService';
+import { triggerConfetti, triggerGoalAchievementConfetti } from '../../utils/confetti';
 
 interface ProfileProps {
   onLogout?: () => void;
@@ -147,6 +148,7 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
                 setMe(updated);
                 if (onProfileUpdate) onProfileUpdate();
                 setSaveStatus('SUCCESS');
+                triggerConfetti();
                 setTimeout(() => {
                     setIsEditing(false);
                     setSaveStatus('IDLE');
@@ -183,6 +185,7 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
     };
 
     const handleAcceptRequest = (req: AlignmentRequest) => {
+        triggerGoalAchievementConfetti();
         setAlignments(prev => [...prev, {
             id: `a-${Date.now()}`,
             peerId: req.senderId,

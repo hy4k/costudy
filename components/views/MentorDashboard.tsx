@@ -6,6 +6,7 @@ import { costudyService } from '../../services/costudyService';
 import { supabase } from '../../services/supabaseClient';
 import { getUserProfile } from '../../services/fetsService';
 import { StudentMasteryChart } from './StudentMasteryChart';
+import { triggerConfetti, triggerGoalAchievementConfetti } from '../../utils/confetti';
 
 interface MentorDashboardProps {
     defaultTab?: 'IMPACT' | 'BROADCAST' | 'CLASSROOMS' | 'REVENUE' | 'BOUNTIES';
@@ -111,6 +112,7 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
             setBTitle('');
             setBContent('');
             setActiveTab('IMPACT');
+            triggerConfetti();
             alert("Announcement posted.");
         } catch (e) {
             console.error("Broadcast failed", e);
@@ -126,6 +128,7 @@ export const MentorDashboard: React.FC<MentorDashboardProps> = ({ defaultTab = '
             const newBounty = await costudyService.createBounty(user?.id || 'teacher', bountyTask, bountyReward, bountyType);
             setBounties(prev => [newBounty, ...prev]);
             setBountyTask('');
+            triggerGoalAchievementConfetti();
             alert("Bounty Posted to Student Wall & Saved.");
         } catch (e) {
             console.error("Bounty creation failed", e);

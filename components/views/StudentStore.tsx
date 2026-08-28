@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Icons } from '../Icons';
 import { processUnifiedPayment, syncStudyTelemetry } from '../../services/fetsService';
+import { triggerStarConfetti, triggerGoalAchievementConfetti } from '../../utils/confetti';
 
 export const StudentStore: React.FC = () => {
     const [payingId, setPayingId] = useState<string | null>(null);
@@ -18,6 +19,7 @@ export const StudentStore: React.FC = () => {
         const result: any = await processUnifiedPayment(item.price);
         setPayingId(null);
         if (result.status === 'success') {
+            triggerGoalAchievementConfetti();
             const msg = isGroupBuy 
                 ? `Strategic Group Pack Activated!\nEach member will receive a neural link invite shortly. A private study room has been pre-initialized for your cluster.`
                 : `CoStudy Pro Verified!\nSuccess! AI Tutor and Full Bank unlocked.`;

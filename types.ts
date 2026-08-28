@@ -178,6 +178,8 @@ export interface Comment {
 }
 
 // Added missing Mentor interface
+export type MentorStatus = 'online' | 'offline' | 'in_session';
+
 export interface Mentor {
     id: string;
     name: string;
@@ -187,6 +189,14 @@ export interface Mentor {
     learningStyle: string;
     timezone: string;
     offerings: { type: string; price: number }[];
+    status?: MentorStatus;
+    lastActive?: string;
+    responseTime?: string;
+    activeSessions?: number;
+    rating?: number;
+    reviewCount?: number;
+    hourlyRate?: number;
+    bio?: string;
 }
 
 // Added missing LibraryItem interface
@@ -320,11 +330,20 @@ export interface RoomResource {
   room_id: string;
   title: string;
   file_url?: string;
+  file_name?: string;
   file_type?: string;
   size?: string;
   category?: string;
   author?: Partial<User>;
   summary?: string;
+}
+
+export interface ClusterMember {
+  id: string;
+  name: string;
+  role: 'ADMIN' | 'MODERATOR' | 'SCHOLAR' | 'FACULTY';
+  avatar?: string;
+  joined_at?: string;
 }
 
 export interface StudyRoom {
@@ -338,6 +357,10 @@ export interface StudyRoom {
   sections: string[];
   targetTopics: string[];
   managed_by?: string; // Teacher ID
+  admin_id?: string;
+  admin_name?: string;
+  privacy?: 'PUBLIC' | 'INVITE_ONLY';
+  member_list?: ClusterMember[];
 }
 
 export interface ViewState {
@@ -355,6 +378,7 @@ export interface ViewState {
   DASHBOARD: 'DASHBOARD';
   REVENUE: 'REVENUE';
   MASTERY_PATH: 'MASTERY_PATH';
+  LAUNCH_MOMENTUM: 'LAUNCH_MOMENTUM';
 }
 
 export const ViewState: ViewState = {
@@ -371,5 +395,6 @@ export const ViewState: ViewState = {
   MESSAGES: 'MESSAGES',
   DASHBOARD: 'DASHBOARD',
   REVENUE: 'REVENUE',
-  MASTERY_PATH: 'MASTERY_PATH'
+  MASTERY_PATH: 'MASTERY_PATH',
+  LAUNCH_MOMENTUM: 'LAUNCH_MOMENTUM'
 };

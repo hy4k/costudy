@@ -182,9 +182,9 @@ export const EssayInterface: React.FC<EssayInterfaceProps> = ({
             </div>
 
             {/* Split Screen Container */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 p-2 bg-[#d6d6d6]">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 p-2 bg-slate-200 dark:bg-slate-950">
                 {/* Left Pane: Scenario & Question Prompt */}
-                <div className="bg-white border-2 border-[#999999] flex flex-col h-[520px] overflow-hidden shadow-xs">
+                <div className="bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 flex flex-col h-[520px] overflow-hidden shadow-xs">
                     <div className="bg-[#4d4d4d] text-white px-4 py-2 font-bold text-xs flex justify-between items-center border-b border-black shrink-0">
                         <span className="uppercase tracking-wider flex items-center gap-1.5">
                             <Icons.BookOpen className="w-3.5 h-3.5 text-amber-300" /> Case Scenario & Instructions
@@ -192,20 +192,20 @@ export const EssayInterface: React.FC<EssayInterfaceProps> = ({
                         <span className="text-[10px] text-slate-300 font-mono">Exam Document Viewer</span>
                     </div>
 
-                    <div className="p-6 overflow-y-auto flex-1 text-slate-900 leading-relaxed font-serif text-sm">
-                        <div className="mb-4 pb-3 border-b border-slate-200">
-                            <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold font-sans">
+                    <div className="p-6 overflow-y-auto flex-1 text-slate-900 dark:text-slate-100 leading-relaxed font-serif text-sm">
+                        <div className="mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
+                            <span className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400 font-bold font-sans">
                                 {activeQuestion.section || 'ICMA CMA Strategic Scenario'}
                             </span>
                         </div>
 
-                        <div className="whitespace-pre-wrap font-serif text-[#111] text-[15px] leading-7">
+                        <div className="whitespace-pre-wrap font-serif text-slate-900 dark:text-slate-100 text-[15px] leading-7">
                             {activeQuestion.question_text}
                         </div>
 
                         {activeQuestion.rubric_guidelines && (
-                            <div className="mt-6 pt-4 border-t-2 border-dashed border-amber-200 bg-amber-50/60 p-4 rounded text-xs text-amber-900 font-sans">
-                                <span className="font-bold uppercase tracking-wider text-amber-800 block mb-1">
+                            <div className="mt-6 pt-4 border-t-2 border-dashed border-amber-300/60 dark:border-amber-500/40 bg-amber-500/10 p-4 rounded text-xs text-amber-900 dark:text-amber-200 font-sans">
+                                <span className="font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300 block mb-1">
                                     💡 Key Evaluation Focus Areas (Rubric):
                                 </span>
                                 {activeQuestion.rubric_guidelines}
@@ -215,7 +215,7 @@ export const EssayInterface: React.FC<EssayInterfaceProps> = ({
                 </div>
 
                 {/* Right Pane: Prometric Response Text Area */}
-                <div className="bg-white border-2 border-[#999999] flex flex-col h-[520px] overflow-hidden shadow-xs">
+                <div className="bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 flex flex-col h-[520px] overflow-hidden shadow-xs">
                     {/* Prometric Toolbar */}
                     <div className="bg-[#4d4d4d] text-white px-3 py-1.5 flex justify-between items-center border-b border-black shrink-0 text-xs font-mono">
                         <div className="flex items-center gap-2">
@@ -277,13 +277,13 @@ export const EssayInterface: React.FC<EssayInterfaceProps> = ({
                     </div>
 
                     {/* Textarea */}
-                    <div className="flex-1 relative flex flex-col bg-[#fffefc]">
+                    <div className="flex-1 relative flex flex-col bg-white dark:bg-slate-900">
                         <textarea
                             value={currentText}
                             onChange={(e) => handleTextChange(e.target.value)}
                             placeholder="Type your structured essay response here. Use numerical headings and clear paragraph breaks matching the requirement numbers..."
                             spellCheck={false}
-                            className={`flex-1 w-full p-5 font-mono outline-none resize-none bg-transparent text-slate-900 leading-relaxed ${
+                            className={`flex-1 w-full p-5 font-mono outline-none resize-none bg-transparent text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 leading-relaxed ${
                                 fontSize === 'sm' ? 'text-xs' : fontSize === 'lg' ? 'text-base' : 'text-sm'
                             }`}
                         />

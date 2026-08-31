@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Icons } from '../Icons';
 import { User, UserRole, AlignmentPurpose, ActiveAlignment, AlignmentRequest, AlignmentDuration, TrackingRecord, ObserverRecord, SignalLevel, SignalConfig } from '../../types';
-import { getUserProfile, updateUserProfile } from '../../services/fetsService';
+import { getUserProfile, updateUserProfile, createUserProfile } from '../../services/fetsService';
 import { triggerConfetti, triggerGoalAchievementConfetti } from '../../utils/confetti';
 
 interface ProfileProps {
@@ -101,7 +101,10 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
             }
             setLoading(true);
             try {
-                const data = await getUserProfile(userId);
+                let data = await getUserProfile(userId);
+                if (!data) {
+                  data = await createUserProfile(userId, { full_name: 'CMA Aspirant' });
+                }
                 if (data) {
                     setMe(data);
                     setEditForm({
@@ -270,16 +273,33 @@ export const Profile: React.FC<ProfileProps> = ({ onLogout, userId, onProfileUpd
               <Icons.HelpCircle className="w-20 h-20 text-brand/20" />
            </div>
            <div className="space-y-4">
-              <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">Identity Not Found</h2>
-              <p className="text-slate-400 font-bold uppercase tracking-widest text-xs max-w-sm mx-auto">
-                 We couldn't retrieve your professional profile. Please ensure your Supabase 'user_profiles' table is active.
+              <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">Setting Up Your Profile</h2>
+              <p className="text-slate-500 font-medium text-xs max-w-sm mx-auto">
+                 Initializing your professional CMA identity and dashboard access...
               </p>
            </div>
-           {onLogout && (
-             <button onClick={onLogout} className="px-12 py-5 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-2xl hover:bg-brand transition-all">
-               Sign Out Universe
+           <div className="flex items-center gap-3">
+             <button 
+               onClick={async () => {
+                 setLoading(true);
+                 const profile = await createUserProfile(userId || 'u-me', { full_name: 'CMA Aspirant' });
+                 if (profile) {
+                   setMe(profile);
+                   onProfileUpdate?.();
+                 }
+                 setLoading(false);
+               }}
+               className="px-8 py-4 bg-brand text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl hover:bg-slate-900 transition-all flex items-center gap-2"
+             >
+               <Icons.CheckBadge className="w-4 h-4" />
+               Initialize Profile Now
              </button>
-           )}
+             {onLogout && (
+               <button onClick={onLogout} className="px-6 py-4 bg-slate-100 text-slate-700 rounded-2xl text-xs font-bold uppercase tracking-wider hover:bg-slate-200 transition-all">
+                 Sign Out
+               </button>
+             )}
+           </div>
         </div>
       );
     }

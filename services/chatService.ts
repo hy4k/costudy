@@ -163,5 +163,24 @@ export const chatService = {
       .limit(5);
     
     return (data as any[]) || [];
+  },
+
+  updateConversationStatus: async (conversationId: string, currentName: string | undefined, newStatus: string) => {
+    let ctx: any = {};
+    try {
+      if (currentName && currentName.startsWith('{')) {
+        ctx = JSON.parse(currentName);
+      }
+    } catch(e) {}
+    ctx.status = newStatus;
+    const newName = JSON.stringify(ctx);
+
+    const { error } = await supabase
+      .from('chat_conversations')
+      .update({ name: newName, updated_at: new Date().toISOString() })
+      .eq('id', conversationId);
+      
+    if (error) throw error;
+    return newName;
   }
 };

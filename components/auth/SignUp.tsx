@@ -17,6 +17,7 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack }) =>
   const [name, setName] = useState('');
   const [accessCode, setAccessCode] = useState(''); // New state for mentor verification
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   // Instant Theme Preview for Role Selection
   useEffect(() => {
@@ -52,6 +53,7 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack }) =>
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+    setSuccess(null);
 
     // Mentor Verification Logic
     if (role === 'TEACHER' && accessCode !== 'CMA2025') {
@@ -61,9 +63,14 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack }) =>
     }
 
     try {
-      await authService.signUp(email, password, name, role);
-      // Wait for session propagation
-      setTimeout(() => onSignUp(), 800);
+      const data = await authService.signUp(email, password, name, role);
+      if (!data?.session) {
+        setSuccess("Profile registered! Please check your email inbox (and spam folder) to confirm your account before logging in.");
+        setTimeout(() => onSwitch(), 6000);
+      } else {
+        // Wait for session propagation
+        setTimeout(() => onSignUp(), 800);
+      }
     } catch (err: any) {
       console.error("Signup Flow Error:", err);
       // If the error is the common Supabase "Database error", provide a more helpful message
@@ -132,6 +139,11 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack }) =>
               {error && (
                 <div className="p-6 bg-brand/10 border border-brand/20 rounded-[2rem] text-brand text-[11px] font-black uppercase tracking-widest text-center animate-in slide-in-from-top-4">
                   {error}
+                </div>
+              )}
+              {success && (
+                <div className="p-6 bg-emerald-500/10 border border-emerald-500/20 rounded-[2rem] text-emerald-500 text-[11px] font-black uppercase tracking-widest text-center animate-in slide-in-from-top-4">
+                  {success}
                 </div>
               )}
               <input 

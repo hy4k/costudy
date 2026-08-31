@@ -58,6 +58,7 @@ export const DoubtDesk: React.FC<DoubtDeskProps> = ({ userId }) => {
 
   // Micro-Consulting State
   const [isBookingConsult, setIsBookingConsult] = useState(false);
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -171,6 +172,18 @@ export const DoubtDesk: React.FC<DoubtDeskProps> = ({ userId }) => {
           setIsBookingConsult(false);
           handleSendMessage("[SYSTEM]: ⚡ Micro-Consulting Session Confirmed (15m). Credits deducted.");
       }, 1500);
+  };
+
+  const handleStatusChange = async (newStatus: string) => {
+    if (!activeConvoId || !activeConversation) return;
+    try {
+      await chatService.updateConversationStatus(activeConvoId, activeConversation.name, newStatus);
+      setConversations(prev => prev.map(c => c.id === activeConvoId ? { ...c, status: newStatus as any } : c));
+      setIsStatusDropdownOpen(false);
+      handleSendMessage(`[SYSTEM]: Ticket status updated to ${newStatus}`);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const getOtherParticipant = (convo: ChatConversation) => {
@@ -329,6 +342,18 @@ export const DoubtDesk: React.FC<DoubtDeskProps> = ({ userId }) => {
                            <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest ${isActive ? 'bg-brand text-white' : 'bg-slate-800 text-slate-500'}`}>
                                {topicDetails ? topicDetails.title : (convo.contextType || 'GENERAL')}
                            </span>
+                           
+                           {/* Status Indicator */}
+                           {convo.status && convo.status !== 'ACTIVE' && (
+                               <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border ${
+                                   convo.status === 'RESOLVED' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
+                                   convo.status === 'IN_REVIEW' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' :
+                                   convo.status === 'PENDING' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' :
+                                   'bg-slate-800 border-slate-700 text-slate-400'
+                               }`}>
+                                   {convo.status}
+                               </span>
+                           )}
                        </div>
 
                        <p className={`text-[11px] font-medium truncate leading-relaxed ${isActive ? 'text-slate-400' : 'text-slate-600'}`}>
@@ -373,6 +398,47 @@ export const DoubtDesk: React.FC<DoubtDeskProps> = ({ userId }) => {
                    </div>
                    
                    <div className="flex gap-3">
+                       {/* Status Dropdown */}
+                       <div className="relative">
+                           <div className="flex flex-col items-end">
+                               <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Ticket Status</span>
+                               <button 
+                                 onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
+                                 className={`px-4 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all cursor-pointer ${
+                                   activeConversation.status === 'RESOLVED' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' :
+                                   activeConversation.status === 'IN_REVIEW' ? 'bg-amber-50 border-amber-200 text-amber-700' :
+                                   activeConversation.status === 'PENDING' ? 'bg-rose-50 border-rose-200 text-rose-700' :
+                                   'bg-slate-100 border-slate-200 text-slate-700'
+                                 }`}
+                               >
+                                   <div className={`w-1.5 h-1.5 rounded-full ${
+                                       activeConversation.status === 'RESOLVED' ? 'bg-emerald-500' :
+                                       activeConversation.status === 'IN_REVIEW' ? 'bg-amber-500' :
+                                       activeConversation.status === 'PENDING' ? 'bg-rose-500' :
+                                       'bg-slate-500'
+                                   }`}></div>
+                                   {activeConversation.status || 'ACTIVE'}
+                                   <Icons.ChevronDown className="w-3 h-3 opacity-50" />
+                               </button>
+                           </div>
+                           
+                           {isStatusDropdownOpen && (
+                               <div className="absolute right-0 top-full mt-2 w-40 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                                   <div className="flex flex-col">
+                                       {['ACTIVE', 'PENDING', 'IN_REVIEW', 'RESOLVED', 'LOCKED'].map(status => (
+                                           <button
+                                               key={status}
+                                               onClick={() => handleStatusChange(status)}
+                                               className="text-left px-4 py-2 text-[10px] font-bold text-slate-600 hover:bg-slate-50 hover:text-brand uppercase tracking-widest transition-colors"
+                                           >
+                                               {status}
+                                           </button>
+                                       ))}
+                                   </div>
+                               </div>
+                           )}
+                       </div>
+
                        {/* Context Badge */}
                        <div className="hidden sm:flex flex-col items-end">
                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Active Topic</span>

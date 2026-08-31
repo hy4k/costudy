@@ -6,9 +6,11 @@ import { ExamSession } from './ExamSession';
 
 interface MockTestsProps {
   userId?: string;
+  onOpenTestDrive?: () => void;
+  onOpenTestDriveAdmin?: () => void;
 }
 
-export const MockTests: React.FC<MockTestsProps> = ({ userId }) => {
+export const MockTests: React.FC<MockTestsProps> = ({ userId, onOpenTestDrive, onOpenTestDriveAdmin }) => {
     const [tests, setTests] = useState<any[]>([]);
     const [perf, setPerf] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -78,7 +80,7 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId }) => {
             </header>
 
             {!loading && perf && (
-                <div className="max-w-5xl mx-auto mb-16 grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="max-w-5xl mx-auto mb-12 grid grid-cols-1 md:grid-cols-4 gap-4">
                     {[
                         { label: 'Global Rank', value: `#${perf.globalRank}`, icon: <Icons.Trophy className="w-4 h-4" /> },
                         { label: 'Average Score', value: `${perf.averageMockScore}%`, icon: <Icons.TrendingUp className="w-4 h-4" /> },
@@ -95,6 +97,44 @@ export const MockTests: React.FC<MockTestsProps> = ({ userId }) => {
                     ))}
                 </div>
             )}
+
+            {/* PHYSICAL TEST CENTRE TEST DRIVE BANNER */}
+            <div className="max-w-5xl mx-auto mb-16 bg-gradient-to-r from-slate-900 via-slate-950 to-slate-900 border-2 border-brand/40 p-8 md:p-10 rounded-[3rem] shadow-2xl relative overflow-hidden text-white">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-brand/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                    <div className="space-y-2">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand/20 border border-brand/40 rounded-lg text-brand text-[10px] font-black uppercase tracking-widest">
+                            <Icons.Shield className="w-3.5 h-3.5" />
+                            Official Physical Test Centre Program
+                        </div>
+                        <h3 className="text-3xl font-black uppercase tracking-tight text-white">
+                            CMA 4-Hour Test Drive Simulation
+                        </h3>
+                        <p className="text-sm text-slate-400 max-w-xl leading-relaxed">
+                            100% authentic Prometric replication for physical exam centres. Features 3-hour 100 MCQs, 1-hour Case Essays, and instant Gemini 3.1 AI grading with 500-point scaled scorecards.
+                        </p>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+                        {onOpenTestDrive && (
+                            <button 
+                                onClick={onOpenTestDrive}
+                                className="px-6 py-4 bg-brand hover:bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-wider transition-all shadow-xl shadow-brand/20 flex items-center justify-center gap-2"
+                            >
+                                <Icons.Lock className="w-4 h-4" /> Launch Candidate Kiosk
+                            </button>
+                        )}
+                        {onOpenTestDriveAdmin && (
+                            <button 
+                                onClick={onOpenTestDriveAdmin}
+                                className="px-5 py-4 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-2xl font-bold text-xs uppercase transition-all border border-slate-700 flex items-center justify-center gap-2"
+                            >
+                                <Icons.Settings className="w-4 h-4 text-brand" /> Staff Admin Console
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
 
             {loading ? (
                 <div className="flex flex-col items-center gap-6 text-slate-400 py-20">

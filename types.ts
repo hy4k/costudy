@@ -245,7 +245,7 @@ export interface ChatConversation {
     contextType?: ThreadContextType;
     contextTitle?: string;
     contextId?: string;
-    status?: 'ACTIVE' | 'LOCKED';
+    status?: 'ACTIVE' | 'LOCKED' | 'PENDING' | 'IN_REVIEW' | 'RESOLVED';
     participants?: Partial<User>[];
     last_message?: ChatMessage | null;
 }
@@ -379,6 +379,8 @@ export interface ViewState {
   REVENUE: 'REVENUE';
   MASTERY_PATH: 'MASTERY_PATH';
   LAUNCH_MOMENTUM: 'LAUNCH_MOMENTUM';
+  TEST_DRIVE: 'TEST_DRIVE';
+  TEST_DRIVE_ADMIN: 'TEST_DRIVE_ADMIN';
 }
 
 export const ViewState: ViewState = {
@@ -396,5 +398,63 @@ export const ViewState: ViewState = {
   DASHBOARD: 'DASHBOARD',
   REVENUE: 'REVENUE',
   MASTERY_PATH: 'MASTERY_PATH',
-  LAUNCH_MOMENTUM: 'LAUNCH_MOMENTUM'
+  LAUNCH_MOMENTUM: 'LAUNCH_MOMENTUM',
+  TEST_DRIVE: 'TEST_DRIVE',
+  TEST_DRIVE_ADMIN: 'TEST_DRIVE_ADMIN'
 };
+
+// Test Drive Interfaces for Physical Test Centre Exam Operations
+export type ExamPart = 'Part 1' | 'Part 2';
+
+export interface TestDriveCandidate {
+  id: string;
+  bookingRef: string; // e.g. "FETS-TD-8921"
+  name: string;
+  email: string;
+  phone: string;
+  examPart: ExamPart;
+  examDate: string;
+  slotTime: string; // e.g. "09:00 AM - 01:00 PM"
+  centerLocation: string;
+  terminalNumber?: string; // e.g. "T-04"
+  status: 'BOOKED' | 'CHECKED_IN' | 'IN_PROGRESS' | 'COMPLETED' | 'GRADED' | 'RESULTS_SENT';
+  checkInTime?: string;
+  proctorAuthCode?: string;
+  scorecard?: TestDriveScorecard;
+  notes?: string;
+}
+
+export interface TestDriveScorecard {
+  id: string;
+  candidateId: string;
+  bookingRef: string;
+  candidateName: string;
+  candidateEmail: string;
+  examPart: ExamPart;
+  examDate: string;
+  durationSecondsUsed: number;
+  mcqCorrect: number;
+  mcqTotal: number;
+  mcqScoreScaled: number; // Max 375
+  essay1ScoreScaled: number; // Max 62.5
+  essay2ScoreScaled: number; // Max 62.5
+  totalScoreScaled: number; // Max 500
+  passed: boolean; // Passing score >= 360 (72%)
+  domainScores: {
+    domain: string;
+    scorePercent: number;
+    masteryLevel: 'Satisfactory' | 'Marginal' | 'Unsatisfactory';
+  }[];
+  aiEvaluationText: string;
+  essayResponses: {
+    questionId: string;
+    scenarioTitle: string;
+    responseText: string;
+    aiFeedback: string;
+    awardedMarks: number;
+    maxMarks: number;
+  }[];
+  gradedAt: string;
+  gradedBy: string; // "Gemini 3.1 Reasoning AI" or Proctor ID
+  resultsSentAt?: string;
+}

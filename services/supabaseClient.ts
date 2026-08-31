@@ -1,289 +1,20 @@
 import { createClient } from '@supabase/supabase-js';
 
-// ==========================================
-// SUPABASE FETCH INTERCEPTOR (Self-Healing Network Guard)
-// ==========================================
-const customFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-  let urlStr = '';
-  if (typeof input === 'string') {
-    urlStr = input;
-  } else if (input && typeof input === 'object' && 'url' in input) {
-    urlStr = (input as any).url;
-  }
-
-  if (urlStr.includes('supabase.fets.in') || urlStr.includes('supabase.co')) {
-    try {
-      const urlObj = new URL(urlStr);
-      const path = urlObj.pathname;
-      const method = (init?.method || 'GET').toUpperCase();
-      
-      const getStorage = (key: string) => JSON.parse(localStorage.getItem(key) || '[]');
-      const setStorage = (key: string, data: any) => localStorage.setItem(key, JSON.stringify(data));
-
-      // 1. Auth routes interceptor
-      if (path.startsWith('/auth/v1/')) {
-        const authRoute = path.replace('/auth/v1/', '');
-        
-        if (authRoute === 'user' || authRoute === 'session') {
-          const sessionStr = localStorage.getItem('cs_auth_session');
-          const session = sessionStr ? JSON.parse(sessionStr) : null;
-          
-          if (authRoute === 'user') {
-            return new Response(JSON.stringify(session?.user || null), {
-              status: session?.user ? 200 : 401,
-              headers: { 'Content-Type': 'application/json' }
-            });
-          } else {
-            return new Response(JSON.stringify(session || null), {
-              status: 200,
-              headers: { 'Content-Type': 'application/json' }
-            });
-          }
-        }
-        
-        if (authRoute === 'token') {
-          let bodyData: any = {};
-          if (init?.body) {
-            try {
-              bodyData = JSON.parse(init.body as string);
-            } catch (e) {}
-          }
-          
-          const email = bodyData.email || 'aspirant@costudy.in';
-          const profiles = getStorage('cs_user_profiles');
-          let profile = profiles.find((p: any) => p.name.toLowerCase().includes(email.split('@')[0]) || p.handle.includes(email.split('@')[0]));
-          if (!profile) profile = profiles[0];
-
-          const session = {
-            user: {
-              id: profile.id,
-              email,
-              user_metadata: {
-                full_name: profile.name,
-                role: profile.role
-              }
-            }
-          };
-          localStorage.setItem('cs_auth_session', JSON.stringify(session));
-          return new Response(JSON.stringify({ access_token: 'mock-token', refresh_token: 'mock-refresh', user: session.user, session }), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' }
-          });
-        }
-
-        if (authRoute === 'logout') {
-          localStorage.removeItem('cs_auth_session');
-          return new Response(JSON.stringify({}), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' }
-          });
-        }
-
-        return new Response(JSON.stringify({}), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
-
-      // 2. REST REST-API routes interceptor
-      if (path.startsWith('/rest/v1/')) {
-        const tableName = path.replace('/rest/v1/', '');
-        
-        let bodyData: any = null;
-        if (init?.body) {
-          try {
-            bodyData = JSON.parse(init.body as string);
-          } catch (e) {}
-        }
-
-        const profiles = getStorage('cs_user_profiles');
-
-        if (tableName === 'user_profiles') {
-          if (method === 'GET') {
-            const sessionStr = localStorage.getItem('cs_auth_session');
-            const session = sessionStr ? JSON.parse(sessionStr) : null;
-            const targetId = session?.user?.id || 'u-me';
-            
-            if (urlStr.includes('role=eq.TEACHER') || urlStr.includes('TEACHER')) {
-              const teachers = profiles.filter((p: any) => p.role === 'TEACHER');
-              return new Response(JSON.stringify(teachers), { status: 200, headers: { 'Content-Type': 'application/json' } });
-            }
-
-            const idMatch = urlStr.match(/id=eq\.([^&]+)/);
-            const idToFind = idMatch ? idMatch[1] : targetId;
-            const profile = profiles.find((p: any) => p.id === idToFind) || profiles[0];
-
-            return new Response(JSON.stringify([profile]), { status: 200, headers: { 'Content-Type': 'application/json' } });
-          }
-
-          if (method === 'PATCH' || method === 'PUT') {
-            const sessionStr = localStorage.getItem('cs_auth_session');
-            const session = sessionStr ? JSON.parse(sessionStr) : null;
-            const targetId = session?.user?.id || 'u-me';
-            
-            const index = profiles.findIndex((p: any) => p.id === targetId);
-            if (index !== -1) {
-              profiles[index] = { ...profiles[index], ...bodyData };
-              setStorage('cs_user_profiles', profiles);
-              return new Response(JSON.stringify([profiles[index]]), { status: 200, headers: { 'Content-Type': 'application/json' } });
-            }
-          }
-        }
-
-        if (tableName === 'posts') {
-          const posts = getStorage('cs_posts');
-          if (method === 'POST') {
-            const payload = Array.isArray(bodyData) ? bodyData[0] : bodyData;
-            const author = profiles.find((p: any) => p.id === payload.author_id) || profiles[0];
-            const newPost = {
-              id: `p-${Date.now()}`,
-              likes: 0,
-              created_at: new Date().toISOString(),
-              ...payload,
-              author
-            };
-            posts.unshift(newPost);
-            setStorage('cs_posts', posts);
-            return new Response(JSON.stringify([newPost]), { status: 201, headers: { 'Content-Type': 'application/json' } });
-          }
-
-          const mappedPosts = posts.map((p: any) => ({
-            ...p,
-            author: profiles.find((u: any) => u.id === p.author_id) || profiles[0]
-          }));
-          return new Response(JSON.stringify(mappedPosts), { status: 200, headers: { 'Content-Type': 'application/json' } });
-        }
-
-        if (tableName === 'comments') {
-          const comments = getStorage('cs_comments');
-          if (method === 'POST') {
-            const payload = Array.isArray(bodyData) ? bodyData[0] : bodyData;
-            const author = profiles.find((p: any) => p.id === payload.author_id) || profiles[0];
-            const newComment = {
-              id: `c-${Date.now()}`,
-              created_at: new Date().toISOString(),
-              ...payload,
-              author
-            };
-            comments.push(newComment);
-            setStorage('cs_comments', comments);
-            return new Response(JSON.stringify([newComment]), { status: 201, headers: { 'Content-Type': 'application/json' } });
-          }
-
-          const idMatch = urlStr.match(/post_id=eq\.([^&]+)/);
-          const postId = idMatch ? idMatch[1] : null;
-          const filtered = postId ? comments.filter((c: any) => c.post_id === postId) : comments;
-          const mapped = filtered.map((c: any) => ({
-            ...c,
-            author: profiles.find((u: any) => u.id === c.author_id) || profiles[0]
-          }));
-          return new Response(JSON.stringify(mapped), { status: 200, headers: { 'Content-Type': 'application/json' } });
-        }
-
-        if (tableName === 'student_enrollments') {
-          const enrollments = getStorage('cs_student_enrollments');
-          const mapped = enrollments.map((e: any) => ({
-            ...e,
-            student: profiles.find((u: any) => u.id === e.student_id) || profiles[0]
-          }));
-          return new Response(JSON.stringify(mapped), { status: 200, headers: { 'Content-Type': 'application/json' } });
-        }
-
-        if (tableName === 'teacher_broadcasts') {
-          const broadcasts = getStorage('cs_teacher_broadcasts');
-          if (method === 'POST') {
-            const payload = Array.isArray(bodyData) ? bodyData[0] : bodyData;
-            const newB = {
-              id: `b-${Date.now()}`,
-              created_at: new Date().toISOString(),
-              ...payload
-            };
-            broadcasts.unshift(newB);
-            setStorage('cs_teacher_broadcasts', broadcasts);
-            return new Response(JSON.stringify([newB]), { status: 201, headers: { 'Content-Type': 'application/json' } });
-          }
-          return new Response(JSON.stringify(broadcasts), { status: 200, headers: { 'Content-Type': 'application/json' } });
-        }
-
-        if (tableName === 'notifications') {
-          const notifications = getStorage('cs_notifications');
-          if (method === 'PATCH') {
-            const updated = notifications.map((n: any) => ({ ...n, is_read: true }));
-            setStorage('cs_notifications', updated);
-            return new Response(JSON.stringify(updated), { status: 200, headers: { 'Content-Type': 'application/json' } });
-          }
-          return new Response(JSON.stringify(notifications), { status: 200, headers: { 'Content-Type': 'application/json' } });
-        }
-
-        if (tableName === 'mentor_invitations') {
-          const invitations = getStorage('cs_mentor_invitations');
-          if (method === 'POST') {
-            const payload = Array.isArray(bodyData) ? bodyData[0] : bodyData;
-            const mentor = profiles.find((u: any) => u.id === payload.mentor_id) || profiles[1];
-            const newInv = {
-              id: `i-${Date.now()}`,
-              created_at: new Date().toISOString(),
-              ...payload,
-              mentor
-            };
-            invitations.push(newInv);
-            setStorage('cs_mentor_invitations', invitations);
-            return new Response(JSON.stringify([newInv]), { status: 201, headers: { 'Content-Type': 'application/json' } });
-          }
-
-          const mapped = invitations.map((inv: any) => ({
-            ...inv,
-            mentor: profiles.find((u: any) => u.id === inv.mentor_id) || profiles[1]
-          }));
-          return new Response(JSON.stringify(mapped), { status: 200, headers: { 'Content-Type': 'application/json' } });
-        }
-
-        if (tableName === 'study_room_messages') {
-          const messages = getStorage('cs_study_room_messages');
-          if (method === 'POST') {
-            const payload = Array.isArray(bodyData) ? bodyData[0] : bodyData;
-            const author = profiles.find((u: any) => u.id === payload.user_id) || profiles[0];
-            const newMsg = {
-              id: `msg-${Date.now()}`,
-              created_at: new Date().toISOString(),
-              ...payload,
-              author
-            };
-            messages.push(newMsg);
-            setStorage('cs_study_room_messages', messages);
-            return new Response(JSON.stringify([newMsg]), { status: 201, headers: { 'Content-Type': 'application/json' } });
-          }
-          return new Response(JSON.stringify(messages), { status: 200, headers: { 'Content-Type': 'application/json' } });
-        }
-
-        return new Response(JSON.stringify([]), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
-    } catch (e) {
-      console.error('[Fetch Interceptor Error]', e);
-    }
-    
-    return new Response(JSON.stringify([]), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    });
-  }
-
-  return fetch(input, init);
-};
-
 const SUPABASE_URL = (import.meta as any).env.VITE_SUPABASE_URL || 'https://avtjxcdcjbwmggdimkgh.supabase.co';
 const SUPABASE_KEY = (import.meta as any).env.VITE_SUPABASE_ANON_KEY || 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc2MzU3MTY2MCwiZXhwIjo0OTE5MjQ1MjYwLCJyb2xlIjoiYW5vbiJ9.ApJ13y26_hrkcVO-XhLwHiSt1j6tg_h74WrPc93iPCg';
 
-// Base real client
+// Base real client configured with an in-memory/direct async lock handler to prevent Navigator LockManager timeouts in iframes
 const realSupabase = createClient(
   SUPABASE_URL,
   SUPABASE_KEY,
   {
-    global: {
-      fetch: customFetch
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      lock: async <R>(_name: string, _acquireTimeout: number, fn: () => Promise<R>): Promise<R> => {
+        return await fn();
+      }
     }
   }
 );
@@ -458,34 +189,88 @@ const handleMockTableQuery = async (tableName: string, targetBuilder: any): Prom
   switch (tableName) {
     case 'user_profiles': {
       const profiles = getStorage('cs_user_profiles');
-      
-      // Simple lookup or upsert
-      const queryStr = String(targetBuilder._query || ''); // check what methods were chained if visible, or fallback to general match
-      
-      // Check if it's select
-      if (targetBuilder.control?.body?.method === 'GET' || targetBuilder._query?.includes('select') || true) {
-        // If we can identify EQ id
-        // Let's check from the query string or defaults
-        // Fallback to checking the last signed in user, or first user in profiles
+      const method = targetBuilder.method || targetBuilder.control?.body?.method || (targetBuilder.body ? 'POST' : 'GET');
+      const bodyData = targetBuilder.body || targetBuilder.control?.body?.data || targetBuilder._body;
+      const urlStr = targetBuilder.url?.href || String(targetBuilder.url || '');
+
+      // Check if write (UPSERT / INSERT / UPDATE / PATCH)
+      if (method === 'POST' || method === 'PATCH' || method === 'PUT' || (bodyData && method !== 'GET')) {
+        const payload = Array.isArray(bodyData) ? bodyData[0] : bodyData;
+        if (payload) {
+          const idMatch = urlStr.match(/id=eq\.([^&]+)/);
+          const targetId = payload.id || (idMatch ? decodeURIComponent(idMatch[1]) : null);
+          let targetProfile: any = null;
+          
+          if (targetId) {
+            const idx = profiles.findIndex((p: any) => p.id === targetId);
+            if (idx >= 0) {
+              profiles[idx] = { ...profiles[idx], ...payload, id: targetId };
+              targetProfile = profiles[idx];
+            } else {
+              targetProfile = { id: targetId, ...payload };
+              profiles.push(targetProfile);
+            }
+            setStorage('cs_user_profiles', profiles);
+          }
+          return { data: targetProfile ? [targetProfile] : [payload], error: null };
+        }
+      }
+
+      // Query specifies teacher/specialists
+      if (urlStr.includes('role=eq.TEACHER') || urlStr.includes('TEACHER')) {
+        const teachers = profiles.filter((p: any) => p.role === 'TEACHER');
+        return { data: teachers, error: null };
+      }
+
+      // Check if filtering by id (e.g. eq('id', userId))
+      const idMatch = urlStr.match(/id=eq\.([^&]+)/);
+      const requestedId = idMatch ? decodeURIComponent(idMatch[1]) : null;
+
+      let profile = null;
+      if (requestedId) {
+        profile = profiles.find((p: any) => p.id === requestedId);
+        if (!profile) {
+          // Check if session has user metadata to populate
+          const session = getMockSession();
+          const fullName = (session?.user?.id === requestedId ? session.user.user_metadata?.full_name : '') || 'CMA Aspirant';
+          profile = {
+            id: requestedId,
+            name: fullName,
+            handle: `${fullName.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${requestedId.slice(0, 4)}`,
+            avatar: `https://i.pravatar.cc/150?u=${requestedId}`,
+            role: "STUDENT",
+            level: "STARTER",
+            bio: "Just started my CMA journey.",
+            strategic_milestone: "Preparing for Part 1 Mock Session.",
+            exam_focus: "CMA Part 1",
+            signal_level: "ACTIVE_SOLVER",
+            costudy_status: {
+              subscription: "Basic",
+              walletBalance: 1000,
+              isVerified: false,
+              globalRank: 1240
+            },
+            performance: [
+              { topic: "Financial Reporting", score: 45, attempts: 1, lastScore: 45, trend: "Stable", style: "Conceptual" },
+              { topic: "Cost Management", score: 32, attempts: 1, lastScore: 32, trend: "Stable", style: "Calculation" }
+            ],
+            specialties: [],
+            years_experience: 0,
+            hourly_rate: 0
+          };
+          profiles.push(profile);
+          setStorage('cs_user_profiles', profiles);
+        }
+      } else {
         const session = getMockSession();
         const targetId = session?.user?.id || 'u-me';
-        
-        // If query specifies teacher/specialists
-        if (targetBuilder.url?.href?.includes('role=eq.TEACHER') || targetBuilder.url?.href?.includes('TEACHER')) {
-          const teachers = profiles.filter((p: any) => p.role === 'TEACHER');
-          return { data: teachers, error: null };
-        }
-
-        const profile = profiles.find((p: any) => p.id === targetId) || profiles[0];
-        
-        // Return single or list depending on maybeSingle()
-        if (targetBuilder.url?.href?.includes('maybeSingle') || targetBuilder.headers?.Accept?.includes('vnd.pgrst.object')) {
-          return { data: profile || null, error: null };
-        }
-        return { data: profile ? [profile] : [], error: null };
+        profile = profiles.find((p: any) => p.id === targetId) || profiles[0];
       }
-      
-      break;
+
+      if (urlStr.includes('maybeSingle') || targetBuilder.headers?.Accept?.includes('vnd.pgrst.object')) {
+        return { data: profile || null, error: null };
+      }
+      return { data: profile ? [profile] : [], error: null };
     }
 
     case 'posts': {
@@ -645,6 +430,24 @@ const handleMockTableQuery = async (tableName: string, targetBuilder: any): Prom
       }
       return { data: messages, error: null };
     }
+    case 'mock_test_results': {
+      const results = getStorage('cs_mock_test_results');
+      if (targetBuilder.control?.body?.method === 'POST') {
+        const body = targetBuilder.control.body.data;
+        if (body) {
+          const payload = Array.isArray(body) ? body[0] : body;
+          const newRecord = {
+            id: `mtr-${Date.now()}`,
+            created_at: new Date().toISOString(),
+            ...payload
+          };
+          results.unshift(newRecord);
+          setStorage('cs_mock_test_results', results);
+          return { data: [newRecord], error: null };
+        }
+      }
+      return { data: results, error: null };
+    }
   }
 
   // Handle generic writes to unknown tables or default success responses
@@ -773,12 +576,23 @@ function makeBuilder(tableName: string, originalBuilder: any): any {
       if (prop === 'then') {
         return async function(onfulfilled: any, onrejected: any) {
           try {
+            // SHORT CIRCUIT for mock users:
+            const urlStr = target.url?.href || '';
+            const bodyStr = JSON.stringify(target.body || target.control?.body || {});
+            const isMockQuery = urlStr.includes('u-') || bodyStr.includes('u-');
+            
+            if (isMockQuery) {
+               const fallbackResult = await handleMockTableQuery(tableName, target);
+               return onfulfilled ? onfulfilled(fallbackResult) : fallbackResult;
+            }
+
             const result = await target;
             if (result && result.error) {
                console.warn(`Supabase query error detected on table "${tableName}" (${result.error.message || ''}), falling back to mock database...`);
                const fallbackResult = await handleMockTableQuery(tableName, target);
                return onfulfilled ? onfulfilled(fallbackResult) : fallbackResult;
             }
+            
             return onfulfilled ? onfulfilled(result) : result;
           } catch (err: any) {
              console.warn(`Supabase exception detected on table "${tableName}", falling back to mock database...`);
@@ -865,11 +679,24 @@ export const supabase = new Proxy(realSupabase, {
               try {
                 const result = await value.apply(authTarget, args);
                 if (result && result.error) {
+                  const status = result.error.status || result.error.code;
+                  const msg = result.error.message || '';
+                  
+                  // Do not fallback to mock for validation errors like Invalid Credentials or Email not confirmed
+                  if (status == 400 || msg.toLowerCase().includes('credential') || msg.toLowerCase().includes('email') || msg.toLowerCase().includes('password') || msg.toLowerCase().includes('already registered')) {
+                     return result;
+                  }
+
                   console.warn(`Supabase auth error detected on "${authProp as string}" (${result.error.message || ''}), falling back to mock auth...`);
                   return await handleMockAuthCall(authProp as string, args);
                 }
                 return result;
               } catch (err: any) {
+                const status = err.status || err.code;
+                const msg = err.message || '';
+                if (status == 400 || msg.toLowerCase().includes('credential') || msg.toLowerCase().includes('email') || msg.toLowerCase().includes('password') || msg.toLowerCase().includes('already registered')) {
+                   throw err;
+                }
                 console.warn(`Supabase auth exception detected on "${authProp as string}", falling back to mock auth...`);
                 return await handleMockAuthCall(authProp as string, args);
               }

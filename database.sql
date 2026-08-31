@@ -2,6 +2,32 @@
 -- ... (Existing SQL) ...
 
 -- ==========================================
+-- SUPABASE AUTH TRIGGER (FOR AUTOMATIC PROFILE CREATION)
+-- ==========================================
+-- This ensures any user created in Supabase Auth (or via the app)
+-- automatically gets a corresponding user_profiles row with the right role.
+CREATE OR REPLACE FUNCTION public.handle_new_user() 
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.user_profiles (id, name, role, handle, avatar)
+  VALUES (
+    new.id, 
+    COALESCE(new.raw_user_meta_data->>'full_name', 'New Aspirant'),
+    COALESCE(new.raw_user_meta_data->>'role', 'STUDENT'),
+    COALESCE(LOWER(REPLACE(new.raw_user_meta_data->>'full_name', ' ', '_')), 'user_' || substr(new.id::text, 1, 8)),
+    'https://i.pravatar.cc/150?u=' || new.id
+  );
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
+
+-- ==========================================
 -- 11. MENTOR INVITATIONS & GROUP PAYMENTS
 -- ==========================================
 CREATE TABLE IF NOT EXISTS mentor_invitations (

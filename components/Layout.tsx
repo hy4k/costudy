@@ -227,7 +227,6 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
             <>
                <NavButton view={ViewState.FACULTY_ROOM} label="Faculty Room" isMobile={isMobile} />
                <NavButton view={ViewState.DASHBOARD} label="Command Center" isMobile={isMobile} />
-               <NavButton view={ViewState.TEST_DRIVE_ADMIN} label="Test Centre Admin" isMobile={isMobile} />
                <NavButton view={ViewState.AI_DECK} label="Teaching Deck" isMobile={isMobile} />
                <NavButton view={ViewState.MESSAGES} label="Doubt Desk" isMobile={isMobile} />
                <NavButton view={ViewState.PROFILE} label="Faculty Profile" isMobile={isMobile} />
@@ -240,7 +239,6 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
           <NavButton view={ViewState.AI_DECK} label="AI Deck" isMobile={isMobile} />
           <NavButton view={ViewState.MASTERY_PATH} label="CMA Path" isMobile={isMobile} />
           <NavButton view={ViewState.TESTS} label="Mocks" isMobile={isMobile} />
-          <NavButton view={ViewState.TEST_DRIVE} label="Test Drive Kiosk" isMobile={isMobile} />
           <NavButton view={ViewState.ROOMS} label="Study Rooms" isMobile={isMobile} />
           <NavButton view={ViewState.TEACHERS} label="Mentors" isMobile={isMobile} />
           {isLoggedIn && <NavButton view={ViewState.MESSAGES} label="Doubt Desk" isMobile={isMobile} />}

@@ -15,8 +15,6 @@ import { MentorDashboard } from './components/views/MentorDashboard';
 import { DoubtDesk } from './components/views/DoubtDesk';
 import { MasteryPath } from './components/views/MasteryPath';
 import { LaunchMomentum } from './components/views/LaunchMomentum';
-import { TestDrivePortal } from './components/views/TestDrivePortal';
-import { TestDriveAdmin } from './components/views/TestDriveAdmin';
 import { Login } from './components/auth/Login';
 import { SignUp } from './components/auth/SignUp';
 import { authService, getUserProfile, createUserProfile } from './services/fetsService';
@@ -76,15 +74,6 @@ function App() {
   };
 
   useEffect(() => {
-    // Check URL parameters for direct physical test centre links (e.g. ?mode=testdrive or ?mode=testdrive_admin)
-    const urlParams = new URLSearchParams(window.location.search);
-    const mode = urlParams.get('mode') || urlParams.get('view');
-    if (mode === 'testdrive' || urlParams.has('testdrive') || urlParams.has('booking')) {
-      setCurrentView(ViewState.TEST_DRIVE);
-    } else if (mode === 'testdrive_admin' || urlParams.has('testdrive_admin')) {
-      setCurrentView(ViewState.TEST_DRIVE_ADMIN);
-    }
-
     const checkUser = async () => {
       try {
         const session = await authService.getSession();
@@ -136,25 +125,6 @@ function App() {
     );
   }
 
-  // Standalone Physical Test Centre Kiosk & Admin Views (Accessible without full login or via direct URL)
-  if (currentView === ViewState.TEST_DRIVE) {
-    return (
-      <TestDrivePortal 
-        onBackToApp={() => setCurrentView(isLoggedIn ? ViewState.WALL : ViewState.LANDING)}
-        onOpenAdmin={() => setCurrentView(ViewState.TEST_DRIVE_ADMIN)}
-      />
-    );
-  }
-
-  if (currentView === ViewState.TEST_DRIVE_ADMIN) {
-    return (
-      <TestDriveAdmin 
-        onLaunchCandidateKiosk={() => setCurrentView(ViewState.TEST_DRIVE)}
-        onBackToApp={() => setCurrentView(isLoggedIn ? ViewState.WALL : ViewState.LANDING)}
-      />
-    );
-  }
-
   if (showAuth && !isLoggedIn) {
     return authView === 'LOGIN' 
       ? <Login onLogin={() => setShowAuth(false)} onSwitch={() => setAuthView('SIGNUP')} onBack={() => setShowAuth(false)} />
@@ -195,13 +165,7 @@ function App() {
       case ViewState.PROFILE:
         return <Profile onLogout={handleLogout} userId={user?.id} onProfileUpdate={refreshUser} />;
       case ViewState.TESTS:
-        return (
-          <MockTests 
-            userId={user?.id} 
-            onOpenTestDrive={() => setCurrentView(ViewState.TEST_DRIVE)}
-            onOpenTestDriveAdmin={() => setCurrentView(ViewState.TEST_DRIVE_ADMIN)}
-          />
-        );
+        return <MockTests userId={user?.id} />;
       case ViewState.STORE:
         return <StudentStore />;
       case ViewState.ROOM_DETAIL:

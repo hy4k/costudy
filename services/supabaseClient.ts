@@ -430,24 +430,6 @@ const handleMockTableQuery = async (tableName: string, targetBuilder: any): Prom
       }
       return { data: messages, error: null };
     }
-    case 'mock_test_results': {
-      const results = getStorage('cs_mock_test_results');
-      if (targetBuilder.control?.body?.method === 'POST') {
-        const body = targetBuilder.control.body.data;
-        if (body) {
-          const payload = Array.isArray(body) ? body[0] : body;
-          const newRecord = {
-            id: `mtr-${Date.now()}`,
-            created_at: new Date().toISOString(),
-            ...payload
-          };
-          results.unshift(newRecord);
-          setStorage('cs_mock_test_results', results);
-          return { data: [newRecord], error: null };
-        }
-      }
-      return { data: results, error: null };
-    }
   }
 
   // Handle generic writes to unknown tables or default success responses

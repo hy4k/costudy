@@ -7,7 +7,7 @@ WORKDIR /app
 COPY package.json package-lock.json* bun.lock* ./
 
 # Install dependencies
-RUN npm ci --include=dev || npm install --include=dev
+RUN npm install --include=dev --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=20000 && ls node_modules/.bin/vite
 
 # Copy source files
 COPY . .

@@ -352,12 +352,9 @@ export const costudyService = {
           });
       }
 
-      // Fallback mock data if DB is empty for demo purposes
-      return [
-          { id: 's1', name: 'Rahul V.', handle: 'rahul_cma', avatar: 'https://i.pravatar.cc/150?u=s1', focus: 'Part 1', lastActivity: '10m ago', performanceScore: 82, status: 'Active' },
-          { id: 's2', name: 'Sneha P.', handle: 'sneha_study', avatar: 'https://i.pravatar.cc/150?u=s2', focus: 'Part 2', lastActivity: '1d ago', performanceScore: 65, status: 'Struggling' },
-          { id: 's3', name: 'Amit Kumar', handle: 'amit_k', avatar: 'https://i.pravatar.cc/150?u=s3', focus: 'Ethics', lastActivity: '4h ago', performanceScore: 90, status: 'Active' }
-      ];
+      // No enrolled students yet — return real (empty) state rather than
+      // fabricated demo students shown to a real teacher as if they were real.
+      return [];
     } catch (e) {
       return [];
     }

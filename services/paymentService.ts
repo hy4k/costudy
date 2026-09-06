@@ -5,9 +5,10 @@
 
 import { supabase } from './supabaseClient';
 
-// Razorpay config (set in .env)
+// Razorpay config (set in .env). The key SECRET must never be bundled into
+// client-side JS — it is used only by the backend order-create/verify endpoints
+// this service calls (createRazorpayOrder / verifyPayment below).
 const RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_demo';
-const RAZORPAY_KEY_SECRET = import.meta.env.VITE_RAZORPAY_KEY_SECRET;
 
 // Pricing plans
 export const PRICING_PLANS = {
@@ -33,7 +34,7 @@ export const PRICING_PLANS = {
       'Unlimited AI questions',
       'Unlimited MCQ',
       'Mock exams',
-      'Essay evaluation',
+      'Case-Based Question (CBQ) practice',
       'Priority support'
     ]
   },

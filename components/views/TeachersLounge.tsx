@@ -277,7 +277,7 @@ export const TeachersLounge: React.FC<TeachersLoungeProps> = ({ userId }) => {
           Hiring Built On <span className="text-brand">Trust</span>
         </h2>
         <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 font-medium max-w-xl mx-auto leading-relaxed mb-8">
-          Connect with certified CMA faculty for 1:1 strategy calls, instant doubt clarification, and high-scoring essay audits with transparent real-time status.
+          Connect with certified CMA faculty for 1:1 strategy calls, instant doubt clarification, and high-scoring exam answer audits with transparent real-time status.
         </p>
 
         {/* Main Mode Toggle: Explore All vs Smart Match */}

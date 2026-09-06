@@ -31,7 +31,7 @@ const FOUNDER_TIERS = [
     title: 'Founding Member',
     requiredCount: 1,
     badgeColor: 'bg-brand/10 text-brand border-brand/30',
-    perks: ["'Founder' Badge on Wall & Profile", 'Early AI Prometric Essay Autograder Access', '+250 Bonus Credits']
+    perks: ["'Founder' Badge on Wall & Profile", 'Early Access to New CBQ Case Packs', '+250 Bonus Credits']
   },
   {
     level: 3,

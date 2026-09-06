@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import { Icons } from '../Icons';
-import { processUnifiedPayment, syncStudyTelemetry } from '../../services/fetsService';
+import { syncStudyTelemetry } from '../../services/fetsService';
 import { triggerStarConfetti, triggerGoalAchievementConfetti } from '../../utils/confetti';
 
 export const StudentStore: React.FC = () => {
     const [payingId, setPayingId] = useState<string | null>(null);
     const [isGroupBuy, setIsGroupBuy] = useState(false);
     const [groupEmails, setGroupEmails] = useState('');
-    const walletBalance = 0; 
+    const walletBalance = 0;
 
+    // Payments are not yet wired to a real gateway from the client — never fake a
+    // successful charge. See services/paymentService.ts for the real (server-verified)
+    // Razorpay flow once a backend order/verify endpoint is deployed.
     const handlePurchase = async (item: any) => {
         if (isGroupBuy && !groupEmails.trim()) {
             alert("Please provide member emails for the Strategic Group Pack.");
@@ -16,16 +19,10 @@ export const StudentStore: React.FC = () => {
         }
 
         setPayingId(item.id);
-        const result: any = await processUnifiedPayment(item.price);
+        await new Promise(r => setTimeout(r, 400));
         setPayingId(null);
-        if (result.status === 'success') {
-            triggerGoalAchievementConfetti();
-            const msg = isGroupBuy 
-                ? `Strategic Group Pack Activated!\nEach member will receive a neural link invite shortly. A private study room has been pre-initialized for your cluster.`
-                : `CoStudy Pro Verified!\nSuccess! AI Tutor and Full Bank unlocked.`;
-            alert(msg);
-            syncStudyTelemetry({ event: 'store_purchase', item: item.name, amount: item.price, type: isGroupBuy ? 'GROUP' : 'INDIVIDUAL' });
-        }
+        alert("Payments are coming soon! We're finishing up secure checkout — check back shortly.");
+        syncStudyTelemetry({ event: 'store_purchase_attempted', item: item.name, amount: item.price, type: isGroupBuy ? 'GROUP' : 'INDIVIDUAL' });
     };
 
     const PLANS = [
@@ -34,7 +31,7 @@ export const StudentStore: React.FC = () => {
         name: 'CoStudy Pro (Individual)', 
         price: 3999, 
         billing: 'billed ₹3999/year', 
-        desc: 'Unlimited AI Tutor, full question bank, and strategic essay audit tool.',
+        desc: 'Unlimited AI Tutor, full question bank, and strategic CBQ (Case-Based Question) practice.',
         features: ["AI Tutor Chat (Unlimited)", "MCQ Practice (Unlimited)", "Full Question Bank", "Mock Test Simulations", "Priority 24/7 Support"]
       },
       { 

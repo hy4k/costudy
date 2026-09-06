@@ -95,13 +95,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onStartFree }
                                 </div>
                                 <h4 className="text-base sm:text-lg font-black text-white uppercase tracking-tight mb-2">Mastery Path & Mocks</h4>
                                 <p className="text-xs sm:text-sm text-slate-300 leading-relaxed mb-5 sm:mb-6">
-                                    Structured Part 1 & Part 2 curriculum roadmap, timed mock test simulations, and automated AI essay scoring.
+                                    Structured Part 1 & Part 2 curriculum roadmap, timed mock test simulations, and a deterministic CBQ (Case-Based Question) scoring engine.
                                 </p>
                             </div>
                             <div className="flex flex-wrap gap-1.5 sm:gap-2 pt-3 sm:pt-4 border-t border-slate-800">
                                 <span className="px-2.5 py-1 rounded-lg bg-white/10 text-amber-300 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider">Part 1 & 2 Roadmap</span>
                                 <span className="px-2.5 py-1 rounded-lg bg-white/10 text-amber-300 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider">Timed Mocks</span>
-                                <span className="px-2.5 py-1 rounded-lg bg-white/10 text-amber-300 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider">Essay Scoring</span>
+                                <span className="px-2.5 py-1 rounded-lg bg-white/10 text-amber-300 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider">CBQ Scoring</span>
                             </div>
                         </div>
                     </div>
@@ -133,7 +133,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onStartFree }
                                     { text: "Study Rooms", note: "Unlimited" },
                                     { text: "Social Feed & Community", note: "Full access" },
                                     { text: "Peer Connections", note: "Unlimited" },
-                                    { text: "Essay Evaluation", disabled: true },
+                                    { text: "CBQ Case Practice", disabled: true },
                                     { text: "Full Question Bank", disabled: true },
                                     { text: "Mock Test Simulations", disabled: true },
                                 ].map((feat, i) => (
@@ -169,7 +169,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onStartFree }
                                     { text: "Study Rooms", note: "Unlimited" },
                                     { text: "Social Feed & Community", note: "Full access" },
                                     { text: "Peer Connections", note: "Unlimited" },
-                                    { text: "Essay Evaluation", note: "AI-powered grading" },
+                                    { text: "CBQ Case Practice", note: "Server-side deterministic scoring" },
                                     { text: "Full Question Bank", note: "Complete access" },
                                     { text: "Mock Test Simulations", note: "Real exam feel" },
                                     { text: "Progress Analytics", note: "Weak area tracking" },

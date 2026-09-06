@@ -161,7 +161,7 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
             <div className="grid md:grid-cols-2 gap-4 text-sm text-slate-700">
               <div className="flex items-start gap-2">
                 <Icons.CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5" />
-                <span>Unlimited AI-powered Q&A and essay grading</span>
+                <span>Unlimited AI-powered Q&A and CBQ case practice</span>
               </div>
               <div className="flex items-start gap-2">
                 <Icons.CheckCircle className="w-4 h-4 text-emerald-500 mt-0.5" />

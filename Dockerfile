@@ -7,7 +7,7 @@ WORKDIR /app
 COPY package.json package-lock.json* bun.lock* ./
 
 # Install dependencies
-RUN npm ci || npm install
+RUN npm ci --include=dev || npm install --include=dev
 
 # Copy source files
 COPY . .

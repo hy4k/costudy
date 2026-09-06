@@ -82,16 +82,23 @@ Deno.serve(async (req) => {
         const { data: exam, error: exErr } = await db.from("mock_exams").select("*").eq("id", body.exam_id).eq("is_published", true).maybeSingle();
         if (exErr || !exam) return json(404, { error: "Exam not found" });
 
-        // Resume an unfinished attempt for this exam if one exists
-        const { data: existing } = await db.from("mock_attempts").select("id").eq("user_id", userId).eq("exam_id", exam.id)
+        // Resume an unfinished attempt only if it still has a question set.
+        // Zombie rows (empty question_ids from older clients) must not blank the UI.
+        const { data: existing } = await db.from("mock_attempts").select("id, question_ids").eq("user_id", userId).eq("exam_id", exam.id)
           .in("state", ["in_progress"]).order("started_at", { ascending: false }).limit(1).maybeSingle();
-        if (existing) { body.attempt_id = existing.id; /* fallthrough to resume */ }
-        else {
+        if (existing && Array.isArray(existing.question_ids) && existing.question_ids.length > 0) {
+          body.attempt_id = existing.id; /* fallthrough to resume */
+        } else {
+          if (existing) {
+            await db.from("mock_attempts").update({ state: "abandoned", section: "completed" }).eq("id", existing.id);
+          }
           const part = exam.exam === "cma_p2" ? "Part 2" : "Part 1";
-          const { data: qs, error: qErr } = await db.rpc("pick_mock_mcqs", { p_part: part, p_count: exam.mcq_count || 100 });
+          const want = exam.mcq_count || 100;
+          const { data: qs, error: qErr } = await db.rpc("pick_mock_mcqs", { p_part: part, p_count: want });
           if (qErr) throw qErr;
           const questionIds = shuffle((qs ?? []).map((q: any) => q.id));
-          if (questionIds.length < 10) return json(409, { error: `Not enough verified ${part} questions in the bank yet.` });
+          const minNeeded = Math.min(want, 10);
+          if (questionIds.length < minNeeded) return json(409, { error: `Not enough verified ${part} questions in the bank yet.` });
 
           const { data: cs } = await db.from("cbq_cases").select("id").eq("part", part).eq("active", true).eq("verified", true);
           const caseIds = shuffle((cs ?? []).map((c: any) => c.id)).slice(0, exam.cbq_count ?? 2);
@@ -114,7 +121,12 @@ Deno.serve(async (req) => {
         const { data: exam } = await db.from("mock_exams").select("id, title, exam, mcq_minutes, cbq_minutes, cbq_count, gate_pct, pass_threshold").eq("id", att.exam_id).single();
         const base = { attempt: { id: att.id, section: att.section, state: att.state, section1_ends_at: att.section1_ends_at, section2_ends_at: att.section2_ends_at, mcq_score: att.mcq_score, mcq_correct: att.mcq_correct, mcq_total: att.mcq_total }, exam, server_now: new Date().toISOString() };
         if (att.section === "mcq") {
-          return json(200, { ...base, questions: await questionsFor(att.question_ids ?? []), responses: await mcqState(att.id) });
+          const qids = att.question_ids ?? [];
+          if (!qids.length) {
+            await db.from("mock_attempts").update({ state: "abandoned", section: "completed" }).eq("id", att.id);
+            return json(409, { error: "This attempt has no questions. Please start the exam again." });
+          }
+          return json(200, { ...base, questions: await questionsFor(qids), responses: await mcqState(att.id) });
         }
         if (att.section === "cbq") {
           return json(200, { ...base, cases: await casesFor(att.case_ids ?? []), responses: await cbqState(att.id) });

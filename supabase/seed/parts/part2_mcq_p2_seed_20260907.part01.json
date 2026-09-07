@@ -12,7 +12,7 @@
       "D": "3.75."
     },
     "correct_answer": "A",
-    "explanation": "Quick ratio = (Current assets \u2212 Inventory) \u00f7 Current liabilities = ($450,000 \u2212 $120,000) \u00f7 $180,000 = 1.83. Inventory is excluded because it is less liquid than cash and receivables."
+    "explanation": "Quick ratio = (Current assets − Inventory) ÷ Current liabilities = ($450,000 − $120,000) ÷ $180,000 = 1.83. Inventory is excluded because it is less liquid than cash and receivables."
   },
   {
     "part": "Part 2",
@@ -27,7 +27,7 @@
       "D": "72 days."
     },
     "correct_answer": "A",
-    "explanation": "Receivables turnover = $2,400,000 \u00f7 $300,000 = 8 times. Average collection period = 360 \u00f7 8 = 45 days."
+    "explanation": "Receivables turnover = $2,400,000 ÷ $300,000 = 8 times. Average collection period = 360 ÷ 8 = 45 days."
   },
   {
     "part": "Part 2",
@@ -42,7 +42,7 @@
       "D": "18.0%."
     },
     "correct_answer": "A",
-    "explanation": "Return on common equity = (Net income \u2212 Preferred dividends) \u00f7 Average common equity = ($180,000 \u2212 $30,000) \u00f7 $750,000 = 20%."
+    "explanation": "Return on common equity = (Net income − Preferred dividends) ÷ Average common equity = ($180,000 − $30,000) ÷ $750,000 = 20%."
   },
   {
     "part": "Part 2",
@@ -87,7 +87,7 @@
       "D": "60%."
     },
     "correct_answer": "A",
-    "explanation": "Operating income = $5,000,000 \u2212 $3,000,000 \u2212 $1,200,000 = $800,000. Operating profit margin = $800,000 \u00f7 $5,000,000 = 16%."
+    "explanation": "Operating income = $5,000,000 − $3,000,000 − $1,200,000 = $800,000. Operating profit margin = $800,000 ÷ $5,000,000 = 16%."
   },
   {
     "part": "Part 2",
@@ -102,7 +102,7 @@
       "D": "0.60."
     },
     "correct_answer": "A",
-    "explanation": "Total liabilities = $2,000,000 \u2212 $800,000 = $1,200,000. Debt-to-equity = $1,200,000 \u00f7 $800,000 = 1.50."
+    "explanation": "Total liabilities = $2,000,000 − $800,000 = $1,200,000. Debt-to-equity = $1,200,000 ÷ $800,000 = 1.50."
   },
   {
     "part": "Part 2",
@@ -117,7 +117,7 @@
       "D": "3.0 times."
     },
     "correct_answer": "A",
-    "explanation": "Total asset turnover = Net sales \u00f7 Average total assets = $1,800,000 \u00f7 $900,000 = 2.0 times, measuring how efficiently assets generate sales."
+    "explanation": "Total asset turnover = Net sales ÷ Average total assets = $1,800,000 ÷ $900,000 = 2.0 times, measuring how efficiently assets generate sales."
   },
   {
     "part": "Part 2",
@@ -132,7 +132,7 @@
       "D": "20.0%."
     },
     "correct_answer": "A",
-    "explanation": "DuPont ROE = Profit margin \u00d7 Asset turnover \u00d7 Equity multiplier = 0.08 \u00d7 1.25 \u00d7 1.6 = 0.16, or 16%."
+    "explanation": "DuPont ROE = Profit margin × Asset turnover × Equity multiplier = 0.08 × 1.25 × 1.6 = 0.16, or 16%."
   },
   {
     "part": "Part 2",
@@ -177,7 +177,7 @@
       "D": "8 times; 45 days."
     },
     "correct_answer": "A",
-    "explanation": "Inventory turnover = $720,000 \u00f7 $120,000 = 6. Days inventory outstanding = 360 \u00f7 6 = 60 days."
+    "explanation": "Inventory turnover = $720,000 ÷ $120,000 = 6. Days inventory outstanding = 360 ÷ 6 = 60 days."
   },
   {
     "part": "Part 2",
@@ -192,7 +192,7 @@
       "D": "8.0 times."
     },
     "correct_answer": "A",
-    "explanation": "Times interest earned = EBIT \u00f7 Interest expense = $480,000 \u00f7 $80,000 = 6.0, indicating ability to cover interest from operating earnings."
+    "explanation": "Times interest earned = EBIT ÷ Interest expense = $480,000 ÷ $80,000 = 6.0, indicating ability to cover interest from operating earnings."
   },
   {
     "part": "Part 2",
@@ -207,7 +207,7 @@
       "D": "1.25."
     },
     "correct_answer": "A",
-    "explanation": "Book value per share = $4,000,000 \u00f7 200,000 = $20. Market-to-book = $28 \u00f7 $20 = 1.40."
+    "explanation": "Book value per share = $4,000,000 ÷ 200,000 = $20. Market-to-book = $28 ÷ $20 = 1.40."
   },
   {
     "part": "Part 2",
@@ -222,7 +222,7 @@
       "D": "$1,060,000."
     },
     "correct_answer": "A",
-    "explanation": "Net working capital = Current assets \u2212 Current liabilities = $650,000 \u2212 $410,000 = $240,000."
+    "explanation": "Net working capital = Current assets − Current liabilities = $650,000 − $410,000 = $240,000."
   },
   {
     "part": "Part 2",
@@ -237,7 +237,7 @@
       "D": "$3.75."
     },
     "correct_answer": "A",
-    "explanation": "Proceeds = $200,000; shares bought back = 8,000; incremental shares = 2,000; diluted shares = 102,000; diluted EPS = $450,000 \u00f7 102,000 \u2248 $4.41."
+    "explanation": "Proceeds = $200,000; shares bought back = 8,000; incremental shares = 2,000; diluted shares = 102,000; diluted EPS = $450,000 ÷ 102,000 ≈ $4.41."
   },
   {
     "part": "Part 2",
@@ -267,7 +267,7 @@
       "D": "6.0%."
     },
     "correct_answer": "A",
-    "explanation": "EBT = $120,000 \u00f7 0.75 = $160,000; EBIT = $160,000 + $40,000 = $200,000; NOPAT = $200,000 \u00d7 0.75 = $150,000. ROA = $150,000 \u00f7 $1,500,000 = 10%."
+    "explanation": "EBT = $120,000 ÷ 0.75 = $160,000; EBIT = $160,000 + $40,000 = $200,000; NOPAT = $200,000 × 0.75 = $150,000. ROA = $150,000 ÷ $1,500,000 = 10%."
   },
   {
     "part": "Part 2",
@@ -282,6 +282,6 @@
       "D": "35 days."
     },
     "correct_answer": "A",
-    "explanation": "Cash conversion cycle = DIO + DSO \u2212 DPO = 55 + 40 \u2212 30 = 65 days, measuring the net time cash is tied up in operations."
+    "explanation": "Cash conversion cycle = DIO + DSO − DPO = 55 + 40 − 30 = 65 days, measuring the net time cash is tied up in operations."
   }
 ]

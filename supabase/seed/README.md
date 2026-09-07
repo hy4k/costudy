@@ -16,9 +16,12 @@ See `quarantine_bad_mcqs.sql`. Scraped/truncated options were soft-disabled rath
 ## CBQ (`cbq_cases` / `cbq_tasks`)
 Mock engine selects cases with `active` and `verified`.
 - `cbq_cases_fets_v1.sql` — original 6 FETS cases (`source='fets'`). **Destructive:** begins with `DELETE … WHERE source='fets'`.
-- `cbq_cases_fets_v2.sql` / `.json` — 6 additional cases (`source='fets_v2'`), append-only:
-  - Part 1: Palakkad FinTech (ITGC), Kollam Cashew (FIFO process costing), Kozhikode Spices (inventory/revenue)
-  - Part 2: Munnar Tea (FX hedge), Wayanad Coffee (NPV/IRR), Pathanamthitta Hydro (WACC)
+- `cbq_cases_fets_v2.sql` — additional cases (`source='fets_v2'`), append-only.
 
 ## Deploy notes
 Apply SQL via Supabase SQL editor / MCP `execute_sql`. Edge function `mock-engine` must stay in sync with `supabase/functions/mock-engine/`.
+
+### CBQ v2 (2026-09-07)
+- `cbq_cases_fets_v2.sql` / `.json` — 6 additional cases (`source='fets_v2'`), append-only:
+  - Part 1: Palakkad FinTech (ITGC), Kollam Cashew (FIFO process costing), Kozhikode Spices (inventory/revenue)
+  - Part 2: Munnar Tea (FX hedge), Wayanad Coffee (NPV/IRR), Pathanamthitta Hydro (WACC)

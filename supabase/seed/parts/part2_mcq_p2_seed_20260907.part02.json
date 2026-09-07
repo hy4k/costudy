@@ -1,0 +1,272 @@
+[
+  {
+    "part": "Part 2",
+    "section": "Section A",
+    "topic": "Financial statement analysis",
+    "difficulty": "medium",
+    "question_text": "An analyst notices that inventory rose 40% while sales rose only 8%. Which conclusion is most reasonable pending further investigation?",
+    "options": {
+      "A": "Inventory may be building up, signaling weaker demand or overproduction.",
+      "B": "The firm necessarily improved its inventory turnover.",
+      "C": "Accounts receivable must have declined by a similar percentage.",
+      "D": "Gross margin must have increased due to better cost control."
+    },
+    "correct_answer": "A",
+    "explanation": "Inventory growing much faster than sales often indicates slowing demand, obsolete stock, or production exceeding sales, which can pressure future cash flow and margins."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section B",
+    "topic": "WACC",
+    "difficulty": "medium",
+    "question_text": "A firm’s capital structure is 40% debt and 60% equity. The after-tax cost of debt is 6% and the cost of equity is 12%. What is the weighted average cost of capital?",
+    "options": {
+      "A": "9.6%.",
+      "B": "9.0%.",
+      "C": "10.8%.",
+      "D": "8.4%."
+    },
+    "correct_answer": "A",
+    "explanation": "WACC = (0.40 × 6%) + (0.60 × 12%) = 2.4% + 7.2% = 9.6%."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section B",
+    "topic": "Cost of equity",
+    "difficulty": "medium",
+    "question_text": "The risk-free rate is 3%, the market risk premium is 5%, and a stock’s beta is 1.4. Using CAPM, what is the cost of equity?",
+    "options": {
+      "A": "10.0%.",
+      "B": "8.0%.",
+      "C": "12.0%.",
+      "D": "7.0%."
+    },
+    "correct_answer": "A",
+    "explanation": "Cost of equity = Rf + β × MRP = 3% + 1.4 × 5% = 3% + 7% = 10%."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section B",
+    "topic": "Cost of debt",
+    "difficulty": "easy",
+    "question_text": "A company can issue bonds at a 9% yield to maturity. The marginal tax rate is 30%. What is the after-tax cost of debt for WACC purposes?",
+    "options": {
+      "A": "6.3%.",
+      "B": "9.0%.",
+      "C": "12.9%.",
+      "D": "2.7%."
+    },
+    "correct_answer": "A",
+    "explanation": "After-tax cost of debt = YTM × (1 − tax rate) = 9% × (1 − 0.30) = 6.3%, reflecting the tax deductibility of interest."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section B",
+    "topic": "Dividend policy",
+    "difficulty": "medium",
+    "question_text": "Under the residual dividend model, dividends are paid from which residual amount?",
+    "options": {
+      "A": "Earnings remaining after funding all positive-NPV projects at the target capital structure.",
+      "B": "A fixed percentage of last year’s dividends plus a growth factor.",
+      "C": "All free cash flow after mandatory debt principal repayments only.",
+      "D": "Cash equal to depreciation plus net income each year."
+    },
+    "correct_answer": "A",
+    "explanation": "The residual model prioritizes investment needs consistent with the target capital structure; any leftover earnings are distributed as dividends."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section B",
+    "topic": "Working capital management",
+    "difficulty": "medium",
+    "question_text": "A firm offers terms of 2/10, net 30. What is the approximate annualized cost of forgoing the discount if payment is made on day 30?",
+    "options": {
+      "A": "36.7%.",
+      "B": "24.0%.",
+      "C": "18.0%.",
+      "D": "2.0%."
+    },
+    "correct_answer": "A",
+    "explanation": "Approximate cost = [2% ÷ (100% − 2%)] × [365 ÷ (30 − 10)] ≈ 0.020408 × 18.25 ≈ 37.2% (often rounded near 36.7% with 360 days: 0.020408 × 18 = 36.7%)."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section B",
+    "topic": "Capital structure",
+    "difficulty": "hard",
+    "question_text": "According to Modigliani and Miller with corporate taxes but no bankruptcy costs, which statement is correct?",
+    "options": {
+      "A": "Firm value rises with debt due to the interest tax shield.",
+      "B": "Capital structure is irrelevant to firm value.",
+      "C": "100% equity always maximizes firm value.",
+      "D": "WACC is constant regardless of leverage."
+    },
+    "correct_answer": "A",
+    "explanation": "With corporate taxes only, debt creates a valuable tax shield, so firm value increases with leverage; without bankruptcy costs the theoretical optimum is maximum debt."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section B",
+    "topic": "Cash management",
+    "difficulty": "easy",
+    "question_text": "Which technique accelerates cash collections by reducing mail and processing float?",
+    "options": {
+      "A": "A lockbox system.",
+      "B": "Stretching accounts payable.",
+      "C": "Issuing commercial paper.",
+      "D": "A revolving credit facility."
+    },
+    "correct_answer": "A",
+    "explanation": "Lockboxes place collection points near customers so remittances clear faster, shortening collection float and increasing available cash."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section B",
+    "topic": "Short-term financing",
+    "difficulty": "medium",
+    "question_text": "Commercial paper is best described as which instrument?",
+    "options": {
+      "A": "Unsecured short-term promissory notes issued by large, creditworthy firms.",
+      "B": "Long-term bonds backed by specific plant assets.",
+      "C": "Bank term loans with maturities over five years.",
+      "D": "Equity warrants attached to preferred stock."
+    },
+    "correct_answer": "A",
+    "explanation": "Commercial paper is short-term, typically unsecured debt sold by strong issuers in the money market to fund working capital needs."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section B",
+    "topic": "Dividend discount model",
+    "difficulty": "medium",
+    "question_text": "A stock will pay a $2.40 dividend next year, dividends grow at 4% perpetually, and the required return is 10%. What is the stock’s intrinsic value under the Gordon growth model?",
+    "options": {
+      "A": "$40.00.",
+      "B": "$24.00.",
+      "C": "$60.00.",
+      "D": "$28.80."
+    },
+    "correct_answer": "A",
+    "explanation": "P0 = D1 ÷ (r − g) = $2.40 ÷ (0.10 − 0.04) = $2.40 ÷ 0.06 = $40.00."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section B",
+    "topic": "EOQ",
+    "difficulty": "medium",
+    "question_text": "Annual demand is 10,000 units, ordering cost is $50 per order, and carrying cost is $4 per unit per year. What is the economic order quantity?",
+    "options": {
+      "A": "500 units.",
+      "B": "250 units.",
+      "C": "1,000 units.",
+      "D": "125 units."
+    },
+    "correct_answer": "A",
+    "explanation": "EOQ = √(2DS ÷ H) = √(2 × 10,000 × 50 ÷ 4) = √250,000 = 500 units."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section B",
+    "topic": "Lease vs buy",
+    "difficulty": "hard",
+    "question_text": "When evaluating a lease-versus-buy decision from the lessee’s perspective, which cash flow is typically treated as a benefit of leasing?",
+    "options": {
+      "A": "Avoidance of the initial asset purchase outflow.",
+      "B": "The present value of lease payments discounted at the equity cost.",
+      "C": "Depreciation tax shields retained while leasing.",
+      "D": "Interest tax shields on a loan that is never taken."
+    },
+    "correct_answer": "A",
+    "explanation": "Leasing replaces buying, so the key benefit is not paying the purchase price up front; the lessee forgoes ownership tax shields and pays lease rentals instead."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section B",
+    "topic": "Raising capital",
+    "difficulty": "easy",
+    "question_text": "In a seasoned equity offering, flotation costs primarily cause which effect on the net proceeds to the issuer?",
+    "options": {
+      "A": "They reduce net proceeds below the offer price.",
+      "B": "They increase the market price of existing shares.",
+      "C": "They eliminate underpricing risk entirely.",
+      "D": "They convert preferred stock into common equity."
+    },
+    "correct_answer": "A",
+    "explanation": "Underwriting fees and other flotation costs are deducted from gross proceeds, so the issuer receives less cash per share than the public offer price."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section B",
+    "topic": "Beta and risk",
+    "difficulty": "medium",
+    "question_text": "Which type of risk does beta primarily measure in the CAPM framework?",
+    "options": {
+      "A": "Systematic (market) risk that cannot be diversified away.",
+      "B": "Firm-specific risk that investors can eliminate with diversification.",
+      "C": "Liquidity risk of thinly traded securities only.",
+      "D": "Credit risk of the firm’s outstanding bonds."
+    },
+    "correct_answer": "A",
+    "explanation": "Beta measures sensitivity to market movements—nondiversifiable systematic risk—which is the risk compensated in CAPM expected returns."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section B",
+    "topic": "Working capital policy",
+    "difficulty": "medium",
+    "question_text": "A firm that finances seasonal current assets with short-term debt and permanent assets with long-term capital is following which approach?",
+    "options": {
+      "A": "A maturity-matching (moderate) working capital financing policy.",
+      "B": "An aggressive policy using only short-term debt for all assets.",
+      "C": "A conservative policy financing all assets with equity.",
+      "D": "A residual financing policy based solely on dividends."
+    },
+    "correct_answer": "A",
+    "explanation": "Maturity matching aligns the duration of financing with the life of the assets: permanent needs with long-term funds and temporary needs with short-term debt."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section B",
+    "topic": "Cost of preferred stock",
+    "difficulty": "easy",
+    "question_text": "Preferred stock pays an $8 annual dividend and can be issued at a net price of $80 after flotation costs. What is the cost of preferred equity?",
+    "options": {
+      "A": "10.0%.",
+      "B": "8.0%.",
+      "C": "12.5%.",
+      "D": "9.0%."
+    },
+    "correct_answer": "A",
+    "explanation": "Cost of preferred = Dp ÷ Net proceeds = $8 ÷ $80 = 10%. Preferred dividends are not tax deductible, so no tax adjustment is made."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section B",
+    "topic": "Share repurchase",
+    "difficulty": "medium",
+    "question_text": "Compared with a cash dividend of equal total amount, an open-market share repurchase typically has which effect, all else equal?",
+    "options": {
+      "A": "It reduces shares outstanding and can increase EPS.",
+      "B": "It always increases the firm’s debt-to-equity ratio immediately.",
+      "C": "It creates a contractual obligation identical to preferred dividends.",
+      "D": "It is treated as an investing cash outflow under U.S. GAAP."
+    },
+    "correct_answer": "A",
+    "explanation": "Repurchases retire shares, lowering the share count so that the same earnings produce higher EPS; they are financing outflows, not investing."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section B",
+    "topic": "Bankruptcy and distress",
+    "difficulty": "hard",
+    "question_text": "In the trade-off theory of capital structure, firms balance the tax advantages of debt against which primary offsetting cost?",
+    "options": {
+      "A": "Expected costs of financial distress and bankruptcy.",
+      "B": "Flotation costs of issuing commercial paper.",
+      "C": "Agency costs of free cash flow only for all-equity firms.",
+      "D": "Underpricing in initial public offerings."
+    },
+    "correct_answer": "A",
+    "explanation": "Trade-off theory sets optimal leverage where the marginal tax shield benefit equals the marginal increase in expected distress costs."
+  }
+]

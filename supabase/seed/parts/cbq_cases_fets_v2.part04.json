@@ -1,0 +1,235 @@
+[
+  {
+    "part": "Part 2",
+    "section": "Risk Management",
+    "title": "Munnar Tea Estates — euro receivable and hedge selection",
+    "narrative": "Munnar Tea Estates exports orthodox black tea to a German distributor and has a firm euro-denominated receivable due in 90 days (Exhibit 1). The Treasurer is evaluating three hedges: a forward sale of euros, a euro put option, and a money-market hedge. The company's home currency is the US dollar for reporting of this export contract.\n\nMarket quotes and interest rates are in Exhibit 2. After the hedges are analysed, the Board also wants a view on whether the exposure is transaction, translation, or economic, and which instruments leave upside if the euro strengthens.",
+    "exhibits": [
+      {
+        "label": "Exhibit 1 — Exposure",
+        "caption": "Export contract",
+        "columns": [
+          "Item",
+          "Detail"
+        ],
+        "rows": [
+          [
+            "Receivable",
+            "EUR 400,000"
+          ],
+          [
+            "Due in",
+            "90 days"
+          ],
+          [
+            "Nature",
+            "Firm sale already shipped; invoice outstanding"
+          ],
+          [
+            "Home currency for this analysis",
+            "US dollar"
+          ]
+        ]
+      },
+      {
+        "label": "Exhibit 2 — Market data",
+        "caption": "Quotes at hedge inception; year basis 360 days",
+        "columns": [
+          "Instrument / rate",
+          "Quote"
+        ],
+        "rows": [
+          [
+            "Spot rate ($/EUR)",
+            "1.120"
+          ],
+          [
+            "90-day forward rate ($/EUR)",
+            "1.100"
+          ],
+          [
+            "Euro put option strike ($/EUR)",
+            "1.105"
+          ],
+          [
+            "Euro put premium ($ per EUR)",
+            "0.015"
+          ],
+          [
+            "EUR 90-day interest rate (annualised)",
+            "4.0%"
+          ],
+          [
+            "USD 90-day interest rate (annualised)",
+            "6.0%"
+          ],
+          [
+            "Spot rate at maturity ($/EUR) — for ex-post evaluation",
+            "1.080"
+          ]
+        ]
+      }
+    ],
+    "difficulty": "Hard",
+    "source": "fets_v2",
+    "verified": true,
+    "tasks": [
+      {
+        "seq": 1,
+        "type": "mcq",
+        "marks": 12,
+        "prompt": "The EUR 400,000 invoice primarily creates which type of foreign-exchange exposure?",
+        "hint": null,
+        "payload": {
+          "options": [
+            "Transaction exposure",
+            "Translation (accounting) exposure",
+            "Economic (operating) exposure only",
+            "No exposure, because the sale is already shipped"
+          ]
+        },
+        "answer": {
+          "value": "A"
+        },
+        "explanation": "A firm foreign-currency receivable whose settlement amount in home currency is not yet fixed is classic transaction exposure. Translation affects consolidated book values of foreign operations; economic exposure is the longer-term effect on competitive position."
+      },
+      {
+        "seq": 2,
+        "type": "num",
+        "marks": 14,
+        "prompt": "If the receivable is sold forward, calculate the <b>guaranteed dollar proceeds</b> at maturity.",
+        "hint": "Whole dollars, no commas.",
+        "payload": {},
+        "answer": {
+          "value": 440000
+        },
+        "explanation": "EUR 400,000 x 1.100 = $440,000 locked in by the forward contract."
+      },
+      {
+        "seq": 3,
+        "type": "num",
+        "marks": 16,
+        "prompt": "Using the maturity spot of 1.080, calculate the <b>net dollar proceeds under the put option</b> (after premium). Premium is paid at inception; ignore time value of money on the premium for this task.",
+        "hint": "Whole dollars. Decide whether the option is exercised.",
+        "payload": {},
+        "answer": {
+          "value": 436000
+        },
+        "explanation": "Spot 1.080 < strike 1.105, so exercise: EUR 400,000 x 1.105 = $442,000. Premium = 400,000 x 0.015 = $6,000. Net proceeds = $442,000 - $6,000 = $436,000."
+      },
+      {
+        "seq": 4,
+        "type": "num",
+        "marks": 16,
+        "prompt": "Calculate the <b>dollar proceeds today</b> from implementing the money-market hedge (borrow euros, convert at spot). Round to the nearest whole dollar.",
+        "hint": "90/360 year fraction. Borrow the present value of EUR 400,000.",
+        "payload": {},
+        "answer": {
+          "value": 443564
+        },
+        "explanation": "PV of receivable = 400,000 / (1 + 0.04 x 90/360) = 400,000 / 1.01 = 396,039.60396. Convert at spot: 396,039.60396 x 1.120 = $443,564 (nearest dollar). At maturity the euro loan is repaid with the receivable."
+      },
+      {
+        "seq": 5,
+        "type": "list",
+        "marks": 14,
+        "prompt": "Complete the ex-post ranking of dollar outcomes at the maturity spot of 1.080.",
+        "hint": null,
+        "payload": {
+          "fields": [
+            {
+              "label": "The highest dollar outcome among unhedged, forward, and option (net of premium) is the",
+              "options": [
+                "forward hedge",
+                "put option",
+                "unhedged position"
+              ]
+            },
+            {
+              "label": "and the unhedged position yields",
+              "options": [
+                "$432,000",
+                "$440,000",
+                "$436,000",
+                "$443,564"
+              ]
+            }
+          ]
+        },
+        "answer": {
+          "values": [
+            "forward hedge",
+            "$432,000"
+          ]
+        },
+        "explanation": "Unhedged = 400,000 x 1.080 = $432,000. Forward $440,000. Option net $436,000. Forward ranks highest in this realised-spot scenario; the option still beats unhedged."
+      },
+      {
+        "seq": 6,
+        "type": "dnd",
+        "marks": 14,
+        "prompt": "Classify each instrument by whether it <b>caps downside while leaving upside</b> if the euro strengthens against the dollar.",
+        "hint": null,
+        "payload": {
+          "items": [
+            {
+              "id": "a",
+              "text": "Sell euros forward"
+            },
+            {
+              "id": "b",
+              "text": "Buy a euro put option"
+            },
+            {
+              "id": "c",
+              "text": "Money-market hedge (borrow euros, convert spot)"
+            },
+            {
+              "id": "d",
+              "text": "Remain unhedged"
+            }
+          ],
+          "zones": {
+            "upside": "Leaves upside if euro strengthens",
+            "locks": "Locks / eliminates upside"
+          }
+        },
+        "answer": {
+          "placement": {
+            "a": "locks",
+            "b": "upside",
+            "c": "locks",
+            "d": "upside"
+          }
+        },
+        "explanation": "A put is insurance: if the euro strengthens, let it expire and sell at the better spot (net of premium). Forward and money-market hedges fix the rate. Unhedged keeps full upside and full downside."
+      },
+      {
+        "seq": 7,
+        "type": "multi",
+        "marks": 14,
+        "prompt": "Which statements are correct for Munnar's hedging decision? <b>Select all that apply.</b>",
+        "hint": null,
+        "payload": {
+          "selectCount": "all that apply",
+          "options": [
+            "The forward sale eliminates transaction exposure on the EUR 400,000 receivable.",
+            "The put option's maximum loss (ignoring time value) is limited to the premium paid.",
+            "A stronger euro at maturity would make the unhedged outcome exceed the forward proceeds.",
+            "Translation exposure on a foreign subsidiary is hedged by selling this receivable forward.",
+            "Money-market and forward hedges both remove upside participation."
+          ]
+        },
+        "answer": {
+          "values": [
+            0,
+            1,
+            2,
+            4
+          ]
+        },
+        "explanation": "Forwards offset the receivable's FX risk; puts limit loss to premium; a stronger euro helps the unhedged position and would beat a short forward; both forward and MM hedges lock the rate. Hedging one receivable does not hedge translation exposure of a subsidiary."
+      }
+    ]
+  }
+]

@@ -1,0 +1,227 @@
+[
+  {
+    "part": "Part 2",
+    "section": "Investment Decisions",
+    "title": "Wayanad Coffee Roasters — cold-store expansion NPV and IRR",
+    "narrative": "Wayanad Coffee Roasters is evaluating a cold-store expansion that would cut spoilage on aged green beans and support a new institutional contract. The project requires an immediate capital outlay and is expected to generate constant annual after-tax operating cash flows for five years, with an after-tax salvage value at the end of year 5 (Exhibit 1).\n\nThe company's hurdle rate for projects of this risk class is 10%. Present-value factors are supplied in Exhibit 2 so that all candidates use the same discounting basis. Ignore inflation and assume cash flows arise at each year-end.",
+    "exhibits": [
+      {
+        "label": "Exhibit 1 — Project cash flows",
+        "caption": "After tax; amounts in $",
+        "columns": [
+          "Item",
+          "Amount"
+        ],
+        "rows": [
+          [
+            "Initial outlay (t = 0)",
+            "1,200,000"
+          ],
+          [
+            "Annual after-tax operating cash flow (years 1-5)",
+            "320,000"
+          ],
+          [
+            "After-tax salvage value (year 5, in addition to operating CF)",
+            "150,000"
+          ],
+          [
+            "Project life",
+            "5 years"
+          ],
+          [
+            "Hurdle rate",
+            "10%"
+          ]
+        ]
+      },
+      {
+        "label": "Exhibit 2 — Present-value factors",
+        "caption": "Use these factors; do not interpolate other tables",
+        "columns": [
+          "Factor",
+          "10%",
+          "12%",
+          "14%"
+        ],
+        "rows": [
+          [
+            "PV of $1 (n = 5)",
+            "0.6209",
+            "0.5674",
+            "0.5194"
+          ],
+          [
+            "PV of annuity $1 (n = 5)",
+            "3.7908",
+            "3.6048",
+            "3.4331"
+          ]
+        ]
+      }
+    ],
+    "difficulty": "Hard",
+    "source": "fets_v2",
+    "verified": true,
+    "tasks": [
+      {
+        "seq": 1,
+        "type": "num",
+        "marks": 16,
+        "prompt": "Calculate the project's <b>NPV at the 10% hurdle rate</b>.",
+        "hint": "Whole dollars, no commas. Use Exhibit 2 factors.",
+        "payload": {},
+        "answer": {
+          "value": 106191
+        },
+        "explanation": "PV of operating CFs = 320,000 x 3.7908 = 1,213,056. PV of salvage = 150,000 x 0.6209 = 93,135. NPV = -1,200,000 + 1,213,056 + 93,135 = $106,191."
+      },
+      {
+        "seq": 2,
+        "type": "num",
+        "marks": 12,
+        "prompt": "Calculate the project's <b>accounting / simple payback period</b> in years (ignore salvage and discounting).",
+        "hint": "Two decimal places.",
+        "payload": {
+          "decimals": true
+        },
+        "answer": {
+          "value": 3.75,
+          "tolerance": 0.005
+        },
+        "explanation": "1,200,000 / 320,000 = 3.75 years."
+      },
+      {
+        "seq": 3,
+        "type": "num",
+        "marks": 14,
+        "prompt": "Calculate the project's <b>profitability index</b> at 10% (PV of inflows / initial outlay).",
+        "hint": "Two decimal places.",
+        "payload": {
+          "decimals": true
+        },
+        "answer": {
+          "value": 1.09,
+          "tolerance": 0.005
+        },
+        "explanation": "PV inflows = 1,213,056 + 93,135 = 1,306,191. PI = 1,306,191 / 1,200,000 = 1.0885 ~ 1.09."
+      },
+      {
+        "seq": 4,
+        "type": "num",
+        "marks": 14,
+        "prompt": "Calculate <b>NPV at 12%</b> using Exhibit 2.",
+        "hint": "Whole dollars. Sign: enter as a positive number if NPV is positive.",
+        "payload": {},
+        "answer": {
+          "value": 38646
+        },
+        "explanation": "320,000 x 3.6048 = 1,153,536; 150,000 x 0.5674 = 85,110; NPV = -1,200,000 + 1,153,536 + 85,110 = $38,646."
+      },
+      {
+        "seq": 5,
+        "type": "list",
+        "marks": 14,
+        "prompt": "Using linear interpolation between 12% and 14%, complete the IRR statement.",
+        "hint": null,
+        "payload": {
+          "fields": [
+            {
+              "label": "NPV at 14% is",
+              "options": [
+                "-$23,498",
+                "$23,498",
+                "-$38,646",
+                "$0"
+              ]
+            },
+            {
+              "label": "and the interpolated IRR is closest to",
+              "options": [
+                "13.2%",
+                "12.4%",
+                "13.8%",
+                "14.0%"
+              ]
+            }
+          ]
+        },
+        "answer": {
+          "values": [
+            "-$23,498",
+            "13.2%"
+          ]
+        },
+        "explanation": "NPV14 = 320,000 x 3.4331 + 150,000 x 0.5194 - 1,200,000 = 1,098,592 + 77,910 - 1,200,000 = -23,498. Interpolate: 12% + 2% x (38,646 / (38,646 + 23,498)) = 12% + 2% x 0.6222 ~ 13.2%."
+      },
+      {
+        "seq": 6,
+        "type": "multi",
+        "marks": 16,
+        "prompt": "Which conclusions follow from the analysis? <b>Select all that apply.</b>",
+        "hint": null,
+        "payload": {
+          "selectCount": "all that apply",
+          "options": [
+            "At the 10% hurdle rate the project creates shareholder value.",
+            "IRR exceeds the 10% hurdle rate.",
+            "A profitability index above 1.0 is consistent with a positive NPV.",
+            "Payback alone is sufficient to accept the project under shareholder-value criteria.",
+            "If the hurdle rate rose to 14%, NPV would turn negative and the project would be rejected."
+          ]
+        },
+        "answer": {
+          "values": [
+            0,
+            1,
+            2,
+            4
+          ]
+        },
+        "explanation": "Positive NPV at 10%, IRR ~ 13.2% > 10%, and PI > 1 are aligned accept signals. Payback ignores time value and cash flows beyond recovery, so it is not sufficient alone. At 14% NPV is negative, so the project fails that hurdle."
+      },
+      {
+        "seq": 7,
+        "type": "dnd",
+        "marks": 14,
+        "prompt": "Match each capital-budgeting metric to the description that best fits it.",
+        "hint": null,
+        "payload": {
+          "items": [
+            {
+              "id": "a",
+              "text": "Net present value"
+            },
+            {
+              "id": "b",
+              "text": "Internal rate of return"
+            },
+            {
+              "id": "c",
+              "text": "Payback period"
+            },
+            {
+              "id": "d",
+              "text": "Profitability index"
+            }
+          ],
+          "zones": {
+            "abs": "Absolute dollar value added to wealth",
+            "rate": "Break-even discount rate on the project's cash flows",
+            "time": "Time to recover the initial outlay from undiscounted CFs",
+            "rel": "Present-value bang per dollar invested"
+          }
+        },
+        "answer": {
+          "placement": {
+            "a": "abs",
+            "b": "rate",
+            "c": "time",
+            "d": "rel"
+          }
+        },
+        "explanation": "NPV measures wealth increase in dollars; IRR is the rate that drives NPV to zero; payback counts recovery time; PI scales PV inflows to outlay for ranking under rationing."
+      }
+    ]
+  }
+]

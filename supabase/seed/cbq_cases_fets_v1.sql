@@ -1,1 +1,1 @@
-PLACEHOLDER_LOAD_FROM_FILE
+@/workspace/costudy-mock-engine/supabase_seed_cbq.sql

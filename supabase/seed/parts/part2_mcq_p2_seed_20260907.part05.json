@@ -1,0 +1,257 @@
+[
+  {
+    "part": "Part 2",
+    "section": "Section D",
+    "topic": "Political risk",
+    "difficulty": "medium",
+    "question_text": "Which action most directly mitigates expropriation risk in a foreign subsidiary?",
+    "options": {
+      "A": "Obtaining political risk insurance and structuring local financing.",
+      "B": "Hedging only with short-dated currency forward contracts.",
+      "C": "Increasing the subsidiary's net monetary asset position.",
+      "D": "Switching from FIFO to LIFO for local inventory costing."
+    },
+    "correct_answer": "A",
+    "explanation": "Political risk insurance and local-source financing reduce net assets at risk and provide recovery if governments seize or restrict operations."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section D",
+    "topic": "Derivatives",
+    "difficulty": "medium",
+    "question_text": "Compared with a forward contract, an at-the-money currency option purchased as a hedge typically:",
+    "options": {
+      "A": "Requires an upfront premium but allows favorable currency moves to benefit the firm.",
+      "B": "Has zero premium and obligates both parties to settle always.",
+      "C": "Eliminates basis risk completely in all hedge markets.",
+      "D": "Can only be used to hedge interest rate exposures."
+    },
+    "correct_answer": "A",
+    "explanation": "Options cost a premium and limit downside while preserving upside if rates move favorably; forwards lock a rate with no premium but no upside."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section D",
+    "topic": "Risk map",
+    "difficulty": "easy",
+    "question_text": "On a risk map plotting likelihood against impact, which risks usually receive the highest priority for treatment?",
+    "options": {
+      "A": "High-likelihood, high-impact risks.",
+      "B": "Low-likelihood, low-impact risks.",
+      "C": "Risks with unknown owners exclusively.",
+      "D": "Risks that are already fully insured."
+    },
+    "correct_answer": "A",
+    "explanation": "ERM prioritizes risks that combine significant chance of occurrence with severe consequences, typically the upper-right quadrant of a risk heat map."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section D",
+    "topic": "Basis risk",
+    "difficulty": "hard",
+    "question_text": "Basis risk in a futures hedge is the risk that:",
+    "options": {
+      "A": "The futures price and the spot price of the hedged item do not move in perfect unison.",
+      "B": "The counterparty defaults on an OTC forward contract.",
+      "C": "Interest rates and FX rates change at the same time.",
+      "D": "The hedge ratio is exactly one-to-one by contract design."
+    },
+    "correct_answer": "A",
+    "explanation": "Imperfect correlation between the hedging instrument and the underlying exposure leaves residual gain or loss known as basis risk."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section E",
+    "topic": "Capital budgeting",
+    "difficulty": "medium",
+    "question_text": "An investment of $80,000 yields cash inflows of $30,000, $35,000, and $40,000 at the ends of years 1-3. Present value factors at 12% are 0.893, 0.797, and 0.712. What is the project's NPV?",
+    "options": {
+      "A": "$3,165.",
+      "B": "$25,000.",
+      "C": "$(3,165).",
+      "D": "$83,165."
+    },
+    "correct_answer": "A",
+    "explanation": "PV of inflows = $26,790 + $27,895 + $28,480 = $83,165. NPV = $83,165 - $80,000 = $3,165, so the project adds value at 12%."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section E",
+    "topic": "Capital budgeting",
+    "difficulty": "easy",
+    "question_text": "Which capital budgeting method ignores the time value of money?",
+    "options": {
+      "A": "Accounting rate of return (and simple payback).",
+      "B": "Net present value analysis method.",
+      "C": "Internal rate of return method.",
+      "D": "Profitability index ranking method."
+    },
+    "correct_answer": "A",
+    "explanation": "ARR uses accounting income without discounting; undiscounted payback also ignores TVM. NPV, IRR, and PI incorporate discounting."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section E",
+    "topic": "IRR",
+    "difficulty": "medium",
+    "question_text": "A project's IRR equals 14% and the required return is 11%. Which statement is correct?",
+    "options": {
+      "A": "NPV is positive at the 11% hurdle rate.",
+      "B": "NPV is negative at the 11% hurdle rate.",
+      "C": "NPV is exactly zero at the 11% rate.",
+      "D": "The project should be rejected under NPV rules."
+    },
+    "correct_answer": "A",
+    "explanation": "IRR is the rate that sets NPV to zero. If IRR exceeds the cost of capital, NPV at that cost of capital is positive and the project should be accepted."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section E",
+    "topic": "Payback",
+    "difficulty": "easy",
+    "question_text": "A project costs $90,000 and generates equal annual cash inflows of $30,000. What is the simple payback period?",
+    "options": {
+      "A": "3.0 years.",
+      "B": "2.0 years.",
+      "C": "4.5 years.",
+      "D": "1.5 years."
+    },
+    "correct_answer": "A",
+    "explanation": "Payback = Initial investment / Annual cash inflow = $90,000 / $30,000 = 3 years when inflows are level."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section E",
+    "topic": "Profitability index",
+    "difficulty": "medium",
+    "question_text": "The present value of a project's future cash inflows is $125,000 and the initial investment is $100,000. What is the profitability index?",
+    "options": {
+      "A": "1.25.",
+      "B": "0.80.",
+      "C": "1.00.",
+      "D": "25.0."
+    },
+    "correct_answer": "A",
+    "explanation": "Profitability index = PV of future inflows / Initial investment = $125,000 / $100,000 = 1.25, indicating $1.25 of PV benefit per dollar invested."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section E",
+    "topic": "Capital budgeting",
+    "difficulty": "hard",
+    "question_text": "When ranking mutually exclusive projects of different sizes, which criterion is generally preferred for maximizing shareholder wealth?",
+    "options": {
+      "A": "Net present value.",
+      "B": "Highest internal rate of return only.",
+      "C": "Shortest undiscounted payback only.",
+      "D": "Highest accounting rate of return only."
+    },
+    "correct_answer": "A",
+    "explanation": "NPV measures absolute value created. IRR can favor smaller projects with high rates that add less total wealth than a larger lower-IRR alternative."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section E",
+    "topic": "After-tax cash flows",
+    "difficulty": "hard",
+    "question_text": "A machine costs $200,000, has a 5-year life, zero salvage, and straight-line depreciation. Pretax operating savings are $60,000 per year. Tax rate is 30%. What is the annual after-tax operating cash flow?",
+    "options": {
+      "A": "$54,000.",
+      "B": "$42,000.",
+      "C": "$60,000.",
+      "D": "$48,000."
+    },
+    "correct_answer": "A",
+    "explanation": "Depreciation = $40,000 per year. Taxable income = $20,000; tax = $6,000. OCF = after-tax savings + depreciation tax effects = $54,000 (or NI $14,000 + depreciation $40,000)."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section E",
+    "topic": "Discounted payback",
+    "difficulty": "medium",
+    "question_text": "Compared with simple payback, discounted payback:",
+    "options": {
+      "A": "Recognizes the time value of money but may still ignore cash flows after the cutoff.",
+      "B": "Always equals the project's IRR recovery period.",
+      "C": "Includes all project cash flows through infinity.",
+      "D": "Cannot be used when project cash flows are uneven."
+    },
+    "correct_answer": "A",
+    "explanation": "Discounted payback accumulates PV of inflows until the investment is recovered, incorporating TVM, yet still truncates analysis after the payback point."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section E",
+    "topic": "Real options",
+    "difficulty": "hard",
+    "question_text": "The option to abandon a capital project if cash flows disappoint is most similar to which financial option?",
+    "options": {
+      "A": "A put option on the project's remaining value.",
+      "B": "A call option to expand operating capacity.",
+      "C": "A forward contract with obligatory cash settlement.",
+      "D": "A written naked call on the firm's common stock."
+    },
+    "correct_answer": "A",
+    "explanation": "Abandonment lets management sell the project's remaining cash flows for salvage, analogous to exercising a put when continuation value falls below salvage."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section E",
+    "topic": "Cost of capital",
+    "difficulty": "medium",
+    "question_text": "A high-risk project should be evaluated using a discount rate that is:",
+    "options": {
+      "A": "Higher than the firm's WACC for average-risk projects.",
+      "B": "Equal to the risk-free rate to remain conservative.",
+      "C": "Lower than WACC to encourage innovation projects.",
+      "D": "Always equal to the after-tax cost of debt."
+    },
+    "correct_answer": "A",
+    "explanation": "Risk-adjusted discount rates rise with project systematic risk; using firm WACC for riskier projects overstates NPV and leads to value-destroying acceptances."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section E",
+    "topic": "Replacement decision",
+    "difficulty": "hard",
+    "question_text": "In an equipment replacement analysis, the relevant initial investment typically includes:",
+    "options": {
+      "A": "Cost of the new asset minus after-tax proceeds from selling the old asset.",
+      "B": "Original historical cost of the old asset only.",
+      "C": "Book value of the old asset with no tax effects considered.",
+      "D": "Future depreciation of the old asset if kept forever."
+    },
+    "correct_answer": "A",
+    "explanation": "The incremental outlay is what must be spent now: purchase cost of the new machine, reduced by after-tax salvage from disposing of the old machine."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section E",
+    "topic": "Inflation",
+    "difficulty": "medium",
+    "question_text": "If cash flow forecasts include inflation, the discount rate used in NPV analysis should generally be:",
+    "options": {
+      "A": "A nominal rate that also embeds inflation expectations.",
+      "B": "A real rate with inflation removed inconsistently.",
+      "C": "The real risk-free rate with no risk premium added.",
+      "D": "Zero because inflation cancels in every NPV ratio."
+    },
+    "correct_answer": "A",
+    "explanation": "Consistency requires matching: nominal cash flows with a nominal discount rate, or real cash flows with a real rate—not mixing the two."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section E",
+    "topic": "Capital rationing",
+    "difficulty": "medium",
+    "question_text": "Under hard capital rationing with divisible projects, managers often rank projects by:",
+    "options": {
+      "A": "Profitability index to maximize NPV per dollar invested.",
+      "B": "Largest initial investment amount first.",
+      "C": "Highest accounting income in year one only.",
+      "D": "Longest payback to ensure project durability."
+    },
+    "correct_answer": "A",
+    "explanation": "When capital is limited, the profitability index helps select the combination of projects that yields the greatest total NPV per scarce investment dollar."
+  }
+]

@@ -1,0 +1,238 @@
+[
+  {
+    "part": "Part 1",
+    "section": "External Financial Reporting",
+    "title": "Kozhikode Spices Limited — inventory valuation and revenue cut-off",
+    "narrative": "Kozhikode Spices Limited exports ground spice blends and holds both owned inventory and goods placed with distributors on consignment. The year-end is 31 March. The Financial Controller is finalising inventory valuation and revenue cut-off and has given you the schedules in Exhibits 1 and 2.\n\nInventory is measured at the lower of cost and net realisable value under Ind AS 2 / IAS 2. Revenue is recognised under Ind AS 115 / IFRS 15 when control transfers. Management has proposed recognising a bill-and-hold arrangement described in Exhibit 2 and is seeking confirmation that the criteria are met.",
+    "exhibits": [
+      {
+        "label": "Exhibit 1 — Inventory positions at 31 March",
+        "caption": "Before year-end adjustments",
+        "columns": [
+          "Line",
+          "Description",
+          "Cost",
+          "Estimated NRV",
+          "Notes"
+        ],
+        "rows": [
+          [
+            "1",
+            "Cardamom blend — finished goods (owned warehouse)",
+            "$120,000",
+            "$95,000",
+            "Oversupply; slow moving"
+          ],
+          [
+            "2",
+            "Pepper grind — finished goods on consignment at retail distributor",
+            "$80,000",
+            "$110,000",
+            "Distributor has not sold to end customers"
+          ],
+          [
+            "3",
+            "Turmeric powder — finished goods",
+            "$60,000",
+            "$72,000",
+            "Normal demand"
+          ],
+          [
+            "4",
+            "Raw black pepper — raw materials",
+            "$45,000",
+            "$40,000",
+            "Market price decline"
+          ]
+        ]
+      },
+      {
+        "label": "Exhibit 2 — Revenue and cut-off items",
+        "caption": "Transactions under review",
+        "columns": [
+          "Item",
+          "Detail"
+        ],
+        "rows": [
+          [
+            "Bill-and-hold Order BH-17",
+            "Invoice $150,000 dated 28 March; customer requested delay of shipment until 12 April for warehouse space; goods segregated, ready, and cannot be redirected; customer accepted billing and risk"
+          ],
+          [
+            "Shipment S-904",
+            "Goods costing $28,000, invoiced $40,000, loaded on carrier 31 March under FOB shipping point terms; arrived at customer 2 April"
+          ],
+          [
+            "Shipment S-911",
+            "Goods costing $18,000, invoiced $26,000, still in Kozhikode warehouse at close of 31 March; FOB destination; delivered 3 April"
+          ],
+          [
+            "Consignment sales report",
+            "Distributor sold $35,000 (cost $22,000) of consigned pepper grind to end customers in March; remittance due April"
+          ]
+        ]
+      }
+    ],
+    "difficulty": "Hard",
+    "source": "fets_v2",
+    "verified": true,
+    "tasks": [
+      {
+        "seq": 1,
+        "type": "num",
+        "marks": 12,
+        "prompt": "Calculate the <b>total write-down to NRV</b> required for inventory lines 1 and 4 combined.",
+        "hint": "Whole dollars. Write down only where NRV is below cost.",
+        "payload": {},
+        "answer": {
+          "value": 30000
+        },
+        "explanation": "Line 1: $120,000 - $95,000 = $25,000. Line 4: $45,000 - $40,000 = $5,000. Total write-down $30,000. Lines 2 and 3 need no write-down (NRV >= cost)."
+      },
+      {
+        "seq": 2,
+        "type": "num",
+        "marks": 14,
+        "prompt": "After the NRV adjustments and after removing the cost of consignment goods sold in March, what is the <b>carrying amount of inventory</b> that should appear on the 31 March statement of financial position?",
+        "hint": "Start from the four lines' costs, adjust, then remove sold consignment cost.",
+        "payload": {},
+        "answer": {
+          "value": 253000
+        },
+        "explanation": "Unadjusted costs $120k+$80k+$60k+$45k = $305,000. Less NRV write-downs $30,000 = $275,000. Less cost of consignment sold in March $22,000 = carrying amount $253,000. (Remaining consignment $58,000 stays in Kozhikode's inventory until sold to end customers.)"
+      },
+      {
+        "seq": 3,
+        "type": "list",
+        "marks": 14,
+        "prompt": "Complete the statement on consignment accounting.",
+        "hint": null,
+        "payload": {
+          "fields": [
+            {
+              "label": "Goods on consignment at the distributor (unsold to end customers) are reported as inventory of",
+              "options": [
+                "Kozhikode Spices Limited",
+                "the retail distributor",
+                "neither party until cash is remitted",
+                "both parties at 50% each"
+              ]
+            },
+            {
+              "label": "and revenue on the March consignment sales report should be recognised by Kozhikode of",
+              "options": [
+                "$35,000",
+                "$80,000",
+                "$22,000",
+                "$0 until remittance arrives"
+              ]
+            }
+          ]
+        },
+        "answer": {
+          "values": [
+            "Kozhikode Spices Limited",
+            "$35,000"
+          ]
+        },
+        "explanation": "Under a consignment arrangement control does not pass until sale to the end customer. Unsold consigned goods remain Kozhikode's inventory; the $35,000 sold in March is Kozhikode revenue (with related cost $22,000)."
+      },
+      {
+        "seq": 4,
+        "type": "multi",
+        "marks": 16,
+        "prompt": "Which of the following support recognising revenue on bill-and-hold Order BH-17 at 31 March? <b>Select all that apply.</b>",
+        "hint": null,
+        "payload": {
+          "selectCount": "all that apply",
+          "options": [
+            "The reason for the hold is substantive and requested by the customer.",
+            "The goods are separately identified as the customer's and ready for transfer.",
+            "Kozhikode retains the ability to redirect the goods to another customer if demand picks up.",
+            "The customer has accepted the billing and the related risks.",
+            "An invoice was issued before the reporting date."
+          ]
+        },
+        "answer": {
+          "values": [
+            0,
+            1,
+            3
+          ]
+        },
+        "explanation": "IFRS 15 bill-and-hold criteria require a substantive customer-requested reason, separate identification, readiness for transfer, and that the entity cannot use the goods or redirect them. Issuing an invoice alone is not sufficient; redirectability would defeat the criteria."
+      },
+      {
+        "seq": 5,
+        "type": "dnd",
+        "marks": 16,
+        "prompt": "For each shipment, decide whether revenue is recognised in the year ended 31 March.",
+        "hint": null,
+        "payload": {
+          "items": [
+            {
+              "id": "a",
+              "text": "Shipment S-904 (FOB shipping point, loaded 31 March)"
+            },
+            {
+              "id": "b",
+              "text": "Shipment S-911 (FOB destination, still in warehouse 31 March)"
+            },
+            {
+              "id": "c",
+              "text": "Consignment sales to end customers reported for March"
+            },
+            {
+              "id": "d",
+              "text": "Unsold consignment goods still at the distributor"
+            }
+          ],
+          "zones": {
+            "yes": "Recognise revenue in year ended 31 March",
+            "no": "Do not recognise revenue yet"
+          }
+        },
+        "answer": {
+          "placement": {
+            "a": "yes",
+            "b": "no",
+            "c": "yes",
+            "d": "no"
+          }
+        },
+        "explanation": "FOB shipping point transfers control on loading — S-904 is March revenue. FOB destination waits for delivery — S-911 is April. Consignment revenue follows end-customer sales; unsold consignment is not revenue."
+      },
+      {
+        "seq": 6,
+        "type": "num",
+        "marks": 14,
+        "prompt": "Calculate <b>total revenue</b> that should be recognised from Exhibit 2 items in the year ended 31 March (BH-17, S-904, S-911, consignment).",
+        "hint": "Whole dollars. Apply the cut-off and bill-and-hold conclusions from prior tasks.",
+        "payload": {},
+        "answer": {
+          "value": 225000
+        },
+        "explanation": "BH-17 $150,000 (criteria met) + S-904 $40,000 + consignment $35,000 = $225,000. S-911 $26,000 is excluded (FOB destination, not delivered)."
+      },
+      {
+        "seq": 7,
+        "type": "mcq",
+        "marks": 14,
+        "prompt": "If management refused the NRV write-down on line 1 only, by how much would pre-tax income for the year be overstated?",
+        "hint": null,
+        "payload": {
+          "options": [
+            "$25,000",
+            "$30,000",
+            "$5,000",
+            "$120,000"
+          ]
+        },
+        "answer": {
+          "value": "A"
+        },
+        "explanation": "Omitting the $25,000 cardamom write-down overstates inventory and pre-tax income by $25,000. The $5,000 raw-pepper write-down is a separate line."
+      }
+    ]
+  }
+]

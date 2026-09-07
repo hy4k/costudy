@@ -1,1 +1,1 @@
-@/workspace/costudy-mock-engine/supabase_seed_cbq.sql
+SEE_FILE_/workspace/agent-tools/FINAL_mcp_args.json

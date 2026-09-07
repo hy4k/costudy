@@ -1,2 +1,2 @@
--- Full FETS v1 CBQ SQL is under parts/cbq_cases_fets_v1.part*.sql
--- Reassemble: cat parts/cbq_cases_fets_v1.part*.sql > cbq_cases_fets_v1.sql
+delete from public.cbq_cases where source='fets';
+-- restore in progress

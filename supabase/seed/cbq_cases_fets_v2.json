@@ -1,0 +1,2 @@
+-- Full CBQ v2 JSON is under parts/cbq_cases_fets_v2.part*.json
+-- Reassemble: jq -s 'add' parts/cbq_cases_fets_v2.part*.json > cbq_cases_fets_v2.json

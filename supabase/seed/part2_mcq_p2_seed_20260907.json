@@ -1,0 +1,2 @@
+-- Full Part2 MCQ JSON is under parts/part2_mcq_p2_seed_20260907.part*.json
+-- Reassemble: jq -s 'add' parts/part2_mcq_p2_seed_20260907.part*.json > part2_mcq_p2_seed_20260907.json

@@ -1,0 +1,211 @@
+[
+  {
+    "part": "Part 1",
+    "section": "Cost Management",
+    "title": "Kollam Cashew Processors — FIFO process costing",
+    "narrative": "Kollam Cashew Processors runs a single roasting department that converts shelled cashews into packaged kernels. The department uses a <b>FIFO</b> process-costing system. Materials are added at the start of the process; conversion costs are incurred evenly.\n\nProduction and cost data for May are set out in Exhibits 1 and 2. There is no spoilage. The Cost Accountant has asked you to compute equivalent units, cost per equivalent unit, and the cost of production report figures the Board pack requires.",
+    "exhibits": [
+      {
+        "label": "Exhibit 1 — Physical flow (units)",
+        "caption": "Roasting department, May",
+        "columns": [
+          "Description",
+          "Units"
+        ],
+        "rows": [
+          [
+            "Opening WIP (100% materials, 40% conversion)",
+            "5,000"
+          ],
+          [
+            "Started during May",
+            "25,000"
+          ],
+          [
+            "Completed and transferred out",
+            "22,000"
+          ],
+          [
+            "Ending WIP (100% materials, 25% conversion)",
+            "8,000"
+          ]
+        ]
+      },
+      {
+        "label": "Exhibit 2 — Costs",
+        "caption": "Roasting department, May",
+        "columns": [
+          "Cost element",
+          "Opening WIP",
+          "Added in May"
+        ],
+        "rows": [
+          [
+            "Materials",
+            "$40,000",
+            "$200,000"
+          ],
+          [
+            "Conversion",
+            "$16,000",
+            "$154,000"
+          ],
+          [
+            "Total",
+            "$56,000",
+            "$354,000"
+          ]
+        ]
+      }
+    ],
+    "difficulty": "Hard",
+    "source": "fets_v2",
+    "verified": true,
+    "tasks": [
+      {
+        "seq": 1,
+        "type": "num",
+        "marks": 12,
+        "prompt": "Under FIFO, calculate <b>equivalent units for materials</b> for May.",
+        "hint": "Whole units. Materials are added at the start of the process.",
+        "payload": {},
+        "answer": {
+          "value": 25000
+        },
+        "explanation": "Opening WIP already 100% complete for materials, so 0 EU to finish it. Started and completed = 22,000 - 5,000 = 17,000. Ending WIP = 8,000 x 100% = 8,000. EU materials = 0 + 17,000 + 8,000 = 25,000."
+      },
+      {
+        "seq": 2,
+        "type": "num",
+        "marks": 12,
+        "prompt": "Under FIFO, calculate <b>equivalent units for conversion</b> for May.",
+        "hint": "Whole units.",
+        "payload": {},
+        "answer": {
+          "value": 22000
+        },
+        "explanation": "To complete opening: 5,000 x (1 - 0.40) = 3,000. Started and completed = 17,000. Ending WIP = 8,000 x 25% = 2,000. EU conversion = 3,000 + 17,000 + 2,000 = 22,000."
+      },
+      {
+        "seq": 3,
+        "type": "list",
+        "marks": 16,
+        "prompt": "Complete the statement of cost per equivalent unit (FIFO).",
+        "hint": null,
+        "payload": {
+          "fields": [
+            {
+              "label": "Materials cost per equivalent unit is",
+              "options": [
+                "$8.00",
+                "$9.60",
+                "$7.00",
+                "$8.16"
+              ]
+            },
+            {
+              "label": "and conversion cost per equivalent unit is",
+              "options": [
+                "$7.00",
+                "$8.00",
+                "$7.72",
+                "$6.16"
+              ]
+            }
+          ]
+        },
+        "answer": {
+          "values": [
+            "$8.00",
+            "$7.00"
+          ]
+        },
+        "explanation": "Materials: $200,000 / 25,000 = $8.00. Conversion: $154,000 / 22,000 = $7.00. FIFO uses only costs added this period in the rate calculation."
+      },
+      {
+        "seq": 4,
+        "type": "num",
+        "marks": 16,
+        "prompt": "Calculate the <b>total cost of units completed and transferred out</b> in May under FIFO.",
+        "hint": "Whole dollars, no commas.",
+        "payload": {},
+        "answer": {
+          "value": 332000
+        },
+        "explanation": "Opening WIP costs $56,000 + conversion to finish opening 3,000 x $7 = $21,000 + started-and-completed 17,000 x ($8 + $7) = $255,000 = $332,000."
+      },
+      {
+        "seq": 5,
+        "type": "num",
+        "marks": 14,
+        "prompt": "Calculate the <b>cost of ending work in process</b> at 31 May.",
+        "hint": "Whole dollars, no commas.",
+        "payload": {},
+        "answer": {
+          "value": 78000
+        },
+        "explanation": "Materials 8,000 x $8 = $64,000 + conversion 2,000 x $7 = $14,000 = $78,000. Check: $56,000 + $354,000 = $410,000; $332,000 + $78,000 = $410,000."
+      },
+      {
+        "seq": 6,
+        "type": "dnd",
+        "marks": 16,
+        "prompt": "Classify each statement as true of <b>FIFO</b> process costing, <b>weighted-average</b> process costing, or <b>both</b>.",
+        "hint": null,
+        "payload": {
+          "items": [
+            {
+              "id": "a",
+              "text": "Separates work done in the prior period from work done this period"
+            },
+            {
+              "id": "b",
+              "text": "Blends opening WIP costs into the current-period unit cost"
+            },
+            {
+              "id": "c",
+              "text": "Requires a physical-flow reconciliation of units"
+            },
+            {
+              "id": "d",
+              "text": "Computes equivalent units only for work performed this period"
+            }
+          ],
+          "zones": {
+            "fifo": "FIFO only",
+            "wa": "Weighted-average only",
+            "both": "Both methods"
+          }
+        },
+        "answer": {
+          "placement": {
+            "a": "fifo",
+            "b": "wa",
+            "c": "both",
+            "d": "fifo"
+          }
+        },
+        "explanation": "FIFO isolates prior-period work and costs; weighted average merges opening costs into the unit rate. Both methods begin with a physical-flow (units) reconciliation."
+      },
+      {
+        "seq": 7,
+        "type": "mcq",
+        "marks": 14,
+        "prompt": "If the department had instead used weighted-average costing, which figure would change?",
+        "hint": null,
+        "payload": {
+          "options": [
+            "Equivalent units for materials and conversion, and therefore cost per EU and the cost assignment",
+            "Physical units completed and transferred out",
+            "Total costs to account for ($410,000)",
+            "The fact that materials are added at the start of the process"
+          ]
+        },
+        "answer": {
+          "value": "A"
+        },
+        "explanation": "Weighted average redefines EU (opening + started work counted together) and folds opening costs into the rate, changing cost per EU and the assignment. Physical completions and total costs to account for are method-independent; material timing is a process fact."
+      }
+    ]
+  }
+]

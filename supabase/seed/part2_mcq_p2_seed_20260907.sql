@@ -1,0 +1,2 @@
+-- Full Part2 MCQ SQL is under parts/part2_mcq_p2_seed_20260907.part*.sql
+-- Reassemble: cat parts/part2_mcq_p2_seed_20260907.part*.sql > part2_mcq_p2_seed_20260907.sql

@@ -1,0 +1,287 @@
+[
+  {
+    "part": "Part 2",
+    "section": "Section A",
+    "topic": "Ratio analysis",
+    "difficulty": "easy",
+    "question_text": "A company has current assets of $450,000, inventory of $120,000, and current liabilities of $180,000. What is the quick (acid-test) ratio?",
+    "options": {
+      "A": "1.83.",
+      "B": "2.50.",
+      "C": "1.67.",
+      "D": "3.75."
+    },
+    "correct_answer": "A",
+    "explanation": "Quick ratio = (Current assets − Inventory) ÷ Current liabilities = ($450,000 − $120,000) ÷ $180,000 = 1.83. Inventory is excluded because it is less liquid than cash and receivables."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section A",
+    "topic": "Ratio analysis",
+    "difficulty": "medium",
+    "question_text": "Net credit sales are $2,400,000 and average accounts receivable are $300,000. Assuming a 360-day year, what is the average collection period?",
+    "options": {
+      "A": "45 days.",
+      "B": "36 days.",
+      "C": "60 days.",
+      "D": "72 days."
+    },
+    "correct_answer": "A",
+    "explanation": "Receivables turnover = $2,400,000 ÷ $300,000 = 8 times. Average collection period = 360 ÷ 8 = 45 days."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section A",
+    "topic": "Ratio analysis",
+    "difficulty": "medium",
+    "question_text": "A firm reports net income of $180,000, preferred dividends of $30,000, and average common equity of $750,000. What is return on common equity?",
+    "options": {
+      "A": "20.0%.",
+      "B": "24.0%.",
+      "C": "16.0%.",
+      "D": "18.0%."
+    },
+    "correct_answer": "A",
+    "explanation": "Return on common equity = (Net income − Preferred dividends) ÷ Average common equity = ($180,000 − $30,000) ÷ $750,000 = 20%."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section A",
+    "topic": "Common-size analysis",
+    "difficulty": "easy",
+    "question_text": "In a common-size income statement, each line item is typically expressed as a percentage of which amount?",
+    "options": {
+      "A": "Net sales revenue.",
+      "B": "Total assets.",
+      "C": "Net income.",
+      "D": "Operating income."
+    },
+    "correct_answer": "A",
+    "explanation": "Common-size income statements scale every item to net sales (or total revenue), enabling cross-firm and trend comparison of cost structure and margins."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section A",
+    "topic": "Horizontal analysis",
+    "difficulty": "easy",
+    "question_text": "Horizontal (trend) analysis of financial statements primarily focuses on which type of comparison?",
+    "options": {
+      "A": "Changes in account balances over successive periods.",
+      "B": "Each account as a percent of a base total in one period.",
+      "C": "Industry averages for the current year only.",
+      "D": "Market values versus book values of assets."
+    },
+    "correct_answer": "A",
+    "explanation": "Horizontal analysis compares dollar and percentage changes in the same accounts across multiple periods to identify trends and growth patterns."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section A",
+    "topic": "Profitability ratios",
+    "difficulty": "medium",
+    "question_text": "Sales are $5,000,000, cost of goods sold is $3,000,000, and operating expenses are $1,200,000. What is the operating profit margin?",
+    "options": {
+      "A": "16%.",
+      "B": "40%.",
+      "C": "24%.",
+      "D": "60%."
+    },
+    "correct_answer": "A",
+    "explanation": "Operating income = $5,000,000 − $3,000,000 − $1,200,000 = $800,000. Operating profit margin = $800,000 ÷ $5,000,000 = 16%."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section A",
+    "topic": "Leverage ratios",
+    "difficulty": "medium",
+    "question_text": "Total assets are $2,000,000 and total equity is $800,000. What is the debt-to-equity ratio?",
+    "options": {
+      "A": "1.50.",
+      "B": "0.40.",
+      "C": "2.50.",
+      "D": "0.60."
+    },
+    "correct_answer": "A",
+    "explanation": "Total liabilities = $2,000,000 − $800,000 = $1,200,000. Debt-to-equity = $1,200,000 ÷ $800,000 = 1.50."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section A",
+    "topic": "Asset turnover",
+    "difficulty": "easy",
+    "question_text": "Net sales are $1,800,000 and average total assets are $900,000. What is the total asset turnover?",
+    "options": {
+      "A": "2.0 times.",
+      "B": "0.5 times.",
+      "C": "1.5 times.",
+      "D": "3.0 times."
+    },
+    "correct_answer": "A",
+    "explanation": "Total asset turnover = Net sales ÷ Average total assets = $1,800,000 ÷ $900,000 = 2.0 times, measuring how efficiently assets generate sales."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section A",
+    "topic": "Dupont analysis",
+    "difficulty": "hard",
+    "question_text": "A firm has a profit margin of 8%, asset turnover of 1.25, and an equity multiplier of 1.6. What is return on equity under the DuPont framework?",
+    "options": {
+      "A": "16.0%.",
+      "B": "10.0%.",
+      "C": "12.8%.",
+      "D": "20.0%."
+    },
+    "correct_answer": "A",
+    "explanation": "DuPont ROE = Profit margin × Asset turnover × Equity multiplier = 0.08 × 1.25 × 1.6 = 0.16, or 16%."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section A",
+    "topic": "Cash flow analysis",
+    "difficulty": "medium",
+    "question_text": "Which of the following items is classified as a cash outflow from investing activities under U.S. GAAP?",
+    "options": {
+      "A": "Purchase of machinery for cash.",
+      "B": "Payment of cash dividends to shareholders.",
+      "C": "Issuance of long-term bonds.",
+      "D": "Collection of accounts receivable from customers."
+    },
+    "correct_answer": "A",
+    "explanation": "Cash purchases of property, plant, and equipment are investing outflows. Dividends and bond issuance are financing; collecting receivables is operating."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section A",
+    "topic": "Earnings quality",
+    "difficulty": "medium",
+    "question_text": "Which practice most clearly reduces the quality of reported earnings?",
+    "options": {
+      "A": "Recognizing revenue before goods are shipped and accepted.",
+      "B": "Accelerating depreciation for tax reporting only.",
+      "C": "Disclosing a change in accounting estimate in the notes.",
+      "D": "Classifying cash paid for interest as an operating outflow."
+    },
+    "correct_answer": "A",
+    "explanation": "Premature revenue recognition inflates current earnings without corresponding cash or completed earnings process, impairing earnings quality and sustainability."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section A",
+    "topic": "Inventory analysis",
+    "difficulty": "medium",
+    "question_text": "Cost of goods sold is $720,000 and average inventory is $120,000. What is inventory turnover and days inventory outstanding (360-day year)?",
+    "options": {
+      "A": "6 times; 60 days.",
+      "B": "6 times; 45 days.",
+      "C": "5 times; 72 days.",
+      "D": "8 times; 45 days."
+    },
+    "correct_answer": "A",
+    "explanation": "Inventory turnover = $720,000 ÷ $120,000 = 6. Days inventory outstanding = 360 ÷ 6 = 60 days."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section A",
+    "topic": "Interest coverage",
+    "difficulty": "easy",
+    "question_text": "EBIT is $480,000 and interest expense is $80,000. What is the times-interest-earned ratio?",
+    "options": {
+      "A": "6.0 times.",
+      "B": "5.0 times.",
+      "C": "4.0 times.",
+      "D": "8.0 times."
+    },
+    "correct_answer": "A",
+    "explanation": "Times interest earned = EBIT ÷ Interest expense = $480,000 ÷ $80,000 = 6.0, indicating ability to cover interest from operating earnings."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section A",
+    "topic": "Book vs market",
+    "difficulty": "medium",
+    "question_text": "A company has 200,000 shares outstanding, book value of equity of $4,000,000, and a market price of $28 per share. What is the market-to-book ratio?",
+    "options": {
+      "A": "1.40.",
+      "B": "2.00.",
+      "C": "0.70.",
+      "D": "1.25."
+    },
+    "correct_answer": "A",
+    "explanation": "Book value per share = $4,000,000 ÷ 200,000 = $20. Market-to-book = $28 ÷ $20 = 1.40."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section A",
+    "topic": "Working capital",
+    "difficulty": "easy",
+    "question_text": "Current assets are $650,000 and current liabilities are $410,000. What is net working capital?",
+    "options": {
+      "A": "$240,000.",
+      "B": "$650,000.",
+      "C": "$410,000.",
+      "D": "$1,060,000."
+    },
+    "correct_answer": "A",
+    "explanation": "Net working capital = Current assets − Current liabilities = $650,000 − $410,000 = $240,000."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section A",
+    "topic": "EPS",
+    "difficulty": "hard",
+    "question_text": "Net income is $450,000 with no preferred stock. Weighted-average common shares are 100,000. Dilutive options cover 10,000 shares at a $20 exercise price; average market price is $25. Using the treasury stock method, diluted EPS is closest to which amount?",
+    "options": {
+      "A": "$4.41.",
+      "B": "$4.50.",
+      "C": "$4.09.",
+      "D": "$3.75."
+    },
+    "correct_answer": "A",
+    "explanation": "Proceeds = $200,000; shares bought back = 8,000; incremental shares = 2,000; diluted shares = 102,000; diluted EPS = $450,000 ÷ 102,000 ≈ $4.41."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section A",
+    "topic": "Liquidity ratios",
+    "difficulty": "medium",
+    "question_text": "Compared with the current ratio, the quick ratio always excludes which current asset category?",
+    "options": {
+      "A": "Inventories and typically prepaid expenses.",
+      "B": "Cash and cash equivalents only.",
+      "C": "Accounts receivable from customers.",
+      "D": "Marketable securities held for trading."
+    },
+    "correct_answer": "A",
+    "explanation": "The quick ratio removes inventory and usually prepaid expenses from current assets because they convert to cash less quickly than receivables and marketable securities."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section A",
+    "topic": "Profitability ratios",
+    "difficulty": "hard",
+    "question_text": "A firm earns $120,000 after tax. Interest expense was $40,000 and the tax rate is 25%. Average total assets are $1,500,000. What is return on assets using NOPAT in the numerator?",
+    "options": {
+      "A": "10.0%.",
+      "B": "8.0%.",
+      "C": "12.0%.",
+      "D": "6.0%."
+    },
+    "correct_answer": "A",
+    "explanation": "EBT = $120,000 ÷ 0.75 = $160,000; EBIT = $160,000 + $40,000 = $200,000; NOPAT = $200,000 × 0.75 = $150,000. ROA = $150,000 ÷ $1,500,000 = 10%."
+  },
+  {
+    "part": "Part 2",
+    "section": "Section A",
+    "topic": "Cash conversion cycle",
+    "difficulty": "hard",
+    "question_text": "Days inventory outstanding is 55, days sales outstanding is 40, and days payable outstanding is 30. What is the cash conversion cycle?",
+    "options": {
+      "A": "65 days.",
+      "B": "125 days.",
+      "C": "85 days.",
+      "D": "35 days."
+    },
+    "correct_answer": "A",
+    "explanation": "Cash conversion cycle = DIO + DSO − DPO = 55 + 40 − 30 = 65 days, measuring the net time cash is tied up in operations."
+  }
+]

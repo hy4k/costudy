@@ -158,7 +158,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSwitch, onBack }) => {
                                                                                     className={`w-full py-6 text-white rounded-[2rem] text-sm font-black uppercase tracking-[0.3em] shadow-2xl hover:-translate-y-1 transition-all active:scale-95 flex items-center justify-center gap-4 mt-8 ${loginType === 'TEACHER' ? 'bg-emerald-600 shadow-emerald-500/20 hover:shadow-emerald-500/40' : 'bg-brand shadow-brand/20 hover:shadow-brand/40'}`}
                                                                                   >
                                                                     {isLoading ? (
-                                                                                                        <span><Icons.CloudSync className="w-5 h-5 animate-spin" /> {view === 'LOGIN' ? 'Verifying Profile...' : 'Dispatching...'}</>
+                                                                                                        <span><Icons.CloudSync className="w-5 h-5 animate-spin" /> {view === 'LOGIN' ? 'Verifying Profile...' : 'Dispatching...'}</span>
                                                                                                       ) : (
                                                                                                         view === 'LOGIN' ? 'Authorize Entry' : 'Request Recovery Link'
                                                                                                       )}

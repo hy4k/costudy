@@ -203,38 +203,38 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
                                                     className={`w-full py-4 px-6 text-left text-sm font-black uppercase tracking-widest rounded-xl transition-all ${currentView === view ? 'bg-brand text-white shadow-lg' : 'text-slate-500 hover:bg-slate-100'}`}
                                                 >
                                     {label}
-                                  </button>button>
+                                  </button>
                               );
           }
           return (
                     <div className="container-button w-[100px] xl:w-[120px] shrink-0" onClick={() => setView(view)}>
-                              <div className="hover-area bt-1"></div>div>
-                              <div className="hover-area bt-2"></div>div>
-                              <div className="hover-area bt-3"></div>div>
-                              <div className="hover-area bt-4"></div>div>
-                              <div className="hover-area bt-5"></div>div>
-                              <div className="hover-area bt-6"></div>div>
+                              <div className="hover-area bt-1"></div>
+                              <div className="hover-area bt-2"></div>
+                              <div className="hover-area bt-3"></div>
+                              <div className="hover-area bt-4"></div>
+                              <div className="hover-area bt-5"></div>
+                              <div className="hover-area bt-6"></div>
                               <button className={`tilt-btn ${currentView === view ? 'active' : ''} whitespace-nowrap text-[9px] xl:text-[10px] px-1.5`}>
                                 {label}
-                              </button>button>
-                    </div>div>
+                              </button>
+                    </div>
                 );
     };
   
     const renderNavItems = (isMobile = false) => {
             if (userRole === UserRole.TEACHER) {
                         return (
-                                      <>
+                                      <React.Fragment>
                                                      <NavButton view={ViewState.FACULTY_ROOM} label="Faculty Room" isMobile={isMobile} />
                                                      <NavButton view={ViewState.DASHBOARD} label="Command Center" isMobile={isMobile} />
                                                      <NavButton view={ViewState.AI_DECK} label="Teaching Deck" isMobile={isMobile} />
                                                      <NavButton view={ViewState.MESSAGES} label="Doubt Desk" isMobile={isMobile} />
                                                      <NavButton view={ViewState.PROFILE} label="Faculty Profile" isMobile={isMobile} />
-                                      </>>
+                                      </React.Fragment>
                                     );
             }
             return (
-                      <>
+                      <React.Fragment>
                                 <NavButton view={ViewState.WALL} label="Social Wall" isMobile={isMobile} />
                                 <NavButton view={ViewState.AI_DECK} label="AI Deck" isMobile={isMobile} />
                                 <NavButton view={ViewState.MASTERY_PATH} label="CMA Path" isMobile={isMobile} />
@@ -243,7 +243,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
                                 <NavButton view={ViewState.TEACHERS} label="Mentors" isMobile={isMobile} />
                         {isLoggedIn && <NavButton view={ViewState.MESSAGES} label="Doubt Desk" isMobile={isMobile} />}
                                 <NavButton view={ViewState.PROFILE} label="My Study" isMobile={isMobile} />
-                      </>>
+                      </React.Fragment>
                     );
     };
   
@@ -259,22 +259,22 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
                                               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                                           >
                             {isMobileMenuOpen ? <Icons.Plus className="w-6 h-6 rotate-45" /> : <Icons.Grid className="w-6 h-6" />}
-                          </button>button>
+                          </button>
                                     )}
                         
                                     <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setView(isLoggedIn ? (userRole === UserRole.TEACHER ? ViewState.FACULTY_ROOM : ViewState.WALL) : ViewState.LANDING)}>
                                                     <div className="group-hover:rotate-12 transition-transform duration-500">
                                                                         <Icons.Logo className="w-8 h-8 sm:w-10 sm:h-10" />
-                                                    </div>div>
-                                                    <span className="text-xl sm:text-2xl font-black tracking-tighter text-slate-900 dark:text-slate-100 uppercase block">CoStudy</span>span>
-                                    </div>div>
-                        </div>div>
+                                                    </div>
+                                                    <span className="text-xl sm:text-2xl font-black tracking-tighter text-slate-900 dark:text-slate-100 uppercase block">CoStudy</span>
+                                    </div>
+                        </div>
                 
                   {/* Top Navigation Menu - only shown after login */}
                   {isLoggedIn && currentView !== ViewState.LANDING && (
                       <div className="hidden lg:flex flex-1 justify-center gap-2 px-4">
                         {renderNavItems()}
-                      </div>div>
+                      </div>
                         )}
                 
                         <div className="flex gap-3 items-center ml-auto">
@@ -292,9 +292,9 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
                                                             ) : (
                                                               <Icons.Moon className="w-5 h-5 text-slate-700" />
                                                             )}
-                                  </button>button>
+                                  </button>
                         
-                                  <div className="hidden lg:block h-8 w-px bg-slate-200 dark:bg-slate-800 mx-2"></div>div>
+                                  <div className="hidden lg:block h-8 w-px bg-slate-200 dark:bg-slate-800 mx-2"></div>
                           {isLoggedIn ? (
                         <div className="flex gap-4 items-center">
                           {/* NOTIFICATION BELL */}
@@ -305,25 +305,25 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
                                                                             >
                                                                              <Icons.Bell className="w-5 h-5" />
                                                           {unreadCount > 0 && (
-                                                                                                      <div className="absolute top-1.5 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white animate-pulse"></div>div>
+                                                                                                      <div className="absolute top-1.5 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white animate-pulse"></div>
                                                                              )}
-                                                        </button>button>
+                                                        </button>
                                       
                                         {/* NOTIFICATION DROPDOWN */}
                                         {showNotifications && (
                                                 <div className="absolute top-full right-0 mt-4 w-72 sm:w-96 bg-white rounded-[2rem] border border-slate-100 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.1)] overflow-hidden animate-in slide-in-from-top-4 z-20">
                                                                           <div className="p-6 border-b border-slate-50 bg-slate-50/50 flex justify-between items-center">
-                                                                                                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Notifications</h4>h4>
+                                                                                                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Notifications</h4>
                                                                             {unreadCount > 0 && (
-                                                                                    <button onClick={handleMarkAllRead} className="text-[9px] font-bold text-brand hover:underline">Mark all read</button>button>
+                                                                                    <button onClick={handleMarkAllRead} className="text-[9px] font-bold text-brand hover:underline">Mark all read</button>
                                                                                                         )}
-                                                                            </div>div>
+                                                                            </div>
                                                                           <div className="max-h-[300px] overflow-y-auto no-scrollbar">
                                                                             {notifications.length === 0 ? (
                                                                                     <div className="p-10 text-center opacity-40">
                                                                                                                           <Icons.Bell className="w-10 h-10 mx-auto mb-3 text-slate-300" />
-                                                                                                                          <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">All caught up</p>p>
-                                                                                      </div>div>
+                                                                                                                          <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">All caught up</p>
+                                                                                      </div>
                                                                                 ) : (
                                                                                     <div className="divide-y divide-slate-50">
                                                                                       {notifications.map(note => (
@@ -340,66 +340,66 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
                                                                                                                                                                                                                                 {note.type === 'MESSAGE' ? <Icons.MessageCircle className="w-4 h-4" /> : 
                                                                                                                                                                                                                                                                                      note.type === 'ALERT' ? <Icons.Bell className="w-4 h-4" /> :
                                                                                                                                                                                                                                                                                      <Icons.CloudSync className="w-4 h-4" />}
-                                                                                                                                                                                                                            </div>div>
+                                                                                                                                                                                                                            </div>
                                                                                                                                                                               <div className="flex-1 min-w-0">
                                                                                                                                                                                                                                 <p className={`text-xs font-medium leading-relaxed ${!note.is_read ? 'text-slate-900 font-bold' : 'text-slate-500'}`}>
                                                                                                                                                                                                                                                                                       {note.content}
-                                                                                                                                                                                                                                                                                  </p>p>
-                                                                                                                                                                                                                                <span className="text-[9px] font-bold text-slate-300 mt-1 block uppercase">{new Date(note.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>span>
-                                                                                                                                                                                                                            </div>div>
+                                                                                                                                                                                                                                                                                  </p>
+                                                                                                                                                                                                                                <span className="text-[9px] font-bold text-slate-300 mt-1 block uppercase">{new Date(note.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                                                                                                                                                                                                            </div>
                                                                                                                                   {!note.is_read && (
-                                                                                                                                                                                                                                <div className="w-2 h-2 bg-brand rounded-full mt-2"></div>div>
+                                                                                                                                                                                                                                <div className="w-2 h-2 bg-brand rounded-full mt-2"></div>
                                                                                                                                                                               )}
-                                                                                                                                  </div>div>
+                                                                                                                                  </div>
                                                                                                                             ))}
-                                                                                      </div>div>
+                                                                                      </div>
                                                                                                         )}
-                                                                            </div>div>
-                                                </div>div>
+                                                                            </div>
+                                                </div>
                                                         )}
-                                      </div>div>
+                                      </div>
                         
                                       <button onClick={() => setView(ViewState.PROFILE)} className="flex items-center gap-3 group">
                                                       <div className="text-right hidden sm:block">
-                                                                          <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{userRole === UserRole.TEACHER ? 'Specialist' : 'Scholar'}</div>div>
-                                                                          <div className="text-[11px] font-black text-slate-900 uppercase tracking-tighter">{userName || 'My Account'}</div>div>
-                                                      </div>div>
+                                                                          <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{userRole === UserRole.TEACHER ? 'Specialist' : 'Scholar'}</div>
+                                                                          <div className="text-[11px] font-black text-slate-900 uppercase tracking-tighter">{userName || 'My Account'}</div>
+                                                      </div>
                                                       <img 
                                                                           src={userAvatar || `https://i.pravatar.cc/100?u=${userName || 'me'}`} 
                                                         className="w-10 h-10 rounded-xl object-cover ring-2 ring-slate-100 group-hover:ring-brand transition-all" 
                                                         alt="Profile" 
                                                       />
-                                      </button>button>
-                        </div>div>
+                                      </button>
+                        </div>
                       ) : (
                         <button 
                                         onClick={onLoginClick}
                                         className="px-6 sm:px-8 py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-brand transition-all shadow-xl active:scale-95 whitespace-nowrap"
                                       >
                                       Log In
-                        </button>button>
+                        </button>
                                   )}
-                        </div>div>
-                </nav>nav>
+                        </div>
+                </nav>
           
             {/* Mobile Menu Overlay - only when logged in */}
             {isLoggedIn && currentView !== ViewState.LANDING && isMobileMenuOpen && (
                       <div className="fixed inset-0 top-20 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl lg:hidden animate-in slide-in-from-top-10 duration-300 flex flex-col p-6 overflow-y-auto">
                                     <div className="space-y-2">
                                       {renderNavItems(true)}
-                                    </div>div>
-                      </div>div>
+                                    </div>
+                      </div>
                 )}
           
                 <main className="flex-1 overflow-y-auto relative no-scrollbar">
                         <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
-                                  <div className="absolute top-1/4 -left-1/4 w-[60%] h-[60%] rounded-full bg-brand/5 blur-[140px]"></div>div>
-                                  <div className="absolute bottom-1/4 -right-1/4 w-[50%] h-[50%] rounded-full bg-blue-500/5 blur-[140px]"></div>div>
-                        </div>div>
+                                  <div className="absolute top-1/4 -left-1/4 w-[60%] h-[60%] rounded-full bg-brand/5 blur-[140px]"></div>
+                                  <div className="absolute bottom-1/4 -right-1/4 w-[50%] h-[50%] rounded-full bg-blue-500/5 blur-[140px]"></div>
+                        </div>
                         <div className="relative z-10 h-full">
                           {children}
-                        </div>div>
-                </main>main>
+                        </div>
+                </main>
           
             {/* LAUNCH MOMENTUM FOUNDER CIRCLE POPUP MODAL */}
                 <AnimatePresence>
@@ -408,7 +408,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
                                   <div 
                                                   className="fixed inset-0" 
                                     onClick={() => setModalOpen(false)}
-                                                ></div>div>
+                                                ></div>
                                   <div className="relative z-10 w-full max-w-5xl bg-slate-900 text-white border border-amber-500/30 rounded-[2.5rem] shadow-[0_25px_80px_rgba(0,0,0,0.8)] overflow-hidden my-auto max-h-[92vh] flex flex-col animate-in zoom-in-95 duration-200">
                                                 
                                     {/* Modal Top Header Bar */}
@@ -416,12 +416,12 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
                                                                 <div className="flex items-center gap-3">
                                                                                   <span className="p-2 bg-amber-400/10 text-amber-400 rounded-xl border border-amber-400/20">
                                                                                                       <Icons.Sparkles className="w-5 h-5" />
-                                                                                    </span>span>
+                                                                                    </span>
                                                                                   <div>
-                                                                                                      <div className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-400">Launch Momentum Program</div>div>
-                                                                                                      <h3 className="text-xs sm:text-sm font-black text-white uppercase tracking-tight">Founder Circle • Claim Founder Status</h3>h3>
-                                                                                    </div>div>
-                                                                </div>div>
+                                                                                                      <div className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-400">Launch Momentum Program</div>
+                                                                                                      <h3 className="text-xs sm:text-sm font-black text-white uppercase tracking-tight">Founder Circle • Claim Founder Status</h3>
+                                                                                    </div>
+                                                                </div>
                                                 
                                                                 <button 
                                                                                     onClick={() => setModalOpen(false)}
@@ -429,18 +429,18 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
                                                                                     title="Close Modal"
                                                                                   >
                                                                                   <Icons.Plus className="w-5 h-5 rotate-45" />
-                                                                </button>button>
-                                                </div>div>
+                                                                </button>
+                                                </div>
                                   
                                     {/* Modal Scrollable Body */}
                                                 <div className="flex-1 overflow-y-auto no-scrollbar">
                                                                 <LaunchMomentum userId={userId} userName={userName} userAvatar={userAvatar} />
-                                                </div>div>
-                                  </div>div>
-                      </div>div>
+                                                </div>
+                                  </div>
+                      </div>
                         )}
-                </AnimatePresence>AnimatePresence>
-          </div>div>
+                </AnimatePresence>
+          </div>
         );
 };
     </></></button>

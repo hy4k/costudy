@@ -106,7 +106,7 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack }) =>
                         
                           {/* Role Selection (Left) */}
                                   <div className="lg:col-span-5 p-16 pt-10">
-                                              <h2 id="signup-path-heading" className="text-4xl font-black text-white mb-4 uppercase tracking-tighter leading-none">Choose Your <span className="text-brand">Path</span></h2>h2>
+                                              <h2 id="signup-path-heading" className="text-4xl font-black text-white mb-4 uppercase tracking-tighter leading-none">Choose Your <span className="text-brand">Path</span></h2>
                                               <div className="space-y-6" role="group" aria-labelledby="signup-path-heading">
                                                              <button 
                                                                                type="button"
@@ -138,7 +138,7 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack }) =>
                         
                           {/* Details Form (Right) */}
                                   <div className="lg:col-span-7 p-16 pt-10 bg-white/5">
-                                              <h2 id="signup-form-heading" className="text-4xl font-black text-white mb-4 uppercase tracking-tighter leading-none">{role === 'TEACHER' ? 'Specialist' : 'Aspirant'} <span className="text-brand">Profile</span></h2>h2>
+                                              <h2 id="signup-form-heading" className="text-4xl font-black text-white mb-4 uppercase tracking-tighter leading-none">{role === 'TEACHER' ? 'Specialist' : 'Aspirant'} <span className="text-brand">Profile</span></h2>
                                               <form onSubmit={handleSubmit} className="space-y-6" aria-labelledby="signup-form-heading" aria-busy={isLoading}>
                                                 {error && (
                             <div role="alert" aria-live="assertive" aria-atomic="true" className="p-6 bg-brand/10 border border-brand/20 rounded-[2rem] text-brand text-[11px] font-black uppercase tracking-widest text-center animate-in slide-in-from-top-4">

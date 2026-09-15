@@ -93,16 +93,16 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack }) =>
                                                <div className="flex items-center gap-4">
                                                                <Icons.Logo className="w-12 h-12" />
                                                                <span className="text-2xl font-black tracking-tighter text-white uppercase">CoStudy</span>
-                                               </div>div>
+                                               </div>
                                                <div className="flex items-center gap-6">
                                                  {onBack && (
                                <button type="button" onClick={onBack} className="text-[10px] font-black text-slate-500 hover:text-white uppercase tracking-widest transition-all flex items-center gap-2">
                                                     <Icons.Plus className="rotate-45 w-4 h-4" /> Universe
-                               </button>button>
+                               </button>
                                                                )}
-                                                               <button type="button" onClick={onSwitch} className="text-[10px] font-black text-slate-500 hover:text-white uppercase tracking-widest transition-all">Already registered?</button>button>
-                                               </div>div>
-                                  </div>div>
+                                                               <button type="button" onClick={onSwitch} className="text-[10px] font-black text-slate-500 hover:text-white uppercase tracking-widest transition-all">Already registered?</button>
+                                               </div>
+                                  </div>
                         
                           {/* Role Selection (Left) */}
                                   <div className="lg:col-span-5 p-16 pt-10">
@@ -116,10 +116,10 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack }) =>
                                                                               >
                                                                                <div aria-hidden="true" className={`absolute top-0 right-0 p-8 transition-opacity duration-300 ${role === 'STUDENT' ? 'opacity-100' : 'opacity-0'}`}>
                                                                                                      <Icons.CheckBadge className="w-8 h-8 text-brand" />
-                                                                               </div>div>
+                                                                               </div>
                                                                                <span className={`block text-2xl font-black mb-2 uppercase tracking-tight transition-colors ${role === 'STUDENT' ? 'text-brand' : 'text-white'}`}>CMA Aspirant</span>
                                                                                <span className="block text-sm text-slate-500 font-medium italic">Master CMA US concepts with AI guidance and peer support.</span>
-                                                             </button>button>
+                                                             </button>
                                                              
                                                              <button 
                                                                                type="button"
@@ -129,12 +129,12 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack }) =>
                                                                               >
                                                                                <div aria-hidden="true" className={`absolute top-0 right-0 p-8 transition-opacity duration-300 ${role === 'TEACHER' ? 'opacity-100' : 'opacity-0'}`}>
                                                                                                      <Icons.CheckBadge className="w-8 h-8 text-brand" />
-                                                                               </div>div>
+                                                                               </div>
                                                                                <span className={`block text-2xl font-black mb-2 uppercase tracking-tight transition-colors ${role === 'TEACHER' ? 'text-brand' : 'text-white'}`}>CMA Specialist</span>
                                                                                <span className="block text-sm text-slate-500 font-medium italic">Mentor aspirants, broadcast insights, and monetize your expertise.</span>
-                                                             </button>button>
-                                              </div>div>
-                                  </div>div>
+                                                             </button>
+                                              </div>
+                                  </div>
                         
                           {/* Details Form (Right) */}
                                   <div className="lg:col-span-7 p-16 pt-10 bg-white/5">
@@ -143,15 +143,15 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack }) =>
                                                 {error && (
                             <div role="alert" aria-live="assertive" aria-atomic="true" className="p-6 bg-brand/10 border border-brand/20 rounded-[2rem] text-brand text-[11px] font-black uppercase tracking-widest text-center animate-in slide-in-from-top-4">
                               {error}
-                            </div>div>
+                            </div>
                                                             )}
                                                 {success && (
                             <div role="status" aria-live="polite" aria-atomic="true" className="p-6 bg-emerald-500/10 border border-emerald-500/20 rounded-[2rem] text-emerald-500 text-[11px] font-black uppercase tracking-widest text-center animate-in slide-in-from-top-4">
                               {success}
-                            </div>div>
+                            </div>
                                                             )}
                                                             <div>
-                                                                            <label htmlFor="signup-name" className="sr-only">Full name</label>label>
+                                                                            <label htmlFor="signup-name" className="sr-only">Full name</label>
                                                                             <input 
                                                                                                 id="signup-name"
                                                                                                 name="name"
@@ -163,9 +163,9 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack }) =>
                                                                                               onChange={(e) => setName(e.target.value)}
                                                                                               className="w-full bg-white/5 border-2 border-white/10 rounded-[1.5rem] px-8 py-5 text-white font-bold outline-none focus:border-brand/50 transition-all placeholder:text-slate-600 focus:ring-4 focus:ring-brand/5"
                                                                                             />
-                                                            </div>div>
+                                                            </div>
                                                             <div>
-                                                                            <label htmlFor="signup-email" className="sr-only">Email address</label>label>
+                                                                            <label htmlFor="signup-email" className="sr-only">Email address</label>
                                                                             <input 
                                                                                                 id="signup-email"
                                                                                                 name="email"
@@ -177,9 +177,9 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack }) =>
                                                                                               onChange={(e) => setEmail(e.target.value)}
                                                                                               className="w-full bg-white/5 border-2 border-white/10 rounded-[1.5rem] px-8 py-5 text-white font-bold outline-none focus:border-brand/50 transition-all placeholder:text-slate-600 focus:ring-4 focus:ring-brand/5"
                                                                                             />
-                                                            </div>div>
+                                                            </div>
                                                             <div>
-                                                                            <label htmlFor="signup-password" className="sr-only">Password</label>label>
+                                                                            <label htmlFor="signup-password" className="sr-only">Password</label>
                                                                             <input 
                                                                                                 id="signup-password"
                                                                                                 name="password"
@@ -191,7 +191,7 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack }) =>
                                                                                               onChange={(e) => setPassword(e.target.value)}
                                                                                               className="w-full bg-white/5 border-2 border-white/10 rounded-[1.5rem] px-8 py-5 text-white font-bold outline-none focus:border-brand/50 transition-all placeholder:text-slate-600 focus:ring-4 focus:ring-brand/5"
                                                                                             />
-                                                            </div>div>
+                                                            </div>
                                               
                                                 {/* Mentor Verification Code Input */}
                                                 {role === 'TEACHER' && (
@@ -199,8 +199,8 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack }) =>
                                                     <div className="relative">
                                                                             <div aria-hidden="true" className="absolute top-1/2 -translate-y-1/2 left-6 text-brand">
                                                                                                         <Icons.CheckBadge className="w-5 h-5" />
-                                                                              </div>div>
-                                                                            <label htmlFor="signup-access-code" className="sr-only">Specialist access code</label>label>
+                                                                              </div>
+                                                                            <label htmlFor="signup-access-code" className="sr-only">Specialist access code</label>
                                                                             <input 
                                                                                                           id="signup-access-code"
                                                                                                           name="accessCode"
@@ -213,9 +213,9 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack }) =>
                                                                                                           onChange={(e) => setAccessCode(e.target.value)}
                                                                                                           className="w-full bg-brand/5 border-2 border-brand/20 rounded-[1.5rem] px-8 py-5 pl-16 text-white font-bold outline-none focus:border-brand/50 transition-all placeholder:text-brand/40 focus:ring-4 focus:ring-brand/5"
                                                                                                       />
-                                                    </div>div>
-                                                    <p id="signup-access-code-help" className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-2 ml-4">* Verification Required for Faculty Access (Try 'CMA2025')</p>p>
-                              </div>div>
+                                                    </div>
+                                                    <p id="signup-access-code-help" className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-2 ml-4">* Verification Required for Faculty Access (Try 'CMA2025')</p>
+                              </div>
                                                             )}
                                               
                                                             <button 
@@ -228,12 +228,12 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack }) =>
                                                                                               ) : (
                                                                                                 role === 'TEACHER' ? 'Confirm Specialist Access' : 'Confirm Candidate Profile'
                                                                                               )}
-                                                            </button>button>
-                                              </form>form>
-                                  </div>div>
-                        </div>div>
-                </div>div>
-          </div>div>
+                                                            </button>
+                                              </form>
+                                  </div>
+                        </div>
+                </div>
+          </div>
         );
 };
 </></div>

@@ -41,7 +41,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSwitch, onBack }) => {
 
       return (
               <div className="min-h-screen w-full bg-slate-950 flex items-center justify-center p-6 relative overflow-hidden font-sans">
-                    <div className="absolute top-0 right-0 w-[1000px] h-[1000px] bg-brand/10 blur-[180px] -mr-40 -mt-40 rounded-full animate-pulse"></div>div>
+                    <div className="absolute top-0 right-0 w-[1000px] h-[1000px] bg-brand/10 blur-[180px] -mr-40 -mt-40 rounded-full animate-pulse"></div>
                     
                     <div className="relative z-10 w-full max-w-[1100px] grid grid-cols-1 lg:grid-cols-2 bg-white/[0.03] backdrop-blur-3xl rounded-[4.5rem] border border-white/10 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] overflow-hidden">
                         {/* Brand Side */}
@@ -49,23 +49,23 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSwitch, onBack }) => {
                                       <div className="flex items-center justify-between mb-16 animate-in slide-in-from-left duration-700">
                                                    <div className="flex items-center gap-4">
                                                                    <Icons.Logo className="w-16 h-16" />
-                                                                   <span className="text-4xl font-black tracking-tighter text-white uppercase">CoStudy</span>span>
-                                                   </div>div>
+                                                                   <span className="text-4xl font-black tracking-tighter text-white uppercase">CoStudy</span>
+                                                   </div>
                                           {onBack && (
                                  <button type="button" onClick={onBack} className="lg:hidden text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                                   <Icons.Plus className="rotate-45 w-4 h-4" /> Universe
-                                 </button>button>
+                                 </button>
                                                    )}
-                                      </div>div>
+                                      </div>
                                       <h1 className="text-7xl font-black text-white leading-[0.85] tracking-tighter uppercase mb-8 scale-y-110">
-                                                  The <span className={`${loginType === 'TEACHER' ? 'text-emerald-500' : 'text-brand'}`}>CMA US</span>span> Study Universe
-                                      </h1>h1>
+                                                  The <span className={`${loginType === 'TEACHER' ? 'text-emerald-500' : 'text-brand'}`}>CMA US</span> Study Universe
+                                      </h1>
                                       <p className="text-xl text-slate-400 font-medium leading-relaxed max-w-md italic opacity-80">
                                           {loginType === 'TEACHER' 
                                                               ? "\"Lead the next generation of finance professionals. Your expertise, their mastery.\"" 
                                                               : "\"Beyond a platform. Your strategy for CMA US mastery. Connect, collaborate, and dominate the exam.\""}
-                                      </p>p>
-                            </div>div>
+                                      </p>
+                            </div>
                     
                         {/* Form Side */}
                             <div className="p-16 flex flex-col justify-center bg-white/5 relative">
@@ -79,7 +79,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSwitch, onBack }) => {
                                                                                       className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${loginType === 'STUDENT' ? 'bg-white text-slate-900 shadow-lg' : 'text-slate-500 hover:text-white'}`}
                                                                                     >
                                                                                   Aspirant
-                                                                 </button>button>
+                                                                 </button>
                                                                  <button 
                                                                                       type="button"
                                                                                       onClick={() => setLoginType('TEACHER')}
@@ -87,30 +87,30 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSwitch, onBack }) => {
                                                                                       className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${loginType === 'TEACHER' ? 'bg-emerald-500 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
                                                                                     >
                                                                                   Mentor
-                                                                 </button>button>
-                                                  </div>div>
+                                                                 </button>
+                                                  </div>
                                       
                                                   <h2 id="login-form-heading" className="text-3xl font-black text-white mb-2 uppercase tracking-tight">
                                                       {view === 'LOGIN' ? (loginType === 'TEACHER' ? 'Faculty Access' : 'Candidate Portal') : 'Recovery Center'}
-                                                  </h2>h2>
+                                                  </h2>
                                                   <p id="login-form-description" className="text-slate-500 font-bold mb-12 uppercase text-[10px] tracking-[0.4em]">
                                                       {view === 'LOGIN' ? (loginType === 'TEACHER' ? 'Secure Specialist Login' : 'Authenticate Your Journey') : 'Reset Your Neural Key'}
-                                                  </p>p>
+                                                  </p>
                                       
                                                   <form onSubmit={handleSubmit} className="space-y-6" aria-labelledby="login-form-heading" aria-describedby="login-form-description" aria-busy={isLoading}>
                                                       {error && (
                                   <div role="alert" aria-live="assertive" aria-atomic="true" className="p-4 bg-brand/10 border border-brand/20 rounded-2xl text-brand text-[10px] font-black uppercase tracking-widest text-center animate-in slide-in-from-top-4">
                                       {error}
-                                  </div>div>
+                                  </div>
                                                                 )}
                                                       {success && (
                                   <div role="status" aria-live="polite" aria-atomic="true" className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-500 text-[10px] font-black uppercase tracking-widest text-center animate-in slide-in-from-top-4">
                                       {success}
-                                  </div>div>
+                                  </div>
                                                                 )}
                                                                 
                                                                 <div className="group relative">
-                                                                                <label htmlFor="login-email" className="sr-only">Email address</label>label>
+                                                                                <label htmlFor="login-email" className="sr-only">Email address</label>
                                                                                 <input 
                                                                                                       id="login-email"
                                                                                                       name="email"
@@ -122,12 +122,12 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSwitch, onBack }) => {
                                                                                                       onChange={(e) => setEmail(e.target.value)}
                                                                                                       className={`w-full bg-white/5 border-2 border-white/10 rounded-[1.5rem] px-8 py-5 text-white font-bold outline-none transition-all placeholder:text-slate-600 focus:ring-8 ${loginType === 'TEACHER' ? 'focus:border-emerald-500/50 focus:ring-emerald-500/5' : 'focus:border-brand/50 focus:ring-brand/5'}`}
                                                                                                     />
-                                                                </div>div>
+                                                                </div>
                                                   
                                                       {view === 'LOGIN' && (
                                   <div className="space-y-4">
                                                     <div className="group relative">
-                                                                        <label htmlFor="login-password" className="sr-only">Password</label>label>
+                                                                        <label htmlFor="login-password" className="sr-only">Password</label>
                                                                         <input 
                                                                                                   id="login-password"
                                                                                                   name="password"
@@ -139,7 +139,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSwitch, onBack }) => {
                                                                                                   onChange={(e) => setPassword(e.target.value)}
                                                                                                   className={`w-full bg-white/5 border-2 border-white/10 rounded-[1.5rem] px-8 py-5 text-white font-bold outline-none transition-all placeholder:text-slate-600 focus:ring-8 ${loginType === 'TEACHER' ? 'focus:border-emerald-500/50 focus:ring-emerald-500/5' : 'focus:border-brand/50 focus:ring-brand/5'}`}
                                                                                                 />
-                                                    </div>div>
+                                                    </div>
                                                     <div className="flex justify-end">
                                                                         <button 
                                                                                                   type="button"
@@ -147,9 +147,9 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSwitch, onBack }) => {
                                                                                                   className="text-[10px] font-black text-slate-500 hover:text-white uppercase tracking-widest transition-colors"
                                                                                                 >
                                                                                               Forgot Access Key?
-                                                                        </button>button>
-                                                    </div>div>
-                                  </div>div>
+                                                                        </button>
+                                                    </div>
+                                  </div>
                                                                 )}
                                                   
                                                                 <button 
@@ -162,7 +162,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSwitch, onBack }) => {
                                                                                                       ) : (
                                                                                                         view === 'LOGIN' ? 'Authorize Entry' : 'Request Recovery Link'
                                                                                                       )}
-                                                                </button>button>
+                                                                </button>
                                                   
                                                       {view === 'FORGOT' && (
                                   <button 
@@ -171,9 +171,9 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSwitch, onBack }) => {
                                                         className="w-full text-[10px] font-black text-slate-500 hover:text-white uppercase tracking-widest transition-colors"
                                                       >
                                                     Return to Portal
-                                  </button>button>
+                                  </button>
                                                                 )}
-                                                  </form>form>
+                                                  </form>
                                       
                                                   <div className="mt-12 pt-12 border-t border-white/5 text-center">
                                                                  <button 
@@ -182,12 +182,12 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSwitch, onBack }) => {
                                                                                      className="px-10 py-4 bg-white text-slate-900 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-brand hover:text-white transition-all shadow-xl"
                                                                                     >
                                                                                   Register New Profile
-                                                                 </button>button>
-                                                  </div>div>
-                                      </div>div>
-                            </div>div>
-                    </div>div>
-              </div>div>
+                                                                 </button>
+                                                  </div>
+                                      </div>
+                            </div>
+                    </div>
+              </div>
             );
 };
-</></div>
+

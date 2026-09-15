@@ -92,7 +92,7 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack }) =>
                                   <div className="lg:col-span-12 p-12 lg:p-16 pb-0 flex justify-between items-center">
                                                <div className="flex items-center gap-4">
                                                                <Icons.Logo className="w-12 h-12" />
-                                                               <span className="text-2xl font-black tracking-tighter text-white uppercase">CoStudy</span>span>
+                                                               <span className="text-2xl font-black tracking-tighter text-white uppercase">CoStudy</span>
                                                </div>div>
                                                <div className="flex items-center gap-6">
                                                  {onBack && (
@@ -106,7 +106,7 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack }) =>
                         
                           {/* Role Selection (Left) */}
                                   <div className="lg:col-span-5 p-16 pt-10">
-                                              <h2 id="signup-path-heading" className="text-4xl font-black text-white mb-4 uppercase tracking-tighter leading-none">Choose Your <span className="text-brand">Path</span>span></h2>h2>
+                                              <h2 id="signup-path-heading" className="text-4xl font-black text-white mb-4 uppercase tracking-tighter leading-none">Choose Your <span className="text-brand">Path</span></h2>h2>
                                               <div className="space-y-6" role="group" aria-labelledby="signup-path-heading">
                                                              <button 
                                                                                type="button"
@@ -117,8 +117,8 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack }) =>
                                                                                <div aria-hidden="true" className={`absolute top-0 right-0 p-8 transition-opacity duration-300 ${role === 'STUDENT' ? 'opacity-100' : 'opacity-0'}`}>
                                                                                                      <Icons.CheckBadge className="w-8 h-8 text-brand" />
                                                                                </div>div>
-                                                                               <span className={`block text-2xl font-black mb-2 uppercase tracking-tight transition-colors ${role === 'STUDENT' ? 'text-brand' : 'text-white'}`}>CMA Aspirant</span>span>
-                                                                               <span className="block text-sm text-slate-500 font-medium italic">Master CMA US concepts with AI guidance and peer support.</span>span>
+                                                                               <span className={`block text-2xl font-black mb-2 uppercase tracking-tight transition-colors ${role === 'STUDENT' ? 'text-brand' : 'text-white'}`}>CMA Aspirant</span>
+                                                                               <span className="block text-sm text-slate-500 font-medium italic">Master CMA US concepts with AI guidance and peer support.</span>
                                                              </button>button>
                                                              
                                                              <button 
@@ -130,15 +130,15 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack }) =>
                                                                                <div aria-hidden="true" className={`absolute top-0 right-0 p-8 transition-opacity duration-300 ${role === 'TEACHER' ? 'opacity-100' : 'opacity-0'}`}>
                                                                                                      <Icons.CheckBadge className="w-8 h-8 text-brand" />
                                                                                </div>div>
-                                                                               <span className={`block text-2xl font-black mb-2 uppercase tracking-tight transition-colors ${role === 'TEACHER' ? 'text-brand' : 'text-white'}`}>CMA Specialist</span>span>
-                                                                               <span className="block text-sm text-slate-500 font-medium italic">Mentor aspirants, broadcast insights, and monetize your expertise.</span>span>
+                                                                               <span className={`block text-2xl font-black mb-2 uppercase tracking-tight transition-colors ${role === 'TEACHER' ? 'text-brand' : 'text-white'}`}>CMA Specialist</span>
+                                                                               <span className="block text-sm text-slate-500 font-medium italic">Mentor aspirants, broadcast insights, and monetize your expertise.</span>
                                                              </button>button>
                                               </div>div>
                                   </div>div>
                         
                           {/* Details Form (Right) */}
                                   <div className="lg:col-span-7 p-16 pt-10 bg-white/5">
-                                              <h2 id="signup-form-heading" className="text-4xl font-black text-white mb-4 uppercase tracking-tighter leading-none">{role === 'TEACHER' ? 'Specialist' : 'Aspirant'} <span className="text-brand">Profile</span>span></h2>h2>
+                                              <h2 id="signup-form-heading" className="text-4xl font-black text-white mb-4 uppercase tracking-tighter leading-none">{role === 'TEACHER' ? 'Specialist' : 'Aspirant'} <span className="text-brand">Profile</span></h2>h2>
                                               <form onSubmit={handleSubmit} className="space-y-6" aria-labelledby="signup-form-heading" aria-busy={isLoading}>
                                                 {error && (
                             <div role="alert" aria-live="assertive" aria-atomic="true" className="p-6 bg-brand/10 border border-brand/20 rounded-[2rem] text-brand text-[11px] font-black uppercase tracking-widest text-center animate-in slide-in-from-top-4">
@@ -224,7 +224,7 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack }) =>
                                                                               className="w-full py-6 bg-brand text-white rounded-[2rem] text-sm font-black uppercase tracking-[0.3em] shadow-2xl shadow-brand/20 hover:shadow-brand/40 transition-all flex items-center justify-center gap-4 hover:-translate-y-1 active:scale-95"
                                                                             >
                                                               {isLoading ? (
-                                                                                                <><Icons.CloudSync className="w-5 h-5 animate-spin" /> Seeding Identity...</>>
+                                                                                                <span><Icons.CloudSync className="w-5 h-5 animate-spin" /> Seeding Identity...</span>
                                                                                               ) : (
                                                                                                 role === 'TEACHER' ? 'Confirm Specialist Access' : 'Confirm Candidate Profile'
                                                                                               )}

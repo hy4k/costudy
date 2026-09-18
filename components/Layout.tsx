@@ -443,4 +443,3 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
           </div>
         );
 };
-    </></></button>

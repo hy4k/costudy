@@ -236,4 +236,3 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack }) =>
           </div>
         );
 };
-</></div>

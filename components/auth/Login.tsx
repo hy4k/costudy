@@ -52,7 +52,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSwitch, onBack }) => {
                 <span className="text-4xl font-black tracking-tighter text-white uppercase">CoStudy</span>
              </div>
              {onBack && (
-               <button onClick={onBack} className="lg:hidden text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+               <button type="button" onClick={onBack} className="lg:hidden text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                  <Icons.Plus className="rotate-45 w-4 h-4" /> Universe
                </button>
              )}
@@ -71,43 +71,51 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSwitch, onBack }) => {
         <div className="p-16 flex flex-col justify-center bg-white/5 relative">
           <div className="max-w-md mx-auto w-full">
             {/* Login Type Toggle */}
-            <div className="flex bg-white/5 rounded-2xl p-1 mb-8">
+            <div className="flex bg-white/5 rounded-2xl p-1 mb-8" role="group" aria-label="Login role">
                <button 
+                 type="button"
                  onClick={() => setLoginType('STUDENT')}
+                 aria-pressed={loginType === 'STUDENT'}
                  className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${loginType === 'STUDENT' ? 'bg-white text-slate-900 shadow-lg' : 'text-slate-500 hover:text-white'}`}
                >
                  Aspirant
                </button>
                <button 
+                 type="button"
                  onClick={() => setLoginType('TEACHER')}
+                 aria-pressed={loginType === 'TEACHER'}
                  className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${loginType === 'TEACHER' ? 'bg-emerald-500 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
                >
                  Mentor
                </button>
             </div>
 
-            <h2 className="text-3xl font-black text-white mb-2 uppercase tracking-tight">
+            <h2 id="login-form-heading" className="text-3xl font-black text-white mb-2 uppercase tracking-tight">
               {view === 'LOGIN' ? (loginType === 'TEACHER' ? 'Faculty Access' : 'Candidate Portal') : 'Recovery Center'}
             </h2>
-            <p className="text-slate-500 font-bold mb-12 uppercase text-[10px] tracking-[0.4em]">
+            <p id="login-form-description" className="text-slate-500 font-bold mb-12 uppercase text-[10px] tracking-[0.4em]">
               {view === 'LOGIN' ? (loginType === 'TEACHER' ? 'Secure Specialist Login' : 'Authenticate Your Journey') : 'Reset Your Neural Key'}
             </p>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6" aria-labelledby="login-form-heading" aria-describedby="login-form-description" aria-busy={isLoading}>
               {error && (
-                <div className="p-4 bg-brand/10 border border-brand/20 rounded-2xl text-brand text-[10px] font-black uppercase tracking-widest text-center animate-in slide-in-from-top-4">
+                <div role="alert" aria-live="assertive" aria-atomic="true" className="p-4 bg-brand/10 border border-brand/20 rounded-2xl text-brand text-[10px] font-black uppercase tracking-widest text-center animate-in slide-in-from-top-4">
                   {error}
                 </div>
               )}
               {success && (
-                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-500 text-[10px] font-black uppercase tracking-widest text-center animate-in slide-in-from-top-4">
+                <div role="status" aria-live="polite" aria-atomic="true" className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-emerald-500 text-[10px] font-black uppercase tracking-widest text-center animate-in slide-in-from-top-4">
                   {success}
                 </div>
               )}
               
               <div className="group relative">
+                <label htmlFor="login-email" className="sr-only">Email address</label>
                 <input 
+                  id="login-email"
+                  name="email"
                   type="email" 
+                  autoComplete="email"
                   required
                   placeholder={loginType === 'TEACHER' ? "Faculty ID (Email)" : "Aspirant ID (Email)"}
                   value={email}
@@ -119,8 +127,12 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSwitch, onBack }) => {
               {view === 'LOGIN' && (
                 <div className="space-y-4">
                   <div className="group relative">
+                    <label htmlFor="login-password" className="sr-only">Password</label>
                     <input 
+                      id="login-password"
+                      name="password"
                       type="password" 
+                      autoComplete="current-password"
                       required
                       placeholder="Secure Access Key"
                       value={password}
@@ -146,7 +158,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSwitch, onBack }) => {
                 className={`w-full py-6 text-white rounded-[2rem] text-sm font-black uppercase tracking-[0.3em] shadow-2xl hover:-translate-y-1 transition-all active:scale-95 flex items-center justify-center gap-4 mt-8 ${loginType === 'TEACHER' ? 'bg-emerald-600 shadow-emerald-500/20 hover:shadow-emerald-500/40' : 'bg-brand shadow-brand/20 hover:shadow-brand/40'}`}
               >
                 {isLoading ? (
-                  <><Icons.CloudSync className="w-5 h-5 animate-spin" /> {view === 'LOGIN' ? 'Verifying Profile...' : 'Dispatching...'}</>
+                  <span><Icons.CloudSync className="w-5 h-5 animate-spin" /> {view === 'LOGIN' ? 'Verifying Profile...' : 'Dispatching...'}</span>
                 ) : (
                   view === 'LOGIN' ? 'Authorize Entry' : 'Request Recovery Link'
                 )}
@@ -165,6 +177,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSwitch, onBack }) => {
 
             <div className="mt-12 pt-12 border-t border-white/5 text-center">
                <button 
+                type="button"
                 onClick={onSwitch}
                 className="px-10 py-4 bg-white text-slate-900 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-brand hover:text-white transition-all shadow-xl"
                >

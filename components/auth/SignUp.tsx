@@ -96,117 +96,90 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack }) =>
              </div>
              <div className="flex items-center gap-6">
                 {onBack && (
-                   <button type="button" onClick={onBack} className="text-[10px] font-black text-slate-500 hover:text-white uppercase tracking-widest transition-all flex items-center gap-2">
+                   <button onClick={onBack} className="text-[10px] font-black text-slate-500 hover:text-white uppercase tracking-widest transition-all flex items-center gap-2">
                      <Icons.Plus className="rotate-45 w-4 h-4" /> Universe
                    </button>
                 )}
-                <button type="button" onClick={onSwitch} className="text-[10px] font-black text-slate-500 hover:text-white uppercase tracking-widest transition-all">Already registered?</button>
+                <button onClick={onSwitch} className="text-[10px] font-black text-slate-500 hover:text-white uppercase tracking-widest transition-all">Already registered?</button>
              </div>
           </div>
 
           {/* Role Selection (Left) */}
           <div className="lg:col-span-5 p-16 pt-10">
-            <h2 id="signup-path-heading" className="text-4xl font-black text-white mb-4 uppercase tracking-tighter leading-none">Choose Your <span className="text-brand">Path</span></h2>
-            <div className="space-y-6" role="group" aria-labelledby="signup-path-heading">
-               <button 
-                type="button"
+            <h2 className="text-4xl font-black text-white mb-4 uppercase tracking-tighter leading-none">Choose Your <span className="text-brand">Path</span></h2>
+            <div className="space-y-6">
+               <div 
                 onClick={() => setRole('STUDENT')}
-                aria-pressed={role === 'STUDENT'}
-                className={`w-full text-left p-10 rounded-[3rem] border-2 cursor-pointer transition-all duration-500 relative overflow-hidden group ${role === 'STUDENT' ? 'border-brand bg-brand/5' : 'border-white/5 bg-white/[0.02] hover:border-white/20'}`}
+                className={`p-10 rounded-[3rem] border-2 cursor-pointer transition-all duration-500 relative overflow-hidden group ${role === 'STUDENT' ? 'border-brand bg-brand/5' : 'border-white/5 bg-white/[0.02] hover:border-white/20'}`}
                >
-                  <div aria-hidden="true" className={`absolute top-0 right-0 p-8 transition-opacity duration-300 ${role === 'STUDENT' ? 'opacity-100' : 'opacity-0'}`}>
+                  <div className={`absolute top-0 right-0 p-8 transition-opacity duration-300 ${role === 'STUDENT' ? 'opacity-100' : 'opacity-0'}`}>
                       <Icons.CheckBadge className="w-8 h-8 text-brand" />
                   </div>
-                  <span className={`block text-2xl font-black mb-2 uppercase tracking-tight transition-colors ${role === 'STUDENT' ? 'text-brand' : 'text-white'}`}>CMA Aspirant</span>
-                  <span className="block text-sm text-slate-500 font-medium italic">Master CMA US concepts with AI guidance and peer support.</span>
-               </button>
+                  <h3 className={`text-2xl font-black mb-2 uppercase tracking-tight transition-colors ${role === 'STUDENT' ? 'text-brand' : 'text-white'}`}>CMA Aspirant</h3>
+                  <p className="text-sm text-slate-500 font-medium italic">Master CMA US concepts with AI guidance and peer support.</p>
+               </div>
                
-               <button 
-                type="button"
+               <div 
                 onClick={() => setRole('TEACHER')}
-                aria-pressed={role === 'TEACHER'}
-                className={`w-full text-left p-10 rounded-[3rem] border-2 cursor-pointer transition-all duration-500 relative overflow-hidden group ${role === 'TEACHER' ? 'border-brand bg-brand/5' : 'border-white/5 bg-white/[0.02] hover:border-white/20'}`}
+                className={`p-10 rounded-[3rem] border-2 cursor-pointer transition-all duration-500 relative overflow-hidden group ${role === 'TEACHER' ? 'border-brand bg-brand/5' : 'border-white/5 bg-white/[0.02] hover:border-white/20'}`}
                >
-                  <div aria-hidden="true" className={`absolute top-0 right-0 p-8 transition-opacity duration-300 ${role === 'TEACHER' ? 'opacity-100' : 'opacity-0'}`}>
+                  <div className={`absolute top-0 right-0 p-8 transition-opacity duration-300 ${role === 'TEACHER' ? 'opacity-100' : 'opacity-0'}`}>
                       <Icons.CheckBadge className="w-8 h-8 text-brand" />
                   </div>
-                  <span className={`block text-2xl font-black mb-2 uppercase tracking-tight transition-colors ${role === 'TEACHER' ? 'text-brand' : 'text-white'}`}>CMA Specialist</span>
-                  <span className="block text-sm text-slate-500 font-medium italic">Mentor aspirants, broadcast insights, and monetize your expertise.</span>
-               </button>
+                  <h3 className={`text-2xl font-black mb-2 uppercase tracking-tight transition-colors ${role === 'TEACHER' ? 'text-brand' : 'text-white'}`}>CMA Specialist</h3>
+                  <p className="text-sm text-slate-500 font-medium italic">Mentor aspirants, broadcast insights, and monetize your expertise.</p>
+               </div>
             </div>
           </div>
 
           {/* Details Form (Right) */}
           <div className="lg:col-span-7 p-16 pt-10 bg-white/5">
-            <h2 id="signup-form-heading" className="text-4xl font-black text-white mb-4 uppercase tracking-tighter leading-none">{role === 'TEACHER' ? 'Specialist' : 'Aspirant'} <span className="text-brand">Profile</span></h2>
-            <form onSubmit={handleSubmit} className="space-y-6" aria-labelledby="signup-form-heading" aria-busy={isLoading}>
+            <h2 className="text-4xl font-black text-white mb-4 uppercase tracking-tighter leading-none">{role === 'TEACHER' ? 'Specialist' : 'Aspirant'} <span className="text-brand">Profile</span></h2>
+            <form onSubmit={handleSubmit} className="space-y-6">
               {error && (
-                <div role="alert" aria-live="assertive" aria-atomic="true" className="p-6 bg-brand/10 border border-brand/20 rounded-[2rem] text-brand text-[11px] font-black uppercase tracking-widest text-center animate-in slide-in-from-top-4">
+                <div className="p-6 bg-brand/10 border border-brand/20 rounded-[2rem] text-brand text-[11px] font-black uppercase tracking-widest text-center animate-in slide-in-from-top-4">
                   {error}
                 </div>
               )}
               {success && (
-                <div role="status" aria-live="polite" aria-atomic="true" className="p-6 bg-emerald-500/10 border border-emerald-500/20 rounded-[2rem] text-emerald-500 text-[11px] font-black uppercase tracking-widest text-center animate-in slide-in-from-top-4">
+                <div className="p-6 bg-emerald-500/10 border border-emerald-500/20 rounded-[2rem] text-emerald-500 text-[11px] font-black uppercase tracking-widest text-center animate-in slide-in-from-top-4">
                   {success}
                 </div>
               )}
-              <div>
-                <label htmlFor="signup-name" className="sr-only">Full name</label>
-                <input 
-                  id="signup-name"
-                  name="name"
-                  type="text" 
-                  autoComplete="name"
-                  required
-                  placeholder="Official Name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-white/5 border-2 border-white/10 rounded-[1.5rem] px-8 py-5 text-white font-bold outline-none focus:border-brand/50 transition-all placeholder:text-slate-600 focus:ring-4 focus:ring-brand/5"
-                />
-              </div>
-              <div>
-                <label htmlFor="signup-email" className="sr-only">Email address</label>
-                <input 
-                  id="signup-email"
-                  name="email"
-                  type="email" 
-                  autoComplete="email"
-                  required
-                  placeholder="Primary Email Address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white/5 border-2 border-white/10 rounded-[1.5rem] px-8 py-5 text-white font-bold outline-none focus:border-brand/50 transition-all placeholder:text-slate-600 focus:ring-4 focus:ring-brand/5"
-                />
-              </div>
-              <div>
-                <label htmlFor="signup-password" className="sr-only">Password</label>
-                <input 
-                  id="signup-password"
-                  name="password"
-                  type="password" 
-                  autoComplete="new-password"
-                  required
-                  placeholder="Secure Access Key"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white/5 border-2 border-white/10 rounded-[1.5rem] px-8 py-5 text-white font-bold outline-none focus:border-brand/50 transition-all placeholder:text-slate-600 focus:ring-4 focus:ring-brand/5"
-                />
-              </div>
+              <input 
+                type="text" 
+                required
+                placeholder="Official Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full bg-white/5 border-2 border-white/10 rounded-[1.5rem] px-8 py-5 text-white font-bold outline-none focus:border-brand/50 transition-all placeholder:text-slate-600 focus:ring-4 focus:ring-brand/5"
+              />
+              <input 
+                type="email" 
+                required
+                placeholder="Primary Email Address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-white/5 border-2 border-white/10 rounded-[1.5rem] px-8 py-5 text-white font-bold outline-none focus:border-brand/50 transition-all placeholder:text-slate-600 focus:ring-4 focus:ring-brand/5"
+              />
+              <input 
+                type="password" 
+                required
+                placeholder="Secure Access Key"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-white/5 border-2 border-white/10 rounded-[1.5rem] px-8 py-5 text-white font-bold outline-none focus:border-brand/50 transition-all placeholder:text-slate-600 focus:ring-4 focus:ring-brand/5"
+              />
 
               {/* Mentor Verification Code Input */}
               {role === 'TEACHER' && (
                   <div className="animate-in slide-in-from-top-4 duration-500 pt-2">
                       <div className="relative">
-                        <div aria-hidden="true" className="absolute top-1/2 -translate-y-1/2 left-6 text-brand">
+                        <div className="absolute top-1/2 -translate-y-1/2 left-6 text-brand">
                             <Icons.CheckBadge className="w-5 h-5" />
                         </div>
-                        <label htmlFor="signup-access-code" className="sr-only">Specialist access code</label>
                         <input 
-                            id="signup-access-code"
-                            name="accessCode"
                             type="text" 
-                            autoComplete="off"
-                            aria-describedby="signup-access-code-help"
                             required
                             placeholder="Specialist Access Code (Invite Only)"
                             value={accessCode}
@@ -214,7 +187,7 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack }) =>
                             className="w-full bg-brand/5 border-2 border-brand/20 rounded-[1.5rem] px-8 py-5 pl-16 text-white font-bold outline-none focus:border-brand/50 transition-all placeholder:text-brand/40 focus:ring-4 focus:ring-brand/5"
                         />
                       </div>
-                      <p id="signup-access-code-help" className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-2 ml-4">* Verification Required for Faculty Access (Try 'CMA2025')</p>
+                      <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-2 ml-4">* Verification Required for Faculty Access (Try 'CMA2025')</p>
                   </div>
               )}
 
@@ -224,7 +197,7 @@ export const SignUp: React.FC<SignUpProps> = ({ onSignUp, onSwitch, onBack }) =>
                 className="w-full py-6 bg-brand text-white rounded-[2rem] text-sm font-black uppercase tracking-[0.3em] shadow-2xl shadow-brand/20 hover:shadow-brand/40 transition-all flex items-center justify-center gap-4 hover:-translate-y-1 active:scale-95"
               >
                 {isLoading ? (
-                  <span><Icons.CloudSync className="w-5 h-5 animate-spin" /> Seeding Identity...</span>
+                  <><Icons.CloudSync className="w-5 h-5 animate-spin" /> Seeding Identity...</>
                 ) : (
                   role === 'TEACHER' ? 'Confirm Specialist Access' : 'Confirm Candidate Profile'
                 )}

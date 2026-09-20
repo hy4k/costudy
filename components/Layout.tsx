@@ -280,10 +280,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setView, children, 
         <div className="flex gap-3 items-center ml-auto">
           {/* THEME TOGGLE BUTTON */}
           <button 
-            type="button"
             onClick={toggleTheme}
-            aria-label={theme === 'dark' ? "Switch to light mode" : "Switch to dark mode"}
-            aria-pressed={theme === 'dark'}
             className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-brand dark:hover:text-brand transition-all flex items-center justify-center shadow-sm"
             title={theme === 'dark' ? "Switch to Light Mode" : "Switch to Dark Mode"}
           >

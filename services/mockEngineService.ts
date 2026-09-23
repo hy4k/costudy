@@ -142,12 +142,22 @@ export interface ResumeResult {
   result?: ExamResult;
 }
 
+export interface BeginMcqResult {
+  section1_ends_at: string;
+  server_now: string;
+}
+
+export interface BeginCbqResult {
+  section2_ends_at: string;
+  server_now: string;
+}
+
 export interface FinishMcqPassed {
   gate_passed: true;
   mcq_pct: number;
   mcq_correct: number;
   mcq_total: number;
-  section2_ends_at: string;
+  section2_ends_at: string | null;
   cases: CbqCase[];
   responses: CbqResponse[];
 }
@@ -227,6 +237,12 @@ export interface AttemptHistoryItem {
 
 export const startExam = (examId: string): Promise<ResumeResult> =>
   callMockEngine<ResumeResult>('start', { exam_id: examId });
+
+export const beginMcq = (attemptId: string): Promise<BeginMcqResult> =>
+  callMockEngine<BeginMcqResult>('begin_mcq', { attempt_id: attemptId });
+
+export const beginCbq = (attemptId: string): Promise<BeginCbqResult> =>
+  callMockEngine<BeginCbqResult>('begin_cbq', { attempt_id: attemptId });
 
 export const resumeAttempt = (attemptId: string): Promise<ResumeResult> =>
   callMockEngine<ResumeResult>('resume', { attempt_id: attemptId });

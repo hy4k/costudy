@@ -624,6 +624,7 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ initial, onExit }) => 
 
   const handleFlagMcq = () => {
     if (!currentMcq) return;
+    setErrorMsg(null);
     const existing = mcqAnswers.get(currentMcq.id) || { selected: null, flagged: false };
     const nextAnswer = { ...existing, flagged: !existing.flagged };
     setMcqAnswers(prev => new Map(prev).set(currentMcq.id, nextAnswer));
@@ -924,6 +925,11 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ initial, onExit }) => 
           </div>
         </div>
 
+        {errorMsg && (
+          <div role="alert" className="mx-4 mb-2 rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-xs font-bold text-red-800 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200">
+            {errorMsg}
+          </div>
+        )}
         <div className="bg-[#4d4d4d] dark:bg-slate-950 px-4 py-3 flex justify-between items-center border-t border-[#666] dark:border-slate-800 shrink-0">
           <div className="flex gap-2 text-xs font-bold text-slate-300">Slide {introPage + 1} of {total}</div>
           <div className="flex gap-3">

@@ -76,7 +76,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onStartFree }
                                 <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-brand/10 text-brand flex items-center justify-center mb-4 sm:mb-5">
                                     <Icons.Brain className="w-5 h-5 sm:w-6 sm:h-6" />
                                 </div>
-                                <h4 className="text-base sm:text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight mb-2">AI Deck & Live Rooms</h4>
+                                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight mb-2">AI Deck & Live Rooms</h3>
                                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-5 sm:mb-6">
                                     Instant Socratic explanations for complex accounting concepts, active MCQ drills, and synchronized video study clusters.
                                 </p>
@@ -93,7 +93,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onStartFree }
                                 <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-amber-400/20 text-amber-400 flex items-center justify-center mb-4 sm:mb-5">
                                     <Icons.Trophy className="w-5 h-5 sm:w-6 sm:h-6" />
                                 </div>
-                                <h4 className="text-base sm:text-lg font-black text-white uppercase tracking-tight mb-2">Mastery Path & Mocks</h4>
+                                <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-tight mb-2">Mastery Path & Mocks</h3>
                                 <p className="text-xs sm:text-sm text-slate-300 leading-relaxed mb-5 sm:mb-6">
                                     Structured Part 1 & Part 2 curriculum roadmap, timed mock test simulations, and a deterministic CBQ (Case-Based Question) scoring engine.
                                 </p>
@@ -214,7 +214,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onStartFree }
                                 <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-4 sm:mb-5">
                                     <Icons.Grid className="w-5 h-5 sm:w-6 sm:h-6" />
                                 </div>
-                                <h4 className="text-base sm:text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight mb-2">Faculty Dashboard</h4>
+                                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight mb-2">Faculty Dashboard</h3>
                                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-5 sm:mb-6">
                                     Track student progress across modules, broadcast cohort announcements, and host exclusive study sessions.
                                 </p>
@@ -231,7 +231,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onStartFree }
                                 <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-400/20 text-emerald-400 flex items-center justify-center mb-4 sm:mb-5">
                                     <Icons.CheckBadge className="w-5 h-5 sm:w-6 sm:h-6" />
                                 </div>
-                                <h4 className="text-base sm:text-lg font-black text-white uppercase tracking-tight mb-2">Verified Status</h4>
+                                <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-tight mb-2">Verified Status</h3>
                                 <p className="text-xs sm:text-sm text-slate-300 leading-relaxed mb-5 sm:mb-6">
                                     Build trust instantly with high-signal CoStudy verification, dedicated mentor profiles, and priority placement.
                                 </p>
@@ -253,12 +253,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onStartFree }
                         <Icons.Logo className="w-12 h-12" />
                         <span className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">CoStudy</span>
                     </div>
-                    <div className="flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 dark:text-slate-500">
+                    <div className="flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] text-slate-700 dark:text-slate-300">
                         <a href="#" className="hover:text-brand transition-colors">Privacy Policy</a>
                         <a href="#" className="hover:text-brand transition-colors">Terms of Use</a>
                         <a href="#" className="hover:text-brand transition-colors">Contact Support</a>
                     </div>
-                    <p className="text-[10px] font-bold text-slate-300 dark:text-slate-600 uppercase tracking-widest">© 2025 CoStudy. All strategic rights reserved.</p>
+                    <p className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">© 2025 CoStudy. All strategic rights reserved.</p>
                 </div>
             </footer>
         </div>

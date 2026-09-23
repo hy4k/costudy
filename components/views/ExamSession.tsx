@@ -611,6 +611,7 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ initial, onExit }) => 
 
   const handleSelectMcqOption = (key: string) => {
     if (!currentMcq) return;
+    setErrorMsg(null);
     const existing = mcqAnswers.get(currentMcq.id) || { selected: null, flagged: false };
     const nextAnswer = { ...existing, selected: key };
     setMcqAnswers(prev => new Map(prev).set(currentMcq.id, nextAnswer));
@@ -690,6 +691,7 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ initial, onExit }) => 
   const currentTask = flatTasks[currentTaskIndex];
 
   const handleCbqChange = (taskId: string, value: any) => {
+    setErrorMsg(null);
     setCbqAnswers(prev => {
       const next = new Map(prev);
       next.set(taskId, value);

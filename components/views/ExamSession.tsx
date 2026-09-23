@@ -6,6 +6,8 @@ import { getMcqStudyTips } from '../../services/geminiService';
 import {
   MockEngineError,
   resumeAttempt,
+  beginMcq,
+  beginCbq,
   saveMcqAnswer,
   finishMcqSection,
   saveCbqResponse,
@@ -67,17 +69,69 @@ const normalizeOptions = (options: any): { key: string; text: string }[] => {
   return [];
 };
 
+interface PendingSave<Arg> {
+  arg: Arg;
+  timer: ReturnType<typeof setTimeout>;
+}
+
 function useDebouncedSaver<Arg>(fn: (arg: Arg) => Promise<any>, delay = 400) {
-  const timers = useRef<Map<string, any>>(new Map());
-  return useCallback((id: string, arg: Arg) => {
-    const existing = timers.current.get(id);
-    if (existing) clearTimeout(existing);
-    const t = setTimeout(() => {
-      fn(arg).catch(err => console.warn('[ExamSession] save failed', err));
-      timers.current.delete(id);
+  const pending = useRef<Map<string, PendingSave<Arg>>>(new Map());
+  const failed = useRef<Map<string, Arg>>(new Map());
+  const inFlight = useRef<Set<Promise<unknown>>>(new Set());
+
+  const saveNow = useCallback((id: string, arg: Arg) => {
+    const request = Promise.resolve()
+      .then(() => fn(arg))
+      .then(() => {
+        if (failed.current.get(id) === arg) failed.current.delete(id);
+      })
+      .catch(error => {
+        // Keep the latest failed payload so a later submission can retry it.
+        failed.current.set(id, arg);
+        throw error;
+      });
+    inFlight.current.add(request);
+    request.then(
+      () => inFlight.current.delete(request),
+      () => inFlight.current.delete(request),
+    );
+    return request;
+  }, [fn]);
+
+  const schedule = useCallback((id: string, arg: Arg) => {
+    const existing = pending.current.get(id);
+    if (existing) clearTimeout(existing.timer);
+    failed.current.delete(id);
+    const timer = setTimeout(() => {
+      const entry = pending.current.get(id);
+      if (!entry) return;
+      pending.current.delete(id);
+      void saveNow(id, entry.arg).catch(error => {
+        console.warn('[ExamSession] save failed; retaining for retry', error);
+      });
     }, delay);
-    timers.current.set(id, t);
-  }, [fn, delay]);
+    pending.current.set(id, { arg, timer });
+  }, [delay, saveNow]);
+
+  const flush = useCallback(async () => {
+    const latest = new Map<string, Arg>(failed.current);
+    failed.current.clear();
+    for (const [id, entry] of pending.current) {
+      clearTimeout(entry.timer);
+      latest.set(id, entry.arg);
+    }
+    pending.current.clear();
+
+    const queuedRequests = Array.from(latest, ([id, arg]) => saveNow(id, arg));
+    await Promise.all([...inFlight.current, ...queuedRequests]);
+  }, [saveNow]);
+
+  useEffect(() => () => {
+    for (const entry of pending.current.values()) clearTimeout(entry.timer);
+    pending.current.clear();
+  }, []);
+
+  return { schedule, flush };
 }
 
 // ============================================================================
@@ -423,9 +477,9 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ initial, onExit }) => 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const [phase, setPhase] = useState<Phase>(() => {
-    if (initial.result) return 'RESULTS';
-    if (initial.attempt.section === 'cbq') return 'CBQ';
-    return 'CONFIRM';
+    if (initial.result || initial.attempt.section === 'completed') return 'RESULTS';
+    if (initial.attempt.section === 'cbq') return initial.attempt.section2_ends_at ? 'CBQ' : 'TRANSITION';
+    return initial.attempt.section1_ends_at ? 'MCQ' : 'CONFIRM';
   });
 
   // MCQ state
@@ -464,6 +518,7 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ initial, onExit }) => 
   const [introPage, setIntroPage] = useState(0);
   const [showCalculator, setShowCalculator] = useState(false);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
+  const [startingSection, setStartingSection] = useState<'mcq' | 'cbq' | null>(null);
   const finishInFlight = useRef(false);
 
   // Server-driven clock offset: serverNow - localNow, used so device clock drift
@@ -476,12 +531,46 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ initial, onExit }) => 
   }, [initial.server_now]);
   const serverNow = () => Date.now() + clockOffsetMs.current;
 
+  const handleBeginMcq = async () => {
+    if (startingSection) return;
+    setStartingSection('mcq');
+    setErrorMsg(null);
+    try {
+      const res = await beginMcq(attempt.id);
+      setMcqEndsAt(res.section1_ends_at);
+      setAttempt(prev => ({ ...prev, section1_ends_at: res.section1_ends_at }));
+      clockOffsetMs.current = new Date(res.server_now).getTime() - Date.now();
+      setPhase('MCQ');
+    } catch (e: any) {
+      setErrorMsg(e?.message || 'Could not start Section 1. Please try again.');
+    } finally {
+      setStartingSection(null);
+    }
+  };
+
+  const handleBeginCbq = async () => {
+    if (startingSection) return;
+    setStartingSection('cbq');
+    setErrorMsg(null);
+    try {
+      const res = await beginCbq(attempt.id);
+      setCbqEndsAt(res.section2_ends_at);
+      setAttempt(prev => ({ ...prev, section2_ends_at: res.section2_ends_at }));
+      clockOffsetMs.current = new Date(res.server_now).getTime() - Date.now();
+      setPhase('CBQ');
+    } catch (e: any) {
+      setErrorMsg(e?.message || 'Could not start Section 2. Please try again.');
+    } finally {
+      setStartingSection(null);
+    }
+  };
+
   // ---- Debounced saves ----
-  const debouncedSaveMcq = useDebouncedSaver<{ questionId: string; selected_key?: string; flagged?: boolean }>(
+  const mcqSaver = useDebouncedSaver<{ questionId: string; selected_key?: string; flagged?: boolean }>(
     ({ questionId, selected_key, flagged }) => saveMcqAnswer(attempt.id, questionId, { selected_key, flagged }),
     350
   );
-  const debouncedSaveCbq = useDebouncedSaver<{ taskId: string; response: any }>(
+  const cbqSaver = useDebouncedSaver<{ taskId: string; response: any }>(
     ({ taskId, response }) => saveCbqResponse(attempt.id, taskId, response),
     400
   );
@@ -522,24 +611,25 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ initial, onExit }) => 
 
   const handleSelectMcqOption = (key: string) => {
     if (!currentMcq) return;
-    setMcqAnswers(prev => {
-      const next = new Map(prev);
-      const existing = next.get(currentMcq.id) || { selected: null, flagged: false };
-      next.set(currentMcq.id, { ...existing, selected: key });
-      return next;
+    const existing = mcqAnswers.get(currentMcq.id) || { selected: null, flagged: false };
+    const nextAnswer = { ...existing, selected: key };
+    setMcqAnswers(prev => new Map(prev).set(currentMcq.id, nextAnswer));
+    mcqSaver.schedule(currentMcq.id, {
+      questionId: currentMcq.id,
+      selected_key: nextAnswer.selected ?? undefined,
+      flagged: nextAnswer.flagged,
     });
-    debouncedSaveMcq(currentMcq.id, { questionId: currentMcq.id, selected_key: key });
   };
 
   const handleFlagMcq = () => {
     if (!currentMcq) return;
-    setMcqAnswers(prev => {
-      const next = new Map(prev);
-      const existing = next.get(currentMcq.id) || { selected: null, flagged: false };
-      const flagged = !existing.flagged;
-      next.set(currentMcq.id, { ...existing, flagged });
-      debouncedSaveMcq(currentMcq.id + ':flag', { questionId: currentMcq.id, flagged });
-      return next;
+    const existing = mcqAnswers.get(currentMcq.id) || { selected: null, flagged: false };
+    const nextAnswer = { ...existing, flagged: !existing.flagged };
+    setMcqAnswers(prev => new Map(prev).set(currentMcq.id, nextAnswer));
+    mcqSaver.schedule(currentMcq.id, {
+      questionId: currentMcq.id,
+      selected_key: nextAnswer.selected ?? undefined,
+      flagged: nextAnswer.flagged,
     });
   };
 
@@ -548,6 +638,16 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ initial, onExit }) => 
     finishInFlight.current = true;
     setPhase('SUBMITTING');
     try {
+      try {
+        await mcqSaver.flush();
+      } catch (saveError: any) {
+        if (!auto) {
+          setErrorMsg(saveError?.message || 'The latest answer could not be saved. Your submission was not sent; please retry.');
+          setPhase('MCQ');
+          return;
+        }
+        console.warn('[ExamSession] automatic MCQ submission proceeding with last confirmed saves', saveError);
+      }
       const res = await finishMcqSection(attempt.id);
       if (res.gate_passed === true) {
         setCbqCases(res.cases);
@@ -595,7 +695,7 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ initial, onExit }) => 
       next.set(taskId, value);
       return next;
     });
-    debouncedSaveCbq(taskId, { taskId, response: value });
+    cbqSaver.schedule(taskId, { taskId, response: value });
   };
 
   const handleSubmit = async (auto = false) => {
@@ -603,6 +703,16 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ initial, onExit }) => 
     finishInFlight.current = true;
     setPhase('SUBMITTING');
     try {
+      try {
+        await cbqSaver.flush();
+      } catch (saveError: any) {
+        if (!auto) {
+          setErrorMsg(saveError?.message || 'The latest response could not be saved. Your submission was not sent; please retry.');
+          setPhase('CBQ');
+          return;
+        }
+        console.warn('[ExamSession] automatic CBQ submission proceeding with last confirmed saves', saveError);
+      }
       const res = await submitExam(attempt.id);
       setResult(res.result);
       setAttempt(prev => ({ ...prev, section: 'completed' }));
@@ -823,8 +933,12 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ initial, onExit }) => 
                 Next <Icons.ChevronRight className="w-4 h-4" />
               </button>
             ) : (
-              <button className="bg-[#8dc63f] hover:bg-[#7db536] text-white px-6 py-2 rounded font-bold flex items-center gap-1 ml-4 text-sm shadow-lg border border-white/20" onClick={() => setPhase('MCQ')}>
-                Start the Test <Icons.ChevronRight className="w-4 h-4" />
+              <button
+                className="bg-[#8dc63f] hover:bg-[#7db536] disabled:opacity-60 text-white px-6 py-2 rounded font-bold flex items-center gap-1 ml-4 text-sm shadow-lg border border-white/20"
+                onClick={handleBeginMcq}
+                disabled={startingSection === 'mcq'}
+              >
+                {startingSection === 'mcq' ? 'Starting…' : 'Start the Test'} <Icons.ChevronRight className="w-4 h-4" />
               </button>
             )}
           </div>
@@ -872,6 +986,11 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ initial, onExit }) => 
           <span className="font-bold text-sm">{exam.title}</span>
           <span className="font-bold text-sm">Section 1 — Multiple Choice</span>
         </div>
+        {errorMsg && (
+          <div role="alert" className="mx-4 mt-3 rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-xs font-bold text-red-800 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200">
+            {errorMsg}
+          </div>
+        )}
 
         <div className="flex-1 flex overflow-hidden relative bg-white dark:bg-slate-900">
           <div className="w-14 bg-white dark:bg-slate-900 border-r border-slate-300 dark:border-slate-800 flex flex-col gap-1 p-1 pt-4 overflow-y-auto shrink-0 no-scrollbar">
@@ -994,9 +1113,14 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ initial, onExit }) => 
           <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2 uppercase tracking-tight">Section 1 Cleared</h2>
           <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">Score: <strong>{attempt.mcq_score}%</strong> ({attempt.mcq_correct}/{attempt.mcq_total})</p>
           <p className="text-sm text-slate-600 dark:text-slate-400 mb-8">You've cleared the 50% gate. Section 2 (Case-Based Questions) is now unlocked — {exam.cbq_minutes} minutes for {cbqCases.length} case{cbqCases.length !== 1 ? 's' : ''}.</p>
-          <button onClick={() => setPhase('CBQ')} className="bg-[#8dc63f] hover:bg-[#7db536] text-white px-10 py-3 rounded-xl font-black text-sm uppercase tracking-wider shadow-lg">
-            Begin Section 2 <Icons.ChevronRight className="w-4 h-4 inline ml-1" />
+          <button
+            onClick={handleBeginCbq}
+            disabled={startingSection === 'cbq'}
+            className="bg-[#8dc63f] hover:bg-[#7db536] disabled:opacity-60 text-white px-10 py-3 rounded-xl font-black text-sm uppercase tracking-wider shadow-lg"
+          >
+            {startingSection === 'cbq' ? 'Starting…' : 'Begin Section 2'} <Icons.ChevronRight className="w-4 h-4 inline ml-1" />
           </button>
+          {errorMsg && <p role="alert" className="mt-4 text-xs font-bold text-red-700 dark:text-red-300">{errorMsg}</p>}
         </div>
       </div>
     );
@@ -1027,6 +1151,11 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ initial, onExit }) => 
           <span className="font-bold text-sm">{exam.title}</span>
           <span className="font-bold text-sm">Section 2 — Case-Based Questions</span>
         </div>
+        {errorMsg && (
+          <div role="alert" className="mx-4 mt-3 rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-xs font-bold text-red-800 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200">
+            {errorMsg}
+          </div>
+        )}
 
         {cbqCases.length > 1 && (
           <div className="bg-slate-100 dark:bg-slate-950 px-4 py-2 flex gap-2 border-b border-slate-300 dark:border-slate-800 shrink-0">
@@ -1220,20 +1349,149 @@ export const ExamSession: React.FC<ExamSessionProps> = ({ initial, onExit }) => 
 };
 
 // ============================================================================
-// Calculator widget (unchanged visual language)
+// Calculator widget
 // ============================================================================
 
-const CalculatorWidget: React.FC<{ onClose: () => void }> = ({ onClose }) => (
-  <div className="absolute top-12 right-12 w-64 bg-slate-100 dark:bg-slate-800 border-2 border-slate-400 dark:border-slate-600 rounded-xl shadow-2xl z-50 p-3 select-none">
-    <div className="bg-slate-700 dark:bg-slate-900 text-white px-2 py-1 text-xs font-bold rounded flex justify-between cursor-move mb-2">
-      <span>Calculator</span>
-      <button onClick={onClose} className="hover:text-red-400 font-bold">X</button>
+type CalculatorOperator = '+' | '-' | '*' | '/';
+
+const CalculatorWidget: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+  const [display, setDisplay] = useState('0');
+  const [storedValue, setStoredValue] = useState<number | null>(null);
+  const [operator, setOperator] = useState<CalculatorOperator | null>(null);
+  const [waitingForOperand, setWaitingForOperand] = useState(false);
+  const [memory, setMemory] = useState(0);
+
+  const formatValue = (value: number) => {
+    if (!Number.isFinite(value)) return 'Error';
+    return String(Number(value.toPrecision(12)));
+  };
+
+  const currentValue = () => Number(display);
+
+  const calculate = (left: number, right: number, op: CalculatorOperator) => {
+    switch (op) {
+      case '+': return left + right;
+      case '-': return left - right;
+      case '*': return left * right;
+      case '/': return right === 0 ? Number.NaN : left / right;
+      default: return right;
+    }
+  };
+
+  const inputDigit = (digit: string) => {
+    if (display === 'Error' || waitingForOperand) {
+      setDisplay(digit);
+      setWaitingForOperand(false);
+      return;
+    }
+    setDisplay(display === '0' ? digit : `${display}${digit}`);
+  };
+
+  const inputDecimal = () => {
+    if (display === 'Error' || waitingForOperand) {
+      setDisplay('0.');
+      setWaitingForOperand(false);
+    } else if (!display.includes('.')) {
+      setDisplay(`${display}.`);
+    }
+  };
+
+  const chooseOperator = (nextOperator: CalculatorOperator) => {
+    const input = currentValue();
+    if (storedValue !== null && operator && !waitingForOperand) {
+      const result = calculate(storedValue, input, operator);
+      setDisplay(formatValue(result));
+      setStoredValue(result);
+    } else {
+      setStoredValue(input);
+    }
+    setOperator(nextOperator);
+    setWaitingForOperand(true);
+  };
+
+  const equals = () => {
+    if (storedValue === null || !operator) return;
+    const result = calculate(storedValue, currentValue(), operator);
+    setDisplay(formatValue(result));
+    setStoredValue(null);
+    setOperator(null);
+    setWaitingForOperand(true);
+  };
+
+  const clearEntry = () => {
+    setDisplay('0');
+    setWaitingForOperand(false);
+  };
+
+  const clearAll = () => {
+    setDisplay('0');
+    setStoredValue(null);
+    setOperator(null);
+    setWaitingForOperand(false);
+  };
+
+  const handleKey = (key: string) => {
+    if (/^\\d$/.test(key)) return inputDigit(key);
+    if (key === '.') return inputDecimal();
+    if (key === '+/-') {
+      if (display !== '0' && display !== 'Error') setDisplay(formatValue(-currentValue()));
+      return;
+    }
+    if (key === '√') {
+      setDisplay(formatValue(Math.sqrt(currentValue())));
+      setWaitingForOperand(true);
+      return;
+    }
+    if (key === '1/x') {
+      setDisplay(formatValue(currentValue() === 0 ? Number.NaN : 1 / currentValue()));
+      setWaitingForOperand(true);
+      return;
+    }
+    if (key === '%') {
+      setDisplay(formatValue(currentValue() / 100));
+      setWaitingForOperand(true);
+      return;
+    }
+    if (key === '←') {
+      if (!waitingForOperand && display !== 'Error') setDisplay(display.length > 1 ? display.slice(0, -1) : '0');
+      return;
+    }
+    if (key === 'CE') return clearEntry();
+    if (key === 'C') return clearAll();
+    if (key === '=') return equals();
+    if (key === 'MC') return setMemory(0);
+    if (key === 'MR') {
+      setDisplay(formatValue(memory));
+      setWaitingForOperand(true);
+      return;
+    }
+    if (key === 'MS') return setMemory(currentValue());
+    if (key === 'M+') return setMemory(memory + currentValue());
+    if (['+', '-', '*', '/'].includes(key)) return chooseOperator(key as CalculatorOperator);
+  };
+
+  const keys = ['MC', 'MR', 'MS', 'M+', '←', 'CE', 'C', '+/-', '√', '7', '8', '9', '/', '%', '4', '5', '6', '*', '1/x', '1', '2', '3', '-', '=', '0', '.', '+'];
+
+  return (
+    <div className="absolute top-12 right-12 w-64 bg-slate-100 dark:bg-slate-800 border-2 border-slate-400 dark:border-slate-600 rounded-xl shadow-2xl z-50 p-3 select-none">
+      <div className="bg-slate-700 dark:bg-slate-900 text-white px-2 py-1 text-xs font-bold rounded flex justify-between cursor-move mb-2">
+        <span>Calculator</span>
+        <button type="button" onClick={onClose} className="hover:text-red-400 font-bold" aria-label="Close calculator">X</button>
+      </div>
+      <div aria-live="polite" className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 h-10 mb-2 text-right p-2 font-mono text-lg font-bold flex items-center justify-end rounded text-slate-900 dark:text-white overflow-hidden">{display}</div>
+      <div className="grid grid-cols-4 gap-1.5">
+        {keys.map(key => (
+          <button
+            type="button"
+            key={key}
+            onClick={() => handleKey(key)}
+            aria-label={`Calculator ${key}`}
+            className={`bg-slate-200 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 p-2 text-xs font-bold rounded hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-900 dark:text-white ${key === '=' ? 'row-span-2 bg-[#8dc63f] text-white hover:bg-[#7db536]' : ''}`}
+          >
+            {key}
+          </button>
+        ))}
+      </div>
     </div>
-    <div className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 h-10 mb-2 text-right p-2 font-mono text-lg font-bold flex items-center justify-end rounded text-slate-900 dark:text-white">0</div>
-    <div className="grid grid-cols-4 gap-1.5">
-      {['MC', 'MR', 'MS', 'M+', '←', 'CE', 'C', '±', '√', '7', '8', '9', '/', '%', '4', '5', '6', '*', '1/x', '1', '2', '3', '-', '=', '0', '.', '+'].map((k, idx) => (
-        <button key={idx} className={`bg-slate-200 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 p-2 text-xs font-bold rounded hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-900 dark:text-white ${k === '=' ? 'row-span-2 bg-[#8dc63f] text-white hover:bg-[#7db536]' : ''}`}>{k}</button>
-      ))}
-    </div>
-  </div>
-);
+  );
+};

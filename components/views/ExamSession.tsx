@@ -1,1 +1,1 @@
-@/workspace/ExamSession.tsx
+// Intentionally empty: exam-session view is not implemented yet.

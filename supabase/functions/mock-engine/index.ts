@@ -2,7 +2,9 @@
 // The browser never sees an answer key; the clock lives here; marking happens here.
 //
 // POST { action, ...payload }  (Authorization: Bearer <user jwt>)
-//   start       { exam_id }                       → { attempt, questions, ends_at }
+//   start       { exam_id }                       → prepared attempt with no active section clock
+//   begin_mcq   { attempt_id }                    → starts section 1 clock
+//   begin_cbq   { attempt_id }                    → starts section 2 clock
 //   resume      { attempt_id }                    → full state for the current section
 //   save_mcq    { attempt_id, question_id, selected_key?, flagged? }
 //   finish_mcq  { attempt_id }                    → grades section 1, applies gate, opens section 2
@@ -103,10 +105,9 @@ Deno.serve(async (req) => {
           const { data: cs } = await db.from("cbq_cases").select("id").eq("part", part).eq("active", true).eq("verified", true);
           const caseIds = shuffle((cs ?? []).map((c: any) => c.id)).slice(0, exam.cbq_count ?? 2);
 
-          const ends = new Date(Date.now() + (exam.mcq_minutes || 180) * 60_000).toISOString();
           const { data: att, error: aErr } = await db.from("mock_attempts").insert({
             user_id: userId, exam_id: exam.id, state: "in_progress", section: "mcq",
-            section1_ends_at: ends, question_ids: questionIds, case_ids: caseIds,
+            section1_ends_at: null, section2_ends_at: null, question_ids: questionIds, case_ids: caseIds,
             mcq_total: questionIds.length, pass_threshold: exam.pass_threshold ?? 360,
             metadata: { source: "costudy", part, mcq_minutes: exam.mcq_minutes, cbq_minutes: exam.cbq_minutes, gate_pct: exam.gate_pct ?? GATE_PCT },
           }).select().single();
@@ -132,6 +133,26 @@ Deno.serve(async (req) => {
           return json(200, { ...base, cases: await casesFor(att.case_ids ?? []), responses: await cbqState(att.id) });
         }
         return json(200, { ...base, result: att.result });
+      }
+
+      case "begin_mcq": {
+        const att = await loadAttempt(body.attempt_id);
+        if (att.section !== "mcq") return json(409, { error: "Section 1 is not available" });
+        if (att.section1_ends_at) return json(200, { section1_ends_at: att.section1_ends_at, server_now: new Date().toISOString() });
+        const ends = new Date(Date.now() + (att.metadata?.mcq_minutes ?? 180) * 60_000).toISOString();
+        const { error } = await db.from("mock_attempts").update({ section1_ends_at: ends }).eq("id", att.id);
+        if (error) throw error;
+        return json(200, { section1_ends_at: ends, server_now: new Date().toISOString() });
+      }
+
+      case "begin_cbq": {
+        const att = await loadAttempt(body.attempt_id);
+        if (att.section !== "cbq") return json(409, { error: "Section 2 is not available" });
+        if (att.section2_ends_at) return json(200, { section2_ends_at: att.section2_ends_at, server_now: new Date().toISOString() });
+        const ends = new Date(Date.now() + (att.metadata?.cbq_minutes ?? 60) * 60_000).toISOString();
+        const { error } = await db.from("mock_attempts").update({ section2_ends_at: ends }).eq("id", att.id);
+        if (error) throw error;
+        return json(200, { section2_ends_at: ends, server_now: new Date().toISOString() });
       }
 
       case "save_mcq": {
@@ -168,13 +189,11 @@ Deno.serve(async (req) => {
         const pct = Math.round((correct / total) * 1000) / 10;
         const gate = att.metadata?.gate_pct ?? GATE_PCT;
         const passedGate = pct >= gate;
-        const cbqMinutes = att.metadata?.cbq_minutes ?? 60;
         const review = ids.map(id => ({ id, selected: sel.get(id) ?? null, correct: keys.get(id)?.correct_answer ?? null, explanation: keys.get(id)?.explanation ?? null, section: keys.get(id)?.section ?? null, topic: keys.get(id)?.topic ?? null }));
 
         if (passedGate) {
-          const ends = new Date(Date.now() + cbqMinutes * 60_000).toISOString();
-          await db.from("mock_attempts").update({ section: "cbq", mcq_score: pct, mcq_correct: correct, mcq_total: total, section2_ends_at: ends, metadata: { ...att.metadata, mcq_by_section: bySection, mcq_review: review } }).eq("id", att.id);
-          return json(200, { gate_passed: true, mcq_pct: pct, mcq_correct: correct, mcq_total: total, section2_ends_at: ends, cases: await casesFor(att.case_ids ?? []), responses: [] });
+          await db.from("mock_attempts").update({ section: "cbq", mcq_score: pct, mcq_correct: correct, mcq_total: total, section2_ends_at: null, metadata: { ...att.metadata, mcq_by_section: bySection, mcq_review: review } }).eq("id", att.id);
+          return json(200, { gate_passed: true, mcq_pct: pct, mcq_correct: correct, mcq_total: total, section2_ends_at: null, cases: await casesFor(att.case_ids ?? []), responses: [] });
         }
         const scaled = scaledScore(pct, 0);
         const result = { mcq_pct: pct, mcq_correct: correct, mcq_total: total, gate_passed: false, gate_pct: gate, cbq_pct: 0, cbq_cases: [], scaled, passed: false, pass_threshold: att.pass_threshold ?? 360, by_section: bySection, mcq_review: review, completed_at: new Date().toISOString() };

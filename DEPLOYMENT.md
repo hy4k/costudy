@@ -150,3 +150,47 @@ sudo apt install -y certbot python3-certbot-nginx
 sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
 ```
 Certbot will configure SSL automatically with auto-renewal enabled!
+
+---
+
+## Part 4: Pre-release Verification
+
+Two checks gate a release. Both run in CI (`.github/workflows/ci.yml`) and
+locally.
+
+### Typecheck and build
+
+Runs on every push and pull request.
+
+```bash
+npm ci
+npm run lint     # tsc --noEmit
+npm run build
+```
+
+### Responsive audit of the public entry surfaces
+
+Drives the real landing, login and signup screens in Chromium at 320px, 375px,
+390px and desktop, in light and dark, and fails on any of:
+
+- page content wider than the viewport (horizontal scroll),
+- content cut off by an `overflow: hidden` ancestor,
+- text wider than the box holding it.
+
+```bash
+npx playwright install chromium   # first run only
+npm run audit:responsive
+```
+
+Results land in `audit/responsive/` (git-ignored): one screenshot per
+combination plus `report.json` naming the offending elements. In CI it is a
+manual job — run **Actions → CI → Run workflow** and download the
+`responsive-audit` artifact.
+
+The audit submits no credentials; it only navigates the public screens. Where a
+Chromium is already installed, point the script at it instead of downloading
+one:
+
+```bash
+AUDIT_CHROMIUM_PATH=/path/to/chromium npm run audit:responsive
+```

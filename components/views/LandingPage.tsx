@@ -10,36 +10,38 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onStartFree }
     return (
         <div className="bg-slate-50 dark:bg-slate-950 min-h-screen text-slate-900 dark:text-slate-100 transition-colors duration-300">
             {/* Hero Section */}
-            <section className="relative px-6 py-24 sm:py-40 overflow-hidden flex flex-col items-center text-center">
+            <section className="relative px-4 sm:px-6 py-20 sm:py-40 overflow-hidden flex flex-col items-center text-center">
                 <div className="absolute top-0 right-0 w-[1000px] h-[1000px] bg-brand/5 blur-[180px] -mr-40 -mt-40 rounded-full animate-pulse pointer-events-none"></div>
                 
-                <div className="relative z-10 max-w-5xl mx-auto">
-                    <div className="inline-flex items-center gap-3 bg-white dark:bg-slate-900 px-6 py-3 rounded-full border border-slate-200 dark:border-slate-800 shadow-xl mb-12 animate-in slide-in-from-top-4 duration-700">
-                        <Icons.CheckBadge className="w-5 h-5 text-brand" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-900 dark:text-slate-200">Official CMA US Intelligence Protocol</span>
+                {/* w-full + min-w-0: as a flex item this box would otherwise size to the
+                    hero wordmark's min-content width and push every child past the viewport. */}
+                <div className="relative z-10 w-full min-w-0 max-w-5xl mx-auto">
+                    <div className="inline-flex items-center gap-2 sm:gap-3 bg-white dark:bg-slate-900 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full border border-slate-200 dark:border-slate-800 shadow-xl mb-8 sm:mb-12 animate-in slide-in-from-top-4 duration-700">
+                        <Icons.CheckBadge className="w-5 h-5 text-brand shrink-0" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] sm:tracking-[0.3em] text-slate-900 dark:text-slate-200">Official CMA US Intelligence Protocol</span>
                     </div>
-                    
-                    <h1 className="text-7xl sm:text-9xl md:text-[11rem] font-black text-slate-900 dark:text-white tracking-tighter leading-[0.8] mb-4 uppercase">
+
+                    <h1 className="text-5xl sm:text-9xl md:text-[11rem] font-black text-slate-900 dark:text-white tracking-tighter leading-[0.8] mb-4 uppercase">
                         COSTUDY
                     </h1>
-                    <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-brand tracking-tight mb-10 uppercase">
+                    <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-brand tracking-tight mb-8 sm:mb-10 uppercase">
                         Master CMA Together.
                     </h2>
-                    
-                    <p className="text-xl sm:text-3xl text-slate-500 dark:text-slate-400 font-medium max-w-3xl mx-auto mb-16 leading-relaxed italic opacity-80">
+
+                    <p className="text-base sm:text-3xl text-slate-500 dark:text-slate-400 font-medium max-w-3xl mx-auto mb-12 sm:mb-16 leading-relaxed italic opacity-80">
                         Modern, AI-powered social network for elite accounting professionals. Hire faculty, collaborate in clusters, and dominate the CMA US exam.
                     </p>
 
-                    <div className="flex flex-col sm:flex-row gap-6 justify-center">
-                        <button 
+                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center">
+                        <button
                             onClick={onStartFree}
-                            className="px-12 py-6 bg-brand text-white rounded-[2.5rem] text-sm font-black uppercase tracking-[0.4em] shadow-[0_20px_50px_rgba(255,26,26,0.3)] hover:bg-slate-900 dark:hover:bg-slate-800 hover:scale-105 transition-all active:scale-95"
+                            className="px-8 sm:px-12 py-5 sm:py-6 bg-brand text-white rounded-[2.5rem] text-sm font-black uppercase tracking-[0.25em] sm:tracking-[0.4em] shadow-[0_20px_50px_rgba(255,26,26,0.3)] hover:bg-slate-900 dark:hover:bg-slate-800 hover:scale-105 transition-all active:scale-95"
                         >
                             Start Free
                         </button>
-                        <button 
+                        <button
                             onClick={onLogin}
-                            className="px-12 py-6 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-[2.5rem] text-sm font-black uppercase tracking-[0.4em] hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95"
+                            className="px-8 sm:px-12 py-5 sm:py-6 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 rounded-[2.5rem] text-sm font-black uppercase tracking-[0.25em] sm:tracking-[0.4em] hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95"
                         >
                             Candidate Login
                         </button>
@@ -109,16 +111,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onStartFree }
             </section>
 
             {/* Strategic Pricing Section */}
-            <section className="px-6 py-24 sm:py-32 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+            <section className="px-4 sm:px-6 py-20 sm:py-32 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
                 <div className="max-w-7xl mx-auto">
-                    <div className="text-center mb-20">
-                        <h2 className="text-4xl sm:text-6xl font-black text-slate-900 dark:text-white uppercase tracking-tighter mb-4">Choose Your Intensity</h2>
+                    <div className="text-center mb-12 sm:mb-20">
+                        <h2 className="text-3xl sm:text-6xl font-black text-slate-900 dark:text-white uppercase tracking-tighter mb-4">Choose Your Intensity</h2>
                         <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Strategic Mastery Plans</p>
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-5xl mx-auto">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 max-w-5xl mx-auto">
                         {/* Free Plan */}
-                        <div className="bg-slate-50 dark:bg-slate-950 p-10 sm:p-14 rounded-[4rem] border border-slate-200 dark:border-slate-800 flex flex-col group hover:border-slate-400 dark:hover:border-slate-700 transition-all shadow-sm">
+                        <div className="bg-slate-50 dark:bg-slate-950 p-6 sm:p-10 lg:p-14 rounded-[2.5rem] sm:rounded-[4rem] border border-slate-200 dark:border-slate-800 flex flex-col group hover:border-slate-400 dark:hover:border-slate-700 transition-all shadow-sm">
                             <h3 className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tight mb-2">Free</h3>
                             <p className="text-slate-500 dark:text-slate-400 font-medium italic mb-10">Perfect to get started</p>
                             
@@ -137,8 +139,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onStartFree }
                                     { text: "Full Question Bank", disabled: true },
                                     { text: "Mock Test Simulations", disabled: true },
                                 ].map((feat, i) => (
-                                    <li key={i} className={`flex items-center gap-3 text-sm font-bold uppercase tracking-widest ${feat.disabled ? 'text-slate-300 dark:text-slate-700 line-through' : 'text-slate-600 dark:text-slate-300'}`}>
-                                        <Icons.CheckCircle className={`w-4 h-4 ${feat.disabled ? 'text-slate-200 dark:text-slate-800' : 'text-emerald-500'}`} />
+                                    <li key={i} className={`flex items-center gap-3 text-xs sm:text-sm font-bold uppercase tracking-wider sm:tracking-widest ${feat.disabled ? 'text-slate-300 dark:text-slate-700 line-through' : 'text-slate-600 dark:text-slate-300'}`}>
+                                        <Icons.CheckCircle className={`w-4 h-4 shrink-0 ${feat.disabled ? 'text-slate-200 dark:text-slate-800' : 'text-emerald-500'}`} />
                                         <span>{feat.text} {feat.note && <span className="text-[10px] lowercase text-slate-400 dark:text-slate-500 font-medium tracking-normal">({feat.note})</span>}</span>
                                     </li>
                                 ))}
@@ -148,11 +150,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onStartFree }
                         </div>
 
                         {/* Pro Plan */}
-                        <div className="bg-slate-900 dark:bg-slate-950 p-10 sm:p-14 rounded-[4rem] border-4 border-brand flex flex-col relative overflow-hidden shadow-2xl group">
-                            <div className="absolute top-0 right-0 p-8 text-brand/20 opacity-20 group-hover:scale-110 transition-transform">
+                        <div className="bg-slate-900 dark:bg-slate-950 p-6 sm:p-10 lg:p-14 rounded-[2.5rem] sm:rounded-[4rem] border-4 border-brand flex flex-col relative overflow-hidden shadow-2xl group">
+                            <div className="absolute top-0 right-0 p-8 text-brand/20 opacity-20 group-hover:scale-110 transition-transform pointer-events-none">
                                 <Icons.Logo className="w-40 h-40" />
                             </div>
-                            <div className="absolute top-8 right-10 bg-brand text-white text-[8px] font-black uppercase px-3 py-1 rounded-full tracking-widest">Recommended</div>
+                            <div className="absolute top-6 right-6 sm:top-8 sm:right-10 bg-brand text-white text-[8px] font-black uppercase px-3 py-1 rounded-full tracking-widest">Recommended</div>
                             
                             <h3 className="text-3xl font-black text-white uppercase tracking-tight mb-2">Pro</h3>
                             <p className="text-slate-400 font-medium italic mb-10">Everything you need to pass</p>
@@ -175,8 +177,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onStartFree }
                                     { text: "Progress Analytics", note: "Weak area tracking" },
                                     { text: "Priority Support", note: "24/7 help" },
                                 ].map((feat, i) => (
-                                    <li key={i} className="flex items-center gap-3 text-sm font-bold uppercase tracking-widest text-slate-300">
-                                        <Icons.CheckCircle className="w-4 h-4 text-brand" />
+                                    <li key={i} className="flex items-center gap-3 text-xs sm:text-sm font-bold uppercase tracking-wider sm:tracking-widest text-slate-300">
+                                        <Icons.CheckCircle className="w-4 h-4 shrink-0 text-brand" />
                                         <span>{feat.text} <span className="text-[10px] lowercase text-slate-500 font-medium tracking-normal">({feat.note})</span></span>
                                     </li>
                                 ))}
@@ -247,18 +249,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onStartFree }
             </section>
 
             {/* Footer */}
-            <footer className="px-6 py-20 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800">
-                <div className="max-w-7xl mx-auto flex flex-col items-center gap-12">
+            <footer className="px-4 sm:px-6 py-16 sm:py-20 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800">
+                <div className="max-w-7xl mx-auto flex flex-col items-center gap-8 sm:gap-12">
                     <div className="flex items-center gap-4">
-                        <Icons.Logo className="w-12 h-12" />
+                        <Icons.Logo className="w-12 h-12 shrink-0" />
                         <span className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">CoStudy</span>
                     </div>
-                    <div className="flex gap-12 text-[10px] font-black uppercase tracking-[0.4em] text-slate-700 dark:text-slate-300">
-                        <a href="#" className="hover:text-brand transition-colors">Privacy Policy</a>
-                        <a href="#" className="hover:text-brand transition-colors">Terms of Use</a>
-                        <a href="#" className="hover:text-brand transition-colors">Contact Support</a>
+                    <div className="flex flex-wrap justify-center gap-x-8 gap-y-4 text-center text-[10px] font-black uppercase tracking-[0.25em] sm:tracking-[0.4em] text-slate-700 dark:text-slate-300">
+                        <a href="#" className="py-2 hover:text-brand transition-colors">Privacy Policy</a>
+                        <a href="#" className="py-2 hover:text-brand transition-colors">Terms of Use</a>
+                        <a href="#" className="py-2 hover:text-brand transition-colors">Contact Support</a>
                     </div>
-                    <p className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">© 2025 CoStudy. All strategic rights reserved.</p>
+                    <p className="text-center text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">© 2025 CoStudy. All strategic rights reserved.</p>
                 </div>
             </footer>
         </div>

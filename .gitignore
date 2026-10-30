@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Responsive audit output (regenerate with `npm run audit:responsive`)
+audit
